@@ -1361,7 +1361,7 @@ pub const JSFrameworkRouter = struct {
     fn partToJS(global: *JSGlobalObject, part: Part, temp_allocator: Allocator) !JSValue {
         var rendered = std.array_list.Managed(u8).init(temp_allocator);
         defer rendered.deinit();
-        var aw = std.Io.Writer.Allocating.fromArrayList(temp_allocator, &rendered);
+        const aw = std.Io.Writer.Allocating.fromArrayList(temp_allocator, &rendered);
         try part.toStringForInternalUse(aw.writer);
         var str = bun.String.cloneUTF8(rendered.items);
         return try str.transferToJS(global);

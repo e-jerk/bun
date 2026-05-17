@@ -270,24 +270,22 @@ pub fn toSystemError(this: Error) SystemError {
     var message_buf: [4096]u8 = @splat(0);
     var message_len: usize = 0;
     const message = message: {
-        brk: {
-            if (maybe_code) |code| {
-                message_len = appendStr(&message_buf, message_len, code);
-                message_len = appendStr(&message_buf, message_len, ": ");
-            }
-            message_len = appendStr(&message_buf, message_len, label orelse "Unknown Error");
-            message_len = appendStr(&message_buf, message_len, ", ");
-            message_len = appendStr(&message_buf, message_len, @tagName(this.syscall));
-            if (this.path.len > 0) {
-                message_len = appendStr(&message_buf, message_len, " '");
-                message_len = appendStr(&message_buf, message_len, this.path);
-                message_len = appendStr(&message_buf, message_len, "'");
+        if (maybe_code) |code| {
+            message_len = appendStr(&message_buf, message_len, code);
+            message_len = appendStr(&message_buf, message_len, ": ");
+        }
+        message_len = appendStr(&message_buf, message_len, label orelse "Unknown Error");
+        message_len = appendStr(&message_buf, message_len, ", ");
+        message_len = appendStr(&message_buf, message_len, @tagName(this.syscall));
+        if (this.path.len > 0) {
+            message_len = appendStr(&message_buf, message_len, " '");
+            message_len = appendStr(&message_buf, message_len, this.path);
+            message_len = appendStr(&message_buf, message_len, "'");
 
-                if (this.dest.len > 0) {
-                    message_len = appendStr(&message_buf, message_len, " -> '");
-                    message_len = appendStr(&message_buf, message_len, this.dest);
-                    message_len = appendStr(&message_buf, message_len, "'");
-                }
+            if (this.dest.len > 0) {
+                message_len = appendStr(&message_buf, message_len, " -> '");
+                message_len = appendStr(&message_buf, message_len, this.dest);
+                message_len = appendStr(&message_buf, message_len, "'");
             }
         }
         break :message message_buf[0..message_len];
