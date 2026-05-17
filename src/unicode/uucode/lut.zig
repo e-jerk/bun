@@ -43,9 +43,9 @@ pub fn Generator(
             var blocks_map = BlockMap.init(alloc);
             defer blocks_map.deinit();
 
-            var stage1: std.ArrayList(u16) = .empty;
-            var stage2: std.ArrayList(u8) = .empty;
-            var stage3: std.ArrayList(Elem) = .empty;
+            var stage1: safe.ArrayList(u16) = .empty;
+            var stage2: safe.ArrayList(u8) = .empty;
+            var stage3: safe.ArrayList(Elem) = .empty;
             defer {
                 stage1.deinit(alloc);
                 stage2.deinit(alloc);
@@ -123,5 +123,6 @@ pub fn Tables(comptime Elem: type) type {
 }
 
 const std = @import("std");
+const safe = @import("safe");
 const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;

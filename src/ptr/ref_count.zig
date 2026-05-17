@@ -559,7 +559,7 @@ pub fn DebugData(thread_safe: bool) type {
             const debug: *@This() = @ptrCast(@alignCast(ptr));
             debug.lock.lock();
             defer debug.lock.unlock();
-            const count = debug.count_pointer.?;
+            const count = (if (debug.count_pointer) |v| v else return error.Null);
             debug.dump(null, data.ptr, if (thread_safe) count.load(.seq_cst) else count.*);
         }
 

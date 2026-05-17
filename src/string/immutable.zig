@@ -491,7 +491,7 @@ pub const SplitIterator = struct {
     /// Returns a slice of the first field. This never fails.
     /// Call this only to get the first field and then use `next` to get all subsequent fields.
     pub fn first(self: *Self) []const u8 {
-        bun.unsafeAssert(self.index.? == 0);
+        bun.unsafeAssert((if (self.index) |v| v else return error.Null) == 0);
         return self.next().?;
     }
 

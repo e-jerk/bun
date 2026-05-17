@@ -66,6 +66,9 @@ pub const Iterator = struct {
         var state: usize = UTF8_ACCEPT;
 
         while (true) {
+            var loop_limit: usize = 0;
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             decodeByte(&state, &cp, self.bytes[self.i]);
             self.i += 1;
             if (isDoneDecoding(state) or self.i >= self.bytes.len) break;

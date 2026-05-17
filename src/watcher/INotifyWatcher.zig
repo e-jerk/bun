@@ -123,66 +123,68 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
         outer: while (__loop_limit_outer < 10_000_000) : (__loop_limit_outer += 1) {
             Futex.waitForever(&this.watch_count, 0);
 
-        const rc = std.posix.system.read(
-            this.fd.cast(),
-            this.eventlist_bytes,
-            this.eventlist_bytes.len,
-        );
-        const errno = std.posix.errno(rc);
-        switch (errno) {
-            .SUCCESS => {
-                var read_eventlist_bytes = this.eventlist_bytes[0..@intCast(rc)];
-                log("{f} read {} bytes", .{ this.fd, read_eventlist_bytes.len });
-                if (read_eventlist_bytes.len == 0) return .{ .result = &.{} };
+            const rc = std.posix.system.read(
+                this.fd.cast(),
+                this.eventlist_bytes,
+                this.eventlist_bytes.len,
+            );
+            const errno = std.posix.errno(rc);
+            switch (errno) {
+                .SUCCESS => {
+                    var read_eventlist_bytes = this.eventlist_bytes[0..@intCast(rc)];
+                    log("{f} read {} bytes", .{ this.fd, read_eventlist_bytes.len });
+                    if (read_eventlist_bytes.len == 0) return .{ .result = &.{} };
 
-                // IN_MODIFY is very noisy
-                // we do a 0.1ms sleep to try to coalesce events better
-                const double_read_threshold = Event.largest_size * (max_count / 2);
-                if (read_eventlist_bytes.len < double_read_threshold) {
-                    var fds = [_]std.posix.pollfd{.{
-                        .fd = this.fd.cast(),
-                        .events = std.posix.POLL.IN | std.posix.POLL.ERR,
-                        .revents = 0,
-                    }};
-                    var timespec = std.posix.timespec{ .sec = 0, .nsec = this.coalesce_interval };
-                    if ((std.posix.ppoll(&fds, &timespec, null) catch 0) > 0) {
-                        inner: while (true) {
-                            const rest = this.eventlist_bytes[read_eventlist_bytes.len..];
-                            bun.assert(rest.len > 0);
-                            const new_rc = std.posix.system.read(this.fd.cast(), rest.ptr, rest.len);
-                            // Output.warn("wapa {} {} = {}", .{ this.fd, rest.len, new_rc });
-                            const e = std.posix.errno(new_rc);
-                            switch (e) {
-                                .SUCCESS => {
-                                    read_eventlist_bytes.len += @intCast(new_rc);
-                                    break :outer read_eventlist_bytes;
-                                },
-                                .AGAIN, .INTR => continue :inner,
-                                else => return .{ .err = .{
-                                    .errno = @truncate(@intFromEnum(e)),
-                                    .syscall = .read,
-                                } },
+                    // IN_MODIFY is very noisy
+                    // we do a 0.1ms sleep to try to coalesce events better
+                    const double_read_threshold = Event.largest_size * (max_count / 2);
+                    if (read_eventlist_bytes.len < double_read_threshold) {
+                        var fds = [_]std.posix.pollfd{.{
+                            .fd = this.fd.cast(),
+                            .events = std.posix.POLL.IN | std.posix.POLL.ERR,
+                            .revents = 0,
+                        }};
+                        var timespec = std.posix.timespec{ .sec = 0, .nsec = this.coalesce_interval };
+                        if ((std.posix.ppoll(&fds, &timespec, null) catch 0) > 0) {
+                            var __loop_limit_inner: u64 = 0;
+                            inner: while (__loop_limit_inner < 10_000_000) : (__loop_limit_inner += 1) {
+                                const rest = this.eventlist_bytes[read_eventlist_bytes.len..];
+                                bun.assert(rest.len > 0);
+                                const new_rc = std.posix.system.read(this.fd.cast(), rest.ptr, rest.len);
+                                // Output.warn("wapa {} {} = {}", .{ this.fd, rest.len, new_rc });
+                                const e = std.posix.errno(new_rc);
+                                switch (e) {
+                                    .SUCCESS => {
+                                        read_eventlist_bytes.len += @intCast(new_rc);
+                                        break :outer read_eventlist_bytes;
+                                    },
+                                    .AGAIN, .INTR => continue :inner,
+                                    else => return .{ .err = .{
+                                        .errno = @truncate(@intFromEnum(e)),
+                                        .syscall = .read,
+                                    } },
+                                }
                             }
                         }
                     }
-                }
 
-                break :outer read_eventlist_bytes;
-            },
-            .AGAIN, .INTR => continue :outer,
-            .INVAL => {
-                if (Environment.isDebug) {
-                    bun.Output.err("EINVAL", "inotify read({f}, {d})", .{ this.fd, this.eventlist_bytes.len });
-                }
-                return .{ .err = .{
+                    break :outer read_eventlist_bytes;
+                },
+                .AGAIN, .INTR => continue :outer,
+                .INVAL => {
+                    if (Environment.isDebug) {
+                        bun.Output.err("EINVAL", "inotify read({f}, {d})", .{ this.fd, this.eventlist_bytes.len });
+                    }
+                    return .{ .err = .{
+                        .errno = @truncate(@intFromEnum(errno)),
+                        .syscall = .read,
+                    } };
+                },
+                else => return .{ .err = .{
                     .errno = @truncate(@intFromEnum(errno)),
                     .syscall = .read,
-                } };
-            },
-            else => return .{ .err = .{
-                .errno = @truncate(@intFromEnum(errno)),
-                .syscall = .read,
-            } },
+                } },
+            }
         }
     };
 

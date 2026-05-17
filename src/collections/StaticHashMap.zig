@@ -137,6 +137,9 @@ pub fn HashMap(comptime K: type, comptime V: type, comptime Context: type, compt
 
         pub fn ensureTotalCapacity(self: *Self, gpa: mem.Allocator, count: usize) !void {
             while (true) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const capacity = @as(u64, 1) << (63 - self.shift + 1);
                 if (count <= capacity * max_load_percentage / 100) {
                     break;
@@ -231,6 +234,9 @@ fn HashMapMixin(
 
             var inserted_at: ?usize = null;
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const entry = self.entries[i];
                 if (entry.hash >= it.hash) {
                     if (ctx.eql(entry.key, key)) {
@@ -311,6 +317,9 @@ fn HashMapMixin(
 
             var i = hash >> self.shift;
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const entry = self.entries[i];
                 if (entry.hash >= hash) {
                     if (!ctx.eql(entry.key, key)) {
@@ -324,6 +333,9 @@ fn HashMapMixin(
             const value = self.entries[i].value;
 
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const j = self.entries[i + 1].hash >> self.shift;
                 if (i < j or self.entries[i + 1].isEmpty()) {
                     break;
@@ -438,6 +450,9 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
 
         pub fn ensureTotalCapacity(self: *Self, gpa: mem.Allocator, count: usize) !void {
             while (true) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const capacity = @as(u64, 1) << (63 - self.shift + 1);
                 if (count <= capacity * max_load_percentage / 100) {
                     break;
@@ -502,6 +517,9 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
 
             var inserted_at: ?usize = null;
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const entry = self.entries[i];
                 if (cmp(entry.hash, it.hash).compare(.gte)) {
                     if (cmp(entry.hash, key) == .eq) {
@@ -540,6 +558,9 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
 
             var i = idx(key, self.shift);
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const entry = self.entries[i];
                 if (cmp(entry.hash, key).compare(.gte)) {
                     if (cmp(entry.hash, key) != .eq) {
@@ -553,6 +574,9 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
             const value = self.entries[i].value;
 
             while (true) : (i += 1) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const j = idx(self.entries[i + 1].hash, self.shift);
                 if (i < j or self.entries[i + 1].isEmpty()) {
                     break;

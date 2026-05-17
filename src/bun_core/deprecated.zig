@@ -92,6 +92,9 @@ pub fn SinglyLinkedList(comptime T: type) type {
             pub fn findLast(node: *Node) *Node {
                 var it = node;
                 while (true) {
+var loop_limit: usize = 0;
+                    loop_limit += 1;
+                    std.debug.assert(loop_limit <= 1_000_000);
                     it = it.next orelse return it;
                 }
             }
@@ -141,9 +144,9 @@ pub fn SinglyLinkedList(comptime T: type) type {
             if (list.first == node) {
                 list.first = node.next;
             } else {
-                var current_elm = MANUAL_EDIT_TEST;
+                var current_elm = (if (list.first) |v| v else return error.Null);
                 while (current_elm.next != node) {
-                    current_elm = current_elm.next.?;
+                    current_elm = (if (current_elm.next) |v| v else return error.Null);
                 }
                 current_elm.next = node.next;
             }
@@ -205,15 +208,15 @@ test "basic SinglyLinkedList test" {
     _ = list.remove(&five); // {2, 3, 4}
     _ = two.removeNext(); // {2, 4}
 
-    try testing.expect(MANUAL_EDIT_TEST.data == 2);
-    try testing.expect(MANUAL_EDIT_TEST.next.?.data == 4);
-    try testing.expect(MANUAL_EDIT_TEST.next.?.next == null);
+    try testing.expect((if (list.first) |v| v else return error.Null).data == 2);
+    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).data == 4);
+    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).next == null);
 
     L.Node.reverse(&list.first);
 
-    try testing.expect(MANUAL_EDIT_TEST.data == 4);
-    try testing.expect(MANUAL_EDIT_TEST.next.?.data == 2);
-    try testing.expect(MANUAL_EDIT_TEST.next.?.next == null);
+    try testing.expect((if (list.first) |v| v else return error.Null).data == 4);
+    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).data == 2);
+    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).next == null);
 }
 
 /// A doubly-linked list has a pair of pointers to both the head and
@@ -425,8 +428,8 @@ test "basic DoublyLinkedList test" {
     _ = list.pop(); // {2, 3, 4}
     list.remove(&three); // {2, 4}
 
-    try testing.expect(MANUAL_EDIT_TEST.data == 2);
-    try testing.expect(list.last.?.data == 4);
+    try testing.expect((if (list.first) |v| v else return error.Null).data == 2);
+    try testing.expect((if (list.last) |v| v else return error.Null).data == 4);
     try testing.expect(list.len == 2);
 }
 

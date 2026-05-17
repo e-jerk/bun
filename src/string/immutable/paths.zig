@@ -444,6 +444,9 @@ fn basenameWindows(comptime T: type, input: []const T) []const T {
 
     var end_index: usize = input.len - 1;
     while (true) {
+var loop_limit: usize = 0;
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const byte = input[end_index];
         if (byte == '/' or byte == '\\') {
             if (end_index == 0)

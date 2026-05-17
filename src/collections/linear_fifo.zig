@@ -426,6 +426,9 @@ pub fn LinearFifo(
         pub fn pump(self: *Self, src_reader: anytype, dest_writer: *std.Io.Writer) !void {
             assert(self.buf.len > 0);
             while (true) {
+var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 if (self.writableLength() > 0) {
                     const n = try src_reader.read(self.writableSlice(0));
                     if (n == 0) break; // EOF

@@ -1040,6 +1040,9 @@ pub const visible = struct {
         var stretch_len: usize = 0;
 
         while (true) {
+            var loop_limit: usize = 0;
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             {
                 const idx = firstNonASCII16(input) orelse input.len;
 

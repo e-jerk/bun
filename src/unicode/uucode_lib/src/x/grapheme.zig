@@ -185,7 +185,7 @@ test "wcwidth{,Next,Remaining} README example" {
 
     try std.testing.expectEqual(1, uucode.x.grapheme.wcwidthNext(&it)); // 1 for 'ò'
     const result = it.peekGrapheme();
-    try std.testing.expectEqualStrings("👨🏻‍❤️‍👨🏿", str[result.?.start..result.?.end]);
+    try std.testing.expectEqualStrings("👨🏻‍❤️‍👨🏿", str[(if (result) |v| v else return error.Null).start..(if (result) |v| v else return error.Null).end]);
 
     try std.testing.expectEqual(3, uucode.x.grapheme.wcwidthRemaining(&it)); // 3 for "👨🏻‍❤️‍👨🏿_"
 
@@ -365,40 +365,40 @@ test "IteratorNoControl nextCodePoint/peekCodePoint" {
 
     var result = it.peekCodePoint();
     try std.testing.expect(it.i == 0);
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == 4);
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F3FD); // 🏽
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F3FD); // 🏽
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D); // Zero width joiner
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D); // Zero width joiner
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.peekCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F680); // 🚀
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F680); // 🚀
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == 15);
-    try std.testing.expect(result.?.code_point == 0x1F680); // 🚀
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F680); // 🚀
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
     try std.testing.expect(std.mem.eql(u8, str[0..it.i], "👩🏽‍🚀"));
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1E8); // Regional Indicator "C"
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1E8); // Regional Indicator "C"
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == str.len);
-    try std.testing.expect(result.?.code_point == 0x1F1ED); // Regional Indicator "H"
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1ED); // Regional Indicator "H"
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
 
     try std.testing.expect(it.peekCodePoint() == null);
     try std.testing.expect(it.nextCodePoint() == null);
@@ -695,6 +695,9 @@ fn testGraphemeBreakNoControl(getActualIsBreak: fn (cp1: u21, cp2: u21, state: *
         var next_expected_str = parts.next().?;
 
         while (true) {
+            var loop_limit: usize = 0;
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             var expected_is_break = std.mem.eql(u8, expected_str, "÷");
             const actual_is_break = getActualIsBreak(cp1, cp2, &state);
             try std.testing.expect(expected_is_break or std.mem.eql(u8, expected_str, "×"));

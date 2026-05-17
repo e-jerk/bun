@@ -532,6 +532,9 @@ const AtomicCount = struct {
         // .monotonic is okay for the same reason as the `cmpxchgWeak`.
         var current = self.value.load(.monotonic);
         while (true) {
+            var loop_limit: usize = 0;
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             if (current == 0) {
                 // No strong refs remain, so the object was already deinitialized.
                 return false;

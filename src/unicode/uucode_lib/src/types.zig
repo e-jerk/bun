@@ -1284,7 +1284,7 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
     }
 
     const info = @typeInfo(c.type).@"union";
-    const Tag = info.tag_type.?;
+    const Tag = (if (info.tag_type) |v| v else return error.Null);
     const Int = @typeInfo(Tag).@"enum".tag_type;
     std.debug.assert(Int == std.meta.Int(.unsigned, @bitSizeOf(Tag)));
 

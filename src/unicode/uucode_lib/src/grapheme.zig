@@ -48,7 +48,7 @@ pub fn CustomIterator(
         pub fn nextCodePoint(self: *Self) ?IteratorResult {
             if (self.next_cp == null) return null;
 
-            const cp1 = self.next_cp.?;
+            const cp1 = (if (self.next_cp) |v| v else return error.Null);
             const gb1 = self.next_gb;
             self.i = self.next_cp_it.i;
             self.next_cp = self.next_cp_it.next();
@@ -108,40 +108,40 @@ test "Iterator nextCodePoint/peekCodePoint" {
 
     var result = it.peekCodePoint();
     try std.testing.expect(it.i == 0);
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == 4);
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F3FD); // 🏽
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F3FD); // 🏽
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D); // Zero width joiner
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D); // Zero width joiner
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.peekCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F680); // 🚀
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F680); // 🚀
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == 15);
-    try std.testing.expect(result.?.code_point == 0x1F680); // 🚀
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F680); // 🚀
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
     try std.testing.expect(std.mem.eql(u8, str[0..it.i], "👩🏽‍🚀"));
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1E8); // Regional Indicator "C"
-    try std.testing.expect(result.?.is_break == false);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1E8); // Regional Indicator "C"
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == false);
 
     result = it.nextCodePoint();
     try std.testing.expect(it.i == str.len);
-    try std.testing.expect(result.?.code_point == 0x1F1ED); // Regional Indicator "H"
-    try std.testing.expect(result.?.is_break == true);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1ED); // Regional Indicator "H"
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break == true);
 
     try std.testing.expect(it.peekCodePoint() == null);
     try std.testing.expect(it.nextCodePoint() == null);
@@ -154,30 +154,30 @@ test "utf8Iterator nextGrapheme/peekGrapheme" {
     try std.testing.expect(it.i == 0);
 
     var result = it.peekGrapheme();
-    try std.testing.expect(result.?.start == 0);
-    try std.testing.expect(result.?.end == 15);
+    try std.testing.expect((if (result) |v| v else return error.Null).start == 0);
+    try std.testing.expect((if (result) |v| v else return error.Null).end == 15);
     try std.testing.expect(it.i == 0);
 
     result = it.nextGrapheme();
-    try std.testing.expect(result.?.start == 0);
-    try std.testing.expect(result.?.end == 15);
+    try std.testing.expect((if (result) |v| v else return error.Null).start == 0);
+    try std.testing.expect((if (result) |v| v else return error.Null).end == 15);
     try std.testing.expect(it.i == 15);
-    try std.testing.expect(std.mem.eql(u8, str[result.?.start..result.?.end], "👩🏽‍🚀"));
+    try std.testing.expect(std.mem.eql(u8, str[(if (result) |v| v else return error.Null).start..(if (result) |v| v else return error.Null).end], "👩🏽‍🚀"));
 
     result = it.nextGrapheme();
-    try std.testing.expect(result.?.start == 15);
-    try std.testing.expect(result.?.end == 23);
+    try std.testing.expect((if (result) |v| v else return error.Null).start == 15);
+    try std.testing.expect((if (result) |v| v else return error.Null).end == 23);
     try std.testing.expect(it.i == 23);
-    try std.testing.expect(std.mem.eql(u8, str[result.?.start..result.?.end], "🇨🇭"));
+    try std.testing.expect(std.mem.eql(u8, str[(if (result) |v| v else return error.Null).start..(if (result) |v| v else return error.Null).end], "🇨🇭"));
 
     result = it.peekGrapheme();
-    try std.testing.expect(result.?.start == 23);
-    try std.testing.expect(result.?.end == str.len);
-    try std.testing.expect(std.mem.eql(u8, str[result.?.start..result.?.end], "👨🏻‍🍼"));
+    try std.testing.expect((if (result) |v| v else return error.Null).start == 23);
+    try std.testing.expect((if (result) |v| v else return error.Null).end == str.len);
+    try std.testing.expect(std.mem.eql(u8, str[(if (result) |v| v else return error.Null).start..(if (result) |v| v else return error.Null).end], "👨🏻‍🍼"));
 
     result = it.nextGrapheme();
-    try std.testing.expect(result.?.start == 23);
-    try std.testing.expect(result.?.end == str.len);
+    try std.testing.expect((if (result) |v| v else return error.Null).start == 23);
+    try std.testing.expect((if (result) |v| v else return error.Null).end == str.len);
     try std.testing.expect(it.i == str.len);
 
     try std.testing.expect(it.peekGrapheme() == null);
@@ -471,6 +471,9 @@ fn testGraphemeBreak(getActualIsBreak: fn (cp1: u21, cp2: u21, state: *BreakStat
         var next_expected_str = parts.next().?;
 
         while (true) {
+            var loop_limit: usize = 0;
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             var expected_is_break = std.mem.eql(u8, expected_str, "÷");
             const actual_is_break = getActualIsBreak(cp1, cp2, &state);
             try std.testing.expect(expected_is_break or std.mem.eql(u8, expected_str, "×"));
@@ -620,36 +623,36 @@ test "long emoji zwj sequences" {
     // 👩‍👩‍👧‍👦 (family: woman, woman, girl, boy)
     var it = utf8Iterator("\u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466}_");
     var result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D);
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D);
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F469); // 👩
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F469); // 👩
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D);
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D);
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F467); // 👧
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F467); // 👧
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D);
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D);
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F466); // 👦
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F466); // 👦
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == '_');
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == '_');
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 }
 
 test "long emoji zwj sequences with emoji modifiers" {
@@ -657,48 +660,48 @@ test "long emoji zwj sequences with emoji modifiers" {
     var it = utf8Iterator("\u{1F468}\u{1F3FB}\u{200D}\u{2764}\u{FE0F}\u{200D}\u{1F48B}\u{200D}\u{1F468}\u{1F3FF}_");
 
     var result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F468); // Man
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F468); // Man
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F3FB); // Light Skin Tone
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F3FB); // Light Skin Tone
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D); // ZWJ
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D); // ZWJ
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x2764); // Heart
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x2764); // Heart
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0xFE0F); // VS16
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0xFE0F); // VS16
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D); // ZWJ
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D); // ZWJ
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F48B); // Kiss Mark
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F48B); // Kiss Mark
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x200D); // ZWJ
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x200D); // ZWJ
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F468); // Man
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F468); // Man
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F3FF); // Dark Skin Tone
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F3FF); // Dark Skin Tone
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == '_');
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == '_');
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 }
 
 test "sequence of regional indicators" {
@@ -706,36 +709,36 @@ test "sequence of regional indicators" {
     var it = utf8Iterator("\u{1F1FA}\u{1F1F8}\u{1F1E6}\u{1F1F9}\u{1F1FC}_\u{1F1F3}_");
 
     var result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1FA); // U
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1FA); // U
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1F8); // S
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1F8); // S
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1E6); // A
-    try std.testing.expect(!result.?.is_break);
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1E6); // A
+    try std.testing.expect(!(if (result) |v| v else return error.Null).is_break);
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1F9); // T
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1F9); // T
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1FC); // W
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1FC); // W
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == '_');
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == '_');
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == 0x1F1F3); // N
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == 0x1F1F3); // N
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 
     result = it.nextCodePoint();
-    try std.testing.expect(result.?.code_point == '_');
-    try std.testing.expect(result.?.is_break); // break
+    try std.testing.expect((if (result) |v| v else return error.Null).code_point == '_');
+    try std.testing.expect((if (result) |v| v else return error.Null).is_break); // break
 }
 
 const std = @import("std");

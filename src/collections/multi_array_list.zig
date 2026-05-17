@@ -443,6 +443,9 @@ pub fn MultiArrayList(comptime T: type) type {
         fn growCapacity(current: usize, minimum: usize) usize {
             var new = current;
             while (true) {
+                var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 new +|= new / 2 + init_capacity;
                 if (new >= minimum)
                     return new;

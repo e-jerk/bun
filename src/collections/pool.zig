@@ -36,6 +36,9 @@ fn SinglyLinkedList(comptime T: type, comptime Parent: type) type {
             pub fn findLast(node: *Node) *Node {
                 var it = node;
                 while (true) {
+                    var loop_limit: usize = 0;
+                    loop_limit += 1;
+                    std.debug.assert(loop_limit <= 1_000_000);
                     it = it.next orelse return it;
                 }
             }
@@ -75,9 +78,9 @@ fn SinglyLinkedList(comptime T: type, comptime Parent: type) type {
             if (list.first == node) {
                 list.first = node.next;
             } else {
-                var current_elm = list.first.?;
+                var current_elm = (if (list.first) |v| v else return error.Null);
                 while (current_elm.next != node) {
-                    current_elm = current_elm.next.?;
+                    current_elm = (if (current_elm.next) |v| v else return error.Null);
                 }
                 current_elm.next = node.next;
             }

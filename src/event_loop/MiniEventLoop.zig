@@ -89,7 +89,7 @@ pub fn throwError(_: *MiniEventLoop, err: bun.sys.Error) void {
 
 pub fn pipeReadBuffer(this: *MiniEventLoop) []u8 {
     return this.pipe_read_buffer orelse {
-        this.pipe_read_buffer = bun.handleOom(this.try safe.Box(PipeReadBuffer).init(allocator, undefined));
+        this.pipe_read_buffer = bun.handleOom(safe.Box(PipeReadBuffer).init(this.allocator, undefined));
         return if (this.pipe_read_buffer) |__zust_v| __zust_v else return error.Null;
     };
 }
@@ -105,7 +105,7 @@ pub fn onAfterEventLoop(this: *MiniEventLoop) void {
 
 pub fn filePolls(this: *MiniEventLoop) *Async.FilePoll.Store {
     return this.file_polls_ orelse {
-        this.file_polls_ = bun.handleOom(this.try safe.Box(Async.FilePoll.Store).init(allocator, undefined));
+        this.file_polls_ = bun.handleOom(safe.Box(Async.FilePoll.Store).init(this.allocator, undefined));
         this.file_polls_.?.* = Async.FilePoll.Store.init();
         return if (this.file_polls_) |__zust_v| __zust_v else return error.Null;
     };

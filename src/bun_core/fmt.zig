@@ -249,7 +249,7 @@ const SharedTempBuffer = [32 * 1024]u8;
 fn getSharedBuffer() []u8 {
     return std.mem.asBytes(shared_temp_buffer_ptr orelse brk: {
         shared_temp_buffer_ptr = bun.default_allocator.create(SharedTempBuffer) catch unreachable;
-        break :brk shared_temp_buffer_ptr.?;
+        break :brk (if (shared_temp_buffer_ptr) |v| v else return error.Null);
     });
 }
 threadlocal var shared_temp_buffer_ptr: ?*SharedTempBuffer = null;
@@ -516,7 +516,7 @@ pub const URLFormatter = struct {
         if (is_port_optional) {
             try writer.writeAll("/");
         } else {
-            try writer.print(":{d}/", .{this.port.?});
+            try writer.print(":{d}/", .{(if (this.port) |v| v else return error.Null)});
         }
     }
 };
@@ -537,7 +537,7 @@ pub const HostFormatter = struct {
         const is_port_optional = formatter.port == null or (formatter.is_https and formatter.port == 443) or
             (!formatter.is_https and formatter.port == 80);
         if (!is_port_optional) {
-            try writer.print(":{d}", .{formatter.port.?});
+            try writer.print(":{d}", .{(if (formatter.port) |v| v else return error.Null)});
             return;
         }
     }

@@ -36,6 +36,9 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
         /// This is because we don't decode UTF-8 in the SIMD code path.
         pub fn skip(it: *const Iterator, cursor: *Cursor, simd: *const fn (input: []const u8) ?usize, scalar: *const fn (CodePointType) bool) SkipResult {
             while (true) {
+                var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 // 1. Get current position. Check for EOF.
                 const current_byte_index = cursor.i;
                 if (current_byte_index >= it.bytes.len) {
@@ -160,6 +163,9 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
             var it = Iterator{ .bytes = slice, .i = 0 };
 
             while (true) {
+                var loop_limit: usize = 0;
+                loop_limit += 1;
+                std.debug.assert(loop_limit <= 1_000_000);
                 const part = it.nextCodepointSlice();
                 @setRuntimeSafety(false);
                 switch (part.len) {
@@ -1004,7 +1010,7 @@ pub const BOM = enum {
     pub fn detectAndSplit(bytes: []const u8) struct { ?BOM, []const u8 } {
         const bom = detect(bytes);
         if (bom == null) return .{ null, bytes };
-        return .{ bom, bytes[bom.?.length()..] };
+        return .{ bom, bytes[(if (bom) |v| v else return error.Null).length()..] };
     }
 
     pub fn getHeader(bom: BOM) []const u8 {

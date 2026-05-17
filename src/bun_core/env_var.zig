@@ -300,7 +300,7 @@ const kind = struct {
 
                     const ptr = self.ptr_value.load(.monotonic);
 
-                    return .{ .value = ptr.?[0..len] };
+                    return .{ .value = (if (ptr) |v| v else return error.Null)[0..len] };
                 }
 
                 inline fn deserAndInvalidate(self: *Self, raw_env: ?[]const u8) ?ValueType {
@@ -381,7 +381,7 @@ const kind = struct {
                         return null;
                     }
 
-                    const string_is_truthy = stringIsTruthy(raw_env.?);
+                    const string_is_truthy = stringIsTruthy((if (raw_env) |v| v else return error.Null));
                     self.value.store(if (string_is_truthy) .yes else .no, .monotonic);
                     return string_is_truthy;
                 }
@@ -461,31 +461,31 @@ const kind = struct {
                         return null;
                     }
 
-                    if (std.mem.eql(u8, raw_env.?, "")) {
+                    if (std.mem.eql(u8, (if (raw_env) |v| v else return error.Null), "")) {
                         switch (ip.opts.deser.empty_string_as) {
                             .value => |v| {
                                 self.value.store(v, .monotonic);
                                 return v;
                             },
                             .erroneous => {
-                                return self.handleError(raw_env.?, "is an empty string");
+                                return self.handleError((if (raw_env) |v| v else return error.Null), "is an empty string");
                             },
                         }
                     }
 
-                    const formatted = std.fmt.parseInt(StoredType, raw_env.?, 10) catch |err| {
+                    const formatted = std.fmt.parseInt(StoredType, (if (raw_env) |v| v else return error.Null), 10) catch |err| {
                         switch (err) {
                             error.Overflow => {
-                                return self.handleError(raw_env.?, "overflows u64");
+                                return self.handleError((if (raw_env) |v| v else return error.Null), "overflows u64");
                             },
                             error.InvalidCharacter => {
-                                return self.handleError(raw_env.?, "is not a valid integer");
+                                return self.handleError((if (raw_env) |v| v else return error.Null), "is not a valid integer");
                             },
                         }
                     };
 
                     if (formatted == not_set_sentinel or formatted == unknown_sentinel) {
-                        return self.handleError(raw_env.?, "is a reserved value");
+                        return self.handleError((if (raw_env) |v| v else return error.Null), "is a reserved value");
                     }
 
                     self.value.store(formatted, .monotonic);

@@ -1005,7 +1005,10 @@ pub const Node = struct {
 
             var __loop_limit: u64 = 0;
 
-            while (__loop_limit < 10_000_000) : (__loop_limit += 1) : (std.atomic.spinLoopHint()) {
+            while (__loop_limit < 10_000_000) : ({
+                __loop_limit += 1;
+                std.atomic.spinLoopHint();
+            }) {
                 const buffer_head = buffer.head.load(.acquire);
                 const buffer_tail = buffer.tail.load(.acquire);
 
