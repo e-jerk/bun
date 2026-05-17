@@ -898,9 +898,9 @@ pub fn getsockname(this: *Listener, globalThis: *jsc.JSGlobalObject, callFrame: 
     var buf: [64]u8 = [_]u8{0} ** 64;
     var text_buf: [512]u8 = undefined;
     const address_bytes: []const u8 = socket.getLocalAddress(&buf) catch return .js_undefined;
-    const address_zig: std.net.Address = switch (address_bytes.len) {
-        4 => std.net.Address.initIp4(address_bytes[0..4].*, 0),
-        16 => std.net.Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
+    const address_zig: @import("std-net-shim").Address = switch (address_bytes.len) {
+        4 => @import("std-net-shim").Address.initIp4(address_bytes[0..4].*, 0),
+        16 => @import("std-net-shim").Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
         else => return .js_undefined,
     };
     const family_js = switch (address_bytes.len) {

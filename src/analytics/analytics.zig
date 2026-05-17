@@ -281,7 +281,7 @@ pub const GenerateHeader = struct {
 
         // On macOS 13, tests that use sendmsg_x or recvmsg_x hang.
         var use_msgx_on_macos_14_or_later: bool = undefined;
-        var detectUseMsgXOnMacOS14OrLater_once = std.once(detectUseMsgXOnMacOS14OrLater);
+        var detectUseMsgXOnMacOS14OrLater_once_done = false;
         fn detectUseMsgXOnMacOS14OrLater() void {
             const version = Semver.Version.parseUTF8(forOS().version);
             use_msgx_on_macos_14_or_later = version.valid and version.version.max().major >= 14;
@@ -292,7 +292,7 @@ pub const GenerateHeader = struct {
                 return 0;
             }
 
-            detectUseMsgXOnMacOS14OrLater_once.call();
+            if (!detectUseMsgXOnMacOS14OrLater_once_done) { detectUseMsgXOnMacOS14OrLater(); detectUseMsgXOnMacOS14OrLater_once_done = true; }
             return @intFromBool(use_msgx_on_macos_14_or_later);
         }
 

@@ -900,9 +900,9 @@ pub fn NewSocket(comptime ssl: bool) type {
             var text_buf: [512]u8 = undefined;
 
             const address_bytes: []const u8 = this.socket.localAddress(&buf) orelse return .js_undefined;
-            const address: std.net.Address = switch (address_bytes.len) {
-                4 => std.net.Address.initIp4(address_bytes[0..4].*, 0),
-                16 => std.net.Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
+            const address: @import("std-net-shim").Address = switch (address_bytes.len) {
+                4 => @import("std-net-shim").Address.initIp4(address_bytes[0..4].*, 0),
+                16 => @import("std-net-shim").Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
                 else => return .js_undefined,
             };
 
@@ -941,9 +941,9 @@ pub fn NewSocket(comptime ssl: bool) type {
             var text_buf: [512]u8 = undefined;
 
             const address_bytes: []const u8 = this.socket.remoteAddress(&buf) orelse return .js_undefined;
-            const address: std.net.Address = switch (address_bytes.len) {
-                4 => std.net.Address.initIp4(address_bytes[0..4].*, 0),
-                16 => std.net.Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
+            const address: @import("std-net-shim").Address = switch (address_bytes.len) {
+                4 => @import("std-net-shim").Address.initIp4(address_bytes[0..4].*, 0),
+                16 => @import("std-net-shim").Address.initIp6(address_bytes[0..16].*, 0, 0, 0),
                 else => return .js_undefined,
             };
 

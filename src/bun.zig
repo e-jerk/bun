@@ -3611,7 +3611,7 @@ pub fn getThreadCount() u16 {
     const min_threads = 2;
     const ThreadCount = struct {
         pub var cached_thread_count: u16 = 0;
-        var cached_thread_count_once = std.once(getThreadCountOnce);
+        var cached_thread_count_once_done = false;
         fn getThreadCountFromUser() ?u16 {
             inline for (.{ "UV_THREADPOOL_SIZE", "GOMAXPROCS" }) |envname| {
                 if (getenvZ(envname)) |env| {
@@ -3633,7 +3633,7 @@ pub fn getThreadCount() u16 {
             cached_thread_count = @min(max_threads, @max(min_threads, getThreadCountFromUser() orelse jsc.wtf.numberOfProcessorCores()));
         }
     };
-    ThreadCount.cached_thread_count_once.call();
+    if (!ThreadCount.cached_thread_count_once_done) { ThreadCount.getThreadCountOnce(); ThreadCount.cached_thread_count_once_done = true; }
     return ThreadCount.cached_thread_count;
 }
 

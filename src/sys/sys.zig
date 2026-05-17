@@ -4648,7 +4648,7 @@ pub fn dlsymWithHandle(comptime Type: type, comptime name: [:0]const u8, comptim
     const Wrapper = struct {
         pub var function: Type = undefined;
         var failed = false;
-        pub var once = std.once(loadOnce);
+        pub var once_done = false;
         fn loadOnce() void {
             function = bun.cast(Type, dlsymImpl(@call(bun.callmod_inline, handle_getter, .{}), name) orelse {
                 failed = true;
@@ -4656,7 +4656,7 @@ pub fn dlsymWithHandle(comptime Type: type, comptime name: [:0]const u8, comptim
             });
         }
     };
-    Wrapper.once.call();
+    if (!Wrapper.once_done) { Wrapper.loadOnce(); Wrapper.once_done = true; }
     if (Wrapper.failed) {
         return null;
     }

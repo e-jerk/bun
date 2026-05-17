@@ -159,7 +159,7 @@ pub fn resultToJS(this: *const Result, globalThis: *jsc.JSGlobalObject) bun.JSEr
     obj.put(globalThis, jsc.ZigString.static("ttl"), JSValue.jsNumber(this.ttl));
     return obj;
 }
-pub fn addressToJS(address: *const std.net.Address, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
+pub fn addressToJS(address: *const @import("std-net-shim").Address, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
     var str = addressToString(address) catch return globalThis.throwOutOfMemory();
     return str.transferToJS(globalThis);
 }

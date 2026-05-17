@@ -1172,10 +1172,7 @@ pub fn parseIntoBinaryLockfile(
         return error.InvalidLockfileVersion;
     };
 
-    const lockfile_version = std.meta.intToEnum(Version, lockfile_version_num) catch {
-        try log.addError(source, lockfile_version_expr.loc, "Unknown lockfile version");
-        return error.UnknownLockfileVersion;
-    };
+    const lockfile_version: Version = @enumFromInt(lockfile_version_num);
 
     lockfile.text_lockfile_version = lockfile_version;
 

@@ -989,6 +989,7 @@ fn addInternalImports(b: *Build, mod: *Module, opts: *BunBuildOptions) void {
     mod.addImport("build_options", opts.buildOptionsModule(b));
 
     mod.addImport("safe", b.createModule(.{ .root_source_file = b.path("lib/safe.zig") }));
+    mod.addImport("std-net-shim", b.createModule(.{ .root_source_file = b.path("src/std_net_shim.zig") }));
 
     const translate_c = getTranslateC(b, opts.target, opts.optimize, opts.android_ndk_sysroot, opts.freebsd_sysroot);
     mod.addImport("translated-c-headers", b.createModule(.{ .root_source_file = translate_c }));

@@ -49,9 +49,9 @@ const Offsets = extern struct {
     fn loadOnce() void {
         Bun__FFI__ensureOffsetsAreLoaded();
     }
-    var once = std.once(loadOnce);
+    var once_done = false;
     pub fn get() *const Offsets {
-        once.call();
+        if (!once_done) { loadOnce(); once_done = true; }
         return &Bun__FFI__offsets;
     }
 };
@@ -245,7 +245,7 @@ pub const FFI = struct {
 
         var cached_default_system_include_dir: [:0]const u8 = "";
         var cached_default_system_library_dir: [:0]const u8 = "";
-        var cached_default_system_include_dir_once = std.once(getSystemRootDirOnce);
+        var cached_default_system_include_dir_once_done = false;
         fn getSystemRootDirOnce() void {
             if (Environment.isMac) {
                 var which_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
@@ -307,13 +307,13 @@ pub const FFI = struct {
         }
 
         fn getSystemIncludeDir() ?[:0]const u8 {
-            cached_default_system_include_dir_once.call();
+            if (!cached_default_system_include_dir_once_done) { getSystemRootDirOnce(); cached_default_system_include_dir_once_done = true; }
             if (cached_default_system_include_dir.len == 0) return null;
             return cached_default_system_include_dir;
         }
 
         fn getSystemLibraryDir() ?[:0]const u8 {
-            cached_default_system_include_dir_once.call();
+            if (!cached_default_system_include_dir_once_done) { getSystemRootDirOnce(); cached_default_system_include_dir_once_done = true; }
             if (cached_default_system_library_dir.len == 0) return null;
             return cached_default_system_library_dir;
         }
@@ -2352,10 +2352,10 @@ const CompilerRT = struct {
         var path_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
         compiler_rt_dir = bun.handleOom(bun.default_allocator.dupeZ(u8, bun.getFdPath(.fromStdDir(bunCC), &path_buf) catch return));
     }
-    var create_compiler_rt_dir_once = std.once(createCompilerRTDir);
+    var create_compiler_rt_dir_once_done = false;
 
     pub fn dir() ?[:0]const u8 {
-        create_compiler_rt_dir_once.call();
+        if (!create_compiler_rt_dir_once_done) { createCompilerRTDir(); create_compiler_rt_dir_once_done = true; }
         if (compiler_rt_dir.len == 0) return null;
         return compiler_rt_dir;
     }

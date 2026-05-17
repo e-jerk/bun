@@ -387,7 +387,7 @@ const CLSCTX_INPROC_SERVER: u32 = 1;
 
 threadlocal var com_initialised = false;
 var factory_ptr: ?*IWICImagingFactory = null;
-var factory_once = std.once(loadFactory);
+var factory_once_done = false;
 
 fn factory() error{BackendUnavailable}!*IWICImagingFactory {
     // COM apartment must be entered on the *calling* thread; the factory
@@ -397,7 +397,7 @@ fn factory() error{BackendUnavailable}!*IWICImagingFactory {
         if (CoInitializeEx(null, COINIT_MULTITHREADED) < 0) return error.BackendUnavailable;
         com_initialised = true;
     }
-    factory_once.call();
+    if (!factory_once_done) { loadFactory(); factory_once_done = true; }
     return factory_ptr orelse error.BackendUnavailable;
 }
 

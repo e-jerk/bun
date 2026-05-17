@@ -268,7 +268,7 @@ pub const Source = struct {
         @"16m",
     };
     var lazy_color_depth: ColorDepth = .none;
-    var color_depth_once = std.once(getColorDepthOnce);
+    var color_depth_once_done = false;
     fn getColorDepthOnce() void {
         if (getForceColorDepth()) |depth| {
             lazy_color_depth = depth;
@@ -374,7 +374,7 @@ pub const Source = struct {
         lazy_color_depth = .none;
     }
     pub fn colorDepth() ColorDepth {
-        color_depth_once.call();
+        if (!color_depth_once_done) { getColorDepthOnce(); color_depth_once_done = true; }
         return lazy_color_depth;
     }
 
@@ -489,10 +489,10 @@ pub fn isAIAgent() bool {
             value = evaluate();
         }
 
-        var once = std.once(setValue);
+        var once_done = false;
 
         pub fn isEnabled() bool {
-            once.call();
+            if (!once_done) { setValue(); once_done = true; }
             return value;
         }
     };
@@ -856,7 +856,7 @@ fn ScopedLogger(comptime tagname: []const u8, comptime visibility: Visibility) t
 
         var lock = bun.Mutex{};
 
-        var is_visible_once = std.once(evaluateIsVisible);
+        var is_visible_once_done = false;
 
         fn evaluateIsVisible() void {
             if (bun.getenvZAnyCase("BUN_DEBUG_" ++ tagname)) |val| {
@@ -879,7 +879,7 @@ fn ScopedLogger(comptime tagname: []const u8, comptime visibility: Visibility) t
         }
 
         pub fn isVisible() bool {
-            is_visible_once.call();
+            if (!is_visible_once_done) { evaluateIsVisible(); is_visible_once_done = true; }
             return !really_disable.load(.monotonic);
         }
 

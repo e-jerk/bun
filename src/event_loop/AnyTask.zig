@@ -27,7 +27,7 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
-            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(if (this.*) |__zust_v| __zust_v else return error.Null)))});
+            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
         }
     };
 }

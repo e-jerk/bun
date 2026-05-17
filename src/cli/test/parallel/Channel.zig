@@ -263,10 +263,7 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
                     return;
                 }
                 if (self.in.items.len - head < @as(usize, 5) + len) break;
-                const kind = std.meta.intToEnum(Frame.Kind, self.in.items[head + 4]) catch {
-                    head += @as(usize, 5) + len;
-                    continue;
-                };
+                const kind: Frame.Kind = @enumFromInt(self.in.items[head + 4]);
                 var rd = Frame.Reader{ .p = self.in.items[head + 5 ..][0..len] };
                 self.owner().onChannelFrame(kind, &rd);
                 head += @as(usize, 5) + len;
