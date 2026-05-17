@@ -1,5 +1,5 @@
 pub const css = @import("../css_parser.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 const CSSStringFns = css.CSSStringFns;
 
 pub const Printer = css.Printer;
@@ -2738,7 +2738,7 @@ pub fn parse_one_simple_selector(
                                 var result = ArrayList(Impl.SelectorImpl.Identifier).initCapacity(
                                     self.parser.allocator,
                                     // TODO: source does this, should see if initializing to 1 is actually better
-                                    // when appending empty safe.ArrayList(T), it will usually initially reserve 8 elements,
+                                    // when appending empty zust.ArrayList(T), it will usually initially reserve 8 elements,
                                     // maybe that's unnecessary, or maybe smallvec is gud here
                                     1,
                                 ) catch unreachable;

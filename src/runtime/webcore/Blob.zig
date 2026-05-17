@@ -5,7 +5,7 @@
 //! basic file copy instead of a naive read write loop.
 
 const Blob = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 const debug = Output.scoped(.Blob, .visible);
 

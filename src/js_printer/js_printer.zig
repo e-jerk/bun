@@ -1,5 +1,5 @@
 const hex_chars = "0123456789ABCDEF";
-const safe = @import("safe");
+const zust = @import("safe");
 const first_ascii = 0x20;
 const last_ascii = 0x7E;
 const first_high_surrogate = 0xD800;
@@ -6373,7 +6373,7 @@ pub fn serializeModuleInfo(module_info: ?*analyze_transpiled_module.ModuleInfo) 
         mi.finalize() catch return null;
     }
     const deserialized = mi.asDeserialized();
-    var buf: safe.ArrayList(u8) = .empty;
+    var buf: zust.ArrayList(u8) = .empty;
     defer buf.deinit(bun.default_allocator);
     deserialized.serialize(buf.writer(bun.default_allocator)) catch return null;
     return buf.toOwnedSlice(bun.default_allocator) catch null;

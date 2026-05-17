@@ -1,5 +1,5 @@
 const Echo = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Should be allocated with the arena from Builtin
 output: std.array_list.Managed(u8),

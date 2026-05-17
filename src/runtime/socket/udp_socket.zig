@@ -1,5 +1,5 @@
 const log = Output.scoped(.UdpSocket, .visible);
-const safe = @import("safe");
+const zust = @import("safe");
 
 const INET6_ADDRSTRLEN = if (bun.Environment.isWindows) 65 else 46;
 

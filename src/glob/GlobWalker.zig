@@ -1853,7 +1853,7 @@ const Syscall = bun.sys;
 const Maybe = bun.sys.Maybe;
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const ArrayList = std.ArrayListUnmanaged;
 const mem = std.mem;
 const Arena = std.heap.ArenaAllocator;

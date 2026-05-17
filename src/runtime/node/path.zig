@@ -1,5 +1,5 @@
 const Path = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 // Allow on the stack:
 // - 8 string slices

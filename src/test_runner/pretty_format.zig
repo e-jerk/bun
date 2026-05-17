@@ -1,5 +1,5 @@
 pub const EventType = enum(u8) {
-const safe = @import("safe");
+const zust = @import("safe");
     Event,
     MessageEvent,
     CloseEvent,

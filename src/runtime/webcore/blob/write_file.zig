@@ -1,5 +1,5 @@
 pub const WriteFileResultType = SystemError.Maybe(SizeType);
-const safe = @import("safe");
+const zust = @import("safe");
 pub const WriteFileOnWriteFileCallback = *const fn (ctx: *anyopaque, count: WriteFileResultType) bun.JSTerminated!void;
 pub const WriteFileTask = jsc.WorkTask(WriteFile);
 

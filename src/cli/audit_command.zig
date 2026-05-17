@@ -1,5 +1,5 @@
 const VulnerabilityInfo = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     severity: []const u8,
     title: []const u8,
     url: []const u8,

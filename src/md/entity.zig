@@ -2162,4 +2162,4 @@ const entity_map: []const Entity = &.{
 };
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");

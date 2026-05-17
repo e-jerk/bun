@@ -1,7 +1,7 @@
 // const IPC = @import("../jsc/ipc.zig");
 
 pub const Stdio = util.Stdio;
-const safe = @import("safe");
+const zust = @import("safe");
 // pub const ShellSubprocess = NewShellSubprocess(.js);
 // pub const ShellSubprocessMini = NewShellSubprocess(.mini);
 
@@ -594,7 +594,7 @@ pub const ShellSubprocess = struct {
     ///
     /// Windows: PipeReader.deinit asserts the libuv source is closed. Whether the source
     /// is uv-initialized depends on how far startWithCurrentPipe got, so a blind close or
-    /// destroy is unsafe. Fall back to leaking the Subprocess (pre-existing behavior)
+    /// destroy is unzust. Fall back to leaking the Subprocess (pre-existing behavior)
     /// rather than risk closing an uninitialized handle.
     fn abortAfterFailedStart(this: *@This()) void {
         if (Environment.isWindows) return;

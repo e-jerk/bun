@@ -1,5 +1,5 @@
 pub const PackCommand = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     pub const Context = struct {
         manager: *PackageManager,
         allocator: std.mem.Allocator,
@@ -1690,7 +1690,7 @@ const safe = @import("safe");
         defer pack_list.deinit(ctx.allocator);
 
         var read_buf: [8192]u8 = undefined;
-        const file_reader = try safe.Box(BufferedFileReader,0,0,0).init(ctx.allocator, undefined);
+        const file_reader = try zust.Box(BufferedFileReader,0,0,0).init(ctx.allocator, undefined);
         defer _ = file_reader.deinit();
         file_reader.* = .{
             .unbuffered_reader = undefined,

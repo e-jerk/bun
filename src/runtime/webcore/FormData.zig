@@ -2,7 +2,7 @@
 //! struct is webcore (fetch Body) and JSC-heavy; `url/` is JSC-free.
 
 pub const FormData = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     fields: Map,
     buffer: []const u8,
     const log = Output.scoped(.FormData, .visible);

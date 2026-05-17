@@ -32,7 +32,7 @@
 //! shared across pool threads.
 
 pub const BackendError = codecs.Error || error{BackendUnavailable};
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     const f = try factory();

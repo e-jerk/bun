@@ -1,5 +1,5 @@
 pub const BunSpawn = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     pub const Action = extern struct {
         pub const FileActionType = enum(u8) {
             none = 0,

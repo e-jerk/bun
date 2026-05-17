@@ -24,4 +24,4 @@ pub const Reporters = struct {
 };
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");

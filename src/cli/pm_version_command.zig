@@ -1,5 +1,5 @@
 pub const PmVersionCommand = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     const VersionType = enum {
         patch,
         minor,

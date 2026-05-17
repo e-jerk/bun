@@ -9,7 +9,7 @@
 //! `toBase64`/`metadata`) is awaited, via `jsc.ConcurrentPromiseTask`.
 
 const Image = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const js = jsc.Codegen.JSImage;
 pub const fromJS = js.fromJS;
@@ -150,7 +150,7 @@ pub fn constructor(global: *jsc.JSGlobalObject, callframe: *jsc.CallFrame, this_
 /// the generated `~JSImage` will `finalize()` on GC, so a manual `finalize()`
 /// after `toJS()` is a double-free. (Contrast `fromInputJS` where the codegen
 /// constructor only wires `m_ctx` after the Zig fn returns, so its `errdefer`
-/// is safe.)
+/// is zust.)
 pub fn fromBlobJS(global: *jsc.JSGlobalObject, blob_value: jsc.JSValue, options: jsc.JSValue) bun.JSError!jsc.JSValue {
     var img = Image.new(.{ .source = .js_buffer });
     errdefer img.finalize();

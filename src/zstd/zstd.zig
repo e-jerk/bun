@@ -272,5 +272,5 @@ pub const ZstdReaderArrayList = struct {
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const c = bun.c;

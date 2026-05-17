@@ -1,5 +1,5 @@
 const log = bun.Output.scoped(.parseArgs, .hidden);
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Represents a slice of a JSValue array
 const ArgsSlice = struct {

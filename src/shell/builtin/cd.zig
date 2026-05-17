@@ -4,7 +4,7 @@
 //! - `cd -` will put the user in the previous directory
 
 const Cd = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 state: union(enum) {
     idle,

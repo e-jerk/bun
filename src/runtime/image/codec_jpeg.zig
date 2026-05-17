@@ -2,7 +2,7 @@
 //! Dispatch lives in codecs.zig; this file is the codec body.
 
 const tjhandle = ?*anyopaque;
-const safe = @import("safe");
+const zust = @import("safe");
 // TJINIT_COMPRESS=0, TJINIT_DECOMPRESS=1.
 pub extern fn tj3Init(init_type: c_int) tjhandle;
 pub extern fn tj3Destroy(h: tjhandle) void;

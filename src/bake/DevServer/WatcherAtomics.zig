@@ -3,7 +3,7 @@
 //! frequently updated (the whole point of HMR)
 
 const Self = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Only one event can run at any given time. We need three events because:
 ///

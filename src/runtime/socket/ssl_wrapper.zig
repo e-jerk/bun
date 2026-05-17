@@ -1,5 +1,5 @@
 const log = bun.Output.scoped(.SSLWrapper, .hidden);
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Mimics the behavior of openssl.c in uSockets, wrapping data that can be received from any where (network, DuplexStream, etc)
 pub fn SSLWrapper(comptime T: type) type {

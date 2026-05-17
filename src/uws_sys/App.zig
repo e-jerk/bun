@@ -456,7 +456,7 @@ pub const c = struct {
 };
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const uws = bun.uws;
 const ListenSocket = bun.uws.ListenSocket;

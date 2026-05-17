@@ -1,5 +1,5 @@
 const Cat = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 opts: Opts = .{},
 state: union(enum) {

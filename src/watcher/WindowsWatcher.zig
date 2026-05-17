@@ -318,7 +318,7 @@ const std = @import("std");
 const w = std.os.windows;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Mutex = bun.Mutex;
 const Output = bun.Output;
 

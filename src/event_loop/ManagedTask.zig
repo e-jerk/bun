@@ -27,7 +27,7 @@ pub fn cancel(this: *ManagedTask) void {
 pub fn New(comptime Type: type, comptime Callback: anytype) type {
     return struct {
         pub fn init(ctx: *Type) Task {
-            var managed = bun.handleOom(safe.Box(ManagedTask).init(bun.default_allocator, undefined));
+            var managed = bun.handleOom(zust.Box(ManagedTask).init(bun.default_allocator, undefined));
             managed.* = ManagedTask{
                 .callback = wrap,
                 .ctx = ctx,
@@ -42,7 +42,7 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
 }
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const jsc = bun.jsc;
 const Task = jsc.Task;

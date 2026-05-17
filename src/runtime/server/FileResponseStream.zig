@@ -9,7 +9,7 @@
 //! once; after it fires the caller must not touch `resp` body methods again.
 
 const FileResponseStream = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 ref_count: RefCount,
 resp: AnyResponse,

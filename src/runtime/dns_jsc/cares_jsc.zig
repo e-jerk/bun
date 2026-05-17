@@ -3,7 +3,7 @@
 //! each `struct_ares_*_reply` are aliased to the free fns here.
 
 // ── struct_hostent ─────────────────────────────────────────────────────────
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn hostentToJSResponse(this: *c_ares.struct_hostent, _: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime lookup_name: []const u8) bun.JSError!jsc.JSValue {
     if (comptime strings.eqlComptime(lookup_name, "cname")) {
         // A cname lookup always returns a single record but we follow the common API here.

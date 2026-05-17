@@ -1,5 +1,5 @@
 const Npm = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 const WhoamiError = OOM || error{
     NeedAuth,

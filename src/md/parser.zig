@@ -275,7 +275,7 @@ const HtmlRenderer = @import("./html_renderer.zig").HtmlRenderer;
 const Allocator = std.mem.Allocator;
 
 const types = @import("./types.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 const Align = types.Align;
 const BlockType = types.BlockType;
 const Container = types.Container;

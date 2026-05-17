@@ -57,7 +57,7 @@ pub const Parser = struct {
                     // this holds the values for the jsx optimizaiton flags, which have both been removed
                     // as the optimizations break newer versions of react, see https://github.com/oven-sh/bun/issues/11025
                     const jsx_optimizations = [_]bool{ false, false };
-                    const safe = @import("safe");
+                    const zust = @import("safe");
                     hasher.update(std.mem.asBytes(&jsx_optimizations));
                 } else {
                     hasher.update("NO_JSX");
@@ -220,7 +220,7 @@ pub const Parser = struct {
         stmts[0] = Stmt{
             .data = .{
                 .s_lazy_export = brk: {
-                    const data = try safe.Box(Expr.Data, 0, 0, 0).init(p.allocator, undefined);
+                    const data = try zust.Box(Expr.Data, 0, 0, 0).init(p.allocator, undefined);
                     data.* = final_expr.data;
                     break :brk data;
                 },

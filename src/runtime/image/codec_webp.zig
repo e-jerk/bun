@@ -1,7 +1,7 @@
 //! libwebp decode/encode for `Bun.Image`.
 //! Dispatch lives in codecs.zig; this file is the codec body.
 
-const safe = @import("safe");
+const zust = @import("safe");
 pub extern fn WebPGetInfo(data: [*]const u8, len: usize, w: *c_int, h: *c_int) c_int;
 extern fn WebPDecodeRGBA(data: [*]const u8, len: usize, w: *c_int, h: *c_int) ?[*]u8;
 extern fn WebPEncodeRGBA(rgba: [*]const u8, w: c_int, h: c_int, stride: c_int, q: f32, out: *?[*]u8) usize;

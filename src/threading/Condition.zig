@@ -279,5 +279,5 @@ const Mutex = bun.Mutex;
 const assert = bun.assert;
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const os = std.os;

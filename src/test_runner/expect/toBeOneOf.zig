@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn toBeOneOf(
     this: *Expect,
     globalThis: *JSGlobalObject,

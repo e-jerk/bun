@@ -13,7 +13,7 @@
 //! default `pages:1` does the same.
 
 const Bits = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     /// Sub-block-aware bit reader. GIF wraps the LZW bitstream in length-
     /// prefixed sub-blocks (≤255 bytes each, terminated by a 0 block), and
     /// codes are LSB-first across byte boundaries — so this pulls one byte at

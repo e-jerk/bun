@@ -1,6 +1,6 @@
 // This is split into a separate function to conserve stack space.
 // On Windows, a single path buffer can take 64 KB.
-const safe = @import("safe");
+const zust = @import("safe");
 fn getArgv0(globalThis: *jsc.JSGlobalObject, PATH: []const u8, cwd: []const u8, pretend_argv0: ?[*:0]const u8, first_cmd: JSValue, allocator: std.mem.Allocator) bun.JSError!struct {
     argv0: [:0]const u8,
     arg0: [:0]u8,

@@ -1,5 +1,5 @@
 const Bun = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// How to add a new function or property to the Bun global
 ///

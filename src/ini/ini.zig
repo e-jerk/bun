@@ -1345,7 +1345,7 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Global = bun.Global;
 const OOM = bun.OOM;
 const Output = bun.Output;

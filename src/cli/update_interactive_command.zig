@@ -1,5 +1,5 @@
 pub const TerminalHyperlink = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     link: []const u8,
     text: []const u8,
     enabled: bool,

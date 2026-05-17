@@ -8,7 +8,7 @@
 /// OS-level uses crontab (Linux), launchctl + launchd plist (macOS), or
 /// schtasks (Windows). Async, event-loop-integrated via bun.spawn.
 /// Shared base for CronRegisterJob and CronRemoveJob.
-const safe = @import("safe");
+const zust = @import("safe");
 fn CronJobBase(comptime Self: type) type {
     return struct {
         pub fn loop(_: *const Self) *bun.Async.Loop {

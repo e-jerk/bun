@@ -741,6 +741,6 @@ const ReadFile = bun.webcore.Blob.read_file.ReadFile;
 const WriteFile = bun.webcore.Blob.write_file.WriteFile;
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const posix = std.posix;
 const linux = std.os.linux;

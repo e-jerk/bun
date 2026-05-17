@@ -295,7 +295,7 @@ fn postProcessAutolinkEnd(content: []const u8, beg: usize, end_in: usize) usize 
 const helpers = @import("./helpers.zig");
 const parser_mod = @import("./parser.zig");
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const Parser = parser_mod.Parser;
 const EmphDelim = Parser.EmphDelim;

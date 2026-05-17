@@ -69,7 +69,7 @@ pub const Array = struct {
     }
 
     pub const toJS = @import("../../js_parser_jsc/expr_jsc.zig").arrayToJS;
-    const safe = @import("safe");
+    const zust = @import("safe");
 
     /// Assumes each item in the array is a string
     pub fn alphabetizeStrings(this: *Array) void {
@@ -527,7 +527,7 @@ pub const Object = struct {
                 return try next.append(expr, allocator);
             }
 
-            const rope = try safe.Box(Rope, 0, 0, 0).init(allocator, undefined);
+            const rope = try zust.Box(Rope, 0, 0, 0).init(allocator, undefined);
             rope.* = .{ .head = expr };
             this.next = rope;
             return rope;

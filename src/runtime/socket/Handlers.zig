@@ -1,5 +1,5 @@
 const Handlers = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 onOpen: jsc.JSValue = .zero,
 onClose: jsc.JSValue = .zero,

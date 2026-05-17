@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn loader_resolver(in: string) !Api.Loader {
     const option_loader = options.Loader.fromString(in) orelse return error.InvalidLoader;
     return option_loader.toAPI();

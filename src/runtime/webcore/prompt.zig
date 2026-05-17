@@ -1,5 +1,5 @@
 //! Implements prompt, alert, and confirm Web API
-const safe = @import("safe");
+const zust = @import("safe");
 comptime {
     const js_alert = jsc.toJSHostFn(alert);
     @export(&js_alert, .{ .name = "WebCore__alert" });

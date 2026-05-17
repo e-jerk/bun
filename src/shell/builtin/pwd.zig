@@ -1,5 +1,5 @@
 const Pwd = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 state: union(enum) {
     idle,

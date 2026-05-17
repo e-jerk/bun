@@ -418,7 +418,7 @@ const bun = @import("bun");
 const assert = bun.assert;
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const atomic = std.atomic;
 const c = std.c;
 

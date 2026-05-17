@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 fn ExternCryptoJob(comptime name: []const u8) type {
     return struct {
         vm: *jsc.VirtualMachine,

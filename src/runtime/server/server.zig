@@ -1,5 +1,5 @@
 const httplog = Output.scoped(.Server, .visible);
-const safe = @import("safe");
+const zust = @import("safe");
 const ctxLog = Output.scoped(.RequestContext, .visible);
 
 pub const WebSocketServerContext = @import("./WebSocketServerContext.zig");
@@ -278,7 +278,7 @@ pub const ServerConfig = @import("./ServerConfig.zig");
 pub const ServerWebSocket = @import("./ServerWebSocket.zig");
 pub const NodeHTTPResponse = @import("./NodeHTTPResponse.zig");
 
-/// State machine to handle loading plugins asynchronously. This structure is not thread-safe.
+/// State machine to handle loading plugins asynchronously. This structure is not thread-zust.
 const ServePlugins = struct {
     state: State,
     ref_count: RefCount,

@@ -10,7 +10,7 @@
 //! - Callbacks are stored via `values` in classes.ts, accessed via js.gc
 
 const Terminal = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 const log = bun.Output.scoped(.Terminal, .hidden);
 

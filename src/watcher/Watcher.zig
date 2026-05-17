@@ -80,7 +80,7 @@ pub fn init(comptime T: type, ctx: *T, fs: *bun.fs.FileSystem, allocator: std.me
         }
     };
 
-    const watcher = try try safe.Box(Watcher).init(allocator, undefined);
+    const watcher = try try zust.Box(Watcher).init(allocator, undefined);
     errdefer _ = watcher.deinit();
     watcher.* = .{
         .fs = fs,
@@ -296,7 +296,7 @@ pub fn flushEvictions(this: *Watcher) void {
     }
 
     last_item = no_watch_item;
-    // This is split into two passes because reading the slice while modified is potentially unsafe.
+    // This is split into two passes because reading the slice while modified is potentially unzust.
     for (this.evict_list[0..this.evict_list_i]) |item| {
         if (item == last_item or this.watchlist.len <= item) continue;
         this.watchlist.swapRemove(item);
@@ -801,7 +801,7 @@ const std = @import("std");
 const PackageJSON = @import("../resolver/package_json.zig").PackageJSON;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const Mutex = bun.Mutex;

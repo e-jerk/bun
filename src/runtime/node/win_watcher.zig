@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 var default_manager: ?*PathWatcherManager = null;
 
 // TODO: make this a generic so we can reuse code with path_watcher

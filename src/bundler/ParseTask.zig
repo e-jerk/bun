@@ -6,7 +6,7 @@ pub const ContentsOrFd = union(enum) {
     contents: string,
 
     const Tag = @typeInfo(ContentsOrFd).@"union".tag_type.?;
-    const safe = @import("safe");
+    const zust = @import("safe");
 };
 
 pub const ParseTask = @This();
@@ -1401,7 +1401,7 @@ pub fn runFromThreadPool(this: *ParseTask) void {
         }
     };
 
-    const result = bun.handleOom(safe.Box(Result, 0, 0, 0).init(bun.default_allocator, undefined));
+    const result = bun.handleOom(zust.Box(Result, 0, 0, 0).init(bun.default_allocator, undefined));
 
     result.* = .{
         .ctx = this.ctx,

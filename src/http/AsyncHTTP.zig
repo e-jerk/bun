@@ -237,14 +237,14 @@ pub fn init(
                 defer allocator.free(auth);
                 const size = std.base64.standard.Encoder.calcSize(auth.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_safe.Encoder.encode(buf["Basic ".len..], auth);
+                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], auth);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             } else {
                 // only use user
                 const size = std.base64.standard.Encoder.calcSize(username.len);
                 var buf = allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_safe.Encoder.encode(buf["Basic ".len..], username);
+                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], username);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             }
@@ -314,14 +314,14 @@ fn reset(this: *AsyncHTTP) !void {
                 defer this.allocator.free(auth);
                 const size = std.base64.standard.Encoder.calcSize(auth.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_safe.Encoder.encode(buf["Basic ".len..], auth);
+                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], auth);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             } else {
                 // only use user
                 const size = std.base64.standard.Encoder.calcSize(username.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_safe.Encoder.encode(buf["Basic ".len..], username);
+                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], username);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             }
@@ -343,7 +343,7 @@ fn sendSyncCallback(this: *SingleHTTPChannel, async_http: *AsyncHTTP, result: HT
 pub fn sendSync(this: *AsyncHTTP) anyerror!picohttp.Response {
     HTTPThread.init(&.{});
 
-    var ctx = try try safe.Box(SingleHTTPChannel).init(bun.default_allocator, undefined);
+    var ctx = try try zust.Box(SingleHTTPChannel).init(bun.default_allocator, undefined);
     ctx.* = SingleHTTPChannel.init();
     this.result_callback = HTTPClientResult.Callback.New(
         *SingleHTTPChannel,
@@ -469,7 +469,7 @@ const PercentEncoding = @import("../url/url.zig").PercentEncoding;
 const URL = @import("../url/url.zig").URL;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const MutableString = bun.MutableString;

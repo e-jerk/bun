@@ -1,5 +1,5 @@
 const Response = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 // C++ helper functions for AsyncLocalStorage integration
 extern fn Response__getAsyncLocalStorageStore(global: *JSGlobalObject, als: JSValue) JSValue;

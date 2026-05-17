@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 extern fn bun_sysconf__SC_NPROCESSORS_ONLN() i32;
 
 pub fn createNodeOsBinding(global: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {

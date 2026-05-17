@@ -855,7 +855,7 @@ const std = @import("std");
 const TaggedPointerUnion = @import("../ptr/ptr.zig").TaggedPointerUnion;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const assert = bun.assert;

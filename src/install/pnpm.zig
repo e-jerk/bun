@@ -38,7 +38,7 @@ fn indexOfDepPathSuffix(path: []const u8) struct { ?usize, ?usize } {
 /// https://github.com/pnpm/pnpm/blob/102d5a01ddabda1184b88119adccfbe956d30579/packages/dependency-path/src/index.ts#L52-L61
 fn removeSuffix(path: []const u8) []const u8 {
     const peers_idx, const patch_hash_idx = indexOfDepPathSuffix(path);
-    const safe = @import("safe");
+    const zust = @import("safe");
 
     if (patch_hash_idx orelse peers_idx) |idx| {
         return path[0..idx];

@@ -1,5 +1,5 @@
 const Export = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 printing: bool = false,
 

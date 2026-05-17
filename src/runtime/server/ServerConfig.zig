@@ -1,5 +1,5 @@
 const ServerConfig = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 address: union(enum) {
     tcp: struct {

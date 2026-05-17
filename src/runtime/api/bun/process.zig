@@ -1,5 +1,5 @@
 const pid_t = if (Environment.isPosix) std.posix.pid_t else uv.uv_pid_t;
-const safe = @import("safe");
+const zust = @import("safe");
 const fd_t = if (Environment.isPosix) std.posix.fd_t else i32;
 const log = bun.Output.scoped(.PROCESS, .visible);
 
@@ -2315,7 +2315,7 @@ pub const sync = struct {
 
     // The PID to forward signals to.
     // Set to 0 when unregistering.
-    extern "c" var Bun__currentSyncPID = safe.CheckedInt(i64).init(0);
+    extern "c" var Bun__currentSyncPID = zust.CheckedInt(i64).init(0);
 
     // Race condition: a signal could be sent before spawnProcessPosix returns.
     // We need to make sure to send it after the process is spawned.

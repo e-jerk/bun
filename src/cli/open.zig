@@ -1,5 +1,5 @@
 pub const opener = switch (@import("builtin").target.os.tag) {
-const safe = @import("safe");
+const zust = @import("safe");
     .macos => "/usr/bin/open",
     .windows => "start",
     else => "xdg-open",

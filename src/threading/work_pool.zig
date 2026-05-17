@@ -42,7 +42,7 @@ pub const WorkPool = struct {
             }
         };
 
-        var task_ = try try safe.Box(TaskType).init(allocator, undefined);
+        var task_ = try try zust.Box(TaskType).init(allocator, undefined);
         task_.* = .{
             .task = .{ .callback = TaskType.callback },
             .context = context,
@@ -55,5 +55,5 @@ pub const WorkPool = struct {
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const ThreadPool = bun.ThreadPool;

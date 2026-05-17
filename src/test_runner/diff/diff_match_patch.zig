@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 const Config = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     /// Number of milliseconds to map a diff before giving up (0 for infinity).
     diff_timeout: u64 = 1000,
     /// Cost of an empty edit operation in terms of edit characters.

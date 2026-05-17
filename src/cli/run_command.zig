@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 var path_buf: bun.PathBuffer = undefined;
 var path_buf2: bun.PathBuffer = undefined;
 const NpmArgs = struct {

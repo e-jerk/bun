@@ -649,7 +649,7 @@ pub const Thread = struct {
     }
 };
 
-/// An event which stores 1 semaphore token and is multi-threaded safe.
+/// An event which stores 1 semaphore token and is multi-threaded zust.
 /// The event can be shutdown(), waking up all wait()ing threads and
 /// making subsequent wait()'s return immediately.
 const Event = struct {
@@ -1064,7 +1064,7 @@ const std = @import("std");
 const Atomic = std.atomic.Value;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const Output = bun.Output;
 const assert = bun.assert;

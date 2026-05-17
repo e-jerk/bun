@@ -1426,7 +1426,7 @@ const URL = @import("../url/url.zig").URL;
 const which = @import("../which/which.zig").which;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const OOM = bun.OOM;
 const Output = bun.Output;

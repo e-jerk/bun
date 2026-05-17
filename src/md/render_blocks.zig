@@ -148,7 +148,7 @@ const parser_mod = @import("./parser.zig");
 const Parser = parser_mod.Parser;
 
 const types = @import("./types.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 const BlockType = types.BlockType;
 const OFF = types.OFF;
 const VerbatimLine = types.VerbatimLine;

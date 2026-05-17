@@ -33,7 +33,7 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
 }
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const jsc = bun.jsc;
 const Task = jsc.Task;

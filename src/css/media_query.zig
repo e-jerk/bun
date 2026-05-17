@@ -1,5 +1,5 @@
 pub const css = @import("./css_parser.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 pub const Error = css.Error;
 
 const Length = css.css_values.length.Length;

@@ -1,5 +1,5 @@
 pub const PublishCommand = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     pub fn Context(comptime directory_publish: bool) type {
         return struct {
             manager: *PackageManager,

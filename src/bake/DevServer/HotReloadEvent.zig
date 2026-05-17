@@ -1,6 +1,6 @@
 /// This task informs the DevServer's thread about new files to be bundled.
 pub const HotReloadEvent = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Align to cache lines to eliminate false sharing.
 _: u0 align(std.atomic.cache_line) = 0,

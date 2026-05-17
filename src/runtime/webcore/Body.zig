@@ -1,7 +1,7 @@
 //! https://developer.mozilla.org/en-US/docs/Web/API/Body
 
 const Body = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 value: Value, // = Value.empty,
 

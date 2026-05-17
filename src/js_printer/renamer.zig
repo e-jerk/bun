@@ -7,7 +7,7 @@ pub const NoOpRenamer = struct {
     }
 
     pub const originalName = nameForSymbol;
-    const safe = @import("safe");
+    const zust = @import("safe");
 
     pub fn nameForSymbol(renamer: *NoOpRenamer, ref: Ref) string {
         if (ref.isSourceContentsSlice()) {
@@ -134,7 +134,7 @@ pub const MinifyRenamer = struct {
         first_top_level_slots: js_ast.SlotCounts,
         reserved_names: bun.StringHashMapUnmanaged(u32),
     ) !*MinifyRenamer {
-        const renamer = try safe.Box(MinifyRenamer, 0, 0, 0).init(allocator, undefined);
+        const renamer = try zust.Box(MinifyRenamer, 0, 0, 0).init(allocator, undefined);
         var slots = SymbolSlot.List.initUndefined();
 
         for (first_top_level_slots.slots.values, 0..) |count, ns| {
@@ -516,7 +516,7 @@ pub const NumberRenamer = struct {
         symbols: js_ast.Symbol.Map,
         root_names: bun.StringHashMapUnmanaged(u32),
     ) !*NumberRenamer {
-        var renamer = try safe.Box(NumberRenamer, 0, 0, 0).init(allocator, undefined);
+        var renamer = try zust.Box(NumberRenamer, 0, 0, 0).init(allocator, undefined);
         renamer.* = NumberRenamer{
             .symbols = symbols,
             .allocator = allocator,

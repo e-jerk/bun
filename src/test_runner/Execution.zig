@@ -35,7 +35,7 @@
 //! ]
 //! ```
 
-const safe = @import("safe");
+const zust = @import("safe");
 groups: []ConcurrentGroup,
 _sequences: []ExecutionSequence,
 /// the entries themselves are owned by BunTest, which owns Execution.

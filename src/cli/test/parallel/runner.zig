@@ -7,7 +7,7 @@
 /// Overridable via BUN_TEST_PARALLEL_SCALE_MS for tests, where debug-build
 /// module load alone can exceed the production 5ms threshold.
 pub const default_scale_up_after_ms = 5;
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Returns true if files were actually run via the worker pool, false if it
 /// fell back to the sequential path (≤1 effective worker). The caller uses

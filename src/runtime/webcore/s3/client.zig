@@ -1,5 +1,5 @@
 pub const ACL = @import("../../../s3_signing/acl.zig").ACL;
-const safe = @import("safe");
+const zust = @import("safe");
 pub const S3HttpDownloadStreamingTask = @import("./download_stream.zig").S3HttpDownloadStreamingTask;
 pub const MultiPartUploadOptions = @import("./multipart_options.zig").MultiPartUploadOptions;
 pub const MultiPartUpload = @import("./multipart.zig").MultiPartUpload;

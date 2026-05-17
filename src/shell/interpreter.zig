@@ -58,7 +58,7 @@
 //! `allocScope.leakSlice(str)` to tell it not to track the allocation anymore
 //! and let `EnvStr` handle it.
 const string = []const u8;
-const safe = @import("safe");
+const zust = @import("safe");
 pub const Arena = std.heap.ArenaAllocator;
 pub const Braces = @import("../shell_parser/braces.zig");
 pub const Syscall = bun.sys;

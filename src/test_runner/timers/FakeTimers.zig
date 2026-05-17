@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 _active: bool = false,
 /// The sorted fake timers. TimerHeap is not optimal here because we need these operations:
 /// - peek/takeFirst (provided by TimerHeap)

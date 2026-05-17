@@ -1,5 +1,5 @@
 pub const interpret = @import("./interpreter.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 pub const subproc = @import("./subproc.zig");
 
 pub const AllocScope = @import("./AllocScope.zig");

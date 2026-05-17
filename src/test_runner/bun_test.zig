@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn cloneActiveStrong() ?BunTestPtr {
     const runner = bun.jsc.Jest.Jest.runner orelse return null;
     return runner.bun_test_root.cloneActiveFile();

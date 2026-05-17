@@ -1,5 +1,5 @@
 const ConstantType = enum { ERRNO, ERRNO_WIN, SIG, DLOPEN, OTHER };
-const safe = @import("safe");
+const zust = @import("safe");
 
 fn getErrnoConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasField(std.posix.E, name))

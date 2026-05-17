@@ -252,7 +252,7 @@ const local_max_header_list_size = H2.local_max_header_list_size;
 const write_buffer_high_water = H2.write_buffer_high_water;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const HTTPClient = bun.http;
 const picohttp = bun.picohttp;
 const strings = bun.strings;

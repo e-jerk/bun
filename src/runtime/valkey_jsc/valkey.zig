@@ -3,7 +3,7 @@
 // This file contains the core Valkey client implementation with protocol handling
 
 pub const ValkeyContext = @import("./ValkeyContext.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Connection flags to track Valkey client state
 pub const ConnectionFlags = struct {

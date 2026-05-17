@@ -12,7 +12,7 @@ pub fn timerCallback(_: *bun.windows.libuv.Timer) callconv(.c) void {}
 pub fn BundleThread(CompletionStruct: type) type {
     return struct {
         const Self = @This();
-        const safe = @import("safe");
+        const zust = @import("safe");
 
         waker: bun.Async.Waker,
         ready_event: std.Thread.ResetEvent,
@@ -42,7 +42,7 @@ pub fn BundleThread(CompletionStruct: type) type {
             // Blocks the calling thread until the bun build thread is created.
             // std.once also blocks other callers of this function until the first caller is done.
             fn loadOnceImpl() void {
-                const bundle_thread = bun.handleOom(safe.Box(Self, 0, 0, 0).init(bun.default_allocator, undefined));
+                const bundle_thread = bun.handleOom(zust.Box(Self, 0, 0, 0).init(bun.default_allocator, undefined));
                 bundle_thread.* = uninitialized;
                 instance = bundle_thread;
 
@@ -107,12 +107,12 @@ pub fn BundleThread(CompletionStruct: type) type {
             defer heap.deinit();
 
             const allocator = heap.allocator();
-            var ast_memory_allocator = try safe.Box(js_ast.ASTMemoryAllocator, 0, 0, 0).init(allocator, undefined);
+            var ast_memory_allocator = try zust.Box(js_ast.ASTMemoryAllocator, 0, 0, 0).init(allocator, undefined);
             ast_memory_allocator.* = .{ .allocator = allocator };
             ast_memory_allocator.reset();
             ast_memory_allocator.push();
 
-            const transpiler = try safe.Box(bun.Transpiler, 0, 0, 0).init(allocator, undefined);
+            const transpiler = try zust.Box(bun.Transpiler, 0, 0, 0).init(allocator, undefined);
 
             try completion.configureBundler(transpiler, allocator);
 

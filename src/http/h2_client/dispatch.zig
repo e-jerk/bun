@@ -581,5 +581,5 @@ const local_max_header_list_size = H2.local_max_header_list_size;
 const write_buffer_control_limit = H2.write_buffer_control_limit;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const strings = bun.strings;

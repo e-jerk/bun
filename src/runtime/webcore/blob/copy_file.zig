@@ -1,6 +1,6 @@
 // blocking, but off the main thread
 pub const CopyFile = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     destination_file_store: Store.File,
     source_file_store: Store.File,
     store: ?*Store = null,

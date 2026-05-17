@@ -195,6 +195,6 @@ const bun = @import("bun");
 const clap = @import("./clap.zig");
 
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const debug = std.debug;
 const mem = std.mem;

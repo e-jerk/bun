@@ -1,5 +1,5 @@
 pub const PmPkgCommand = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     const SubCommand = enum {
         get,
         set,

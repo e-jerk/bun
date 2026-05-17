@@ -1,7 +1,7 @@
 threadlocal var initialized_store = false;
 
 pub const bun_hash_tag = ".bun-tag-";
-const safe = @import("safe");
+const zust = @import("safe");
 pub const max_hex_hash_len: comptime_int = brk: {
     var buf: [128]u8 = undefined;
     break :brk (std.fmt.bufPrint(buf[0..], "{x}", .{std.math.maxInt(u64)}) catch @panic("Buf wasn't big enough.")).len;
@@ -72,7 +72,7 @@ pub fn initializeMiniStore() void {
         pub threadlocal var instance: ?*@This() = null;
     };
     if (MiniStore.instance == null) {
-        var mini_store = bun.handleOom(safe.Box(MiniStore, 0, 0, 0).init(bun.default_allocator, undefined));
+        var mini_store = bun.handleOom(zust.Box(MiniStore, 0, 0, 0).init(bun.default_allocator, undefined));
         mini_store.* = .{
             .heap = bun.MimallocArena.init(),
             .memory_allocator = undefined,

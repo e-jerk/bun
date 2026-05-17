@@ -12,7 +12,7 @@ fn embedDebugFallback(comptime msg: []const u8, comptime code: []const u8) []con
 
 pub const Fallback = struct {
     pub const HTMLTemplate = @embedFile("../fallback.html");
-    const safe = @import("safe");
+    const zust = @import("safe");
     pub const HTMLBackendTemplate = @embedFile("../fallback-backend.html");
 
     const Base64FallbackMessage = struct {
@@ -234,7 +234,7 @@ pub const Runtime = struct {
                 return &empty_bundler_feature_flags;
             }
 
-            const set = bun.handleOom(safe.Box(bun.StringSet, 0, 0, 0).init(allocator, undefined));
+            const set = bun.handleOom(zust.Box(bun.StringSet, 0, 0, 0).init(allocator, undefined));
             set.* = bun.StringSet.init(allocator);
             for (feature_flags) |flag| {
                 bun.handleOom(set.insert(flag));

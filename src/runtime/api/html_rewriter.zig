@@ -1,5 +1,5 @@
 const SelectorMap = std.ArrayListUnmanaged(*LOLHTML.HTMLSelector);
-const safe = @import("safe");
+const zust = @import("safe");
 pub const LOLHTMLContext = struct {
     const RefCount = bun.ptr.RefCount(@This(), "ref_count", deinit, .{});
     pub const ref = RefCount.ref;

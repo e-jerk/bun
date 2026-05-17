@@ -1,5 +1,5 @@
 pub const css = @import("../css_parser.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 pub const Result = css.Result;
 
 const Percentage = css.css_values.percentage.Percentage;

@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn getTypeName(globalObject: *JSGlobalObject, value: JSValue) ZigString {
     var js_type = value.jsType();
     if (js_type.isArray()) {

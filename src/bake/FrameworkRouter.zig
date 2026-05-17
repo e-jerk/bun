@@ -3,7 +3,7 @@
 //! updating for DevServer, or serializing to a binary for use in production.
 
 const FrameworkRouter = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 /// Metadata for route files is specified out of line, either in DevServer where
 /// it is an IncrementalGraph(.server).FileIndex or the production build context

@@ -1569,7 +1569,7 @@ const FileType = @import("./pipes.zig").FileType;
 const PollOrFd = @import("./pipes.zig").PollOrFd;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Async = bun.Async;
 const Environment = bun.Environment;
 const OOM = bun.OOM;

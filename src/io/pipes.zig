@@ -101,6 +101,6 @@ pub const ReadState = enum {
 };
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Async = bun.Async;
 const Environment = bun.Environment;

@@ -1,5 +1,5 @@
 pub const DataURL = @import("./data_url.zig").DataURL;
-const safe = @import("safe");
+const zust = @import("safe");
 pub const DirInfo = @import("./dir_info.zig");
 
 const debuglog = Output.scoped(.Resolver, .hidden);
@@ -2303,7 +2303,7 @@ pub const Resolver = struct {
                 existing.data.clearAndFree(allocator);
             }
 
-            var dir_entries_ptr = in_place orelse safe.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
+            var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
             dir_entries_ptr.* = new_entry;
 
             if (r.store_fd) {
@@ -3011,7 +3011,7 @@ pub const Resolver = struct {
                     existing.data.clearAndFree(allocator);
                 }
                 new_entry.fd = if (r.store_fd) open_dir else .invalid;
-                var dir_entries_ptr = in_place orelse safe.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
+                var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
                 dir_entries_ptr.* = new_entry;
                 dir_entries_option = try rfs.entries.put(&cached_dir_entry_result, .{
                     .entries = dir_entries_ptr,

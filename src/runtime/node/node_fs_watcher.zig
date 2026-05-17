@@ -1,5 +1,5 @@
 const log = Output.scoped(.@"fs.watch", .hidden);
-const safe = @import("safe");
+const zust = @import("safe");
 const PathWatcher = if (Environment.isWindows) @import("./win_watcher.zig") else @import("./path_watcher.zig");
 
 // TODO: make this a top-level struct

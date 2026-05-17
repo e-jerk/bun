@@ -1,5 +1,5 @@
 const ReadableStream = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 value: JSValue,
 ptr: Source,

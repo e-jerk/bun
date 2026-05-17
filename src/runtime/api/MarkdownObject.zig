@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn create(globalThis: *jsc.JSGlobalObject) jsc.JSValue {
     const object = JSValue.createEmptyObject(globalThis, 4);
     object.put(

@@ -1,5 +1,5 @@
 pub const css = @import("../css_parser.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;

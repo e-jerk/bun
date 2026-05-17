@@ -1,5 +1,5 @@
 pub const SrcIndex = bun.bundle_v2.Index;
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const SymbolList = bun.ast.Symbol.List;
 

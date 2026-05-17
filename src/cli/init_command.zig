@@ -1,5 +1,5 @@
 pub const InitCommand = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     pub fn prompt(
         alloc: std.mem.Allocator,
         comptime label: string,

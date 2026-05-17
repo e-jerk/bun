@@ -1,5 +1,5 @@
 const debug = Output.scoped(.bunx, .visible);
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const BunxCommand = struct {
     var path_buf: bun.PathBuffer = undefined;

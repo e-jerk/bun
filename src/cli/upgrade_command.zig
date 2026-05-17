@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 pub var initialized_store = false;
 pub fn initializeStore() void {
     if (initialized_store) return;
@@ -355,7 +355,7 @@ pub const UpgradeCommand = struct {
 
         var filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
-            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);
@@ -426,8 +426,8 @@ pub const UpgradeCommand = struct {
             var progress = refresher.start("Downloading", version.size);
             progress.unit = .bytes;
             refresher.refresh();
-            var async_http = try safe.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined);
-            var zip_file_buffer = try safe.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
+            var async_http = try zust.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined);
+            var zip_file_buffer = try zust.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
             zip_file_buffer.* = try MutableString.init(ctx.allocator, @max(version.size, 1024));
 
             async_http.* = HTTP.AsyncHTTP.initSync(

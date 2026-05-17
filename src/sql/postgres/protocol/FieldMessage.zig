@@ -1,5 +1,5 @@
 pub const FieldMessage = union(FieldType) {
-const safe = @import("safe");
+const zust = @import("safe");
     severity: String,
     localized_severity: String,
     code: String,

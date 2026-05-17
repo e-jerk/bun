@@ -1,5 +1,5 @@
 const NodeHTTPResponse = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 const log = bun.Output.scoped(.NodeHTTPResponse, .visible);
 

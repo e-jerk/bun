@@ -13,7 +13,7 @@ pub fn createForSubprocess(owner: *Subprocess, ptr: *?*MaxBuf, initial: ?i64) vo
         ptr.* = null;
         return;
     }
-    const maxbuf = bun.handleOom(safe.Box(MaxBuf).init(bun.default_allocator, undefined));
+    const maxbuf = bun.handleOom(zust.Box(MaxBuf).init(bun.default_allocator, undefined));
     maxbuf.* = .{
         .owned_by_subprocess = owner,
         .owned_by_reader = false,
@@ -83,5 +83,5 @@ pub const Kind = enum {
 
 const bun = @import("bun");
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const Subprocess = bun.jsc.Subprocess;

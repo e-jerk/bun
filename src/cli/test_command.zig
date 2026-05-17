@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 var path_buf: bun.PathBuffer = undefined;
 var path_buf2: bun.PathBuffer = undefined;
 
@@ -1388,10 +1388,10 @@ pub const TestCommand = struct {
         }
 
         var env_loader = brk: {
-            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
-            const loader = try safe.Box(DotEnv.Loader,0,0,0).init(ctx.allocator, undefined);
+            const loader = try zust.Box(DotEnv.Loader,0,0,0).init(ctx.allocator, undefined);
             loader.* = DotEnv.Loader.init(map, ctx.allocator);
             break :brk loader;
         };
@@ -1413,7 +1413,7 @@ pub const TestCommand = struct {
         var inline_snapshots_to_write = std.AutoArrayHashMap(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
         jsc.VirtualMachine.isBunTest = true;
 
-        var reporter = try safe.Box(CommandLineReporter,0,0,0).init(ctx.allocator, undefined);
+        var reporter = try zust.Box(CommandLineReporter,0,0,0).init(ctx.allocator, undefined);
         defer {
             if (reporter.reporters.junit) |file_reporter| {
                 file_reporter.deinit();

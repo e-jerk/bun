@@ -1,5 +1,5 @@
 const ScriptConfig = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     package_json_path: []u8,
     package_name: []const u8,
     script_name: []const u8,
@@ -54,7 +54,7 @@ pub const ProcessHandle = struct {
         var spawned: bun.spawn.process.SpawnProcessResult = brk: {
 
             // Get the envp with the PATH configured
-            // There's probably a more optimal way to do this where you have a safe.ArrayList shared
+            // There's probably a more optimal way to do this where you have a zust.ArrayList shared
             // instead of creating a new one for each process
             var arena = std.heap.ArenaAllocator.init(bun.default_allocator);
             defer arena.deinit();

@@ -280,7 +280,7 @@ pub fn connect(this: *@This(), client: *HTTPClient, comptime is_ssl: bool) !?New
             }
 
             // Cache miss - create new SSL context
-            var custom_context = try try safe.Box(NewHTTPContext(is_ssl).init(bun.default_allocator, undefined));
+            var custom_context = try try zust.Box(NewHTTPContext(is_ssl).init(bun.default_allocator, undefined));
             custom_context.* = .{
                 .ref_count = .init(),
                 .pending_sockets = NewHTTPContext(is_ssl).PooledSocketHiveAllocator.empty,
@@ -742,7 +742,7 @@ const ProxyTunnel = @import("./ProxyTunnel.zig");
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const Global = bun.Global;
 const Output = bun.Output;

@@ -14,7 +14,7 @@ pub fn jsonStringify(self: *const @This(), writer: anytype) !void {
 
 pub fn ToExpr(comptime expr_type: type, comptime func_type: anytype) type {
     const ExprType = expr_type;
-    const safe = @import("safe");
+    const zust = @import("safe");
     return struct {
         context: *ExprType,
         allocator: std.mem.Allocator,
@@ -132,17 +132,17 @@ pub fn alloc(allocator: std.mem.Allocator, t: anytype, loc: logger.Loc) Binding 
     icount += 1;
     switch (@TypeOf(t)) {
         B.Identifier => {
-            const data = safe.Box(B.Identifier, 0, 0, 0).init(allocator, undefined) catch unreachable;
+            const data = zust.Box(B.Identifier, 0, 0, 0).init(allocator, undefined) catch unreachable;
             data.* = t;
             return Binding{ .loc = loc, .data = B{ .b_identifier = data } };
         },
         B.Array => {
-            const data = safe.Box(B.Array, 0, 0, 0).init(allocator, undefined) catch unreachable;
+            const data = zust.Box(B.Array, 0, 0, 0).init(allocator, undefined) catch unreachable;
             data.* = t;
             return Binding{ .loc = loc, .data = B{ .b_array = data } };
         },
         B.Object => {
-            const data = safe.Box(B.Object, 0, 0, 0).init(allocator, undefined) catch unreachable;
+            const data = zust.Box(B.Object, 0, 0, 0).init(allocator, undefined) catch unreachable;
             data.* = t;
             return Binding{ .loc = loc, .data = B{ .b_object = data } };
         },

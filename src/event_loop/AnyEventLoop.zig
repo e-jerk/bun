@@ -97,7 +97,7 @@ pub const AnyEventLoop = union(EventLoopKind) {
                 bun.todoPanic(@src(), "AnyEventLoop.enqueueTaskConcurrent", .{});
                 // const TaskType = AnyTask.New(Context, Callback);
                 // @field(ctx, field) = TaskType.init(ctx);
-                // var concurrent = try safe.Box(ConcurrentTask).init(bun.default_allocator, undefined) catch unreachable;
+                // var concurrent = try zust.Box(ConcurrentTask).init(bun.default_allocator, undefined) catch unreachable;
                 // _ = concurrent.from(jsc.Task.init(&@field(ctx, field)));
                 // concurrent.auto_delete = true;
                 // this.virtual_machine.jsc.enqueueTaskConcurrent(concurrent);
@@ -112,7 +112,7 @@ pub const AnyEventLoop = union(EventLoopKind) {
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Async = bun.Async;
 const uws = bun.uws;
 

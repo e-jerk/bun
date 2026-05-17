@@ -6,7 +6,7 @@
 // - Windows can be configured to return []const u16
 
 const IteratorError = error{ AccessDenied, SystemResources } || posix.UnexpectedError;
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const IteratorResult = struct {
     name: PathString,

@@ -1,7 +1,7 @@
 //! `fromJS`/`toJS` for `GetAddrInfo` and its nested option types, plus
 //! `addressToJS`/`addrInfoToJSArray`. The pure types stay in `src/dns/`.
 
-const safe = @import("safe");
+const zust = @import("safe");
 pub fn optionsFromJS(value: jsc.JSValue, globalObject: *jsc.JSGlobalObject) FromJSError!Options {
     if (value.isEmptyOrUndefinedOrNull())
         return Options{};

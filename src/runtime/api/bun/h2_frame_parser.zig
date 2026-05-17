@@ -1,5 +1,5 @@
 const MAX_PAYLOAD_SIZE_WITHOUT_FRAME = 16384 - FrameHeader.byteSize - 1;
-const safe = @import("safe");
+const zust = @import("safe");
 const BunSocket = union(enum) {
     none: void,
     tls: *TLSSocket,

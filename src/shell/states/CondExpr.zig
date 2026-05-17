@@ -1,7 +1,7 @@
 //! https://www.gnu.org/software/bash/manual/bash.html#Bash-Conditional-Expressions
 //!
 pub const CondExpr = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 base: State,
 node: *const ast.CondExpr,

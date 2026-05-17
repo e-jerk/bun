@@ -1,5 +1,5 @@
 pub const CFAbsoluteTime = f64;
-const safe = @import("safe");
+const zust = @import("safe");
 pub const CFTimeInterval = f64;
 pub const CFArrayCallBacks = anyopaque;
 

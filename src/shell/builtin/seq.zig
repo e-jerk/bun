@@ -1,4 +1,4 @@
-const safe = @import("safe");
+const zust = @import("safe");
 state: enum { idle, err, done } = .idle,
 buf: std.ArrayListUnmanaged(u8) = .{},
 _start: f32 = 1,

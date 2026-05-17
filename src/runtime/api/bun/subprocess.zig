@@ -2,7 +2,7 @@
 //! code for `Bun.spawnSync`
 
 const Subprocess = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const js = jsc.Codegen.JSSubprocess;
 pub const toJS = js.toJS;

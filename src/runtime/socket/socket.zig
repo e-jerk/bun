@@ -1,5 +1,5 @@
 pub const SocketAddress = @import("./SocketAddress.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 
 fn JSSocketType(comptime ssl: bool) type {
     if (!ssl) {
@@ -1597,7 +1597,7 @@ pub fn NewSocket(comptime ssl: bool) type {
             }
 
             const vm = handlers.vm;
-            const handlers_ptr = bun.handleOom(safe.Box(Handlers, 0, 0, 0).init(vm.allocator, undefined));
+            const handlers_ptr = bun.handleOom(zust.Box(Handlers, 0, 0, 0).init(vm.allocator, undefined));
             handlers_ptr.* = handlers;
             handlers_consumed = true;
 
@@ -2102,7 +2102,7 @@ pub fn jsUpgradeDuplexToTLS(globalObject: *jsc.JSGlobalObject, callframe: *jsc.C
         default_data.ensureStillAlive();
     }
 
-    const handlers_ptr = bun.handleOom(safe.Box(Handlers, 0, 0, 0).init(handlers.vm.allocator, undefined));
+    const handlers_ptr = bun.handleOom(zust.Box(Handlers, 0, 0, 0).init(handlers.vm.allocator, undefined));
     handlers_ptr.* = handlers;
     handlers_consumed = true;
     // Set mode to duplex_server so TLSSocket.isServer() returns true for ALPN server mode

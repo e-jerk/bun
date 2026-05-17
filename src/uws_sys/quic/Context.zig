@@ -49,7 +49,7 @@ pub const Context = opaque {
 };
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const uws = bun.uws;
 
 const PendingConnect = uws.quic.PendingConnect;

@@ -2,7 +2,7 @@
 /// running through the js_parser. It emits a ParseTask.Result and joins
 /// with the same logic that it runs though.
 pub const ServerComponentParseTask = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 task: ThreadPoolLib.Task = .{ .callback = &taskCallbackWrap },
 data: Data,
@@ -32,7 +32,7 @@ fn taskCallbackWrap(thread_pool_task: *ThreadPoolLib.Task) void {
     defer worker.unget();
     var log = Logger.Log.init(worker.allocator);
 
-    const result = bun.handleOom(safe.Box(ParseTask.Result, 0, 0, 0).init(bun.default_allocator, undefined));
+    const result = bun.handleOom(zust.Box(ParseTask.Result, 0, 0, 0).init(bun.default_allocator, undefined));
     result.* = .{
         .ctx = task.ctx,
         .task = undefined,

@@ -127,7 +127,7 @@ const TickState = enum { timeout, completed };
 
 fn prepareTimerOnWindows(this: *SpawnSyncEventLoop, ts: *const bun.timespec) void {
     const timer: *bun.windows.libuv.Timer = this.uv_timer orelse brk: {
-        const uv_timer: *bun.windows.libuv.Timer = try safe.Box(bun.windows.libuv.Timer).init(bun.default_allocator, undefined) catch |e| bun.handleOom(e);
+        const uv_timer: *bun.windows.libuv.Timer = try zust.Box(bun.windows.libuv.Timer).init(bun.default_allocator, undefined) catch |e| bun.handleOom(e);
         uv_timer.* = std.mem.zeroes(bun.windows.libuv.Timer);
         uv_timer.init(this.uws_loop.uv_loop);
         break :brk uv_timer;
@@ -194,7 +194,7 @@ pub fn isActive(this: *const SpawnSyncEventLoop) bool {
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const jsc = bun.jsc;
 const uws = bun.uws;
 const libuv = bun.windows.libuv;

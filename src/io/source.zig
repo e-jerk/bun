@@ -268,7 +268,7 @@ pub const Source = union(enum) {
             return StdinTTY.getStdinTTY(loop);
         }
 
-        const tty = try safe.Box(Source.Tty).init(bun.default_allocator, undefined) catch |err| bun.handleOom(err);
+        const tty = try zust.Box(Source.Tty).init(bun.default_allocator, undefined) catch |err| bun.handleOom(err);
         switch (tty.init(loop, uv_fd)) {
             .err => |err| {
                 _ = tty.deinit();
@@ -283,7 +283,7 @@ pub const Source = union(enum) {
     pub fn openFile(fd: bun.FD) *Source.File {
         bun.assert(fd.isValid() and fd.uv() != -1);
         log("openFile (fd = {f})", .{fd});
-        const file = bun.handleOom(safe.Box(Source.File).init(bun.default_allocator, undefined));
+        const file = bun.handleOom(zust.Box(Source.File).init(bun.default_allocator, undefined));
 
         file.* = std.mem.zeroes(Source.File);
         file.file = fd.uv();
@@ -372,5 +372,5 @@ export fn Source__setRawModeStdin(raw: bool) c_int {
 
 const bun = @import("bun");
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const uv = bun.windows.libuv;

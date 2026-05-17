@@ -1,5 +1,5 @@
 const ParsedShellScript = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const js = jsc.Codegen.JSParsedShellScript;
 pub const toJS = js.toJS;

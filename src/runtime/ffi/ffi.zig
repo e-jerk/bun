@@ -1,5 +1,5 @@
 const debug = Output.scoped(.TCC, .visible);
-const safe = @import("safe");
+const zust = @import("safe");
 
 extern fn pthread_jit_write_protect_np(enable: c_int) void;
 

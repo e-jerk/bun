@@ -1,5 +1,5 @@
 const RefCount = bun.ptr.RefCount(@This(), "ref_count", deinit, .{});
-const safe = @import("safe");
+const zust = @import("safe");
 pub const ref = RefCount.ref;
 pub const deref = RefCount.deref;
 

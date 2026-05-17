@@ -26,7 +26,7 @@
 
 /// Process-global manager. Created on first `fs.watch()`, never destroyed (matches
 /// the FSEvents loop and Windows libuv loop lifetimes).
-const safe = @import("safe");
+const zust = @import("safe");
 var default_manager: ?*PathWatcherManager = null;
 var default_manager_mutex: Mutex = .{};
 
@@ -186,7 +186,7 @@ pub const PathWatcher = struct {
     /// `_events_cb` holds that mutex while calling into `onFSEvent` (which takes
     /// `manager.mutex`). Holding both here would be AB/BA with the CF thread. Once
     /// `fse.deinit()` returns, `_events_cb` has released the loop mutex and nulled our
-    /// slot, so no further callbacks will fire and `destroy()` is safe.
+    /// slot, so no further callbacks will fire and `destroy()` is zust.
     pub fn detach(this: *PathWatcher, ctx: *anyopaque) void {
         const manager = this.manager orelse {
             _ = this.handlers.swapRemove(ctx);
@@ -310,7 +310,7 @@ pub fn watch(
     if (comptime !Environment.isMac) {
         if (Platform.addWatch(manager, watcher).asErr()) |err| {
             // Still under the same lock as the map insertion, so no other thread
-            // can have observed `watcher` yet — unconditional destroy is safe.
+            // can have observed `watcher` yet — unconditional destroy is zust.
             manager.unlinkWatcherLocked(watcher);
             manager.mutex.unlock();
             watcher.manager = null;

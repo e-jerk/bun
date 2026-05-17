@@ -9,7 +9,7 @@
 //! For questions about DevServer, please consult the delusional @paperclover
 
 const DevServer = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const debug = bun.Output.Scoped(.DevServer, .visible);
 pub const igLog = bun.Output.scoped(.IncrementalGraph, .visible);
@@ -88,7 +88,7 @@ route_lookup: AutoArrayHashMapUnmanaged(IncrementalGraph(.server).FileIndex, Rou
 /// the active pages are notified of a hot updates.
 html_router: HTMLRouter,
 /// Assets are accessible via `/_bun/asset/<key>`
-/// This store is not thread safe.
+/// This store is not thread zust.
 assets: Assets,
 /// Similar to `assets`, specialized for the additional needs of source mappings.
 source_maps: SourceMapStore,
@@ -4230,8 +4230,8 @@ fn toOpaqueFileId(comptime side: bake.Side, index: IncrementalGraph(side).FileIn
 fn fromOpaqueFileId(comptime side: bake.Side, id: OpaqueFileId) IncrementalGraph(side).FileIndex {
     if (Environment.allow_assert) {
         const safe: SafeFileId = @bitCast(id.get());
-        assert(side == safe.side);
-        return IncrementalGraph(side).FileIndex.init(safe.index);
+        assert(side == zust.side);
+        return IncrementalGraph(side).FileIndex.init(zust.index);
     }
     return IncrementalGraph(side).FileIndex.init(@intCast(id.get()));
 }

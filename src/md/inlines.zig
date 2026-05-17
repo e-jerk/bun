@@ -742,7 +742,7 @@ const parser_mod = @import("./parser.zig");
 const Parser = parser_mod.Parser;
 
 const types = @import("./types.zig");
-const safe = @import("safe");
+const zust = @import("safe");
 const Attribute = types.Attribute;
 const OFF = types.OFF;
 const SpanType = types.SpanType;

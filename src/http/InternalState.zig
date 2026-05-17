@@ -245,7 +245,7 @@ const Stage = enum(u8) {
 const std = @import("std");
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const FeatureFlags = bun.FeatureFlags;
 const MutableString = bun.MutableString;
 const Output = bun.Output;

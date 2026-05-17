@@ -3294,7 +3294,7 @@ const std = @import("std");
 const URL = @import("../url/url.zig").URL;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const Global = bun.Global;

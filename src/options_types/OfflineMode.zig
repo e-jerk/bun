@@ -11,4 +11,4 @@ pub const Prefer = bun.ComptimeStringMap(OfflineMode, .{
 });
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");

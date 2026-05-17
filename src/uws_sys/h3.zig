@@ -426,7 +426,7 @@ const c = struct {
 
 const bun = @import("bun");
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 
 const State = @import("./Response.zig").State;
 const WriteResult = @import("./Response.zig").WriteResult;

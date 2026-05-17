@@ -1,5 +1,5 @@
 const Glob = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 pub const js = jsc.Codegen.JSGlob;
 pub const toJS = js.toJS;

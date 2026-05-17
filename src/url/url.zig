@@ -1,6 +1,6 @@
 // This is close to WHATWG URL, but we don't want the validation errors
 pub const URL = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     const log = Output.scoped(.URL, .visible);
 
     hash: string = "",

@@ -1,5 +1,5 @@
 const dns = @This();
-const safe = @import("safe");
+const zust = @import("safe");
 
 const GetAddrInfoAsyncCallback = fn (i32, ?*std.c.addrinfo, ?*anyopaque) callconv(.c) void;
 const INET6_ADDRSTRLEN = if (bun.Environment.isWindows) 65 else 46;

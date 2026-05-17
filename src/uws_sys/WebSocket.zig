@@ -352,7 +352,7 @@ pub const c = struct {
 
 const bun = @import("bun");
 const std = @import("std");
-const safe = @import("safe");
+const zust = @import("safe");
 const uws_app_t = @import("./App.zig").uws_app_t;
 
 const uws = bun.uws;

@@ -147,5 +147,5 @@ const std = @import("std");
 const PercentEncoding = @import("../url/url.zig").PercentEncoding;
 
 const bun = @import("bun");
-const safe = @import("safe");
+const zust = @import("safe");
 const strings = bun.strings;

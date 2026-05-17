@@ -1,5 +1,5 @@
 pub const Counter = struct {
-const safe = @import("safe");
+const zust = @import("safe");
     expected: u32 = 0,
     actual: u32 = 0,
 };
