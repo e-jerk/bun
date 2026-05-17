@@ -144,9 +144,9 @@ var loop_limit: usize = 0;
             if (list.first == node) {
                 list.first = node.next;
             } else {
-                var current_elm = (if (list.first) |v| v else return error.Null);
+                var current_elm = (if (list.first) |v| v else unreachable);
                 while (current_elm.next != node) {
-                    current_elm = (if (current_elm.next) |v| v else return error.Null);
+                    current_elm = (if (current_elm.next) |v| v else unreachable);
                 }
                 current_elm.next = node.next;
             }
