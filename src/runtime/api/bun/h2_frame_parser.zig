@@ -1917,7 +1917,7 @@ pub const H2FrameParser = struct {
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             const header = this.decode(payload[offset..]) catch break;
             offset += header.next;
             log("header {s} {s}", .{ header.name, header.value });
@@ -3126,7 +3126,7 @@ while (true) : (__loop_limit_1 += 1) {
             }
 
             origin_slice = try origin_string.toSlice(globalObject, bun.default_allocator);
-            origin_str = (if (origin_slice) |v| v else return error.Null).slice();
+            origin_str = (origin_slice.?).slice();
         }
 
         const value_string = callframe.argument(1);
@@ -3135,7 +3135,7 @@ while (true) : (__loop_limit_1 += 1) {
                 return globalObject.throwInvalidArgumentTypeValue("value", "value", value_string);
             }
             value_slice = try value_string.toSlice(globalObject, bun.default_allocator);
-            value_str = (if (value_slice) |v| v else return error.Null).slice();
+            value_str = (value_slice.?).slice();
         }
 
         const stream_id_js = callframe.argument(2);
@@ -3537,7 +3537,7 @@ while (true) : (__loop_limit_1 += 1) {
         // lets validate and convert to lowercase in one pass
 var __loop_limit_2: usize = 0;
 begin: while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             for (in_slice, 0..) |c, i| {
                 switch (c) {
                     'A'...'Z' => {

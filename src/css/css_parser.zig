@@ -667,7 +667,7 @@ pub fn DeriveParse(comptime T: type) type {
                 }
             }
 
-            const first_void_index = if (maybe_first_void_index) |v| v else return error.Null;
+            const first_void_index = maybe_first_void_index.?;
 
             const void_fields = bun.meta.EnumFields(T)[first_void_index .. first_void_index + void_count];
 

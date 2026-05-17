@@ -325,7 +325,7 @@ pub fn runAsWorker(
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 while (self.cmds.pending_idx == null and !self.cmds.done) {
                     self.vm.eventLoop().tick();
                     if (self.cmds.pending_idx != null or self.cmds.done) break;

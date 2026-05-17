@@ -117,7 +117,7 @@ pub fn exit(code: u32) noreturn {
     bun.crash_handler.sleepForeverIfAnotherThreadIsCrashing();
 
     if (Environment.isDebug) {
-        bun.assert((if (bun.debug_allocator_data.backing) |v| v else return error.Null).deinit() == .ok);
+        bun.assert((bun.debug_allocator_data.backing.?).deinit() == .ok);
         bun.debug_allocator_data.backing = null;
     }
 

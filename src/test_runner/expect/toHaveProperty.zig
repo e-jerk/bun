@@ -36,7 +36,7 @@ pub fn toHaveProperty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *Ca
     }
 
     if (pass and expected_property != null) {
-        pass = try received_property.jestDeepEquals((if (expected_property) |v| v else return error.Null), globalThis);
+        pass = try received_property.jestDeepEquals((expected_property.?), globalThis);
     }
 
     if (not) pass = !pass;
@@ -51,7 +51,7 @@ pub fn toHaveProperty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *Ca
             if (received_property != .zero) {
                 return this.throw(globalThis, signature, "\n\nExpected path: <green>{f}<r>\n\nExpected value: not <green>{f}<r>\n", .{
                     expected_property_path.toFmt(&formatter),
-                    (if (expected_property) |v| v else return error.Null).toFmt(&formatter),
+                    (expected_property.?).toFmt(&formatter),
                 });
             }
         }
@@ -69,7 +69,7 @@ pub fn toHaveProperty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *Ca
             // deep equal case
             const diff_format = DiffFormatter{
                 .received = received_property,
-                .expected = (if (expected_property) |v| v else return error.Null),
+                .expected = (expected_property.?),
                 .globalThis = globalThis,
             };
 
@@ -80,7 +80,7 @@ pub fn toHaveProperty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *Ca
             "Unable to find property\n";
         return this.throw(globalThis, signature, fmt, .{
             expected_property_path.toFmt(&formatter),
-            (if (expected_property) |v| v else return error.Null).toFmt(&formatter),
+            (expected_property.?).toFmt(&formatter),
         });
     }
 

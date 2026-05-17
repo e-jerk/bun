@@ -136,7 +136,7 @@ pub fn from(fetch_headers_ref: ?*FetchHeaders, allocator: std.mem.Allocator, opt
     const buf_len_before_content_type = buf_len;
     const needs_content_type = brk: {
         if (options.body) |body| {
-            if (body.hasContentTypeFromUser() and (fetch_headers_ref == null or !(if (fetch_headers_ref) |__zust_v| __zust_v else return error.Null).fastHas(.ContentType))) {
+            if (body.hasContentTypeFromUser() and (fetch_headers_ref == null or !(fetch_headers_ref.?).fastHas(.ContentType))) {
                 header_count += 1;
                 buf_len += @as(u32, @truncate(body.contentType().len + "Content-Type".len));
                 break :brk true;
@@ -162,10 +162,10 @@ pub fn from(fetch_headers_ref: ?*FetchHeaders, allocator: std.mem.Allocator, opt
             .length = "Content-Type".len,
         };
 
-        bun.copy(u8, headers.buf.items[buf_len_before_content_type + "Content-Type".len ..], (if (options.body) |__zust_v| __zust_v else return error.Null).contentType());
+        bun.copy(u8, headers.buf.items[buf_len_before_content_type + "Content-Type".len ..], (options.body.?).contentType());
         values[header_count - 1] = .{
             .offset = buf_len_before_content_type + @as(u32, "Content-Type".len),
-            .length = @as(u32, @truncate((if (options.body) |__zust_v| __zust_v else return error.Null).contentType().len)),
+            .length = @as(u32, @truncate((options.body.?).contentType().len)),
         };
     }
 

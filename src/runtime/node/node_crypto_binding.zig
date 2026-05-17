@@ -535,7 +535,7 @@ const Scrypt = struct {
 
         if (is_async) {
             if (callback.isUndefined()) {
-                callback = (if (maybe_options_value) |v| v else return error.Null);
+                callback = (maybe_options_value.?);
                 maybe_options_value = null;
             }
         }
@@ -620,26 +620,26 @@ const Scrypt = struct {
         const p_default: u32 = 1;
         const maxmem_default: i64 = 33554432;
 
-        if (N == null or (if (N) |v| v else return error.Null) == 0) {
+        if (N == null or (N.?) == 0) {
             N = N_default;
         }
-        if (r == null or (if (r) |v| v else return error.Null) == 0) {
+        if (r == null or (r.?) == 0) {
             r = r_default;
         }
-        if (p == null or (if (p) |v| v else return error.Null) == 0) {
+        if (p == null or (p.?) == 0) {
             p = p_default;
         }
-        if (maxmem == null or (if (maxmem) |v| v else return error.Null) == 0) {
+        if (maxmem == null or (maxmem.?) == 0) {
             maxmem = maxmem_default;
         }
 
         const ctx: Scrypt = .{
             .password = password,
             .salt = salt,
-            .N = (if (N) |v| v else return error.Null),
-            .r = (if (r) |v| v else return error.Null),
-            .p = (if (p) |v| v else return error.Null),
-            .maxmem = @intCast((if (maxmem) |v| v else return error.Null)),
+            .N = (N.?),
+            .r = (r.?),
+            .p = (p.?),
+            .maxmem = @intCast((maxmem.?)),
             .keylen = @intCast(keylen),
         };
 

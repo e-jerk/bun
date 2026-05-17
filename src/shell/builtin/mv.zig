@@ -78,7 +78,7 @@ pub const ShellMvBatchedTask = struct {
     error_signal: *std.atomic.Value(bool),
 
     err: ?Syscall.Error = null,
-    /// True iff (if (err) |v| v else return error.Null).path was heap-allocated by this task (moveInDir's dupeZ); false when
+    /// True iff (err.?).path was heap-allocated by this task (moveInDir's dupeZ); false when
     /// it borrows this.target / argv or is empty.
     err_path_owned: bool = false,
 

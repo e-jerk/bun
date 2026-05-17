@@ -3495,7 +3495,7 @@ pub const NodeFS = struct {
         } else {
 var __loop_limit_1: usize = 0;
 outer: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 const amt = switch (Syscall.read(src_fd, buf)) {
                     .result => |result| result,
                     .err => |err| return Maybe(Return.CopyFile){ .err = if (src.len > 0) err.withPath(src) else err },
@@ -3529,7 +3529,7 @@ outer: while (true) : (__loop_limit_1 += 1) {
     pub noinline fn copyFileUsingSendfileOnLinuxWithReadWriteFallback(src: [:0]const u8, dest: [:0]const u8, src_fd: FD, dest_fd: FD, stat_size: usize, wrote: *u64) Maybe(Return.CopyFile) {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             const amt = switch (bun.sys.sendfile(src_fd, dest_fd, std.math.maxInt(i32) - 1)) {
                 .err => {
                     return copyFileUsingReadWriteLoop(src, dest, src_fd, dest_fd, stat_size, wrote);
@@ -3690,7 +3690,7 @@ while (true) : (__loop_limit_2 += 1) {
             // fd types.
 var __loop_limit_3: usize = 0;
 cfr: while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_3 > 1_000_000) break;
                 const rc = std.c.copy_file_range(src_fd.native(), null, dest_fd.native(), null, std.math.maxInt(i32) - 1, 0);
                 switch (bun.sys.getErrno(rc)) {
                     .SUCCESS => if (rc == 0) {
@@ -3795,7 +3795,7 @@ cfr: while (true) : (__loop_limit_3 += 1) {
                 // copy until EOF
 var __loop_limit_4: usize = 0;
 while (true) : (__loop_limit_4 += 1) {
-    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_4 > 1_000_000) break;
                     // Linux Kernel 5.3 or later
                     // Not supported in gVisor
                     const written = linux.copy_file_range(src_fd.cast(), &off_in_copy, dest_fd.cast(), &off_out_copy, std.heap.pageSize(), 0);
@@ -5376,7 +5376,7 @@ while (true) : (__loop_limit_4 += 1) {
         } else {
 var __loop_limit_5: usize = 0;
 while (true) : (__loop_limit_5 += 1) {
-    if (__loop_limit_5 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_5 > 1_000_000) break;
                 if (args.aborted()) return Maybe(Return.ReadFileWithOptions).aborted;
                 switch (Syscall.read(fd, buf.items.ptr[total..@min(buf.capacity, max_size)])) {
                     .err => |err| return .{ .err = err },
@@ -6690,7 +6690,7 @@ while (true) : (__loop_limit_5 += 1) {
                 // copy until EOF
 var __loop_limit_6: usize = 0;
 while (true) : (__loop_limit_6 += 1) {
-    if (__loop_limit_6 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_6 > 1_000_000) break;
                     // Linux Kernel 5.3 or later
                     // Not supported in gVisor
                     const written = linux.copy_file_range(src_fd.cast(), &off_in_copy, dest_fd.cast(), &off_out_copy, std.heap.pageSize(), 0);
@@ -6828,7 +6828,7 @@ while (true) : (__loop_limit_6 += 1) {
             var off_out: i64 = 0;
 var __loop_limit_7: usize = 0;
 cfr: while (true) : (__loop_limit_7 += 1) {
-    if (__loop_limit_7 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_7 > 1_000_000) break;
                 const rc: isize = @bitCast(std.c.copy_file_range(src_fd.native(), &off_in, dest_fd.native(), &off_out, if (size == 0) std.math.maxInt(i32) - 1 else size -| wrote, 0));
                 switch (bun.sys.getErrno(rc)) {
                     .SUCCESS => {
@@ -6972,7 +6972,7 @@ pub fn zigDeleteTree(self: std.fs.Dir, sub_path: []const u8, kind_hint: std.fs.F
             var treat_as_dir = entry.kind == .directory;
 var __loop_limit_8: usize = 0;
 handle_entry: while (true) : (__loop_limit_8 += 1) {
-    if (__loop_limit_8 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_8 > 1_000_000) break;
                 if (treat_as_dir) {
                     if (stack.unusedCapacitySlice().len >= 1) {
                         var iterable_dir = top.iter.dir.openDir(entry.name, .{
@@ -7066,7 +7066,7 @@ handle_entry: while (true) : (__loop_limit_8 += 1) {
                 var treat_as_dir = true;
 var __loop_limit_9: usize = 0;
 handle_entry: while (true) : (__loop_limit_9 += 1) {
-    if (__loop_limit_9 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_9 > 1_000_000) break;
                     if (treat_as_dir) {
                         break :iterable_dir parent_dir.openDir(name, .{
                             .no_follow = true,
@@ -7146,7 +7146,7 @@ fn zigDeleteTreeOpenInitialSubpath(self: std.fs.Dir, sub_path: []const u8, kind_
 
 var __loop_limit_10: usize = 0;
 handle_entry: while (true) : (__loop_limit_10 += 1) {
-    if (__loop_limit_10 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_10 > 1_000_000) break;
             if (treat_as_dir) {
                 break :iterable_dir self.openDir(sub_path, .{
                     .no_follow = true,
@@ -7205,7 +7205,7 @@ handle_entry: while (true) : (__loop_limit_10 += 1) {
 fn zigDeleteTreeMinStackSizeWithKindHint(self: std.fs.Dir, sub_path: []const u8, kind_hint: std.fs.File.Kind) !void {
 var __loop_limit_11: usize = 0;
 start_over: while (true) : (__loop_limit_11 += 1) {
-    if (__loop_limit_11 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_11 > 1_000_000) break;
         var dir = (try zigDeleteTreeOpenInitialSubpath(self, sub_path, kind_hint)) orelse return;
         var cleanup_dir_parent: ?std.fs.Dir = null;
         defer if (cleanup_dir_parent) |*d| d.close();
@@ -7225,13 +7225,13 @@ start_over: while (true) : (__loop_limit_11 += 1) {
 
 var __loop_limit_12: usize = 0;
 scan_dir: while (true) : (__loop_limit_12 += 1) {
-    if (__loop_limit_12 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_12 > 1_000_000) break;
             var dir_it = dir.iterateAssumeFirstIteration();
             dir_it: while (try dir_it.next()) |entry| {
                 var treat_as_dir = entry.kind == .directory;
 var __loop_limit_13: usize = 0;
 handle_entry: while (true) : (__loop_limit_13 += 1) {
-    if (__loop_limit_13 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_13 > 1_000_000) break;
                     if (treat_as_dir) {
                         const new_dir = dir.openDir(entry.name, .{
                             .no_follow = true,

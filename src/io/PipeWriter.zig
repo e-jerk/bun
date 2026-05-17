@@ -1474,13 +1474,13 @@ pub fn WindowsStreamingWriter(comptime Parent: type, function_table: anytype) ty
                 return .{ .done = 0 };
             }
 
-            if (this.source != null and if (this.source) |__zust_v| __zust_v else return error.Null == .sync_file) {
+            if (this.source != null and this.source.? == .sync_file) {
                 defer this.outgoing.reset();
                 var remain = StreamBuffer.writeOrFallback(&this.outgoing, buffer, comptime writeFn) catch {
                     return .{ .err = bun.sys.Error.oom };
                 };
                 const initial_len = remain.len;
-                const fd: bun.FD = .fromUV((if (this.source) |__zust_v| __zust_v else return error.Null).sync_file.file);
+                const fd: bun.FD = .fromUV((this.source.?).sync_file.file);
 
                 while (remain.len > 0) {
                     switch (fd.write(remain)) {

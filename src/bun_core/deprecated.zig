@@ -208,15 +208,15 @@ test "basic SinglyLinkedList test" {
     _ = list.remove(&five); // {2, 3, 4}
     _ = two.removeNext(); // {2, 4}
 
-    try testing.expect((if (list.first) |v| v else return error.Null).data == 2);
-    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).data == 4);
-    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).next == null);
+    try testing.expect(list.first.?.data == 2);
+    try testing.expect(list.first.?.next.?.data == 4);
+    try testing.expect(list.first.?.next.?.next == null);
 
     L.Node.reverse(&list.first);
 
-    try testing.expect((if (list.first) |v| v else return error.Null).data == 4);
-    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).data == 2);
-    try testing.expect((if ((if (list.first) |v| v else return error.Null).next) |v| v else return error.Null).next == null);
+    try testing.expect(list.first.?.data == 4);
+    try testing.expect(list.first.?.next.?.data == 2);
+    try testing.expect(list.first.?.next.?.next == null);
 }
 
 /// A doubly-linked list has a pair of pointers to both the head and
@@ -428,8 +428,8 @@ test "basic DoublyLinkedList test" {
     _ = list.pop(); // {2, 3, 4}
     list.remove(&three); // {2, 4}
 
-    try testing.expect((if (list.first) |v| v else return error.Null).data == 2);
-    try testing.expect((if (list.last) |v| v else return error.Null).data == 4);
+    try testing.expect((list.first.?).data == 2);
+    try testing.expect((list.last.?).data == 4);
     try testing.expect(list.len == 2);
 }
 

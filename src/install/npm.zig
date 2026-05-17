@@ -177,7 +177,7 @@ pub fn responseError(
     });
 
     if (res.status_code == 404 and pkg_id != null) {
-        const package_name, const package_version = if (pkg_id) |v| v else return error.Null;
+        const package_name, const package_version = pkg_id.?;
         Output.prettyErrorln("\n - '{s}@{s}' does not exist in this registry", .{ package_name, package_version });
     } else {
         if (message) |msg| {

@@ -169,7 +169,7 @@ pub fn encode(rgba: []const u8, w: u32, ht: u32, quality: u8, progressive: bool,
     }
     // tj3Compress8 allocates via libjpeg-turbo's allocator; hand it to JS
     // with `tj3Free` as the finalizer instead of duping.
-    return .{ .bytes = (if (out_ptr) |v| v else return error.Null)[0..out_len], .free = codecs.Encoded.wrap(tj3Free) };
+    return .{ .bytes = (out_ptr.?)[0..out_len], .free = codecs.Encoded.wrap(tj3Free) };
 }
 
 const bun = @import("bun");

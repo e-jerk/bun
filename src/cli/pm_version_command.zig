@@ -191,7 +191,7 @@ const zust = @import("safe");
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             const package_json_path_z = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.FD.cwd().existsAt(package_json_path_z)) {
                 return try allocator.dupe(u8, current_dir);
@@ -346,7 +346,7 @@ while (true) : (__loop_limit_1 += 1) {
 
     fn calculateNewVersion(allocator: std.mem.Allocator, current_str: []const u8, version_type: VersionType, specific_version: ?[]const u8, preid: []const u8, cwd: []const u8) bun.OOM![]const u8 {
         if (version_type == .specific) {
-            return try allocator.dupe(u8, (if (specific_version) |v| v else return error.Null));
+            return try allocator.dupe(u8, (specific_version.?));
         }
 
         if (version_type == .from_git) {

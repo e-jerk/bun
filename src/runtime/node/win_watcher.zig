@@ -280,7 +280,7 @@ pub fn watch(
 
     const manager = default_manager orelse brk: {
         default_manager = PathWatcherManager.init(vm);
-        break :brk (if (default_manager) |v| v else return error.Null);
+        break :brk (default_manager.?);
     };
     var watcher = switch (PathWatcher.init(manager, path, recursive)) {
         .err => |err| return .{ .err = err },

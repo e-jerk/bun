@@ -15,7 +15,7 @@ pub fn run(this: *ManagedTask) bun.JSError!void {
     defer _ = this.deinit();
     const callback = this.callback;
     const ctx = this.ctx;
-    try callback(if (ctx) |__zust_v| __zust_v else return error.Null);
+    try callback(ctx.?);
 }
 
 pub fn cancel(this: *ManagedTask) void {
@@ -36,7 +36,7 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
-            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(if (this.*) |__zust_v| __zust_v else return error.Null)))});
+            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.*.?)))});
         }
     };
 }

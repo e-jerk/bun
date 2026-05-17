@@ -264,7 +264,7 @@ pub const FSWatcher = struct {
     };
 
     pub fn onPathUpdatePosix(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
+        const this = bun.cast(*FSWatcher, (ctx.?));
 
         if (this.verbose) {
             switch (event) {
@@ -284,7 +284,7 @@ pub const FSWatcher = struct {
     }
 
     pub fn onPathUpdateWindows(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
+        const this = bun.cast(*FSWatcher, (ctx.?));
 
         if (this.verbose) {
             switch (event) {
@@ -313,7 +313,7 @@ pub const FSWatcher = struct {
     pub const onPathUpdate = if (Environment.isWindows) onPathUpdateWindows else onPathUpdatePosix;
 
     pub fn onUpdateEnd(ctx: ?*anyopaque) void {
-        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
+        const this = bun.cast(*FSWatcher, (ctx.?));
         if (this.verbose) {
             Output.flush();
         }

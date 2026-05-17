@@ -268,7 +268,7 @@ pub fn NewResponse(ssl_flag: i32) type {
                 const handler_fn = handler;
                 const Args = *@TypeOf(args_tuple);
                 pub fn handle(user_data: ?*anyopaque) callconv(.c) void {
-                    const args: Args = @ptrCast(@alignCast(if (user_data) |__zust_v| __zust_v else return error.Null));
+                    const args: Args = @ptrCast(@alignCast(user_data.?));
                     @call(bun.callmod_inline, handler_fn, args.*);
                 }
             };
@@ -290,7 +290,7 @@ pub fn NewResponse(ssl_flag: i32) type {
                         });
                     } else {
                         @call(bun.callmod_inline, handler, .{
-                            @as(UserDataType, @ptrCast(@alignCast(if (user_data) |__zust_v| __zust_v else return error.Null))),
+                            @as(UserDataType, @ptrCast(@alignCast(user_data.?))),
                         });
                     }
                 }

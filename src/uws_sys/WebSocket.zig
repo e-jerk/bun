@@ -34,7 +34,7 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
             const ContextType = @TypeOf(ctx);
             const Wrapper = struct {
                 pub fn wrap(user_data: ?*anyopaque) callconv(.c) void {
-                    @call(bun.callmod_inline, callback, .{bun.cast(ContextType, if (user_data) |__zust_v| __zust_v else return error.Null)});
+                    @call(bun.callmod_inline, callback, .{bun.cast(ContextType, user_data.?)});
                 }
             };
 
@@ -136,7 +136,7 @@ pub const AnyWebSocket = union(enum) {
         const ContextType = @TypeOf(ctx);
         const Wrapper = struct {
             pub fn wrap(user_data: ?*anyopaque) callconv(.c) void {
-                @call(bun.callmod_inline, callback, .{bun.cast(ContextType, if (user_data) |__zust_v| __zust_v else return error.Null)});
+                @call(bun.callmod_inline, callback, .{bun.cast(ContextType, user_data.?)});
             }
         };
 

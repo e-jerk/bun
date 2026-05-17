@@ -174,11 +174,11 @@ pub fn validateNumber(globalThis: *JSGlobalObject, value: JSValue, name: string,
     }
     if (!valid) {
         if (maybe_min != null and maybe_max != null) {
-            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be >= {d} && <= {d}. Received {d}", .{ name, (if (maybe_min) |v| v else return error.Null), (if (maybe_max) |v| v else return error.Null), num });
+            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be >= {d} && <= {d}. Received {d}", .{ name, (maybe_min.?), (maybe_max.?), num });
         } else if (maybe_min != null) {
-            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be >= {d}. Received {d}", .{ name, (if (maybe_min) |v| v else return error.Null), num });
+            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be >= {d}. Received {d}", .{ name, (maybe_min.?), num });
         } else if (maybe_max != null) {
-            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be <= {d}. Received {d}", .{ name, (if (maybe_max) |v| v else return error.Null), num });
+            return throwRangeError(globalThis, "The value of \"{s}\" is out of range. It must be <= {d}. Received {d}", .{ name, (maybe_max.?), num });
         }
     }
     return num;

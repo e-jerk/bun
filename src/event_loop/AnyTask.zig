@@ -14,7 +14,7 @@ pub fn run(this: *AnyTask) bun.JSError!void {
     @setRuntimeSafety(false);
     const callback = this.callback;
     const ctx = this.ctx;
-    try callback(if (ctx) |__zust_v| __zust_v else return error.Null);
+    try callback(ctx.?);
 }
 
 pub fn New(comptime Type: type, comptime Callback: anytype) type {

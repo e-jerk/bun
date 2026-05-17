@@ -68,7 +68,7 @@ const zust = @import("safe");
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             const pkg_path = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.sys.existsZ(pkg_path)) {
                 return try allocator.dupe(u8, pkg_path);
@@ -563,17 +563,17 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         var nested_obj = root.get(current_key);
-        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
+        if (nested_obj == null or (nested_obj.?).data != .e_object) {
             const new_obj = js_ast.Expr.init(js_ast.E.Object, js_ast.E.Object{}, logger.Loc.Empty);
             try root.data.e_object.put(allocator, current_key, new_obj);
             nested_obj = root.get(current_key);
         }
 
-        if ((if (nested_obj) |v| v else return error.Null).data != .e_object) {
+        if ((nested_obj.?).data != .e_object) {
             return error.ExpectedObject;
         }
 
-        var nested = (if (nested_obj) |v| v else return error.Null);
+        var nested = (nested_obj.?);
         try setNestedSimple(allocator, &nested, remaining_path, value, parse_json);
         try root.data.e_object.put(allocator, current_key, nested);
     }
@@ -594,7 +594,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         var nested_obj = root.get(current_key);
-        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
+        if (nested_obj == null or (nested_obj.?).data != .e_object) {
             const new_obj = js_ast.Expr.init(js_ast.E.Object, js_ast.E.Object{}, logger.Loc.Empty);
 
             try root.data.e_object.put(allocator, current_key, new_obj);
@@ -603,11 +603,11 @@ while (true) : (__loop_limit_1 += 1) {
             nested_obj = root.get(current_key);
         }
 
-        if ((if (nested_obj) |v| v else return error.Null).data != .e_object) {
+        if ((nested_obj.?).data != .e_object) {
             return error.ExpectedObject;
         }
 
-        var nested = (if (nested_obj) |v| v else return error.Null);
+        var nested = (nested_obj.?);
         try setNested(allocator, &nested, remaining_path, value, parse_json);
     }
 
@@ -682,11 +682,11 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         const nested_obj = root.get(current_key);
-        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
+        if (nested_obj == null or (nested_obj.?).data != .e_object) {
             return false;
         }
 
-        var nested = (if (nested_obj) |v| v else return error.Null);
+        var nested = (nested_obj.?);
         const deleted = try deleteNested(allocator, &nested, remaining_path);
 
         if (deleted) {

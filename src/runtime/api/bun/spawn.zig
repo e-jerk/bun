@@ -503,7 +503,7 @@ pub const PosixSpawn = struct {
         var status: PidStatus = 0;
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             const rc = system.waitpid(pid, &status, @as(c_int, @intCast(flags)));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){
@@ -525,7 +525,7 @@ while (true) : (__loop_limit_1 += 1) {
         var status: PidStatus = 0;
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             const rc = system.wait4(pid, &status, @as(c_int, @intCast(flags)), @ptrCast(usage));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){

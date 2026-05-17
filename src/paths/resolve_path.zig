@@ -173,7 +173,7 @@ pub fn getIfExistsLongestCommonPathGeneric(input: []const []const u8, comptime p
         }
     }
 
-    return input[0][0 .. (if (last_common_separator) |v| v else return error.Null) + 1];
+    return input[0][0 .. (last_common_separator.?) + 1];
 }
 
 // TODO: is it faster to determine longest_common_separator in the while loop

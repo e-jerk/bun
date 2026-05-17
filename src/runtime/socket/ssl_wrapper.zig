@@ -411,7 +411,7 @@ pub fn SSLWrapper(comptime T: type) type {
             // read data from the input BIO
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 log("handleReading", .{});
                 const ssl = this.ssl orelse return false;
 
@@ -490,7 +490,7 @@ while (true) : (__loop_limit_1 += 1) {
             var read: usize = 0;
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
                 const ssl = this.ssl orelse return;
                 const output = BoringSSL.SSL_get_wbio(ssl) orelse return;
                 const available = buffer[read..];

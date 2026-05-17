@@ -927,7 +927,7 @@ pub const Resolver = struct {
             if (maybe_suffix == null or maybe_suffix.? < 1)
                 break :try_without_suffix;
 
-            const suffix = if (maybe_suffix) |v| v else return error.Null;
+            const suffix = maybe_suffix.?;
             if (r.debug_logs) |*debug| {
                 debug.addNoteFmt("Retrying resolution after removing the suffix {s}", .{import_path[suffix..]});
             }
@@ -2961,7 +2961,7 @@ pub const Resolver = struct {
                     }
                 }
 
-                const safe_path = if (_safe_path) |v| v else return error.Null;
+                const safe_path = _safe_path.?;
 
                 const dir_path_i = std.mem.indexOf(u8, safe_path, queue_top.unsafe_path) orelse unreachable;
                 var end = dir_path_i +

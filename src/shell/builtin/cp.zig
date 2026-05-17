@@ -81,7 +81,7 @@ pub fn start(this: *Cp) Yield {
         },
     };
 
-    if (maybe_filepath_args == null or (if (maybe_filepath_args) |v| v else return error.Null).len <= 1) {
+    if (maybe_filepath_args == null or (maybe_filepath_args.?).len <= 1) {
         return this.writeFailingError(Builtin.Kind.cp.usageString(), 1);
     }
 

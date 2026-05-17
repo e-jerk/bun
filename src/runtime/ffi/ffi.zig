@@ -1523,7 +1523,7 @@ pub const FFI = struct {
         }
 
         pub fn handleTCCError(ctx: ?*Function, message: [*c]const u8) callconv(.c) void {
-            var this = (if (ctx) |v| v else return error.Null);
+            var this = (ctx.?);
             var msg = std.mem.span(message);
             if (msg.len > 0) {
                 var offset: usize = 0;

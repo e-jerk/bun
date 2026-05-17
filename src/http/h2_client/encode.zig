@@ -88,7 +88,7 @@ pub fn writeRequest(session: *ClientSession, client: *HTTPClient, stream: *Strea
             strings.copyLowercaseIfNeeded(h.name, &lower_buf)
         else blk: {
             heap = bun.handleOom(bun.default_allocator.alloc(u8, h.name.len));
-            break :blk strings.copyLowercaseIfNeeded(h.name, if (heap) |__zust_v| __zust_v else return error.Null);
+            break :blk strings.copyLowercaseIfNeeded(h.name, heap.?);
         };
         var never_index = false;
         if (RequestHeader.map.get(name)) |kind| switch (kind) {

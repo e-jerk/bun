@@ -430,7 +430,7 @@ pub fn spawnMaybeSync(
                     }
 
                     if (comptime Environment.isPosix) {
-                        const terminal = existing_terminal orelse (if (terminal_info) |v| v else return error.Null).terminal;
+                        const terminal = existing_terminal orelse (terminal_info.?).terminal;
                         const slave_fd = terminal.getSlaveFd();
                         stdio[0] = .{ .fd = slave_fd };
                         stdio[1] = .{ .fd = slave_fd };

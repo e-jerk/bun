@@ -316,8 +316,8 @@ pub fn onIOWriterChunk(this: *Rm, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        this.state = .{ .err = @intFromEnum((if (e) |v| v else return error.Null).getErrno()) };
-        return this.bltn().done((if (e) |v| v else return error.Null).getErrno());
+        this.state = .{ .err = @intFromEnum((e.?).getErrno()) };
+        return this.bltn().done((e.?).getErrno());
     }
 
     return this.bltn().done(1);
@@ -1064,7 +1064,7 @@ pub const ShellRmTask = struct {
         };
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             if (state.treat_as_dir) {
                 log("rmdirat({f}, {s})", .{ dirfd, dir_task.path });
                 switch (ShellSyscall.rmdirat(dirfd, dir_task.path)) {

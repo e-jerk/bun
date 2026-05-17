@@ -1684,7 +1684,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
 
     opts.output_dir = output_dir;
     if (output_file != null)
-        ctx.debug.output_file = (if (output_file) |v| v else return error.Null);
+        ctx.debug.output_file = (output_file.?);
 
     if (cmd == .RunCommand or cmd == .AutoCommand) {
         if (args.option("--shell")) |shell| {

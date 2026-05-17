@@ -681,7 +681,7 @@ pub const BunTest = struct {
         // Drain unhandled promise rejections.
         var __loop_limit_1: usize = 0;
         while (true) : (__loop_limit_1 += 1) {
-            if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+            if (__loop_limit_1 > 1_000_000) break;
             // Prevent the user's Promise rejection from going into the uncaught promise rejection queue.
             if (result != .zero)
                 if (result.asPromise()) |promise|
@@ -775,7 +775,7 @@ pub const BunTest = struct {
             bun.Output.flush();
         }
 
-        globalThis.bunVM().runErrorHandler((if (exception) |v| v else return error.Null), null);
+        globalThis.bunVM().runErrorHandler((exception.?), null);
 
         if (handle_status == .show_unhandled_error_between_tests or handle_status == .show_unhandled_error_in_describe) {
             bun.Output.prettyError("<r><d>-------------------------------<r>\n\n", .{});

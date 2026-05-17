@@ -168,7 +168,7 @@ fn createParsedShellScriptImpl(globalThis: *jsc.JSGlobalObject, callframe: *jsc.
     ) catch |err| {
         if (err == shell.ParseError.Lex) {
             assert(lex_result != null);
-            const str = (if (lex_result) |v| v else return error.Null).combineErrors(shargs.arena_allocator());
+            const str = (lex_result.?).combineErrors(shargs.arena_allocator());
             return globalThis.throwPretty("{s}", .{str});
         }
 

@@ -56,7 +56,7 @@ fn __defineConstant(globalObject: *jsc.JSGlobalObject, object: jsc.JSValue, comp
             }
         },
         .OTHER => {
-            object.put(globalObject, jsc.ZigString.static(name), jsc.JSValue.jsNumberFromInt32((if (value) |v| v else return error.Null)));
+            object.put(globalObject, jsc.ZigString.static(name), jsc.JSValue.jsNumberFromInt32((value.?)));
         },
     }
 }

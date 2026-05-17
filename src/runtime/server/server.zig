@@ -1009,22 +1009,22 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                             return error.JSError;
                         }
 
-                        if ((if (fetch_headers_to_use) |v| v else return error.Null).fastGet(.SecWebSocketProtocol)) |protocol| {
+                        if ((fetch_headers_to_use.?).fastGet(.SecWebSocketProtocol)) |protocol| {
                             // Clone before fastRemove frees the backing StringImpl.
                             sec_websocket_protocol_owned.deinit();
                             sec_websocket_protocol_owned = bun.handleOom(protocol.toSliceClone(bun.default_allocator));
                             sec_websocket_protocol = sec_websocket_protocol_owned.toZigString();
                             // Remove from headers so it's not written twice (once here and once by upgrade())
-                            (if (fetch_headers_to_use) |v| v else return error.Null).fastRemove(.SecWebSocketProtocol);
+                            (fetch_headers_to_use.?).fastRemove(.SecWebSocketProtocol);
                         }
 
-                        if ((if (fetch_headers_to_use) |v| v else return error.Null).fastGet(.SecWebSocketExtensions)) |extensions| {
+                        if ((fetch_headers_to_use.?).fastGet(.SecWebSocketExtensions)) |extensions| {
                             // Clone before fastRemove frees the backing StringImpl.
                             sec_websocket_extensions_owned.deinit();
                             sec_websocket_extensions_owned = bun.handleOom(extensions.toSliceClone(bun.default_allocator));
                             sec_websocket_extensions = sec_websocket_extensions_owned.toZigString();
                             // Remove from headers so it's not written twice (once here and once by upgrade())
-                            (if (fetch_headers_to_use) |v| v else return error.Null).fastRemove(.SecWebSocketExtensions);
+                            (fetch_headers_to_use.?).fastRemove(.SecWebSocketExtensions);
                         }
                     }
 
@@ -1960,7 +1960,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             this.listener = socket;
             this.vm.event_loop_handle = Async.Loop.get();
             if (!ssl_enabled)
-                this.vm.addListeningSocketForWatchMode((if (socket) |v| v else return error.Null).socket().fd());
+                this.vm.addListeningSocketForWatchMode((socket.?).socket().fd());
         }
 
         pub fn h3AltSvc(this: *ThisServer) ?[]const u8 {

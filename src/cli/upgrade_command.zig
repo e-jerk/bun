@@ -169,7 +169,7 @@ pub const UpgradeCommand = struct {
         );
         async_http.client.flags.reject_unauthorized = env_loader.getTLSRejectUnauthorized();
 
-        if (!silent) async_http.client.progress_node = (if (progress) |v| v else return error.Null);
+        if (!silent) async_http.client.progress_node = (progress.?);
         const response = try async_http.sendSync();
 
         switch (response.status_code) {
@@ -187,8 +187,8 @@ pub const UpgradeCommand = struct {
         initializeStore();
         var expr = JSON.parseUTF8(source, &log, allocator) catch |err| {
             if (!silent) {
-                (if (progress) |v| v else return error.Null).end();
-                (if (refresher) |v| v else return error.Null).refresh();
+                (progress.?).end();
+                (refresher.?).refresh();
 
                 if (log.errors > 0) {
                     try log.print(Output.errorWriter());
@@ -205,8 +205,8 @@ pub const UpgradeCommand = struct {
 
         if (log.errors > 0) {
             if (!silent) {
-                (if (progress) |v| v else return error.Null).end();
-                (if (refresher) |v| v else return error.Null).refresh();
+                (progress.?).end();
+                (refresher.?).refresh();
 
                 try log.print(Output.errorWriter());
                 Global.exit(1);
@@ -219,8 +219,8 @@ pub const UpgradeCommand = struct {
 
         if (expr.data != .e_object) {
             if (!silent) {
-                (if (progress) |v| v else return error.Null).end();
-                (if (refresher) |v| v else return error.Null).refresh();
+                (progress.?).end();
+                (refresher.?).refresh();
 
                 const json_type: js_ast.Expr.Tag = @as(js_ast.Expr.Tag, expr.data);
                 Output.prettyErrorln("JSON error - expected an object but received {s}", .{@tagName(json_type)});
@@ -238,8 +238,8 @@ pub const UpgradeCommand = struct {
 
         if (version.tag.len == 0) {
             if (comptime !silent) {
-                (if (progress) |v| v else return error.Null).end();
-                (if (refresher) |v| v else return error.Null).refresh();
+                (progress.?).end();
+                (refresher.?).refresh();
 
                 Output.prettyErrorln("JSON Error parsing releases from GitHub: <r><red>tag_name<r> is missing?\n{s}", .{metadata_body.list.items});
                 Global.exit(1);
@@ -292,8 +292,8 @@ pub const UpgradeCommand = struct {
         }
 
         if (comptime !silent) {
-            (if (progress) |v| v else return error.Null).end();
-            (if (refresher) |v| v else return error.Null).refresh();
+            (progress.?).end();
+            (refresher.?).refresh();
             if (version.name()) |name| {
                 Output.prettyErrorln("Bun v{s} is out, but not for this platform ({s}) yet.", .{
                     name, Version.triplet,
@@ -764,7 +764,7 @@ pub const UpgradeCommand = struct {
                         target_dirname,
                         target_filename,
                     }, 0);
-                    std.posix.rename(destination_executable, (if (outdated_filename) |v| v else return error.Null)) catch |err| {
+                    std.posix.rename(destination_executable, (outdated_filename.?)) catch |err| {
                         save_dir_.deleteTree(version_name) catch {};
                         Output.prettyErrorln("<r><red>error:<r> Failed to rename current executable {s}", .{@errorName(err)});
                         Global.exit(1);
@@ -777,7 +777,7 @@ pub const UpgradeCommand = struct {
 
                     if (comptime Environment.isWindows) {
                         // Attempt to restore the old executable. If this fails, the user will be left without a working copy of bun.
-                        std.posix.rename((if (outdated_filename) |v| v else return error.Null), destination_executable) catch {
+                        std.posix.rename((outdated_filename.?), destination_executable) catch {
                             Output.errGeneric(
                                 \\Failed to move new version of Bun to {s} due to {s}
                             ,

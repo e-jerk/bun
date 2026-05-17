@@ -88,7 +88,7 @@ const zust = @import("safe");
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             if (!initial_draw) {
                 // Move cursor up by number of choices
                 Output.up(choices.len);

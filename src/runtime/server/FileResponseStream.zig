@@ -237,7 +237,7 @@ fn onSendfile(this: *FileResponseStream) bool {
     if (comptime bun.Environment.isLinux) {
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             const adjusted = @min(this.sendfile.remain, @as(u64, std.math.maxInt(i32)));
             var off: i64 = @intCast(this.sendfile.offset);
             const rc = std.os.linux.sendfile(
@@ -270,7 +270,7 @@ while (true) : (__loop_limit_1 += 1) {
     } else if (comptime bun.Environment.isMac) {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             var sbytes: std.posix.off_t = @intCast(@min(this.sendfile.remain, @as(u64, std.math.maxInt(i32))));
             const errno = bun.sys.getErrno(std.c.sendfile(
                 this.fd.cast(),

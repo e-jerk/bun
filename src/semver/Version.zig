@@ -510,8 +510,8 @@ var loop_limit: usize = 0;
                     // if left is null, left is less than.
                     if (lhs_part == null) return .lt;
 
-                    const lhs_uint: ?IntType = std.fmt.parseUnsigned(IntType, (if (lhs_part) |v| v else return error.Null), 10) catch null;
-                    const rhs_uint: ?IntType = std.fmt.parseUnsigned(IntType, (if (rhs_part) |v| v else return error.Null), 10) catch null;
+                    const lhs_uint: ?IntType = std.fmt.parseUnsigned(IntType, (lhs_part.?), 10) catch null;
+                    const rhs_uint: ?IntType = std.fmt.parseUnsigned(IntType, (rhs_part.?), 10) catch null;
 
                     // a part that doesn't parse as an integer is greater than a part that does
                     // https://github.com/npm/node-semver/blob/816c7b2cbfcb1986958a290f941eddfd0441139e/internal/identifiers.js#L12
@@ -519,7 +519,7 @@ var loop_limit: usize = 0;
                     if (lhs_uint == null and rhs_uint != null) return .gt;
 
                     if (lhs_uint == null and rhs_uint == null) {
-                        switch (strings.order((if (lhs_part) |v| v else return error.Null), (if (rhs_part) |v| v else return error.Null))) {
+                        switch (strings.order((lhs_part.?), (rhs_part.?))) {
                             .eq => {
                                 // continue to the next part
                                 continue;
@@ -528,7 +528,7 @@ var loop_limit: usize = 0;
                         }
                     }
 
-                    switch (std.math.order((if (lhs_uint) |v| v else return error.Null), (if (rhs_uint) |v| v else return error.Null))) {
+                    switch (std.math.order((lhs_uint.?), (rhs_uint.?))) {
                         .eq => continue,
                         else => |not_equal| return not_equal,
                     }

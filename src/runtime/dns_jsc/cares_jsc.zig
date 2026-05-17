@@ -133,7 +133,7 @@ pub fn caaReplyToJSResponse(this: *c_ares.struct_ares_caa_reply, parent_allocato
     const allocator = arena.allocator();
     var count: usize = 0;
     var caa: ?*c_ares.struct_ares_caa_reply = this;
-    while (caa != null) : (caa = (if (caa) |v| v else return error.Null).next) {
+    while (caa != null) : (caa = (caa.?).next) {
         count += 1;
     }
 
@@ -142,7 +142,7 @@ pub fn caaReplyToJSResponse(this: *c_ares.struct_ares_caa_reply, parent_allocato
     caa = this;
     var i: u32 = 0;
     while (caa != null) {
-        var node = (if (caa) |v| v else return error.Null);
+        var node = (caa.?);
         try array.putIndex(globalThis, i, node.toJS(globalThis, allocator));
         caa = node.next;
         i += 1;
@@ -173,7 +173,7 @@ pub fn srvReplyToJSResponse(this: *c_ares.struct_ares_srv_reply, parent_allocato
     const allocator = arena.allocator();
     var count: usize = 0;
     var srv: ?*c_ares.struct_ares_srv_reply = this;
-    while (srv != null) : (srv = (if (srv) |v| v else return error.Null).next) {
+    while (srv != null) : (srv = (srv.?).next) {
         count += 1;
     }
 
@@ -182,7 +182,7 @@ pub fn srvReplyToJSResponse(this: *c_ares.struct_ares_srv_reply, parent_allocato
     srv = this;
     var i: u32 = 0;
     while (srv != null) {
-        var node = (if (srv) |v| v else return error.Null);
+        var node = (srv.?);
         try array.putIndex(globalThis, i, node.toJS(globalThis, allocator));
         srv = node.next;
         i += 1;
@@ -214,7 +214,7 @@ pub fn mxReplyToJSResponse(this: *c_ares.struct_ares_mx_reply, parent_allocator:
     const allocator = arena.allocator();
     var count: usize = 0;
     var mx: ?*c_ares.struct_ares_mx_reply = this;
-    while (mx != null) : (mx = (if (mx) |v| v else return error.Null).next) {
+    while (mx != null) : (mx = (mx.?).next) {
         count += 1;
     }
 
@@ -223,7 +223,7 @@ pub fn mxReplyToJSResponse(this: *c_ares.struct_ares_mx_reply, parent_allocator:
     mx = this;
     var i: u32 = 0;
     while (mx != null) {
-        var node = (if (mx) |v| v else return error.Null);
+        var node = (mx.?);
         try array.putIndex(globalThis, i, node.toJS(globalThis, allocator));
         mx = node.next;
         i += 1;
@@ -252,7 +252,7 @@ pub fn txtReplyToJSResponse(this: *c_ares.struct_ares_txt_reply, parent_allocato
     const allocator = arena.allocator();
     var count: usize = 0;
     var txt: ?*c_ares.struct_ares_txt_reply = this;
-    while (txt != null) : (txt = (if (txt) |v| v else return error.Null).next) {
+    while (txt != null) : (txt = (txt.?).next) {
         count += 1;
     }
 
@@ -261,7 +261,7 @@ pub fn txtReplyToJSResponse(this: *c_ares.struct_ares_txt_reply, parent_allocato
     txt = this;
     var i: u32 = 0;
     while (txt != null) {
-        var node = (if (txt) |v| v else return error.Null);
+        var node = (txt.?);
         try array.putIndex(globalThis, i, try node.toJS(globalThis, allocator));
         txt = node.next;
         i += 1;
@@ -280,7 +280,7 @@ pub fn txtReplyToJS(this: *c_ares.struct_ares_txt_reply, globalThis: *jsc.JSGlob
 pub fn txtReplyToJSForAny(this: *c_ares.struct_ares_txt_reply, _: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var count: usize = 0;
     var txt: ?*c_ares.struct_ares_txt_reply = this;
-    while (txt != null) : (txt = (if (txt) |v| v else return error.Null).next) {
+    while (txt != null) : (txt = (txt.?).next) {
         count += 1;
     }
 
@@ -288,8 +288,8 @@ pub fn txtReplyToJSForAny(this: *c_ares.struct_ares_txt_reply, _: std.mem.Alloca
 
     txt = this;
     var i: u32 = 0;
-    while (txt != null) : (txt = (if (txt) |v| v else return error.Null).next) {
-        var node = (if (txt) |v| v else return error.Null);
+    while (txt != null) : (txt = (txt.?).next) {
+        var node = (txt.?);
         try array.putIndex(globalThis, i, jsc.ZigString.fromUTF8(node.txt[0..node.length]).toJS(globalThis));
         i += 1;
     }
@@ -308,7 +308,7 @@ pub fn naptrReplyToJSResponse(this: *c_ares.struct_ares_naptr_reply, parent_allo
     const allocator = arena.allocator();
     var count: usize = 0;
     var naptr: ?*c_ares.struct_ares_naptr_reply = this;
-    while (naptr != null) : (naptr = (if (naptr) |v| v else return error.Null).next) {
+    while (naptr != null) : (naptr = (naptr.?).next) {
         count += 1;
     }
 
@@ -317,7 +317,7 @@ pub fn naptrReplyToJSResponse(this: *c_ares.struct_ares_naptr_reply, parent_allo
     naptr = this;
     var i: u32 = 0;
     while (naptr != null) {
-        var node = (if (naptr) |v| v else return error.Null);
+        var node = (naptr.?);
         try array.putIndex(globalThis, i, node.toJS(globalThis, allocator));
         naptr = node.next;
         i += 1;

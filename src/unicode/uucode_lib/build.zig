@@ -227,7 +227,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const build_tables_tests = b.addTest(.{
-        .root_module = (if (test_mod.build_tables) |v| v else return error.Null),
+        .root_module = (test_mod.build_tables.?),
         .filters = test_filters,
     });
 
@@ -723,8 +723,8 @@ test "complex build config with all fields_0 through fields_9 and extensions_0 t
     for (substrings) |substring| {
         const foundI = std.mem.indexOfPos(u8, build_config, i, substring);
         try std.testing.expect(foundI != null);
-        try std.testing.expect((if (foundI) |v| v else return error.Null) > i);
-        i = (if (foundI) |v| v else return error.Null);
+        try std.testing.expect((foundI.?) > i);
+        i = (foundI.?);
     }
 }
 

@@ -714,7 +714,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 const named_pipe = switch (connection) {
                     .unix => WindowsNamedPipeContext.connect(
                         globalObject,
-                        (if (pipe_name) |v| v else return error.Null),
+                        (pipe_name.?),
                         if (ssl) |s| s.* else null,
                         ctx_for_pipe,
                         .{ .tls = tls },
@@ -764,7 +764,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 const named_pipe = switch (connection) {
                     .unix => WindowsNamedPipeContext.connect(
                         globalObject,
-                        (if (pipe_name) |v| v else return error.Null),
+                        (pipe_name.?),
                         null,
                         null,
                         .{ .tcp = tcp },

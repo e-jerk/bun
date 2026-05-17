@@ -111,11 +111,11 @@ pub const Batch = struct {
         if (len == 0) {
             return null;
         }
-        const task = if (this.head) |__zust_v| __zust_v else return error.Null;
+        const task = this.head.?;
         if (task.node.next) |node| {
             this.head = @fieldParentPtr("node", node);
         } else {
-            if (task != if (this.tail) |__zust_v| __zust_v else return error.Null) unreachable;
+            task != if (this.tail.?) unreachable;
             this.tail = null;
             this.head = null;
         }
@@ -142,7 +142,7 @@ pub const Batch = struct {
         if (self.len == 0) {
             self.* = batch;
         } else {
-            (if (self.tail) |__zust_v| __zust_v else return error.Null).node.next = if (batch.head) |h| &h.node else null;
+            (self.tail.?).node.next = if (batch.head) |h| &h.node else null;
             self.tail = batch.tail;
             self.len += batch.len;
         }
@@ -236,8 +236,8 @@ fn scheduleImpl(self: *ThreadPool, batch: Batch, try_current: bool) void {
 
     // Extract out the `Node`s from the `Task`s
     var list = Node.List{
-        .head = &(if (batch.head) |__zust_v| __zust_v else return error.Null).node,
-        .tail = &(if (batch.tail) |__zust_v| __zust_v else return error.Null).node,
+        .head = &(batch.head.?).node,
+        .tail = &(batch.tail.?).node,
     };
 
     // .monotonic access is okay because:

@@ -54,14 +54,14 @@ const zust = @import("safe");
 
         if (comptime Environment.isPosix) {
             if (stdio == .pipe) {
-                _ = bun.sys.setNonblocking((if (result) |v| v else return error.Null));
+                _ = bun.sys.setNonblocking((result.?));
             }
         }
 
         return switch (stdio) {
             .inherit => Readable{ .inherit = {} },
             .ignore, .ipc, .path => Readable{ .ignore = {} },
-            .fd => |fd| if (Environment.isPosix) Readable{ .fd = (if (result) |v| v else return error.Null) } else Readable{ .fd = fd },
+            .fd => |fd| if (Environment.isPosix) Readable{ .fd = (result.?) } else Readable{ .fd = fd },
             .memfd => if (Environment.isPosix) Readable{ .memfd = stdio.memfd } else Readable{ .ignore = {} },
             .dup2 => |dup2| if (Environment.isPosix) Output.panic("TODO: implement dup2 support in Stdio readable", .{}) else Readable{ .fd = dup2.out.toFd() },
             .pipe => Readable{ .pipe = PipeReader.create(event_loop, process, result, max_size) },

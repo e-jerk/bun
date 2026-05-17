@@ -917,7 +917,7 @@ export fn Bun__resolveSyncWithPaths(
     paths_ptr: ?[*]const bun.String,
     paths_len: usize,
 ) jsc.JSValue {
-    const paths: []const bun.String = if (paths_len == 0) &.{} else (if (paths_ptr) |v| v else return error.Null)[0..paths_len];
+    const paths: []const bun.String = if (paths_len == 0) &.{} else (paths_ptr.?)[0..paths_len];
 
     const specifier_str = specifier.toBunString(global) catch return .zero;
     defer specifier_str.deref();
@@ -1550,7 +1550,7 @@ comptime {
 
 pub const JSZlib = struct {
     export fn reader_deallocator(_: ?*anyopaque, ctx: ?*anyopaque) void {
-        var reader: *zlib.ZlibReaderArrayList = bun.cast(*zlib.ZlibReaderArrayList, (if (ctx) |v| v else return error.Null));
+        var reader: *zlib.ZlibReaderArrayList = bun.cast(*zlib.ZlibReaderArrayList, (ctx.?));
         reader.list.deinit(reader.allocator);
         reader.deinit();
     }
@@ -1558,7 +1558,7 @@ pub const JSZlib = struct {
         bun.allocators.freeWithoutSize(ctx);
     }
     export fn compressor_deallocator(_: ?*anyopaque, ctx: ?*anyopaque) void {
-        var compressor: *zlib.ZlibCompressorArrayList = bun.cast(*zlib.ZlibCompressorArrayList, (if (ctx) |v| v else return error.Null));
+        var compressor: *zlib.ZlibCompressorArrayList = bun.cast(*zlib.ZlibCompressorArrayList, (ctx.?));
         compressor.list.deinit(compressor.allocator);
         compressor.deinit();
     }
@@ -1704,7 +1704,7 @@ pub const JSZlib = struct {
                 defer decompressor.deinit();
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                     const result = decompressor.decompress(compressed, list.allocatedSlice(), if (is_gzip) .gzip else .deflate);
 
                     list.items.len = result.written;
@@ -1820,7 +1820,7 @@ while (true) : (__loop_limit_1 += 1) {
 
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
                     const result = compressor.compress(compressed, list.allocatedSlice(), encoding);
 
                     list.items.len = result.written;

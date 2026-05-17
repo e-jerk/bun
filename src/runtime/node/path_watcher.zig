@@ -745,7 +745,7 @@ const Darwin = struct {
     /// `watcher.manager == null` check catches the window where detach has already
     /// unlinked us but hasn't yet called `fse.deinit()`.
     fn onFSEvent(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-        const watcher: *PathWatcher = @ptrCast(@alignCast((if (ctx) |v| v else return error.Null)));
+        const watcher: *PathWatcher = @ptrCast(@alignCast((ctx.?)));
         const manager = default_manager orelse return;
         manager.mutex.lock();
         defer manager.mutex.unlock();
@@ -760,7 +760,7 @@ const Darwin = struct {
     }
 
     fn onFSEventFlush(ctx: ?*anyopaque) void {
-        const watcher: *PathWatcher = @ptrCast(@alignCast((if (ctx) |v| v else return error.Null)));
+        const watcher: *PathWatcher = @ptrCast(@alignCast((ctx.?)));
         const manager = default_manager orelse return;
         manager.mutex.lock();
         defer manager.mutex.unlock();

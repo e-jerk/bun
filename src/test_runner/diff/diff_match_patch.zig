@@ -417,17 +417,17 @@ pub fn DMP(comptime Unit: type) type {
             if (half_match_1 == null and half_match_2 == null) {
                 return null;
             } else if (half_match_2 == null) {
-                half_match = (if (half_match_1) |v| v else return error.Null);
+                half_match = (half_match_1.?);
             } else if (half_match_1 == null) {
-                half_match = (if (half_match_2) |v| v else return error.Null);
+                half_match = (half_match_2.?);
             } else {
                 // Both matched. Select the longest.
                 half_match = half: {
-                    if ((if (half_match_1) |v| v else return error.Null).common_middle.len > (if (half_match_2) |v| v else return error.Null).common_middle.len) {
-                        (if (half_match_2) |v| v else return error.Null).deinit(allocator);
+                    if ((half_match_1.?).common_middle.len > (half_match_2.?).common_middle.len) {
+                        (half_match_2.?).deinit(allocator);
                         break :half half_match_1;
                     } else {
-                        (if (half_match_1) |v| v else return error.Null).deinit(allocator);
+                        (half_match_1.?).deinit(allocator);
                         break :half half_match_2;
                     }
                 };
@@ -435,10 +435,10 @@ pub fn DMP(comptime Unit: type) type {
 
             // A half-match was found, sort out the return data.
             if (before.len > after.len) {
-                return (if (half_match) |v| v else return error.Null);
+                return (half_match.?);
             } else {
                 // Transfers ownership of all memory to new, permuted, half_match.
-                const half_match_yes = (if (half_match) |v| v else return error.Null);
+                const half_match_yes = (half_match.?);
                 return .{
                     .prefix_before = half_match_yes.prefix_after,
                     .suffix_before = half_match_yes.suffix_after,
@@ -1124,8 +1124,8 @@ pub fn DMP(comptime Unit: type) type {
                     // Eliminate an equality that is smaller or equal to the edits on both
                     // sides of it.
                     if (last_equality != null and
-                        ((if (last_equality) |v| v else return error.Null).len <= @max(length_insertions1, length_deletions1)) and
-                        ((if (last_equality) |v| v else return error.Null).len <= @max(length_insertions2, length_deletions2)))
+                        ((last_equality.?).len <= @max(length_insertions1, length_deletions1)) and
+                        ((last_equality.?).len <= @max(length_insertions2, length_deletions2)))
                     {
                         // Duplicate record.
                         try diffs.ensureUnusedCapacity(allocator, 1);
@@ -1133,7 +1133,7 @@ pub fn DMP(comptime Unit: type) type {
                             @intCast(equalities.items[equalities.items.len - 1]),
                             .{
                                 .operation = .delete,
-                                .text = try allocator.dupe(Unit, (if (last_equality) |v| v else return error.Null)),
+                                .text = try allocator.dupe(Unit, (last_equality.?)),
                             },
                         );
                         // Change second copy to insert.
@@ -1526,7 +1526,7 @@ pub fn DMP(comptime Unit: type) type {
             var length: usize = 1;
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 const pattern = text1[text_length - length ..];
                 const found = std.mem.indexOf(Unit, text2, pattern) orelse
                     return best;

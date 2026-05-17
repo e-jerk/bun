@@ -2022,7 +2022,7 @@ pub const TestCommand = struct {
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             while (vm.isEventLoopAlive()) {
                 vm.tick();
                 vm.eventLoop().autoTickActive();

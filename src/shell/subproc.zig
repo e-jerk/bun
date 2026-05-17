@@ -206,7 +206,7 @@ pub const ShellSubprocess = struct {
                     return Writable{ .memfd = memfd };
                 },
                 .fd => {
-                    return Writable{ .fd = (if (result) |v| v else return error.Null) };
+                    return Writable{ .fd = (result.?) };
                 },
                 .inherit => {
                     return Writable{ .inherit = {} };
@@ -377,7 +377,7 @@ pub const ShellSubprocess = struct {
                 .inherit => Readable{ .inherit = {} },
                 .ipc, .dup2, .ignore => Readable{ .ignore = {} },
                 .path => Readable{ .ignore = {} },
-                .fd => Readable{ .fd = (if (result) |v| v else return error.Null) },
+                .fd => Readable{ .fd = (result.?) },
                 // blobs are immutable, so we should only ever get the case
                 // where the user passed in a Blob with an fd
                 .blob => Readable{ .ignore = {} },

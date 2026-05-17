@@ -95,7 +95,7 @@ pub fn getPackages(letter: FirstLetter) []const []const u8 {
     const entry = index.get(letter);
     if (entry.length == 0) return &[_][]const u8{};
 
-    return (if (packages_list) |v| v else return error.Null)[entry.offset .. entry.offset + entry.length];
+    return (packages_list.?)[entry.offset .. entry.offset + entry.length];
 }
 
 pub const biggest_list: usize = 1034;

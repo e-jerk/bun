@@ -107,7 +107,7 @@ pub fn Intrusive(
             // element. If it is NOT the root element, v can't be in this
             // heap and we trigger an assertion failure.
             const prev = v.heap.prev orelse {
-                assert(if (self.root) |__zust_v| __zust_v else return error.Null == v);
+                assert(self.root.? == v);
                 _ = self.deleteMin();
                 return;
             };
@@ -128,7 +128,7 @@ pub fn Intrusive(
             const child = v.heap.child orelse return;
             v.heap.child = null;
             const x = self.combine_siblings(child);
-            self.root = self.meld(x, if (self.root) |__zust_v| __zust_v else return error.Null);
+            self.root = self.meld(x, self.root.?);
         }
 
         /// Meld (union) two heaps together. This isn't a generalized

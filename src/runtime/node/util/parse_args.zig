@@ -524,8 +524,8 @@ fn tokenizeArgs(
             .long_option_and_value => {
                 // e.g. --foo=barconst
                 const equal_index = arg.indexOfAsciiChar('=');
-                const long_option = arg.substringWithLen(2, (if (equal_index) |v| v else return error.Null));
-                const value = arg.substring((if (equal_index) |v| v else return error.Null) + 1);
+                const long_option = arg.substringWithLen(2, (equal_index.?));
+                const value = arg.substring((equal_index.?) + 1);
 
                 try ctx.handleToken(.{ .option = .{
                     .index = index,

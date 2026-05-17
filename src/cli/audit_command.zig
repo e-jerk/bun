@@ -262,7 +262,7 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
 
     if (prod_only) {
         prod_packages = bun.StringHashMap(void).init(allocator);
-        try buildProductionPackageSet(allocator, pm, &(if (prod_packages) |v| v else return error.Null));
+        try buildProductionPackageSet(allocator, pm, &(prod_packages.?));
     }
 
     for (pkg_names, pkg_resolutions, 0..) |name, res, idx| {
@@ -272,7 +272,7 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         const name_slice = name.slice(buf);
 
         if (prod_only and prod_packages != null) {
-            if (!(if (prod_packages) |v| v else return error.Null).contains(name_slice)) {
+            if (!(prod_packages.?).contains(name_slice)) {
                 continue;
             }
         }
@@ -302,7 +302,7 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         }
 
         var version_exists = false;
-        for ((if (found_package) |v| v else return error.Null).versions.items) |existing_ver| {
+        for ((found_package.?).versions.items) |existing_ver| {
             if (std.mem.eql(u8, existing_ver, ver_str)) {
                 version_exists = true;
                 break;
@@ -310,7 +310,7 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         }
 
         if (!version_exists) {
-            try (if (found_package) |v| v else return error.Null).versions.append(ver_str);
+            try (found_package.?).versions.append(ver_str);
         } else {
             allocator.free(ver_str);
         }
@@ -559,7 +559,7 @@ fn findDependencyPaths(
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 // Check for cycle before processing
                 if (seen_in_trace.contains(trace)) {
                     // Cycle detected, stop tracing

@@ -62,7 +62,7 @@ pub const PollOrFd = union(enum) {
                 if (close_fd) _ = fd.closeAllowingBadFileDescriptor(null);
             }
             if (comptime @TypeOf(onCloseFn) != void)
-                onCloseFn(@ptrCast(@alignCast(if (ctx) |__zust_v| __zust_v else return error.Null)));
+                onCloseFn(@ptrCast(@alignCast(ctx.?)));
         } else {
             this.* = .{ .closed = {} };
         }

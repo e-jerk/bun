@@ -90,7 +90,7 @@ pub fn throwError(_: *MiniEventLoop, err: bun.sys.Error) void {
 pub fn pipeReadBuffer(this: *MiniEventLoop) []u8 {
     return this.pipe_read_buffer orelse {
         this.pipe_read_buffer = bun.handleOom(zust.Box(PipeReadBuffer).init(this.allocator, undefined));
-        return if (this.pipe_read_buffer) |__zust_v| __zust_v else return error.Null;
+        return this.pipe_read_buffer.?;
     };
 }
 
@@ -107,7 +107,7 @@ pub fn filePolls(this: *MiniEventLoop) *Async.FilePoll.Store {
     return this.file_polls_ orelse {
         this.file_polls_ = bun.handleOom(zust.Box(Async.FilePoll.Store).init(this.allocator, undefined));
         this.file_polls_.?.* = Async.FilePoll.Store.init();
-        return if (this.file_polls_) |__zust_v| __zust_v else return error.Null;
+        return this.file_polls_.?;
     };
 }
 
@@ -319,7 +319,7 @@ pub const JsVM = struct {
     }
 
     pub inline fn platformEventLoop(this: @This()) *jsc.PlatformEventLoop {
-        return if (this.vm.event_loop_handle) |__zust_v| __zust_v else return error.Null;
+        return this.vm.event_loop_handle.?;
     }
 
     pub inline fn incrementPendingUnrefCounter(this: @This()) void {

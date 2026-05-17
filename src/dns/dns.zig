@@ -277,8 +277,8 @@ pub const addressToJS = options_jsc.addressToJS;
 pub fn addrInfoCount(addrinfo: *std.c.addrinfo) u32 {
     var count: u32 = 1;
     var current: ?*std.c.addrinfo = addrinfo.next;
-    while (current != null) : (current = (if (current) |__zust_v| __zust_v else return error.Null).next) {
-        count += @intFromBool((if (current) |__zust_v| __zust_v else return error.Null).addr != null);
+    while (current != null) : (current = (current.?).next) {
+        count += @intFromBool((current.?).addr != null);
     }
     return count;
 }

@@ -1560,7 +1560,7 @@ pub const Parser = struct {
             .elif => {
                 var __loop_limit_1: usize = 0;
                 while (true) : (__loop_limit_1 += 1) {
-                    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+                    if (__loop_limit_1 > 1_000_000) break;
                     _ = self.expectIfClauseTextToken(.elif);
                     const elif_cond = try self.parse_if_body(&.{.then});
                     if (!self.match_if_clausetok(.then)) {
@@ -2456,7 +2456,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
         pub fn lex(self: *@This()) LexerError!void {
             var __loop_limit_2: usize = 0;
             while (true) : (__loop_limit_2 += 1) {
-                if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+                if (__loop_limit_2 > 1_000_000) break;
                 const input = self.eat() orelse {
                     try self.break_word(true);
                     break;
@@ -4673,7 +4673,7 @@ pub const TestingAPIs = struct {
         const script_ast = Interpreter.parse(arena.allocator(), script.items[0..], jsobjs.items[0..], jsstrings.items[0..], &out_parser, &out_lex_result) catch |err| {
             if (err == ParseError.Lex) {
                 if (bun.Environment.allow_assert) assert(out_lex_result != null);
-                const str = (if (out_lex_result) |v| v else return error.Null).combineErrors(arena.allocator());
+                const str = (out_lex_result.?).combineErrors(arena.allocator());
                 return globalThis.throwPretty("{s}", .{str});
             }
 

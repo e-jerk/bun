@@ -1395,7 +1395,7 @@ fn updatePackageJsonAfterMigration(allocator: Allocator, manager: *PackageManage
         const is_object_workspaces = existing_workspaces != null and existing_workspaces.?.data == .e_object;
 
         if (use_array_format) {
-            const paths = if (workspace_paths) |v| v else return error.Null;
+            const paths = workspace_paths.?;
             var items: JSAst.ExprNodeList = try .initCapacity(allocator, paths.items.len);
             for (paths.items) |path| {
                 items.appendAssumeCapacity(Expr.init(E.String, .{ .data = path }, .Empty));

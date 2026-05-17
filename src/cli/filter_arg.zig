@@ -226,7 +226,7 @@ pub const PackageFilterIterator = struct {
     fn walkerNext(self: *PackageFilterIterator) !?[]const u8 {
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             switch (try self.iter.next()) {
                 .err => |err| {
                     Output.prettyErrorln("Error: {f}", .{err});
@@ -257,7 +257,7 @@ while (true) : (__loop_limit_1 += 1) {
     pub fn next(self: *PackageFilterIterator) !?[]const u8 {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             if (!self.valid) {
                 if (self.pattern_idx < self.patterns.len) {
                     try self.initWalker();

@@ -256,9 +256,9 @@ const Context = struct {
                     if (next_expected_header_byte == null) {
                         return this.doWorkInflate();
                     }
-                    if ((if (next_expected_header_byte) |v| v else return error.Null)[0] == GZIP_HEADER_ID1) {
+                    if ((next_expected_header_byte.?)[0] == GZIP_HEADER_ID1) {
                         this.gzip_id_bytes_read = 1;
-                        (if (next_expected_header_byte) |v| v else return error.Null) += 1;
+                        (next_expected_header_byte.?) += 1;
                         if (this.state.avail_in == 1) { // The only available byte was already read.
                             return this.doWorkInflate();
                         }
@@ -271,7 +271,7 @@ const Context = struct {
                     if (next_expected_header_byte == null) {
                         return this.doWorkInflate();
                     }
-                    if ((if (next_expected_header_byte) |v| v else return error.Null)[0] == GZIP_HEADER_ID2) {
+                    if ((next_expected_header_byte.?)[0] == GZIP_HEADER_ID2) {
                         this.gzip_id_bytes_read = 2;
                         this.mode = .GUNZIP;
                     } else {

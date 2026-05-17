@@ -1010,7 +1010,7 @@ pub const BOM = enum {
     pub fn detectAndSplit(bytes: []const u8) struct { ?BOM, []const u8 } {
         const bom = detect(bytes);
         if (bom == null) return .{ null, bytes };
-        return .{ bom, bytes[(if (bom) |v| v else return error.Null).length()..] };
+        return .{ bom, bytes[(bom.?).length()..] };
     }
 
     pub fn getHeader(bom: BOM) []const u8 {

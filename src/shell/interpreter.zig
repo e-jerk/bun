@@ -1050,7 +1050,7 @@ pub const Interpreter = struct {
         ) catch |err| {
             if (err == bun.shell.ParseError.Lex) {
                 assert(out_lex_result != null);
-                const str = (if (out_lex_result) |v| v else return error.Null).combineErrors(shargs.arena_allocator());
+                const str = (out_lex_result.?).combineErrors(shargs.arena_allocator());
                 bun.Output.prettyErrorln("<r><red>error<r>: Failed to run <b>{s}<r> due to error <b>{s}<r>", .{ std.fs.path.basename(path), str });
                 bun.Global.exit(1);
             }
@@ -1119,7 +1119,7 @@ pub const Interpreter = struct {
         const script = ThisInterpreter.parse(shargs.arena_allocator(), src, jsobjs, &[_]bun.String{}, &out_parser, &out_lex_result) catch |err| {
             if (err == bun.shell.ParseError.Lex) {
                 assert(out_lex_result != null);
-                const str = (if (out_lex_result) |v| v else return error.Null).combineErrors(shargs.arena_allocator());
+                const str = (out_lex_result.?).combineErrors(shargs.arena_allocator());
                 bun.Output.prettyErrorln("<r><red>error<r>: Failed to run script <b>{s}<r> due to error <b>{s}<r>", .{ path_for_errors, str });
                 bun.Global.exit(1);
             }

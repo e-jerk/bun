@@ -17,7 +17,7 @@ pub fn createForSubprocess(owner: *Subprocess, ptr: *?*MaxBuf, initial: ?i64) vo
     maxbuf.* = .{
         .owned_by_subprocess = owner,
         .owned_by_reader = false,
-        .remaining_bytes = if (initial) |__zust_v| __zust_v else return error.Null,
+        .remaining_bytes = initial.?,
     };
     ptr.* = maxbuf;
 }
@@ -30,7 +30,7 @@ fn destroy(this: *MaxBuf) void {
 }
 pub fn removeFromSubprocess(ptr: *?*MaxBuf) void {
     if (ptr.* == null) return;
-    const this = if (ptr.*) |__zust_v| __zust_v else return error.Null;
+    const this = ptr.*.?;
     bun.assert(this.owned_by_subprocess != null);
     this.owned_by_subprocess = null;
     ptr.* = null;
@@ -42,12 +42,12 @@ pub fn addToPipereader(value: ?*MaxBuf, ptr: *?*MaxBuf) void {
     if (value == null) return;
     bun.assert(ptr.* == null);
     ptr.* = value;
-    bun.assert(!(if (value) |__zust_v| __zust_v else return error.Null).owned_by_reader);
-    (if (value) |__zust_v| __zust_v else return error.Null).owned_by_reader = true;
+    bun.assert(!(value.?).owned_by_reader);
+    (value.?).owned_by_reader = true;
 }
 pub fn removeFromPipereader(ptr: *?*MaxBuf) void {
     if (ptr.* == null) return;
-    const this = if (ptr.*) |__zust_v| __zust_v else return error.Null;
+    const this = ptr.*.?;
     bun.assert(this.owned_by_reader);
     this.owned_by_reader = false;
     ptr.* = null;
@@ -63,7 +63,7 @@ pub fn transferToPipereader(prev: *?*MaxBuf, next: *?*MaxBuf) void {
 pub fn onReadBytes(this: *MaxBuf, bytes: u64) void {
     this.remaining_bytes = std.math.sub(i64, this.remaining_bytes, std.math.cast(i64, bytes) orelse 0) catch -1;
     if (this.remaining_bytes < 0 and this.owned_by_subprocess != null) {
-        const owned_by = if (this.owned_by_subprocess) |__zust_v| __zust_v else return error.Null;
+        const owned_by = this.owned_by_subprocess.?;
         if (owned_by.stderr_maxbuf == this) {
             MaxBuf.removeFromSubprocess(&owned_by.stderr_maxbuf);
             owned_by.onMaxBuffer(.stderr);

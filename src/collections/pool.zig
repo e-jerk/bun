@@ -78,9 +78,9 @@ fn SinglyLinkedList(comptime T: type, comptime Parent: type) type {
             if (list.first == node) {
                 list.first = node.next;
             } else {
-                var current_elm = (if (list.first) |v| v else return error.Null);
+                var current_elm = (list.first.?);
                 while (current_elm.next != node) {
-                    current_elm = (if (current_elm.next) |v| v else return error.Null);
+                    current_elm = (current_elm.next.?);
                 }
                 current_elm.next = node.next;
             }

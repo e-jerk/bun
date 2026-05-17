@@ -1100,7 +1100,7 @@ pub const CreateCommand = struct {
                 // "bun.macros.react-relay.graphql"
                 // if (needs.bun_macro_relay and !needs_bun_prop and !needs_bun_macros_prop) {
                 //     // "graphql" is the only valid one for now, so anything else in this object is invalid.
-                //     (if (bun_relay_prop) |v| v else return error.Null).data.e_object = InjectionPrefill.bun_macros_relay_object.properties.ptr[0].value.?.data.e_object;
+                //     (bun_relay_prop.?).data.e_object = InjectionPrefill.bun_macros_relay_object.properties.ptr[0].value.?.data.e_object;
                 //     needs_bun_macros_prop = false;
                 //     needs_bun_prop = false;
                 //     needs.bun_macro_relay = false;
@@ -1109,7 +1109,7 @@ pub const CreateCommand = struct {
 
                 // "bun.macros"
                 // if (needs_bun_macros_prop and !needs_bun_prop) {
-                //     var obj = (if (bun_prop) |v| v else return error.Null).data.e_object;
+                //     var obj = (bun_prop.?).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + InjectionPrefill.bun_macros_relay_object.properties.len,
@@ -1137,7 +1137,7 @@ pub const CreateCommand = struct {
 
                 // if (needs_to_inject_dependency) {
                 //     defer needs_to_inject_dependency = false;
-                //     var obj = (if (dependencies) |v| v else return error.Null).data.e_object;
+                //     var obj = (dependencies.?).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + dependencies_to_inject_count,
@@ -1152,7 +1152,7 @@ pub const CreateCommand = struct {
 
                 // if (needs_to_inject_dev_dependency) {
                 //     defer needs_to_inject_dev_dependency = false;
-                //     var obj = (if (dev_dependencies) |v| v else return error.Null).data.e_object;
+                //     var obj = (dev_dependencies.?).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + dev_dependencies_to_inject_count,
@@ -1390,7 +1390,7 @@ pub const CreateCommand = struct {
                     package_json_expr.data.e_object.properties.shrinkRetainingCapacity(property_i);
                 }
 
-                const file: bun.FD = .fromStdFile((if (package_json_file) |v| v else return error.Null));
+                const file: bun.FD = .fromStdFile((package_json_file.?));
 
                 var buffer_writer = JSPrinter.BufferWriter.init(bun.default_allocator);
                 buffer_writer.append_newline = true;
@@ -1450,7 +1450,7 @@ pub const CreateCommand = struct {
 
         if (npm_client_ != null and preinstall_tasks.items.len > 0) {
             for (preinstall_tasks.items) |task| {
-                execTask(ctx.allocator, task, destination, PATH, (if (npm_client_) |v| v else return error.Null));
+                execTask(ctx.allocator, task, destination, PATH, (npm_client_.?));
             }
         }
 

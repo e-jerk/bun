@@ -177,7 +177,7 @@ const zust = @import("safe");
         if (which == .both or which == .destination) {
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 const dest = this.destination_file_store.pathlike.path.sliceZ(&path_buf1);
                 const mode = this.destination_mode orelse jsc.Node.fs.default_permission;
                 this.destination_fd = switch (bun.sys.open(
@@ -273,7 +273,7 @@ while (true) : (__loop_limit_1 += 1) {
 
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             // TODO: this should use non-blocking I/O.
             const written = switch (comptime use) {
                 .copy_file_range => linux.copy_file_range(src_fd.cast(), null, dest_fd.cast(), null, remain, 0),
@@ -396,7 +396,7 @@ while (true) : (__loop_limit_2 += 1) {
 
 var __loop_limit_3: usize = 0;
 while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_3 > 1_000_000) break;
             const dest = this.destination_file_store.pathlike.path.sliceZ(
                 &dest_buf,
             );
@@ -465,7 +465,7 @@ while (true) : (__loop_limit_3 += 1) {
                         }
 
                         if (this.doClonefile()) {
-                            if (this.max_length != Blob.max_size and this.max_length < @as(SizeType, @intCast((if (stat_) |v| v else return error.Null).size))) {
+                            if (this.max_length != Blob.max_size and this.max_length < @as(SizeType, @intCast((stat_.?).size))) {
                                 // If this fails...well, there's not much we can do about it.
                                 _ = bun.c.truncate(
                                     this.destination_file_store.pathlike.path.sliceZ(&path_buf),
@@ -473,7 +473,7 @@ while (true) : (__loop_limit_3 += 1) {
                                 );
                                 this.read_len = @as(SizeType, @intCast(this.max_length));
                             } else {
-                                this.read_len = @as(SizeType, @intCast((if (stat_) |v| v else return error.Null).size));
+                                this.read_len = @as(SizeType, @intCast((stat_.?).size));
                             }
                             // Apply destination mode if specified (clonefile copies source permissions)
                             if (this.destination_mode) |mode| {

@@ -40,7 +40,7 @@ pub fn run(this: *AnyTaskWithExtraContext, extra: *anyopaque) void {
     @setRuntimeSafety(false);
     const callback = this.callback;
     const ctx = this.ctx;
-    callback(if (ctx) |__zust_v| __zust_v else return error.Null, extra);
+    callback(ctx.?, extra);
 }
 
 pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: anytype) type {
@@ -57,8 +57,8 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
                 bun.callmod_inline,
                 Callback,
                 .{
-                    @as(*Type, @ptrCast(@alignCast(if (this.*) |__zust_v| __zust_v else return error.Null))),
-                    @as(*ContextType, @ptrCast(@alignCast(if (extra) |__zust_v| __zust_v else return error.Null))),
+                    @as(*Type, @ptrCast(@alignCast(this.*.?))),
+                    @as(*ContextType, @ptrCast(@alignCast(extra.?))),
                 },
             );
         }

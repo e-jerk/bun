@@ -424,7 +424,7 @@ pub fn cloneValue(
             if (js.gc.stream.get(js_ref)) |stream| {
                 const readable = try jsc.WebCore.ReadableStream.fromJS(stream, globalThis);
                 if (readable != null) {
-                    break :brk try this._body.cloneWithReadableStream(globalThis, &(if (readable) |v| v else return error.Null));
+                    break :brk try this._body.cloneWithReadableStream(globalThis, &(readable.?));
                 }
             }
         }

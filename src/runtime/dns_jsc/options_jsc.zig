@@ -172,7 +172,7 @@ pub fn addrInfoToJSArray(addr_info: *std.c.addrinfo, globalThis: *jsc.JSGlobalOb
     {
         var j: u32 = 0;
         var current: ?*std.c.addrinfo = addr_info;
-        while (current) |this_node| : (current = (if (current) |v| v else return error.Null).next) {
+        while (current) |this_node| : (current = (current.?).next) {
             try array.putIndex(
                 globalThis,
                 j,

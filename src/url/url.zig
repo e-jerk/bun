@@ -852,7 +852,7 @@ pub const PercentEncoding = struct {
                             // We can't expect other tools to be as fault tolerant
                             if (i + "PUBLIC_URL%".len < input.len and strings.eqlComptime(input[i + 1 ..][0.."PUBLIC_URL%".len], "PUBLIC_URL%")) {
                                 i += "PUBLIC_URL%".len + 1;
-                                (if (needs_redirect) |v| v else return error.Null).* = true;
+                                (needs_redirect.?).* = true;
                                 continue;
                             }
                             return error.DecodingError;
@@ -1008,7 +1008,7 @@ pub const Scanner = struct {
         // otherwise we'd recursively call the function
 var __loop_limit_1: usize = 0;
 loop: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             if (this.i >= this.query_string.len) return null;
 
             const slice = this.query_string[this.i..];

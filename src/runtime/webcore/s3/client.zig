@@ -695,7 +695,7 @@ pub fn readableStream(
         }
 
         fn onStreamCancelled(ctx: ?*anyopaque) void {
-            const self: *@This() = @ptrCast(@alignCast((if (ctx) |v| v else return error.Null)));
+            const self: *@This() = @ptrCast(@alignCast((ctx.?)));
             // Release the Strong ref so the ReadableStream can be GC'd.
             // The download may still be in progress, but the callback will
             // see readable_stream_ref.get() return null and skip data delivery.

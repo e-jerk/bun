@@ -170,7 +170,7 @@ pub const JestPrettyFormat = struct {
             }
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }
@@ -195,7 +195,7 @@ while (true) : (__loop_limit_1 += 1) {
         } else {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }
@@ -760,7 +760,7 @@ while (true) : (__loop_limit_2 += 1) {
                 ) callconv(.c) void {
                     if (is_private_symbol) return;
 
-                    const key = (if (key_) |v| v else return error.Null)[0];
+                    const key = (key_.?)[0];
                     if (key.eqlComptime("constructor")) return;
 
                     var ctx: *@This() = bun.cast(*@This(), ctx_ptr orelse return);

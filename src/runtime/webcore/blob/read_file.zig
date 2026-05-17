@@ -200,7 +200,7 @@ pub const ReadFile = struct {
 
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             switch (result) {
                 .result => |res| {
                     read_len.* = @truncate(res);

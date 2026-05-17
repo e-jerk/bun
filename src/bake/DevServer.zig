@@ -1391,7 +1391,7 @@ fn computeArgumentsForFrameworkRequest(
             var route = dev.router.routePtr(framework_bundle.route_index);
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
                 if (route.file_layout != .none) n += 1;
                 route = dev.router.routePtr(route.parent.unwrap() orelse break);
             }
@@ -1406,7 +1406,7 @@ while (true) : (__loop_limit_1 += 1) {
             n = 1;
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
                 if (route.file_layout.unwrap()) |layout| {
                     const relative_path_buf = bun.path_buffer_pool.get();
                     defer bun.path_buffer_pool.put(relative_path_buf);
@@ -2172,7 +2172,7 @@ fn traceAllRouteImports(dev: *DevServer, route_bundle: *RouteBundle, gts: *Graph
             // For all parents, the layout is considered
 var __loop_limit_3: usize = 0;
 while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_3 > 1_000_000) break;
                 if (route.file_layout.unwrap()) |id| {
                     try dev.server_graph.traceImports(fromOpaqueFileId(.server, id), gts, goal);
                 }
@@ -3043,7 +3043,7 @@ fn startNextBundleIfPresent(dev: *DevServer) void {
             var current = event;
 var __loop_limit_4: usize = 0;
 while (true) : (__loop_limit_4 += 1) {
-    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_4 > 1_000_000) break;
                 current.processFileList(dev, &entry_points, temp_alloc);
                 current = dev.watcher_atomics.recycleEventFromDevServer(current) orelse break;
                 if (comptime Environment.isDebug) {

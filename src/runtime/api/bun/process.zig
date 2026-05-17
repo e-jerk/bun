@@ -664,13 +664,13 @@ pub const Status = union(enum) {
         if (exit_code != null) {
             return .{
                 .exited = .{
-                    .code = (if (exit_code) |v| v else return error.Null),
+                    .code = (exit_code.?),
                     .signal = @enumFromInt(signal orelse 0),
                 },
             };
         } else if (signal != null) {
             return .{
-                .signaled = @enumFromInt((if (signal) |v| v else return error.Null)),
+                .signaled = @enumFromInt((signal.?)),
             };
         }
 
@@ -1024,7 +1024,7 @@ const WaiterThreadPosix = struct {
 
 var __loop_limit_1: usize = 0;
 outer: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             this.js_process.loop();
 
             if (comptime Environment.isLinux) {
@@ -1279,7 +1279,7 @@ pub const PosixSpawnResult = struct {
 
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_2 > 1_000_000) break;
             switch (brk: {
                 const rc = bun.sys.pidfd_open(
                     @intCast(this.pid),
@@ -1313,7 +1313,7 @@ while (true) : (__loop_limit_2 += 1) {
                         else => {
 var __loop_limit_3: usize = 0;
 while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_3 > 1_000_000) break;
                                 var status: u32 = 0;
                                 const rc = std.os.linux.wait4(this.pid, &status, 0, null);
 
@@ -1912,9 +1912,9 @@ pub fn spawnProcessWindows(
         const stdio = stdio_containers.items[i];
         const result_stdio: *WindowsSpawnResult.StdioResult = result_stdios[i];
 
-        if (dup_src != null and i == (if (dup_src) |v| v else return error.Null)) {
+        if (dup_src != null and i == (dup_src.?)) {
             result_stdio.* = .unavailable;
-        } else if (dup_tgt != null and i == (if (dup_tgt) |v| v else return error.Null)) {
+        } else if (dup_tgt != null and i == (dup_tgt.?)) {
             result_stdio.* = .{ .buffer_fd = .fromUV(dup_fds[0]) };
         } else switch (stdio_options[i]) {
             .buffer => {
@@ -2688,7 +2688,7 @@ pub const sync = struct {
         var child_status: ?Status = null;
 var __loop_limit_4: usize = 0;
 while (true) : (__loop_limit_4 += 1) {
-    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_4 > 1_000_000) break;
             const got = switch (bun.sys.kevent(kq_fd, &.{}, events[0..], null)) {
                 .err => |err| return .{ .err = err },
                 .result => |c| c,
@@ -2829,7 +2829,7 @@ while (true) : (__loop_limit_4 += 1) {
         var child_status: ?Status = null;
 var __loop_limit_5: usize = 0;
 while (true) : (__loop_limit_5 += 1) {
-    if (__loop_limit_5 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_5 > 1_000_000) break;
             // Reap *before* poll(). Covers (a) the SIGCHLD-before-block race —
             // child may have exited between spawnProcessPosix and the
             // sigprocmask above, in which case the kernel discarded SIGCHLD
@@ -2846,7 +2846,7 @@ while (true) : (__loop_limit_5 += 1) {
                 if (jc.isActive()) std.posix.W.UNTRACED else @as(u32, 0);
 var __loop_limit_6: usize = 0;
 while (true) : (__loop_limit_6 += 1) {
-    if (__loop_limit_6 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_6 > 1_000_000) break;
                 const r = PosixSpawn.wait4(-1, wopts, null);
                 const w = switch (r) {
                     .err => break,
@@ -2902,7 +2902,7 @@ while (true) : (__loop_limit_6 += 1) {
             }
         }
         for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| _ = drainFd(fd, out_fd, bytes);
-        return .{ .result = (if (child_status) |v| v else return error.Null) };
+        return .{ .result = (child_status.?) };
     }
 
     /// Non-blocking drain of `fd` into `bytes`. Closes and invalidates both
@@ -2913,7 +2913,7 @@ while (true) : (__loop_limit_6 += 1) {
         if (fd.* == bun.invalid_fd) return null;
 var __loop_limit_7: usize = 0;
 while (true) : (__loop_limit_7 += 1) {
-    if (__loop_limit_7 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_7 > 1_000_000) break;
             bytes.ensureUnusedCapacity(16384) catch return bun.sys.Error.fromCode(.NOMEM, .recv);
             switch (bun.sys.recvNonBlock(fd.*, bytes.unusedCapacitySlice())) {
                 .err => |err| {
@@ -2938,7 +2938,7 @@ while (true) : (__loop_limit_7 += 1) {
     fn reapChild(child: std.c.pid_t) Status {
 var __loop_limit_8: usize = 0;
 while (true) : (__loop_limit_8 += 1) {
-    if (__loop_limit_8 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_8 > 1_000_000) break;
             if (Status.from(child, &PosixSpawn.wait4(child, 0, null))) |stat| return stat;
         }
     }

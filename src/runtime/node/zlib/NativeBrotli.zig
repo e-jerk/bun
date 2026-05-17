@@ -146,7 +146,7 @@ const Context = struct {
                 if (state == null) {
                     return Error.init("Could not initialize Brotli instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
                 }
-                this.state = @ptrCast((if (state) |v| v else return error.Null));
+                this.state = @ptrCast((state.?));
                 return Error.ok;
             },
             .BROTLI_DECODE => {
@@ -156,7 +156,7 @@ const Context = struct {
                 if (state == null) {
                     return Error.init("Could not initialize Brotli instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
                 }
-                this.state = @ptrCast((if (state) |v| v else return error.Null));
+                this.state = @ptrCast((state.?));
                 return Error.ok;
             },
             else => unreachable,
@@ -215,12 +215,12 @@ const Context = struct {
             .BROTLI_ENCODE => {
                 var next_in = this.next_in;
                 this.last_result.e = c.BrotliEncoderCompressStream(@ptrCast(this.state), this.flush, &this.avail_in, &next_in, &this.avail_out, &this.next_out, null);
-                this.next_in.? += @intFromPtr((if (next_in) |v| v else return error.Null)) - @intFromPtr(this.next_in.?);
+                this.next_in.? += @intFromPtr((next_in.?)) - @intFromPtr(this.next_in.?);
             },
             .BROTLI_DECODE => {
                 var next_in = this.next_in;
                 this.last_result.d = c.BrotliDecoderDecompressStream(@ptrCast(this.state), &this.avail_in, &next_in, &this.avail_out, &this.next_out, null);
-                this.next_in.? += @intFromPtr((if (next_in) |v| v else return error.Null)) - @intFromPtr(this.next_in.?);
+                this.next_in.? += @intFromPtr((next_in.?)) - @intFromPtr(this.next_in.?);
                 if (this.last_result.d == .err) {
                     this.error_ = c.BrotliDecoderGetErrorCode(@ptrCast(this.state));
                 }

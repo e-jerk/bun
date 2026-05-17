@@ -281,7 +281,7 @@ pub fn stepGroup(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalO
 
     var __loop_limit_1: usize = 0;
     while (true) : (__loop_limit_1 += 1) {
-        if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+        if (__loop_limit_1 > 1_000_000) break;
         const group = this.activeGroup() orelse return .complete;
         if (!group.executing) {
             this.onGroupStarted(group, globalThis);
@@ -349,7 +349,7 @@ const AdvanceSequenceStatus = union(enum) {
 fn stepSequence(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) !AdvanceSequenceStatus {
     var __loop_limit_2: usize = 0;
     while (true) : (__loop_limit_2 += 1) {
-        if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+        if (__loop_limit_2 > 1_000_000) break;
         return try stepSequenceOne(buntest_strong, globalThis, group, sequence_index, now) orelse continue;
     }
 }

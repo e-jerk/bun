@@ -25,7 +25,7 @@ pub fn toBeEmpty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFra
                         any_: ?*anyopaque,
                         _: JSValue,
                     ) callconv(.c) void {
-                        bun.cast(*bool, (if (any_) |v| v else return error.Null)).* = true;
+                        bun.cast(*bool, (any_.?)).* = true;
                     }
                 }.anythingInIterator);
                 pass = !any_properties_in_iterator;

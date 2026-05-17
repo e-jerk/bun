@@ -158,7 +158,7 @@ fn onHandshake(this: *HTTPClient, handshake_success: bool, ssl_error: uws.us_bun
 
                 // if checkServerIdentity returns false, we dont call open this means that the connection was rejected
                 bun.assert(proxy.wrapper != null);
-                const ssl_ptr = (if (proxy.wrapper) |__zust_v| __zust_v else return error.Null).ssl orelse return;
+                const ssl_ptr = (proxy.wrapper.?).ssl orelse return;
 
                 switch (proxy.socket) {
                     .ssl => |socket| {
@@ -313,10 +313,10 @@ pub fn start(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPContext(is
     }
     if (start_payload.len > 0) {
         log("proxy tunnel start with payload", .{});
-        (if (proxy_tunnel.wrapper) |__zust_v| __zust_v else return error.Null).startWithPayload(start_payload);
+        (proxy_tunnel.wrapper.?).startWithPayload(start_payload);
     } else {
         log("proxy tunnel start", .{});
-        (if (proxy_tunnel.wrapper) |__zust_v| __zust_v else return error.Null).start();
+        (proxy_tunnel.wrapper.?).start();
     }
 }
 

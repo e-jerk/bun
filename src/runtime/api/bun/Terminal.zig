@@ -716,27 +716,27 @@ fn createPtyWindows(cols: u16, rows: u16) CreatePtyError!PtyResult {
     const size = w.COORD{ .X = clampToCoord(cols), .Y = clampToCoord(rows) };
     {
         var pc: w.HPCON = undefined;
-        if (w.CreatePseudoConsole(size, (if (in_client) |v| v else return error.Null), (if (out_client) |v| v else return error.Null), 0, &pc) < 0)
+        if (w.CreatePseudoConsole(size, (in_client.?), (out_client.?), 0, &pc) < 0)
             return error.OpenPtyFailed;
         hpcon = pc;
     }
 
     // ConPTY duplicated the client handles internally; close our copies.
-    _ = w.CloseHandle((if (in_client) |v| v else return error.Null));
+    _ = w.CloseHandle((in_client.?));
     in_client = null;
-    _ = w.CloseHandle((if (out_client) |v| v else return error.Null));
+    _ = w.CloseHandle((out_client.?));
     out_client = null;
 
     // Wrap server (overlapped) ends as libuv-owned FDs so they can be passed
     // to BufferedReader/StreamingWriter.start() which calls uv_pipe_open.
-    const read_fd = bun.FD.fromNative((if (out_server) |v| v else return error.Null)).makeLibUVOwned() catch return error.DupFailed;
+    const read_fd = bun.FD.fromNative((out_server.?)).makeLibUVOwned() catch return error.DupFailed;
     out_server = null;
     errdefer read_fd.close();
 
-    const write_fd = bun.FD.fromNative((if (in_server) |v| v else return error.Null)).makeLibUVOwned() catch return error.DupFailed;
+    const write_fd = bun.FD.fromNative((in_server.?)).makeLibUVOwned() catch return error.DupFailed;
     in_server = null;
 
-    const result_hpcon = (if (hpcon) |v| v else return error.Null);
+    const result_hpcon = (hpcon.?);
     hpcon = null;
 
     return PtyResult{

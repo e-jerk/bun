@@ -167,8 +167,8 @@ pub fn tickWithTimeout(this: *SpawnSyncEventLoop, timeout: ?*const bun.timespec)
 
     if (timeout) |ts| {
         if (bun.Environment.isWindows) {
-            (if (this.uv_timer) |__zust_v| __zust_v else return error.Null).unref();
-            (if (this.uv_timer) |__zust_v| __zust_v else return error.Null).stop();
+            (this.uv_timer.?).unref();
+            (this.uv_timer.?).stop();
         } else {
             this.did_timeout = bun.timespec.now(.allow_mocked_time).order(ts) != .lt;
         }

@@ -229,7 +229,7 @@ fn makeGlobWalker(
         switch (try globWalker.initWithCwd(
             arena,
             this.pattern,
-            (if (cwd) |v| v else return error.Null),
+            (cwd.?),
             dot,
             absolute,
             follow_symlinks,

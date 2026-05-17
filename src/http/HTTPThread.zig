@@ -158,7 +158,7 @@ pub fn deflater(this: *@This()) *LibdeflateState {
         });
     }
 
-    return if (this.lazy_libdeflater) |__zust_v| __zust_v else return error.Null;
+    return this.lazy_libdeflater.?;
 }
 
 fn onInitErrorNoop(err: InitError, opts: InitOpts) noreturn {

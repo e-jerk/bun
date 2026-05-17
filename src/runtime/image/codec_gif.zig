@@ -218,7 +218,7 @@ fn decodeFrame(bytes: []const u8, lzw_off: usize, w: u32, h: u32, interlace: boo
             written += r[0];
             first = r[1];
         } else if (code == avail and prev != null) {
-            const r = dict.emit((if (prev) |v| v else return error.Null), clear, idx[written..], &scratch);
+            const r = dict.emit((prev.?), clear, idx[written..], &scratch);
             written += r[0];
             first = r[1];
             if (written < npix) {

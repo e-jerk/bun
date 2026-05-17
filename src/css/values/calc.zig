@@ -464,7 +464,7 @@ pub fn Calc(comptime V: type) type {
                     // Otherwise, if center is known to be less than the maximum, remove the max argument.
                     if (cmp) |cmp_val| {
                         if (cmp_val == std.math.Order.gt) {
-                            const val = if (max) |v| v else return error.Null;
+                            const val = max.?;
                             center = val;
                             max = null;
                         } else {

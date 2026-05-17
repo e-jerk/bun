@@ -31,7 +31,7 @@ pub fn allocate(this: *StringBuilder, allocator: Allocator) Allocator.Error!void
 
 pub fn deinit(this: *StringBuilder, allocator: Allocator) void {
     if (this.ptr == null or this.cap == 0) return;
-    allocator.free((if (this.ptr) |v| v else return error.Null)[0..this.cap]);
+    allocator.free((this.ptr.?)[0..this.cap]);
 }
 
 pub fn count16(this: *StringBuilder, slice: []const u16) void {
@@ -71,9 +71,9 @@ pub fn appendZ(this: *StringBuilder, slice: []const u8) [:0]const u8 {
         assert(this.ptr != null); // must call allocate first
     }
 
-    bun.copy(u8, (if (this.ptr) |v| v else return error.Null)[this.len..this.cap], slice);
-    (if (this.ptr) |v| v else return error.Null)[this.len + slice.len] = 0;
-    const result = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap][0..slice.len :0];
+    bun.copy(u8, (this.ptr.?)[this.len..this.cap], slice);
+    (this.ptr.?)[this.len + slice.len] = 0;
+    const result = (this.ptr.?)[this.len..this.cap][0..slice.len :0];
     this.len += slice.len + 1;
 
     if (comptime Environment.allow_assert) assert(this.len <= this.cap);
@@ -93,8 +93,8 @@ pub fn append(this: *StringBuilder, slice: []const u8) []const u8 {
         assert(this.ptr != null); // must call allocate first
     }
 
-    bun.copy(u8, (if (this.ptr) |v| v else return error.Null)[this.len..this.cap], slice);
-    const result = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap][0..slice.len];
+    bun.copy(u8, (this.ptr.?)[this.len..this.cap], slice);
+    const result = (this.ptr.?)[this.len..this.cap][0..slice.len];
     this.len += slice.len;
 
     if (comptime Environment.allow_assert) assert(this.len <= this.cap);
@@ -133,8 +133,8 @@ pub fn appendCount(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     }
 
     const start = this.len;
-    bun.copy(u8, (if (this.ptr) |v| v else return error.Null)[this.len..this.cap], slice);
-    const result = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap][0..slice.len];
+    bun.copy(u8, (this.ptr.?)[this.len..this.cap], slice);
+    const result = (this.ptr.?)[this.len..this.cap][0..slice.len];
     _ = result;
     this.len += slice.len;
 
@@ -150,9 +150,9 @@ pub fn appendCountZ(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     }
 
     const start = this.len;
-    bun.copy(u8, (if (this.ptr) |v| v else return error.Null)[this.len..this.cap], slice);
-    (if (this.ptr) |v| v else return error.Null)[this.len + slice.len] = 0;
-    const result = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap][0..slice.len];
+    bun.copy(u8, (this.ptr.?)[this.len..this.cap], slice);
+    (this.ptr.?)[this.len + slice.len] = 0;
+    const result = (this.ptr.?)[this.len..this.cap][0..slice.len];
     _ = result;
     this.len += slice.len;
     this.len += 1;
@@ -168,7 +168,7 @@ pub fn fmt(this: *StringBuilder, comptime str: []const u8, args: anytype) []cons
         assert(this.ptr != null); // must call allocate first
     }
 
-    const buf = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap];
+    const buf = (this.ptr.?)[this.len..this.cap];
     const out = std.fmt.bufPrint(buf, str, args) catch unreachable;
     this.len += out.len;
 
@@ -183,7 +183,7 @@ pub fn fmtAppendCount(this: *StringBuilder, comptime str: []const u8, args: anyt
         assert(this.ptr != null); // must call allocate first
     }
 
-    const buf = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap];
+    const buf = (this.ptr.?)[this.len..this.cap];
     const out = std.fmt.bufPrint(buf, str, args) catch unreachable;
     const off = this.len;
     this.len += out.len;
@@ -202,7 +202,7 @@ pub fn fmtAppendCountZ(this: *StringBuilder, comptime str: []const u8, args: any
         assert(this.ptr != null); // must call allocate first
     }
 
-    const buf = (if (this.ptr) |v| v else return error.Null)[this.len..this.cap];
+    const buf = (this.ptr.?)[this.len..this.cap];
     const out = std.fmt.bufPrintZ(buf, str, args) catch unreachable;
     const off = this.len;
     this.len += out.len;

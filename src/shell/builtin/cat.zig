@@ -52,7 +52,7 @@ pub fn start(this: *Cat) Yield {
         },
     };
 
-    const should_read_from_stdin = filepath_args == null or (if (filepath_args) |v| v else return error.Null).len == 0;
+    const should_read_from_stdin = filepath_args == null or (filepath_args.?).len == 0;
 
     if (should_read_from_stdin) {
         this.state = .{
@@ -61,7 +61,7 @@ pub fn start(this: *Cat) Yield {
     } else {
         this.state = .{
             .exec_filepath_args = .{
-                .args = (if (filepath_args) |v| v else return error.Null),
+                .args = (filepath_args.?),
             },
         };
     }

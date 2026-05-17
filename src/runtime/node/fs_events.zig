@@ -122,7 +122,7 @@ pub const CoreFoundation = struct {
 
         InitLibrary();
 
-        return (if (fsevents_cf) |v| v else return error.Null);
+        return (fsevents_cf.?);
     }
 
     // We Actually never deinit it
@@ -154,7 +154,7 @@ pub const CoreServices = struct {
 
         InitLibrary();
 
-        return (if (fsevents_cs) |v| v else return error.Null);
+        return (fsevents_cs.?);
     }
 
     // We Actually never deinit it
@@ -225,7 +225,7 @@ pub const FSEventsLoop = struct {
         pub fn run(this: *Task) void {
             const callback = this.callback;
             const ctx = this.ctx;
-            callback((if (ctx) |v| v else return error.Null));
+            callback((ctx.?));
         }
 
         pub fn New(comptime Type: type, comptime Callback: anytype) type {
@@ -238,7 +238,7 @@ pub const FSEventsLoop = struct {
                 }
 
                 pub fn wrap(this: ?*anyopaque) void {
-                    @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast((if (this) |v| v else return error.Null))))});
+                    @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast((this.?))))});
                 }
             };
         }
@@ -631,7 +631,7 @@ pub fn watch(path: string, recursive: bool, callback: FSEventsWatcher.Callback, 
         if (fsevents_default_loop == null) {
             fsevents_default_loop = try FSEventsLoop.init();
         }
-        return FSEventsWatcher.init((if (fsevents_default_loop) |v| v else return error.Null), path, recursive, callback, updateEnd, ctx);
+        return FSEventsWatcher.init((fsevents_default_loop.?), path, recursive, callback, updateEnd, ctx);
     }
 }
 

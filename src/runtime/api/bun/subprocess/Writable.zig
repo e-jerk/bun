@@ -161,14 +161,14 @@ const zust = @import("safe");
 
         if (comptime Environment.isPosix) {
             if (stdio.* == .pipe) {
-                _ = bun.sys.setNonblocking((if (result) |v| v else return error.Null));
+                _ = bun.sys.setNonblocking((result.?));
             }
         }
 
         switch (stdio.*) {
             .dup2 => @panic("TODO dup2 stdio"),
             .pipe, .readable_stream => {
-                const pipe = jsc.WebCore.FileSink.create(event_loop, (if (result) |v| v else return error.Null));
+                const pipe = jsc.WebCore.FileSink.create(event_loop, (result.?));
 
                 switch (pipe.writer.start(pipe.fd, true)) {
                     .result => {},
@@ -222,7 +222,7 @@ const zust = @import("safe");
                 return Writable{ .memfd = memfd };
             },
             .fd => {
-                return Writable{ .fd = (if (result) |v| v else return error.Null) };
+                return Writable{ .fd = (result.?) };
             },
             .inherit => {
                 return Writable{ .inherit = {} };

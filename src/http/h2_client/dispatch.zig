@@ -245,7 +245,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                 }
                 return;
             }
-            const stream = if (maybe_stream) |__zust_v| __zust_v else return error.Null;
+            const stream = maybe_stream.?;
             session.stream_progressed = true;
             if (header.flags & @intFromEnum(wire.HeadersFrameFlags.PADDED) != 0) {
                 fragment = stripPadding(fragment) orelse {

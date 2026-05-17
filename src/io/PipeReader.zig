@@ -947,8 +947,8 @@ pub const WindowsBufferedReader = struct {
     }
 
     pub fn startWithCurrentPipe(this: *WindowsBufferedReader) bun.sys.Maybe(void) {
-        bun.assert(!(if (this.source) |__zust_v| __zust_v else return error.Null).isClosed());
-        (if (this.source) |__zust_v| __zust_v else return error.Null).setData(this);
+        bun.assert(!(this.source.?).isClosed());
+        (this.source.?).setData(this);
         this.buffer().clearRetainingCapacity();
         this.flags.is_done = false;
         return this.startReading();

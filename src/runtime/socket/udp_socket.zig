@@ -95,7 +95,7 @@ fn onData(socket: *uws.udp.Socket, buf: *uws.udp.PacketBuffer, packets: c_int) c
         const slice = buf.getPayload(i);
         const truncated = buf.getTruncated(i);
 
-        const span = std.mem.span((if (hostname) |v| v else return error.Null));
+        const span = std.mem.span((hostname.?));
         var hostname_string = if (scope_id) |id| blk: {
             if (comptime !bun.Environment.isWindows) {
                 var buffer = std.mem.zeroes([bun.c.IF_NAMESIZE:0]u8);

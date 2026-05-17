@@ -1067,7 +1067,7 @@ fn writeFileWithEmptySourceToDestination(ctx: *jsc.JSGlobalObject, destination_b
                         const mode: bun.Mode = options.mode orelse jsc.Node.fs.default_permission;
                         var __loop_limit_1: usize = 0;
                         while (true) : (__loop_limit_1 += 1) {
-                            if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+                            if (__loop_limit_1 > 1_000_000) break;
                             const open_res = bun.sys.open(file.pathlike.path.sliceZ(&buf), bun.O.CREAT | bun.O.TRUNC, mode);
                             switch (open_res) {
                                 // errors fall through and are handled below
@@ -3292,7 +3292,7 @@ export fn Blob__fromBytes(globalThis: *jsc.JSGlobalObject, ptr: ?[*]const u8, le
         return blob;
     }
 
-    const bytes = bun.handleOom(bun.default_allocator.dupe(u8, (if (ptr) |v| v else return error.Null)[0..len]));
+    const bytes = bun.handleOom(bun.default_allocator.dupe(u8, (ptr.?)[0..len]));
     const store = Store.init(bytes, bun.default_allocator);
     return new(initWithStore(store, globalThis));
 }
@@ -3565,7 +3565,7 @@ pub fn initWithAllASCII(bytes: []u8, allocator: std.mem.Allocator, globalThis: *
     var store: ?*Blob.Store = null;
     if (bytes.len > 0) {
         store = Blob.Store.init(bytes, allocator);
-        (if (store) |v| v else return error.Null).is_all_ascii = is_all_ascii;
+        (store.?).is_all_ascii = is_all_ascii;
     }
     return Blob{
         .size = @as(SizeType, @truncate(bytes.len)),
@@ -3786,7 +3786,7 @@ pub fn toStringWithBytes(this: *Blob, global: *JSGlobalObject, raw_bytes: []cons
     // false == can't be
     const could_be_all_ascii = this.isAllASCII() orelse this.store.?.is_all_ascii;
 
-    if (could_be_all_ascii == null or !(if (could_be_all_ascii) |v| v else return error.Null)) {
+    if (could_be_all_ascii == null or !(could_be_all_ascii.?)) {
         // if toUTF16Alloc returns null, it means there are no non-ASCII characters
         // instead of erroring, invalid characters will become a U+FFFD replacement character
         if (strings.toUTF16Alloc(bun.default_allocator, buf, false, false) catch return global.throwOutOfMemory()) |external| {
@@ -3903,7 +3903,7 @@ pub fn toJSONWithBytes(this: *Blob, global: *JSGlobalObject, raw_bytes: []const 
     // free the original allocation, not the offset pointer.
     defer if (comptime lifetime == .temporary) bun.default_allocator.free(raw_bytes);
 
-    if (could_be_all_ascii == null or !(if (could_be_all_ascii) |v| v else return error.Null)) {
+    if (could_be_all_ascii == null or !(could_be_all_ascii.?)) {
         var stack_fallback = std.heap.stackFallback(4096, bun.default_allocator);
         const allocator = stack_fallback.get();
         // if toUTF16Alloc returns null, it means there are no non-ASCII characters
@@ -4227,7 +4227,7 @@ fn fromJSWithoutDeferGC(
 
     var __loop_limit_2: usize = 0;
     while (true) : (__loop_limit_2 += 1) {
-        if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+        if (__loop_limit_2 > 1_000_000) break;
         switch (current.jsTypeLoose()) {
             .NumberObject,
             jsc.JSValue.JSType.String,
@@ -4964,7 +4964,7 @@ pub fn FileOpener(comptime This: type) type {
 
             var __loop_limit_3: usize = 0;
             while (true) : (__loop_limit_3 += 1) {
-                if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+                if (__loop_limit_3 > 1_000_000) break;
                 this.opened_fd = switch (bun.sys.open(path, open_flags_, jsc.Node.fs.default_permission)) {
                     .result => |fd| fd,
                     .err => |err| {

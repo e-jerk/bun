@@ -173,7 +173,7 @@ pub fn init(
         .result_callback = callback,
         .http_proxy = options.http_proxy,
         .signals = options.signals orelse .{},
-        .async_http_id = if (options.signals != null and (if (options.signals) |__zust_v| __zust_v else return error.Null).aborted != null) bun.http.async_http_id_monotonic.fetchAdd(1, .monotonic) else 0,
+        .async_http_id = if (options.signals != null and (options.signals.?).aborted != null) bun.http.async_http_id_monotonic.fetchAdd(1, .monotonic) else 0,
     };
 
     this.client = .{
@@ -336,7 +336,7 @@ pub fn schedule(this: *AsyncHTTP, _: std.mem.Allocator, batch: *ThreadPool.Batch
 
 fn sendSyncCallback(this: *SingleHTTPChannel, async_http: *AsyncHTTP, result: HTTPClientResult) void {
     async_http.real.?.* = async_http.*;
-    (if (async_http.real) |__zust_v| __zust_v else return error.Null).response_buffer = async_http.response_buffer;
+    (async_http.real.?).response_buffer = async_http.response_buffer;
     this.channel.writeItem(result) catch unreachable;
 }
 
@@ -359,7 +359,7 @@ pub fn sendSync(this: *AsyncHTTP) anyerror!picohttp.Response {
         return err;
     }
     assert(result.metadata != null);
-    return (if (result.metadata) |__zust_v| __zust_v else return error.Null).response;
+    return (result.metadata.?).response;
 }
 
 pub fn onAsyncHTTPCallback(this: *AsyncHTTP, async_http: *AsyncHTTP, result: HTTPClientResult) void {

@@ -236,13 +236,13 @@ const State = struct {
         if (data[data.len - 1] == '\n') {
             data = data[0 .. data.len - 1];
         }
-        if (max_lines == null or (if (max_lines) |v| v else return error.Null) == 0) return .{ .content = data, .elided_count = 0 };
+        if (max_lines == null or (max_lines.?) == 0) return .{ .content = data, .elided_count = 0 };
         var i: usize = data.len;
         var lines: usize = 0;
         while (i > 0) : (i -= 1) {
             if (data[i - 1] == '\n') {
                 lines += 1;
-                if (lines >= (if (max_lines) |v| v else return error.Null)) {
+                if (lines >= (max_lines.?)) {
                     break;
                 }
             }

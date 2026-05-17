@@ -128,7 +128,7 @@ pub fn encode(rgba: []const u8, w: u32, h: u32, quality: u8, lossless: bool, icc
     else
         WebPEncodeRGBA(rgba.ptr, @intCast(w), @intCast(h), stride, @floatFromInt(quality), &out);
     if (len == 0 or out == null) return error.EncodeFailed;
-    const bitstream = (if (out) |v| v else return error.Null)[0..len];
+    const bitstream = (out.?)[0..len];
 
     // Fast path: no profile to attach, so the bare VP8/VP8L RIFF that
     // `WebPEncodeRGBA` produced is already the final container. Avoids the

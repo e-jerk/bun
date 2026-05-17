@@ -730,7 +730,7 @@ pub fn insert(
         var route = fr.routePtr(root_route);
 var __loop_limit_1: usize = 0;
 outer: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    if (__loop_limit_1 > 1_000_000) break;
             var next = route.first_child.unwrap();
             while (next) |current| {
                 const child = fr.routePtr(current);
@@ -742,7 +742,7 @@ outer: while (true) : (__loop_limit_1 += 1) {
                     route = fr.routePtr(current);
                     continue :outer;
                 }
-                next = fr.routePtr((if (next) |v| v else return error.Null)).next_sibling.unwrap() orelse
+                next = fr.routePtr((next.?)).next_sibling.unwrap() orelse
                     break;
             }
 

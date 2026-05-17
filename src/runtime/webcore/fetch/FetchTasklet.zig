@@ -931,7 +931,7 @@ const zust = @import("safe");
     }
 
     fn onStreamCancelledCallback(ctx: ?*anyopaque) void {
-        const this = bun.cast(*FetchTasklet, (if (ctx) |v| v else return error.Null));
+        const this = bun.cast(*FetchTasklet, (ctx.?));
         if (this.ignore_data) return;
         this.ignoreRemainingResponseBody();
     }

@@ -63,7 +63,7 @@ pub const Request = opaque {
     ) void {
         const Wrap = struct {
             fn each(n: [*]const u8, nl: usize, v: [*]const u8, vl: usize, ud: ?*anyopaque) callconv(.c) void {
-                cb(@ptrCast(@alignCast(if (ud) |__zust_v| __zust_v else return error.Null)), n[0..nl], v[0..vl]);
+                cb(@ptrCast(@alignCast(ud.?)), n[0..nl], v[0..vl]);
             }
         };
         c.uws_h3_req_for_each_header(this, Wrap.each, ctx);
@@ -173,7 +173,7 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, off: u64, p: ?*anyopaque) callconv(.c) bool {
-                return handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), off, r);
+                return handler(@ptrCast(@alignCast(p.?)), off, r);
             }
         };
         c.uws_h3_res_on_writable(this, W.cb, ud);
@@ -189,7 +189,7 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), r);
+                handler(@ptrCast(@alignCast(p.?)), r);
             }
         };
         c.uws_h3_res_on_aborted(this, W.cb, ud);
@@ -205,7 +205,7 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), r);
+                handler(@ptrCast(@alignCast(p.?)), r);
             }
         };
         c.uws_h3_res_on_timeout(this, W.cb, ud);
@@ -221,7 +221,7 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, ptr: [*c]const u8, len: usize, last: bool, p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), r, if (len > 0) ptr[0..len] else "", last);
+                handler(@ptrCast(@alignCast(p.?)), r, if (len > 0) ptr[0..len] else "", last);
             }
         };
         c.uws_h3_res_on_data(this, W.cb, ud);
@@ -236,7 +236,7 @@ pub const Response = opaque {
     pub fn runCorkedWithType(this: *Response, comptime UD: type, comptime handler: fn (UD) void, ud: UD) void {
         const W = struct {
             fn cb(p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)));
+                handler(@ptrCast(@alignCast(p.?)));
             }
         };
         c.uws_h3_res_cork(this, ud, W.cb);
@@ -270,7 +270,7 @@ pub const App = opaque {
     ) void {
         const W = struct {
             fn cb(res: *Response, req: *Request, p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), req, res);
+                handler(@ptrCast(@alignCast(p.?)), req, res);
             }
         };
         const f = switch (which) {
@@ -344,7 +344,7 @@ pub const App = opaque {
     ) void {
         const W = struct {
             fn cb(ls: ?*ListenSocket, p: ?*anyopaque) callconv(.c) void {
-                handler(@ptrCast(@alignCast(if (p) |__zust_v| __zust_v else return error.Null)), ls);
+                handler(@ptrCast(@alignCast(p.?)), ls);
             }
         };
         c.uws_h3_app_listen_with_config(this, config.host, config.port, config.options, W.cb, ud);
