@@ -97,7 +97,7 @@ pub const HostedGitInfo = struct {
         input: []const u8,
     ) error{ OutOfMemory, InvalidURL }![]const u8 {
         const writable = sb.writable();
-        var stream = std.io.fixedBufferStream(writable);
+        var stream = @import("std-io-compat").fixedBufferStream(writable);
         const decoded_len = PercentEncoding.decode(
             @TypeOf(stream.writer()),
             stream.writer(),
@@ -1379,7 +1379,7 @@ const HostProvider = enum {
 
                     const user_slice = blk: {
                         const writable = sb.writable();
-                        var stream = std.io.fixedBufferStream(writable);
+                        var stream = @import("std-io-compat").fixedBufferStream(writable);
                         const decoded_len = PercentEncoding.decode(
                             @TypeOf(stream.writer()),
                             stream.writer(),
@@ -1390,7 +1390,7 @@ const HostProvider = enum {
                     };
                     const project_slice = blk: {
                         const writable = sb.writable();
-                        var stream = std.io.fixedBufferStream(writable);
+                        var stream = @import("std-io-compat").fixedBufferStream(writable);
                         const decoded_len = PercentEncoding.decode(
                             @TypeOf(stream.writer()),
                             stream.writer(),
@@ -1401,7 +1401,7 @@ const HostProvider = enum {
                     };
                     const committish_slice = if (committish) |c| blk: {
                         const writable = sb.writable();
-                        var stream = std.io.fixedBufferStream(writable);
+                        var stream = @import("std-io-compat").fixedBufferStream(writable);
                         const decoded_len = PercentEncoding.decode(
                             @TypeOf(stream.writer()),
                             stream.writer(),

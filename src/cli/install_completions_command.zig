@@ -81,7 +81,7 @@ pub const InstallCompletionsCommand = struct {
             const bunx_cmd = bunx_cmd_with_z[0 .. bunx_cmd_with_z.len - 1 :0];
             // TODO: fix this zig bug, it is one line change to a few functions.
             // const file = try std.fs.createFileAbsoluteW(bunx_cmd, .{});
-            const file = try std.fs.cwd().createFileW(bunx_cmd, .{});
+            const file = try std.c.AT.FDCWD.createFileW(bunx_cmd, .{});
             defer file.close();
             try file.writeAll(script);
         }
@@ -115,7 +115,7 @@ pub const InstallCompletionsCommand = struct {
             comptime bun.strings.literal(u16, "uninstall.ps1"),
         });
 
-        const file = try std.fs.cwd().createFileW(uninstaller_path, .{});
+        const file = try std.c.AT.FDCWD.createFileW(uninstaller_path, .{});
         defer file.close();
 
         try file.writeAll(content);

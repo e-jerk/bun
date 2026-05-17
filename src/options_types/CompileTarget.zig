@@ -249,9 +249,9 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
                 const libarchive = bun.libarchive;
                 var tmpname_buf: [1024]u8 = undefined;
                 const tempdir_name = try bun.fs.FileSystem.tmpname("tmp", &tmpname_buf, bun.fastRandom());
-                var tmpdir = try std.fs.cwd().makeOpenPath(tempdir_name, .{});
+                var tmpdir = try std.c.AT.FDCWD.makeOpenPath(tempdir_name, .{});
                 defer tmpdir.close();
-                defer std.fs.cwd().deleteTree(tempdir_name) catch {};
+                defer std.c.AT.FDCWD.deleteTree(tempdir_name) catch {};
                 _ = libarchive.Archiver.extractToDir(
                     tarball_bytes.items,
                     tmpdir,
@@ -278,7 +278,7 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
                             did_retry = true;
                             const dirname = bun.path.dirname(dest_z, .loose);
                             if (dirname.len > 0) {
-                                std.fs.cwd().makePath(dirname) catch {};
+                                std.c.AT.FDCWD.makePath(dirname) catch {};
                                 continue;
                             }
 

@@ -35,9 +35,9 @@ pub const PackageInstaller = struct {
         list: Lockfile.Package.Scripts.List,
         tree_id: Lockfile.Tree.Id,
         optional: bool,
-    }) = .{},
+    }) = .empty,
 
-    trusted_dependencies_from_update_requests: std.AutoArrayHashMapUnmanaged(TruncatedPackageNameHash, void),
+    trusted_dependencies_from_update_requests: std.array_hash_map.Auto(TruncatedPackageNameHash, void),
 
     // uses same ids as lockfile.trees
     trees: []TreeContext,
@@ -149,7 +149,7 @@ pub const PackageInstaller = struct {
         /// Trees are drained breadth first because if the current tree is completed from
         /// the remaining pending installs, then any child tree has a higher chance of
         /// being able to install it's dependencies
-        pending_installs: std.ArrayListUnmanaged(DependencyInstallContext) = .{},
+        pending_installs: std.ArrayListUnmanaged(DependencyInstallContext) = .empty,
 
         binaries: Bin.PriorityQueue,
 
@@ -187,7 +187,7 @@ pub const PackageInstaller = struct {
         pub fn close(this: *LazyPackageDestinationDir) void {
             switch (this.*) {
                 .dir => {
-                    if (this.dir.fd != std.fs.cwd().fd) {
+                    if (this.dir.fd != std.c.AT.FDCWD.fd) {
                         this.dir.close();
                     }
                 },
@@ -892,7 +892,7 @@ pub const PackageInstaller = struct {
                         this.folder_path_buf[folder.len] = 0;
                         installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
                     }
-                    installer.cache_dir = std.fs.cwd();
+                    installer.cache_dir = std.c.AT.FDCWD;
                 } else {
                     // transitive folder dependencies are relative to their parent. they are not hoisted
                     @memcpy(this.folder_path_buf[0..folder.len], folder);
@@ -900,7 +900,7 @@ pub const PackageInstaller = struct {
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
 
                     // cache_dir might not be created yet (if it's in node_modules)
-                    installer.cache_dir = std.fs.cwd();
+                    installer.cache_dir = std.c.AT.FDCWD;
                 }
             },
             .local_tarball => {
@@ -921,11 +921,11 @@ pub const PackageInstaller = struct {
                     this.folder_path_buf[folder.len] = 0;
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
                 }
-                installer.cache_dir = std.fs.cwd();
+                installer.cache_dir = std.c.AT.FDCWD;
             },
             .root => {
                 installer.cache_dir_subpath = ".";
-                installer.cache_dir = std.fs.cwd();
+                installer.cache_dir = std.c.AT.FDCWD;
             },
             .symlink => {
                 const directory = this.manager.globalLinkDir();
@@ -934,7 +934,7 @@ pub const PackageInstaller = struct {
 
                 if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                     installer.cache_dir_subpath = ".";
-                    installer.cache_dir = std.fs.cwd();
+                    installer.cache_dir = std.c.AT.FDCWD;
                 } else {
                     const global_link_dir = this.manager.globalLinkDirPath();
                     var ptr = &this.folder_path_buf;
@@ -1115,7 +1115,7 @@ pub const PackageInstaller = struct {
             };
 
             defer {
-                if (std.fs.cwd().fd != destination_dir.fd) destination_dir.close();
+                if (std.c.AT.FDCWD.fd != destination_dir.fd) destination_dir.close();
             }
 
             var lazy_package_dir: LazyPackageDestinationDir = .{ .dir = destination_dir };

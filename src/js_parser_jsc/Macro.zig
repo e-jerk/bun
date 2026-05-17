@@ -6,7 +6,7 @@ pub fn isMacroPath(str: string) bool {
 }
 
 pub const MacroContext = struct {
-    pub const MacroMap = std.AutoArrayHashMap(i32, Macro);
+    pub const MacroMap = std.array_hash_map.Auto(i32, Macro);
 
     resolver: *Resolver,
     env: *DotEnv.Loader,

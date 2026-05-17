@@ -282,7 +282,7 @@ pub fn BoundedArrayAligned(
             @compileError("The Writer interface is only defined for BoundedArray(u8, ...) " ++
                 "but the given type is BoundedArray(" ++ @typeName(T) ++ ", ...)")
         else
-            std.io.GenericWriter(*Self, error{Overflow}, appendWrite);
+            @import("std-io-compat").GenericWriter(*Self, error{Overflow}, appendWrite);
 
         /// Initializes a writer which will write into the array.
         pub fn writer(self: *Self) Writer {
@@ -290,7 +290,7 @@ pub fn BoundedArrayAligned(
         }
 
         /// Same as `appendSlice` except it returns the number of bytes written, which is always the same
-        /// as `m.len`. The purpose of this function existing is to match `std.io.GenericWriter` API.
+        /// as `m.len`. The purpose of this function existing is to match `@import("std-io-compat").GenericWriter` API.
         fn appendWrite(self: *Self, m: []const u8) error{Overflow}!usize {
             try self.appendSlice(m);
             return m.len;

@@ -29,7 +29,7 @@ const zust = @import("safe");
 
     pub const Actions = struct {
         chdir_buf: ?[*:0]u8 = null,
-        actions: std.ArrayListUnmanaged(Action) = .{},
+        actions: std.ArrayListUnmanaged(Action) = .empty,
         detached: bool = false,
 
         pub fn init() !Actions {

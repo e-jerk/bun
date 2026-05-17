@@ -33,7 +33,7 @@ var getTemporaryDirectoryOnce = bun.once(struct {
         const temp_dir_name = Fs.FileSystem.RealFS.getDefaultTempDir();
 
         var tried_dot_tmp = false;
-        var tempdir: std.fs.Dir = bun.MakePath.makeOpenPath(std.fs.cwd(), temp_dir_name, .{}) catch brk: {
+        var tempdir: std.fs.Dir = bun.MakePath.makeOpenPath(std.c.AT.FDCWD, temp_dir_name, .{}) catch brk: {
             tried_dot_tmp = true;
             break :brk bun.MakePath.makeOpenPath(cache_directory, bun.pathLiteral(".tmp"), .{}) catch |err| {
                 Output.prettyErrorln("<r><red>error<r>: bun is unable to access tempdir: {s}", .{@errorName(err)});
@@ -124,7 +124,7 @@ noinline fn ensureCacheDirectory(this: *PackageManager) std.fs.Dir {
             const cache_dir = fetchCacheDirectoryPath(this.env, &this.options);
             this.cache_directory_path = bun.handleOom(this.allocator.dupeZ(u8, cache_dir.path));
 
-            return std.fs.cwd().makeOpenPath(cache_dir.path, .{}) catch {
+            return std.c.AT.FDCWD.makeOpenPath(cache_dir.path, .{}) catch {
                 this.options.enable.cache = false;
                 this.allocator.free(this.cache_directory_path);
                 continue :loop;
@@ -140,7 +140,7 @@ noinline fn ensureCacheDirectory(this: *PackageManager) std.fs.Dir {
             .auto,
         )) catch |err| bun.handleOom(err);
 
-        return std.fs.cwd().makeOpenPath("node_modules/.cache", .{}) catch |err| {
+        return std.c.AT.FDCWD.makeOpenPath("node_modules/.cache", .{}) catch |err| {
             Output.prettyErrorln("<r><red>error<r>: bun is unable to write files: {s}", .{@errorName(err)});
             Global.crash();
         };
@@ -475,7 +475,7 @@ pub fn computeCacheDirAndSubpath(
 ) struct { cache_dir: std.fs.Dir, cache_dir_subpath: stringZ } {
     const name = pkg_name;
     const buf = manager.lockfile.buffers.string_bytes.items;
-    var cache_dir = std.fs.cwd();
+    var cache_dir = std.c.AT.FDCWD;
     var cache_dir_subpath: stringZ = "";
 
     switch (resolution.tag) {
@@ -506,7 +506,7 @@ pub fn computeCacheDirAndSubpath(
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
             }
-            cache_dir = std.fs.cwd();
+            cache_dir = std.c.AT.FDCWD;
         },
         .local_tarball => {
             cache_dir_subpath = manager.cachedTarballFolderName(resolution.value.local_tarball, patch_hash);
@@ -526,7 +526,7 @@ pub fn computeCacheDirAndSubpath(
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
             }
-            cache_dir = std.fs.cwd();
+            cache_dir = std.c.AT.FDCWD;
         },
         .symlink => {
             const directory = manager.globalLinkDir();
@@ -535,7 +535,7 @@ pub fn computeCacheDirAndSubpath(
 
             if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                 cache_dir_subpath = ".";
-                cache_dir = std.fs.cwd();
+                cache_dir = std.c.AT.FDCWD;
             } else {
                 const global_link_dir = manager.globalLinkDirPath();
                 var ptr = folder_path_buf;
@@ -564,7 +564,7 @@ pub fn computeCacheDirAndSubpath(
 }
 
 pub fn attemptToCreatePackageJSONAndOpen() !std.fs.File {
-    const package_json_file = std.fs.cwd().createFileZ("package.json", .{ .read = true }) catch |err| {
+    const package_json_file = std.c.AT.FDCWD.createFileZ("package.json", .{ .read = true }) catch |err| {
         Output.prettyErrorln("<r><red>error:<r> {s} create package.json", .{@errorName(err)});
         Global.crash();
     };

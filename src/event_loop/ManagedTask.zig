@@ -27,7 +27,7 @@ pub fn cancel(this: *ManagedTask) void {
 pub fn New(comptime Type: type, comptime Callback: anytype) type {
     return struct {
         pub fn init(ctx: *Type) Task {
-            var managed = bun.handleOom(zust.Box(ManagedTask).init(bun.default_allocator, undefined));
+            var managed = bun.handleOom(bun.default_allocator.create(ManagedTask));
             managed.* = ManagedTask{
                 .callback = wrap,
                 .ctx = ctx,
@@ -36,7 +36,7 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
-            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.*.?)))});
+            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
         }
     };
 }

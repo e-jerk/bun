@@ -217,7 +217,7 @@ const RouteLoader = struct {
     config: Options.RouteConfig,
     route_dirname_len: u16 = 0,
 
-    dedupe_dynamic: std.AutoArrayHashMap(u32, string),
+    dedupe_dynamic: std.array_hash_map.Auto(u32, string),
     log: *Logger.Log,
     index: ?*Route = null,
     static_list: bun.StringHashMap(*Route),
@@ -327,7 +327,7 @@ const RouteLoader = struct {
             .fs = resolver.fs,
             .config = config,
             .static_list = bun.StringHashMap(*Route).init(allocator),
-            .dedupe_dynamic = std.AutoArrayHashMap(u32, string).init(allocator),
+            .dedupe_dynamic = std.array_hash_map.Auto(u32, string).init(allocator),
             .all_routes = .{},
             .route_dirname_len = route_dirname_len,
         };
@@ -918,7 +918,7 @@ pub const MockServer = struct {
 fn makeTest(cwd_path: string, data: anytype) !void {
     Output.initTest();
     bun.assert(cwd_path.len > 1 and !strings.eql(cwd_path, "/") and !strings.endsWith(cwd_path, "bun"));
-    const bun_tests_dir = try std.fs.cwd().makeOpenPath("bun-test-scratch", .{});
+    const bun_tests_dir = try std.c.AT.FDCWD.makeOpenPath("bun-test-scratch", .{});
     bun_tests_dir.deleteTree(cwd_path) catch {};
 
     const cwd = try bun_tests_dir.makeOpenPath(cwd_path, .{});

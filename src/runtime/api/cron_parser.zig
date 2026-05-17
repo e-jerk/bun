@@ -80,7 +80,7 @@ pub const CronExpression = struct {
     /// Format the expression as a normalized numeric "M H D Mo W" string
     /// suitable for crontab. Returns the written slice of `buf`.
     pub fn formatNumeric(self: CronExpression, buf: *[512]u8) []const u8 {
-        var stream = std.io.fixedBufferStream(buf);
+        var stream = @import("std-io-compat").fixedBufferStream(buf);
         const w = stream.writer();
         formatBitfield(w, u64, self.minutes, 0, 59);
         w.writeByte(' ') catch unreachable;

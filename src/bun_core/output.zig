@@ -20,7 +20,7 @@ pub var terminal_size: std.posix.winsize = .{
 pub const Source = struct {
     pub const StreamType: type = brk: {
         if (Environment.isWasm) {
-            break :brk std.io.FixedBufferStream([]u8);
+            break :brk @import("std-io-compat").FixedBufferStream([]u8);
         } else {
             break :brk File;
             // var stdout = std.fs.File.stdout();
@@ -750,12 +750,12 @@ inline fn printTo(dest: Destination, comptime fmt: string, args: anytype) void {
         switch (dest) {
             .stdout => {
                 source.stream.pos = 0;
-                source.stream.writer().print(fmt, args) catch unreachable;
+                source.stream.print(fmt, args) catch unreachable;
                 root.console_log(root.Uint8Array.fromSlice(source.stream.buffer[0..source.stream.pos]));
             },
             .stderr => {
                 source.error_stream.seekTo(0) catch return;
-                source.error_stream.writer().print(fmt, args) catch unreachable;
+                source.error_stream.print(fmt, args) catch unreachable;
                 root.console_error(root.Uint8Array.fromSlice(source.err_buffer[0..source.error_stream.pos]));
             },
         }
@@ -1293,7 +1293,7 @@ pub fn initScopedDebugWriterAtStartup() void {
     if (bun.env_var.BUN_DEBUG.get()) |path| {
         if (path.len > 0 and !strings.eql(path, "0") and !strings.eql(path, "false")) {
             if (std.fs.path.dirname(path)) |dir| {
-                std.fs.cwd().makePath(dir) catch {};
+                std.c.AT.FDCWD.makePath(dir) catch {};
             }
 
             // do not use libuv through this code path, since it might not be initialized yet.
@@ -1303,7 +1303,7 @@ pub fn initScopedDebugWriterAtStartup() void {
             const path_fmt = std.mem.replaceOwned(u8, bun.default_allocator, path, "{pid}", pid) catch @panic("failed to allocate path");
             defer bun.default_allocator.free(path_fmt);
 
-            const fd: bun.FD = .fromStdFile(std.fs.cwd().createFile(path_fmt, .{
+            const fd: bun.FD = .fromStdFile(std.c.AT.FDCWD.createFile(path_fmt, .{
                 .mode = if (Environment.isPosix) 0o644 else 0,
             }) catch |open_err| {
                 panic("Failed to open file for debug output: {s} ({s})", .{ @errorName(open_err), path });

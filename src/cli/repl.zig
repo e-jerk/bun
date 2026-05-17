@@ -828,14 +828,14 @@ fn write(_: *Repl, data: []const u8) void {
 }
 
 fn print(_: *Repl, comptime format: []const u8, args: anytype) void {
-    Output.writer().print(format, args) catch {};
+    Output.print(format, args) catch {};
 }
 
 fn printError(self: *Repl, comptime format: []const u8, args: anytype) void {
     if (self.use_colors) {
-        Output.writer().print(Color.red ++ format ++ Color.reset, args) catch {};
+        Output.print(Color.red ++ format ++ Color.reset, args) catch {};
     } else {
-        Output.writer().print(format, args) catch {};
+        Output.print(format, args) catch {};
     }
 }
 

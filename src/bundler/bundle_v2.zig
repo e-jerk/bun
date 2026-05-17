@@ -45,7 +45,7 @@
 pub const logPartDependencyTree = Output.scoped(.part_dep_tree, .visible);
 const zust = @import("safe");
 
-pub const MangledProps = std.AutoArrayHashMapUnmanaged(Ref, []const u8);
+pub const MangledProps = std.array_hash_map.Auto(Ref, []const u8);
 pub const PathToSourceIndexMap = @import("./PathToSourceIndexMap.zig");
 
 pub const Watcher = bun.jsc.hot_reloader.NewHotReloader(BundleV2, EventLoop, true);
@@ -125,17 +125,17 @@ pub const BundleV2 = struct {
     source_code_length: usize,
 
     /// There is a race condition where an onResolve plugin may schedule a task on the bundle thread before it's parsing task completes
-    resolve_tasks_waiting_for_import_source_index: std.AutoArrayHashMapUnmanaged(Index.Int, BabyList(struct { to_source_index: Index, import_record_index: u32 })) = .{},
+    resolve_tasks_waiting_for_import_source_index: std.array_hash_map.Auto(Index.Int, BabyList(struct { to_source_index: Index, import_record_index: u32 })) = .{},
 
     /// Allocations not tracked by a threadlocal heap
     free_list: std.array_list.Managed([]const u8) = std.array_list.Managed([]const u8).init(bun.default_allocator),
 
     /// See the comment in `Chunk.OutputPiece`
     unique_key: u64 = 0,
-    dynamic_import_entry_points: std.AutoArrayHashMap(Index.Int, void) = undefined,
+    dynamic_import_entry_points: std.array_hash_map.Auto(Index.Int, void) = undefined,
     has_on_parse_plugins: bool = false,
 
-    finalizers: std.ArrayListUnmanaged(CacheEntry.ExternalFreeFunction) = .{},
+    finalizers: std.ArrayListUnmanaged(CacheEntry.ExternalFreeFunction) = .empty,
 
     drain_defer_task: DeferredBatchTask = .{},
 
@@ -156,7 +156,7 @@ pub const BundleV2 = struct {
     /// track requested export names for deduplication and cycle detection.
     /// Persists across calls to scheduleBarrelDeferredImports so cross-file
     /// deduplication is free.
-    requested_exports: std.AutoArrayHashMapUnmanaged(u32, barrel_imports.RequestedExports) = .{},
+    requested_exports: std.array_hash_map.Auto(u32, barrel_imports.RequestedExports) = .{},
 
     const barrel_imports = @import("./barrel_imports.zig");
 
@@ -285,7 +285,7 @@ pub const BundleV2 = struct {
         all_urls_for_css: []const []const u8,
         redirects: []u32,
         redirect_map: PathToSourceIndexMap,
-        dynamic_import_entry_points: *std.AutoArrayHashMap(Index.Int, void),
+        dynamic_import_entry_points: *std.array_hash_map.Auto(Index.Int, void),
         /// Files which are Server Component Boundaries
         scb_bitset: ?bun.bit_set.DynamicBitSetUnmanaged,
         scb_list: ServerComponentBoundary.List.Slice,
@@ -403,7 +403,7 @@ pub const BundleV2 = struct {
             additional_files_imported_by_css_and_inlined.deinit(stack_alloc);
         }
 
-        this.dynamic_import_entry_points = std.AutoArrayHashMap(Index.Int, void).init(this.allocator());
+        this.dynamic_import_entry_points = std.array_hash_map.Auto(Index.Int, void).init(this.allocator());
 
         const all_urls_for_css = this.graph.ast.items(.url_for_css);
 
@@ -1037,7 +1037,7 @@ pub const BundleV2 = struct {
             .normal => []const []const u8,
             .dev_server => struct {
                 files: bake.DevServer.EntryPointList,
-                css_data: *std.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
+                css_data: *std.array_hash_map.Auto(Index, CssEntryPointMeta),
             },
             .bake_production => bake.production.EntryPointMap,
         },
@@ -1247,8 +1247,8 @@ pub const BundleV2 = struct {
         var server = try AstBuilder.init(this.allocator(), &bake.server_virtual_source, this.transpiler.options.hot_module_reloading);
         var client = try AstBuilder.init(this.allocator(), &bake.client_virtual_source, this.transpiler.options.hot_module_reloading);
 
-        var server_manifest_props: std.ArrayListUnmanaged(G.Property) = .{};
-        var client_manifest_props: std.ArrayListUnmanaged(G.Property) = .{};
+        var server_manifest_props: std.ArrayListUnmanaged(G.Property) = .empty;
+        var client_manifest_props: std.ArrayListUnmanaged(G.Property) = .empty;
 
         const scbs = this.graph.server_component_boundaries.list.slice();
         const named_exports_array = this.graph.ast.items(.named_exports);
@@ -2449,7 +2449,7 @@ pub const BundleV2 = struct {
         this.graph.heap.helpCatchMemoryIssues();
 
         this.dynamic_import_entry_points = .init(this.allocator());
-        var html_files: std.AutoArrayHashMapUnmanaged(Index, void) = .{};
+        var html_files: std.array_hash_map.Auto(Index, void) = .{};
 
         // Separate non-failing files into two lists: JS and CSS
         const js_reachable_files = reachable_files: {
@@ -4344,14 +4344,14 @@ pub const CssEntryPointMeta = struct {
 
 /// The lifetime of this structure is tied to the bundler's arena
 pub const DevServerInput = struct {
-    css_entry_points: std.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
+    css_entry_points: std.array_hash_map.Auto(Index, CssEntryPointMeta),
 };
 
 /// The lifetime of this structure is tied to the bundler's arena
 pub const DevServerOutput = struct {
     chunks: []Chunk,
-    css_file_list: std.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
-    html_files: std.AutoArrayHashMapUnmanaged(Index, void),
+    css_file_list: std.array_hash_map.Auto(Index, CssEntryPointMeta),
+    html_files: std.array_hash_map.Auto(Index, void),
 
     pub fn jsPseudoChunk(out: *const DevServerOutput) *Chunk {
         return &out.chunks[0];

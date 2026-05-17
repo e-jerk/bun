@@ -99,7 +99,7 @@ pub const UpdateInteractiveCommand = struct {
         const new_package_json_source = try manager.allocator.dupe(u8, package_json_writer.ctx.writtenWithoutTrailingZero());
 
         // Write the updated package.json
-        const write_file = std.fs.cwd().createFile(package_json_path, .{}) catch |err| {
+        const write_file = std.c.AT.FDCWD.createFile(package_json_path, .{}) catch |err| {
             manager.allocator.free(new_package_json_source);
             Output.errGeneric("Failed to write package.json at {s}: {s}", .{ package_json_path, @errorName(err) });
             return err;
@@ -545,7 +545,7 @@ pub const UpdateInteractiveCommand = struct {
         const packages = lockfile.packages.slice();
         const pkg_resolutions = packages.items(.resolution);
 
-        var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .{};
+        var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
         for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
@@ -566,7 +566,7 @@ pub const UpdateInteractiveCommand = struct {
         const pkg_resolutions = packages.items(.resolution);
         const string_buf = lockfile.buffers.string_bytes.items;
 
-        var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .{};
+        var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
         for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));

@@ -37,7 +37,7 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
                 break :brk win_temp_buffer[0 .. temp.len + suffix.len :0];
             },
         };
-        const dir = try std.fs.cwd().makeOpenPath(base_name, .{});
+        const dir = try std.c.AT.FDCWD.makeOpenPath(base_name, .{});
         BunDebugHolder.dir = dir;
         break :dir dir;
     };

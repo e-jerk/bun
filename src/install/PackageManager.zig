@@ -88,7 +88,7 @@ env_configure: ?ScriptRunEnvironment = null,
 lockfile: *Lockfile = undefined,
 
 options: Options,
-preinstall_state: std.ArrayListUnmanaged(PreinstallState) = .{},
+preinstall_state: std.ArrayListUnmanaged(PreinstallState) = .empty,
 postinstall_optimizer: PostinstallOptimizer.List = .{},
 
 global_link_dir: ?std.fs.Dir = null,
@@ -107,7 +107,7 @@ event_loop: jsc.AnyEventLoop,
 
 // During `installPackages` we learn exactly what dependencies from --trust
 // actually have scripts to run, and we add them to this list
-trusted_deps_to_add_to_package_json: std.ArrayListUnmanaged(string) = .{},
+trusted_deps_to_add_to_package_json: std.ArrayListUnmanaged(string) = .empty,
 
 any_failed_to_install: bool = false,
 
@@ -626,7 +626,7 @@ pub fn init(
                 package_json_path_buf[this_cwd.len + "/package.json".len] = 0;
                 const package_json_path = package_json_path_buf[0 .. this_cwd.len + "/package.json".len :0];
 
-                break :child std.fs.cwd().openFileZ(
+                break :child std.c.AT.FDCWD.openFileZ(
                     package_json_path,
                     .{ .mode = if (need_write) .read_write else .read_only },
                 ) catch |err| switch (err) {
@@ -693,7 +693,7 @@ pub fn init(
                     parent_path_buf[parent_without_trailing_slash.len..parent_path_buf.len][0.."/package.json".len].* = "/package.json".*;
                     parent_path_buf[parent_without_trailing_slash.len + "/package.json".len] = 0;
 
-                    const json_file = std.fs.cwd().openFileZ(
+                    const json_file = std.c.AT.FDCWD.openFileZ(
                         parent_path_buf[0 .. parent_without_trailing_slash.len + "/package.json".len :0].ptr,
                         .{ .mode = .read_write },
                     ) catch {

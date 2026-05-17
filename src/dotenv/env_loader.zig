@@ -659,7 +659,7 @@ pub const Loader = struct {
         comptime suffix: DotEnvFileSuffix,
         value_buffer: *std.array_list.Managed(u8),
     ) !void {
-        const dir_handle: std.fs.Dir = std.fs.cwd();
+        const dir_handle: std.fs.Dir = std.c.AT.FDCWD;
 
         switch (comptime suffix) {
             .development => {

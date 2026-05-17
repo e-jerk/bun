@@ -2091,13 +2091,13 @@ pub const BundleOptions = struct {
 };
 
 pub fn openOutputDir(output_dir: string) !std.fs.Dir {
-    return std.fs.cwd().openDir(output_dir, .{}) catch brk: {
-        std.fs.cwd().makeDir(output_dir) catch |err| {
+    return std.c.AT.FDCWD.openDir(output_dir, .{}) catch brk: {
+        std.c.AT.FDCWD.makeDir(output_dir) catch |err| {
             Output.printErrorln("error: Unable to mkdir \"{s}\": \"{s}\"", .{ output_dir, @errorName(err) });
             Global.crash();
         };
 
-        const handle = std.fs.cwd().openDir(output_dir, .{}) catch |err2| {
+        const handle = std.c.AT.FDCWD.openDir(output_dir, .{}) catch |err2| {
             Output.printErrorln("error: Unable to open \"{s}\": \"{s}\"", .{ output_dir, @errorName(err2) });
             Global.crash();
         };

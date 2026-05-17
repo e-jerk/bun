@@ -196,7 +196,7 @@ pub const EncodedPattern = struct {
 
     pub fn initFromParts(parts: []const Part, allocator: Allocator) !EncodedPattern {
         const slice = try allocator.alloc(u8, patternSerializedLength(parts));
-        var s = std.io.fixedBufferStream(slice);
+        var s = @import("std-io-compat").fixedBufferStream(slice);
         for (parts) |part|
             part.writeAsSerialized(s.writer()) catch
                 unreachable; // enough space
@@ -255,7 +255,7 @@ pub const EncodedPattern = struct {
         // multiple hash calls on small chunks. Allocation is not needed
         // since the upper bound is known (file path limits)
         var stack_space: [std.fs.max_path_bytes * 2]u8 = undefined;
-        var stream = std.io.fixedBufferStream(&stack_space);
+        var stream = @import("std-io-compat").fixedBufferStream(&stack_space);
         const w = stream.writer();
         var it = k.iterate();
         while (it.next()) |item| switch (item) {
@@ -591,7 +591,7 @@ pub const Style = union(enum) {
         comptime conventions: NextRoutingConvention,
     ) ![]Part {
         var i: usize = 1;
-        var parts: std.ArrayListUnmanaged(Part) = .{};
+        var parts: std.ArrayListUnmanaged(Part) = .empty;
         const stop_chars = switch (conventions) {
             .pages => "[",
             .app => "[(@",
@@ -1105,7 +1105,7 @@ fn scanInner(
                                 try EncodedPattern.initFromParts(parsed.parts, fr.pattern_string_arena.allocator())
                             else static_route: {
                                 const allocation = try fr.pattern_string_arena.allocator().alloc(u8, static_total_len);
-                                var s = std.io.fixedBufferStream(allocation);
+                                var s = @import("std-io-compat").fixedBufferStream(allocation);
                                 for (parsed.parts) |part|
                                     switch (part) {
                                         .text => |data| {
@@ -1361,7 +1361,8 @@ pub const JSFrameworkRouter = struct {
     fn partToJS(global: *JSGlobalObject, part: Part, temp_allocator: Allocator) !JSValue {
         var rendered = std.array_list.Managed(u8).init(temp_allocator);
         defer rendered.deinit();
-        try part.toStringForInternalUse(rendered.writer());
+        var aw = std.Io.Writer.Allocating.fromArrayList(temp_allocator, &rendered);
+        try part.toStringForInternalUse(aw.writer);
         var str = bun.String.cloneUTF8(rendered.items);
         return try str.transferToJS(global);
     }

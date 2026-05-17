@@ -89,7 +89,7 @@ const FileCoverage = struct {
     fnf: u32 = 0,
     fnh: u32 = 0,
     /// 1-based line number → summed hit count.
-    da: std.AutoArrayHashMapUnmanaged(u32, u32) = .empty,
+    da: std.array_hash_map.Auto(u32, u32) = .empty,
 
     fn lh(self: *const FileCoverage) u32 {
         var n: u32 = 0;

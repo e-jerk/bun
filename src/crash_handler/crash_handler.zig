@@ -53,7 +53,7 @@ threadlocal var unsupported_uv_function: ?[*:0]const u8 = null;
 /// rate or only crash due to assertion failures, are debug-only. See `Action`.
 pub threadlocal var current_action: ?Action = null;
 
-var before_crash_handlers: std.ArrayListUnmanaged(struct { *anyopaque, *const OnBeforeCrash }) = .{};
+var before_crash_handlers: std.ArrayListUnmanaged(struct { *anyopaque, *const OnBeforeCrash }) = .empty;
 
 var before_crash_handlers_mutex: bun.Mutex = .{};
 
@@ -372,7 +372,7 @@ pub fn crashHandler(
 
                     dumpStackTrace(trace.*, .{});
 
-                    trace_str_buf.writer().print("{f}", .{TraceString{
+                    trace_str_buf.print("{f}", .{TraceString{
                         .trace = trace,
                         .reason = reason,
                         .action = .view_trace,
@@ -437,7 +437,7 @@ pub fn crashHandler(
 
                     writer.writeAll(" ") catch std.posix.abort();
 
-                    trace_str_buf.writer().print("{f}", .{TraceString{
+                    trace_str_buf.print("{f}", .{TraceString{
                         .trace = trace,
                         .reason = reason,
                         .action = .open_issue,
@@ -1715,7 +1715,7 @@ pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimi
                 stderr.print("Unable to dump stack trace: Unable to open debug info: {s}\nFallback trace:\n", .{@errorName(err)}) catch return;
                 break :attempt_dump;
             };
-            writeStackTrace(trace, stderr, debug_info, std.io.tty.detectConfig(std.fs.File.stderr()), limits) catch |err| {
+            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(std.fs.File.stderr()), limits) catch |err| {
                 stderr.print("Unable to dump stack trace: {s}\nFallback trace:\n", .{@errorName(err)}) catch return;
                 break :attempt_dump;
             };
@@ -1735,7 +1735,7 @@ pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimi
                 stderr.print("Unable to dump stack trace: Unable to open debug info: {s}\n", .{@errorName(err)}) catch return;
                 return;
             };
-            writeStackTrace(trace, stderr, debug_info, std.io.tty.detectConfig(std.fs.File.stderr()), limits) catch |err| {
+            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(std.fs.File.stderr()), limits) catch |err| {
                 stderr.print("Unable to dump stack trace: {s}", .{@errorName(err)}) catch return;
                 return;
             };
@@ -1947,7 +1947,7 @@ pub fn writeStackTrace(
     stack_trace: std.builtin.StackTrace,
     out_stream: anytype,
     debug_info: *debug.SelfInfo,
-    tty_config: std.io.tty.Config,
+    tty_config: @import("std-io-compat").TtyConfig,
     limits: WriteStackTraceLimits,
 ) !void {
     if (builtin.strip_debug_info) return error.MissingDebugInfo;
@@ -2048,7 +2048,7 @@ fn printLineInfo(
     address: usize,
     symbol_name: []const u8,
     compile_unit_name: []const u8,
-    tty_config: std.io.tty.Config,
+    tty_config: @import("std-io-compat").TtyConfig,
 ) !void {
     const base_path = bun.Environment.base_path ++ std.fs.path.sep_str;
     nosuspend {
@@ -2105,14 +2105,14 @@ fn printLineInfo(
 /// - Record the whole slice into a buffer
 /// - Locate the column, expand a highlight to one word.
 /// - Print the line, with the highlight.
-fn printLineFromFileAnyOs(out_stream: anytype, tty_config: std.io.tty.Config, source_location: SourceLocation) !void {
+fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compat").TtyConfig, source_location: SourceLocation) !void {
     // Need this to always block even in async I/O mode, because this could potentially
     // be called from e.g. the event loop code crashing.
-    var f = try std.fs.cwd().openFile(source_location.file_name, .{});
+    var f = try std.c.AT.FDCWD.openFile(source_location.file_name, .{});
     defer f.close();
 
     var line_buf: [4096]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&line_buf);
+    var fbs = @import("std-io-compat").fixedBufferStream(&line_buf);
     read_line: {
         var buf: [4096]u8 = undefined;
         var amt_read = try f.read(buf[0..]);

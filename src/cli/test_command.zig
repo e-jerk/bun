@@ -72,7 +72,7 @@ pub fn writeTestStatusLine(comptime status: bun_test.Execution.Result, writer: a
 // - Add stdout/stderr to the JUnit report
 // - Add timestamp field to the JUnit report
 pub const JunitReporter = struct {
-    contents: std.ArrayListUnmanaged(u8) = .{},
+    contents: std.ArrayListUnmanaged(u8) = .empty,
     total_metrics: Metrics = .{},
     testcases_metrics: Metrics = .{},
     offset_of_testsuites_value: usize = 0,
@@ -80,7 +80,7 @@ pub const JunitReporter = struct {
     current_file: string = "",
     properties_list_to_repeat_in_every_test_suite: ?[]const u8 = null,
 
-    suite_stack: std.ArrayListUnmanaged(SuiteInfo) = .{},
+    suite_stack: std.ArrayListUnmanaged(SuiteInfo) = .empty,
     current_depth: u32 = 0,
 
     hostname_value: ?string = null,
@@ -580,9 +580,9 @@ pub const CommandLineReporter = struct {
     /// the terminal.
     worker_ipc_file_idx: ?u32 = null,
 
-    failures_to_repeat_buf: std.ArrayListUnmanaged(u8) = .{},
-    skips_to_repeat_buf: std.ArrayListUnmanaged(u8) = .{},
-    todos_to_repeat_buf: std.ArrayListUnmanaged(u8) = .{},
+    failures_to_repeat_buf: std.ArrayListUnmanaged(u8) = .empty,
+    skips_to_repeat_buf: std.ArrayListUnmanaged(u8) = .empty,
+    todos_to_repeat_buf: std.ArrayListUnmanaged(u8) = .empty,
 
     reporters: struct {
         dots: bool = false,
@@ -1410,7 +1410,7 @@ pub const TestCommand = struct {
         var snapshot_file_buf = std.array_list.Managed(u8).init(ctx.allocator);
         var snapshot_values = Snapshots.ValuesHashMap.init(ctx.allocator);
         var snapshot_counts = bun.StringHashMap(usize).init(ctx.allocator);
-        var inline_snapshots_to_write = std.AutoArrayHashMap(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
+        var inline_snapshots_to_write = std.array_hash_map.Auto(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
         jsc.VirtualMachine.isBunTest = true;
 
         var reporter = try zust.Box(CommandLineReporter).init(ctx.allocator, undefined);

@@ -7,7 +7,7 @@ pub const BunxCommand = struct {
     /// bunx-specific options parsed from argv.
     const Options = struct {
         /// CLI arguments to pass to the command being run.
-        passthrough_list: std.ArrayListUnmanaged(string) = .{},
+        passthrough_list: std.ArrayListUnmanaged(string) = .empty,
         /// `bunx <package_name>`
         package_name: string,
         /// The binary name to run (when using --package)
@@ -291,7 +291,7 @@ pub const BunxCommand = struct {
             if (is_stale) {
                 _ = target_package_json.close();
                 // If delete fails, oh well. Hope installation takes care of it.
-                std.fs.cwd().deleteTree(tempdir_name) catch {};
+                std.c.AT.FDCWD.deleteTree(tempdir_name) catch {};
                 return error.NeedToInstall;
             }
             _ = target_package_json.close();
@@ -745,7 +745,7 @@ pub const BunxCommand = struct {
             Global.exit(1);
         }
 
-        const bunx_install_dir = try std.fs.cwd().makeOpenPath(bunx_cache_dir, .{});
+        const bunx_install_dir = try std.c.AT.FDCWD.makeOpenPath(bunx_cache_dir, .{});
 
         create_package_json: {
             // create package.json, but only if it doesn't exist

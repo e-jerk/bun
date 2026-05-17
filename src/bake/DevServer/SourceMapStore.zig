@@ -563,5 +563,5 @@ const dumpBundle = DevServer.dumpBundle;
 const mapLog = DevServer.mapLog;
 
 const std = @import("std");
-const AutoArrayHashMapUnmanaged = std.AutoArrayHashMapUnmanaged;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
 const Allocator = std.mem.Allocator;

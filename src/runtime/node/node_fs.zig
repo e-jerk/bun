@@ -5739,7 +5739,7 @@ while (true) : (__loop_limit_5 += 1) {
 
     pub fn rmdir(this: *NodeFS, args: Arguments.RmDir, _: Flavor) Maybe(Return.Rmdir) {
         if (args.recursive) {
-            zigDeleteTree(std.fs.cwd(), args.path.slice(), .directory) catch |err| {
+            zigDeleteTree(std.c.AT.FDCWD, args.path.slice(), .directory) catch |err| {
                 var errno: bun.sys.E = switch (@as(anyerror, err)) {
                     error.AccessDenied => .PERM,
                     error.FileTooBig => .FBIG,
@@ -5795,7 +5795,7 @@ while (true) : (__loop_limit_5 += 1) {
 
         // We cannot use removefileat() on macOS because it does not handle write-protected files as expected.
         if (args.recursive) {
-            zigDeleteTree(std.fs.cwd(), args.path.slice(), .file) catch |err| {
+            zigDeleteTree(std.c.AT.FDCWD, args.path.slice(), .file) catch |err| {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 const errno: E = switch (@as(anyerror, err)) {
                     // error.InvalidHandle => .BADF,
@@ -6584,7 +6584,7 @@ while (true) : (__loop_limit_5 += 1) {
 
             const first_try = ret.errnoSysP(c.copyfile(src, dest, null, mode_), .copyfile, src) orelse return ret.success;
             if (first_try == .err and first_try.err.errno == @intFromEnum(Syscall.E.NOENT)) {
-                bun.makePath(std.fs.cwd(), bun.path.dirname(dest, .auto)) catch {};
+                bun.makePath(std.c.AT.FDCWD, bun.path.dirname(dest, .auto)) catch {};
                 return ret.errnoSysP(c.copyfile(src, dest, null, mode_), .copyfile, src) orelse ret.success;
             }
             return first_try;
@@ -6862,7 +6862,7 @@ cfr: while (true) : (__loop_limit_7 += 1) {
                     switch (err) {
                         .FILE_EXISTS, .ALREADY_EXISTS => errpath = dest,
                         .PATH_NOT_FOUND => {
-                            bun.makePathW(std.fs.cwd(), bun.path.dirnameW(dest)) catch {};
+                            bun.makePathW(std.c.AT.FDCWD, bun.path.dirnameW(dest)) catch {};
                             const second_try = windows.CopyFileW(src, dest, @intFromBool(mode.shouldntOverwrite()));
                             if (second_try > 0) return ret.success;
                             err = windows.GetLastError();

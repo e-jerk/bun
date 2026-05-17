@@ -57,7 +57,7 @@ pub fn installIsolatedPackages(
         // The universe of distinct peer-dependency names is small even in large
         // lockfiles, so each per-package set is a bitset over that universe and the
         // fixpoint is bitwise OR/ANDNOT on a contiguous buffer.
-        var peer_name_idx: std.AutoArrayHashMapUnmanaged(PackageNameHash, void) = .empty;
+        var peer_name_idx: std.array_hash_map.Auto(PackageNameHash, void) = .empty;
         defer peer_name_idx.deinit(lockfile.allocator);
         for (dependencies) |dep| {
             if (dep.behavior.isPeer()) {
@@ -729,7 +729,7 @@ pub fn installIsolatedPackages(
                     hasher.update(pkg_name.slice(string_buf));
                     const pkg_res = pkg_resolutions[peer_ids.pkg_id];
                     res_fmt_buf.clearRetainingCapacity();
-                    try res_fmt_buf.writer().print("{f}", .{pkg_res.fmt(string_buf, .posix)});
+                    try res_fmt_buf.print("{f}", .{pkg_res.fmt(string_buf, .posix)});
                     hasher.update(res_fmt_buf.items);
                 }
                 break :peer_hash .from(hasher.final());
@@ -861,7 +861,7 @@ pub fn installIsolatedPackages(
     const WyhashWriter = struct {
         hasher: *std.hash.Wyhash,
         const E = error{};
-        pub fn writer(self: *@This()) std.io.GenericWriter(*@This(), E, write) {
+        pub fn writer(self: *@This()) @import("std-io-compat").GenericWriter(*@This(), E, write) {
             return .{ .context = self };
         }
         fn write(self: *@This(), bytes: []const u8) E!usize {
@@ -1097,7 +1097,7 @@ pub fn installIsolatedPackages(
             defer scc_stack.deinit(manager.allocator);
             var work: std.ArrayListUnmanaged(struct { v: u32, child: u32 }) = .empty;
             defer work.deinit(manager.allocator);
-            var scc_ext: std.AutoArrayHashMapUnmanaged(u64, void) = .empty;
+            var scc_ext: std.array_hash_map.Auto(u64, void) = .empty;
             defer scc_ext.deinit(manager.allocator);
 
             var index_counter: u32 = 0;

@@ -11,7 +11,7 @@ const zust = @import("safe");
         // pointer in this file. `manager.lockfile` is incorrect
         lockfile: ?*Lockfile,
 
-        bundled_deps: std.ArrayListUnmanaged(BundledDep) = .{},
+        bundled_deps: std.ArrayListUnmanaged(BundledDep) = .empty,
 
         stats: Stats = .{},
 
@@ -248,15 +248,15 @@ const zust = @import("safe");
             }
         }
 
-        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .{};
+        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .empty;
         defer ignores.deinit(allocator);
 
-        var dirs: std.ArrayListUnmanaged(DirInfo) = .{};
+        var dirs: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer dirs.deinit(allocator);
 
         try dirs.append(allocator, .{ root_dir, "", 1 });
 
-        var included_dirs: std.ArrayListUnmanaged(DirInfo) = .{};
+        var included_dirs: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer included_dirs.deinit(allocator);
 
         var subpath_dedupe = bun.StringHashMap(void).init(allocator);
@@ -391,15 +391,15 @@ const zust = @import("safe");
         dedupe: *bun.StringHashMap(void),
         log_level: LogLevel,
     ) OOM!void {
-        var dirs: std.ArrayListUnmanaged(DirInfo) = .{};
+        var dirs: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer dirs.deinit(allocator);
 
         try dirs.append(allocator, root_dir_info);
 
-        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .{};
+        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .empty;
         defer ignores.deinit(allocator);
 
-        var negated_excludes: std.ArrayListUnmanaged(Pattern) = .{};
+        var negated_excludes: std.ArrayListUnmanaged(Pattern) = .empty;
         defer negated_excludes.deinit(allocator);
 
         if (excludes.len > 0) {
@@ -561,7 +561,7 @@ const zust = @import("safe");
         var dedupe = bun.StringHashMap(void).init(ctx.allocator);
         defer dedupe.deinit();
 
-        var additional_bundled_deps: std.ArrayListUnmanaged(DirInfo) = .{};
+        var additional_bundled_deps: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer additional_bundled_deps.deinit(ctx.allocator);
 
         var iter = DirIterator.iterate(.fromStdDir(dir), .u8);
@@ -679,7 +679,7 @@ const zust = @import("safe");
     ) OOM!void {
         ctx.stats.bundled_deps += 1;
 
-        var dirs: std.ArrayListUnmanaged(DirInfo) = .{};
+        var dirs: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer dirs.deinit(ctx.allocator);
 
         try dirs.append(ctx.allocator, bundled_dir_info);
@@ -809,12 +809,12 @@ const zust = @import("safe");
         root_dir: DirInfo,
         log_level: LogLevel,
     ) OOM!void {
-        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .{};
+        var ignores: std.ArrayListUnmanaged(IgnorePatterns) = .empty;
         defer ignores.deinit(allocator);
 
         // Stacks and depth-first traversal. Doing so means we can push and pop from
         // ignore patterns without needing to clone the entire list for future use.
-        var dirs: std.ArrayListUnmanaged(DirInfo) = .{};
+        var dirs: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer dirs.deinit(allocator);
 
         try dirs.append(allocator, root_dir);
@@ -916,7 +916,7 @@ const zust = @import("safe");
         json: Expr,
         comptime field: string,
     ) OOM!?std.ArrayListUnmanaged(BundledDep) {
-        var deps: std.ArrayListUnmanaged(BundledDep) = .{};
+        var deps: std.ArrayListUnmanaged(BundledDep) = .empty;
         const bundled_deps = json.get(field) orelse return null;
 
         invalid_field: {
@@ -978,7 +978,7 @@ const zust = @import("safe");
         allocator: std.mem.Allocator,
         json: Expr,
     ) OOM![]const BinInfo {
-        var bins: std.ArrayListUnmanaged(BinInfo) = .{};
+        var bins: std.ArrayListUnmanaged(BinInfo) = .empty;
 
         var path_buf: PathBuffer = undefined;
 
@@ -1471,8 +1471,8 @@ const zust = @import("safe");
             if (json.root.get("files")) |files| {
                 files_error: {
                     if (files.asArray()) |_files_array| {
-                        var includes: std.ArrayListUnmanaged(Pattern) = .{};
-                        var excludes: std.ArrayListUnmanaged(Pattern) = .{};
+                        var includes: std.ArrayListUnmanaged(Pattern) = .empty;
+                        var excludes: std.ArrayListUnmanaged(Pattern) = .empty;
                         defer {
                             includes.deinit(ctx.allocator);
                             excludes.deinit(ctx.allocator);
@@ -1672,7 +1672,7 @@ const zust = @import("safe");
             const most_likely_a_slash = dest_buf[abs_tarball_dest_dir_end];
             dest_buf[abs_tarball_dest_dir_end] = 0;
             const abs_tarball_dest_dir = dest_buf[0..abs_tarball_dest_dir_end :0];
-            bun.makePath(std.fs.cwd(), abs_tarball_dest_dir) catch {};
+            bun.makePath(std.c.AT.FDCWD, abs_tarball_dest_dir) catch {};
             dest_buf[abs_tarball_dest_dir_end] = most_likely_a_slash;
         }
 
@@ -2457,7 +2457,7 @@ const zust = @import("safe");
 
         // ignore files are always ignored, don't need to worry about opening or reading twice
         pub fn readFromDisk(allocator: std.mem.Allocator, dir: std.fs.Dir, dir_depth: usize) OOM!?IgnorePatterns {
-            var patterns: std.ArrayListUnmanaged(Pattern) = .{};
+            var patterns: std.ArrayListUnmanaged(Pattern) = .empty;
             errdefer patterns.deinit(allocator);
 
             var ignore_kind: Kind = .@".npmignore";
@@ -2649,7 +2649,7 @@ pub const bindings = struct {
         const tarball_path = tarball_path_str.toUTF8(bun.default_allocator);
         defer tarball_path.deinit();
 
-        const tarball_file = File.from(std.fs.cwd().openFile(tarball_path.slice(), .{}) catch |err| {
+        const tarball_file = File.from(std.c.AT.FDCWD.openFile(tarball_path.slice(), .{}) catch |err| {
             return global.throw("failed to open tarball file \"{s}\": {s}", .{ tarball_path.slice(), @errorName(err) });
         });
         defer tarball_file.close();

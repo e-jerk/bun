@@ -1072,7 +1072,7 @@ pub fn migrateNPMLockfile(
     try this.resolve(log);
 
     // if (Environment.isDebug) {
-    //     const dump_file = try std.fs.cwd().createFileZ("after-clean.json", .{});
+    //     const dump_file = try std.c.AT.FDCWD.createFileZ("after-clean.json", .{});
     //     defer dump_file.close();
     //     try std.json.stringify(this, .{ .whitespace = .indent_2 }, dump_file.writer());
     // }

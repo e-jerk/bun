@@ -317,7 +317,7 @@ pub fn Writer(comptime WritableStream: type) type {
     };
 }
 
-pub const ByteWriter = Writer(*std.io.FixedBufferStream([]u8));
+pub const ByteWriter = Writer(*@import("std-io-compat").FixedBufferStream([]u8));
 pub const FileWriter = Writer(std.fs.File);
 
 pub const api = struct {

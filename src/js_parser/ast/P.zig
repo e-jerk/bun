@@ -482,9 +482,9 @@ pub fn NewParser_(
         /// will be set to the most recently visited node (as a way to mark that this
         /// node has metadata) and "tsNamespaceMemberData" will be set to the metadata.
         ts_namespace: RecentlyVisitedTSNamespace = .{},
-        top_level_enums: std.ArrayListUnmanaged(Ref) = .{},
+        top_level_enums: std.ArrayListUnmanaged(Ref) = .empty,
 
-        scopes_in_order_for_enum: std.AutoArrayHashMapUnmanaged(logger.Loc, []ScopeOrder) = .{},
+        scopes_in_order_for_enum: std.array_hash_map.Auto(logger.Loc, []ScopeOrder) = .{},
 
         // If this is true, then all top-level statements are wrapped in a try/catch
         will_wrap_module_in_try_catch_for_using: bool = false,

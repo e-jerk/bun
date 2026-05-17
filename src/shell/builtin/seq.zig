@@ -1,6 +1,6 @@
 const zust = @import("safe");
 state: enum { idle, err, done } = .idle,
-buf: std.ArrayListUnmanaged(u8) = .{},
+buf: std.ArrayListUnmanaged(u8) = .empty,
 _start: f32 = 1,
 _end: f32 = 1,
 increment: f32 = 1,

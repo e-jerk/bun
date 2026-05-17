@@ -19,6 +19,10 @@ pub const IOReader = Interpreter.IOReader;
 pub const Yield = @import("../../shell/Yield.zig").Yield;
 pub const unreachableState = interpret.unreachableState;
 
+// Re-export AST and SmolList from the main shell module
+pub const AST = @import("../../shell/shell.zig").AST;
+pub const SmolList = @import("../../shell/shell.zig").SmolList;
+
 pub const SUBSHELL_TODO_ERROR = "Subshells are not implemented, please open GitHub issue!";
 
 /// Using these instead of the file descriptor decl literals to make sure we use LivUV fds on Windows

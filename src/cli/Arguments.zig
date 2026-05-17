@@ -9,7 +9,7 @@ pub fn noop_resolver(in: string) !string {
 }
 
 pub fn fileReadError(err: anyerror, stderr: anytype, filename: string, kind: string) noreturn {
-    stderr.writer().print("Error reading file \"{s}\" for {s}: {s}", .{ filename, kind, @errorName(err) }) catch {};
+    stderr.print("Error reading file \"{s}\" for {s}: {s}", .{ filename, kind, @errorName(err) }) catch {};
     std.process.exit(1);
 }
 

@@ -513,7 +513,7 @@ test "LinearFifo(u8, .Dynamic)" {
     fifo.shrink(0);
 
     {
-        try fifo.writer().print("{s}, {s}!", .{ "Hello", "World" });
+        try fifo.print("{s}, {s}!", .{ "Hello", "World" });
         var result: [30]u8 = undefined;
         try testing.expectEqualSlices(u8, "Hello, World!", result[0..fifo.read(&result)]);
         try testing.expectEqual(@as(usize, 0), fifo.readableLength());
@@ -530,9 +530,9 @@ test "LinearFifo(u8, .Dynamic)" {
 
     {
         try fifo.ensureTotalCapacity(1);
-        var in_fbs = std.io.fixedBufferStream("pump test");
+        var in_fbs = @import("std-io-compat").fixedBufferStream("pump test");
         var out_buf: [50]u8 = undefined;
-        var out_fbs = std.io.fixedBufferStream(&out_buf);
+        var out_fbs = @import("std-io-compat").fixedBufferStream(&out_buf);
         try fifo.pump(in_fbs.reader(), out_fbs.writer());
         try testing.expectEqualSlices(u8, in_fbs.buffer, out_fbs.getWritten());
     }

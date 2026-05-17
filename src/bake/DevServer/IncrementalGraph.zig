@@ -2077,5 +2077,5 @@ const Shared = bun.ptr.Shared;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.AutoArrayHashMapUnmanaged;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
 const Allocator = std.mem.Allocator;

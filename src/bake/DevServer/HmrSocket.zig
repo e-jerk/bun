@@ -205,7 +205,7 @@ pub fn onMessage(s: *HmrSocket, ws: AnyWebSocket, msg: []const u8, opcode: uws.O
             }
         },
         .unref_source_map => {
-            var fbs = std.io.fixedBufferStream(msg[1..]);
+            var fbs = @import("std-io-compat").fixedBufferStream(msg[1..]);
             const r = fbs.reader();
 
             const source_map_id = SourceMapStore.Key.init(r.readInt(u64, .little) catch

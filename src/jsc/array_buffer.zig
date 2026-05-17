@@ -141,7 +141,7 @@ pub const ArrayBuffer = extern struct {
     pub const empty = ArrayBuffer{ .len = 0, .byte_len = 0, .typed_array_type = .Uint8Array, .ptr = &.{} };
 
     pub const name = "Bun__ArrayBuffer";
-    pub const Stream = std.io.FixedBufferStream([]u8);
+    pub const Stream = @import("std-io-compat").FixedBufferStream([]u8);
 
     pub inline fn stream(this: ArrayBuffer) Stream {
         return Stream{ .pos = 0, .buf = this.slice() };

@@ -1007,7 +1007,7 @@ fn fetchImpl(
         var path_buf: bun.PathBuffer = undefined;
         const PercentEncoding = @import("../../url/url.zig").PercentEncoding;
         var path_buf2: bun.PathBuffer = undefined;
-        var stream = std.io.fixedBufferStream(&path_buf2);
+        var stream = @import("std-io-compat").fixedBufferStream(&path_buf2);
         var url_path_decoded = path_buf2[0 .. PercentEncoding.decode(
             @TypeOf(&stream.writer()),
             &stream.writer(),

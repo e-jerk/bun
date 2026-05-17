@@ -11,7 +11,7 @@ const SslContextCacheEntry = struct {
 };
 const ssl_context_cache_max_size = 60;
 const ssl_context_cache_ttl_ns = 30 * std.time.ns_per_min;
-var custom_ssl_context_map = std.AutoArrayHashMap(*SSLConfig, SslContextCacheEntry).init(bun.default_allocator);
+var custom_ssl_context_map = std.array_hash_map.Auto(*SSLConfig, SslContextCacheEntry).init(bun.default_allocator);
 
 loop: *jsc.MiniEventLoop,
 http_context: NewHTTPContext(false),
@@ -22,7 +22,7 @@ queued_tasks: Queue = Queue{},
 /// `active_requests_count >= max_simultaneous_requests`. Kept in FIFO order
 /// and processed before `queued_tasks` on the next `drainEvents`. Owned by
 /// the HTTP thread; never accessed concurrently.
-deferred_tasks: std.ArrayListUnmanaged(*AsyncHTTP) = .{},
+deferred_tasks: std.ArrayListUnmanaged(*AsyncHTTP) = .empty,
 /// Set by `drainQueuedShutdowns` when a shutdown's `async_http_id` wasn't in
 /// `socket_async_http_abort_tracker` — the request is either not yet started
 /// (still in `queued_tasks`/`deferred_tasks`) or already done. `drainEvents`

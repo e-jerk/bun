@@ -484,7 +484,7 @@ const zust = @import("safe");
         const encoded_name = bun.fmt.dependencyUrl(package_name);
 
         // Try to get package metadata to check if version exists
-        url_buf.writer().print("{s}/{f}", .{ registry_url, encoded_name }) catch return false;
+        url_buf.print("{s}/{f}", .{ registry_url, encoded_name }) catch return false;
 
         const package_url = URL.parse(url_buf.items);
 
@@ -498,10 +498,10 @@ const zust = @import("safe");
         defer auth_buf.deinit();
 
         if (registry.token.len > 0) {
-            auth_buf.writer().print("Bearer {s}", .{registry.token}) catch return false;
+            auth_buf.print("Bearer {s}", .{registry.token}) catch return false;
             headers.count("authorization", auth_buf.items);
         } else if (registry.auth.len > 0) {
-            auth_buf.writer().print("Basic {s}", .{registry.auth}) catch return false;
+            auth_buf.print("Basic {s}", .{registry.auth}) catch return false;
             headers.count("authorization", auth_buf.items);
         }
 
@@ -510,11 +510,11 @@ const zust = @import("safe");
 
         if (registry.token.len > 0) {
             auth_buf.clearRetainingCapacity();
-            auth_buf.writer().print("Bearer {s}", .{registry.token}) catch return false;
+            auth_buf.print("Bearer {s}", .{registry.token}) catch return false;
             headers.append("authorization", auth_buf.items);
         } else if (registry.auth.len > 0) {
             auth_buf.clearRetainingCapacity();
-            auth_buf.writer().print("Basic {s}", .{registry.auth}) catch return false;
+            auth_buf.print("Basic {s}", .{registry.auth}) catch return false;
             headers.append("authorization", auth_buf.items);
         }
 
@@ -592,7 +592,7 @@ const zust = @import("safe");
 
         const publish_req_body = try constructPublishRequestBody(directory_publish, ctx);
 
-        var print_buf: std.ArrayListUnmanaged(u8) = .{};
+        var print_buf: std.ArrayListUnmanaged(u8) = .empty;
         defer print_buf.deinit(ctx.allocator);
         var print_writer = print_buf.writer(ctx.allocator);
 
@@ -1283,7 +1283,7 @@ while (true) : (__loop_limit_1 += 1) {
                     }
                 };
 
-                var dirs: std.ArrayListUnmanaged(struct { std.fs.Dir, string, bool }) = .{};
+                var dirs: std.ArrayListUnmanaged(struct { std.fs.Dir, string, bool }) = .empty;
                 defer dirs.deinit(allocator);
 
                 try dirs.append(allocator, .{ bin_dir.stdDir(), normalized_bin_dir, false });

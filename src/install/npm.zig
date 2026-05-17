@@ -958,7 +958,7 @@ pub const PackageManifest = struct {
             pos.* += bytes.len;
         }
 
-        pub fn readArray(stream: *std.io.FixedBufferStream([]const u8), comptime Type: type) ![]const Type {
+        pub fn readArray(stream: *@import("std-io-compat").FixedBufferStream([]const u8), comptime Type: type) ![]const Type {
             var reader = stream.reader();
             const byte_len = try reader.readInt(u64, .little);
             if (byte_len == 0) {
@@ -1207,7 +1207,7 @@ pub const PackageManifest = struct {
             const file_id = bun.Wyhash11.hash(0, this.name());
             var dest_path_buf: [512 + 64]u8 = undefined;
             var out_path_buf: [("18446744073709551615".len * 2) + "_".len + ".npm".len + 1]u8 = undefined;
-            var dest_path_stream = std.io.fixedBufferStream(&dest_path_buf);
+            var dest_path_stream = @import("std-io-compat").fixedBufferStream(&dest_path_buf);
             var dest_path_stream_writer = dest_path_stream.writer();
             const file_id_hex_fmt = bun.fmt.hexIntLower(file_id);
             const hex_timestamp: usize = @intCast(@max(std.time.milliTimestamp(), 0));
@@ -1259,7 +1259,7 @@ pub const PackageManifest = struct {
             if (!strings.eqlComptime(bytes[0..header_bytes.len], header_bytes)) {
                 return null;
             }
-            var pkg_stream = std.io.fixedBufferStream(bytes);
+            var pkg_stream = @import("std-io-compat").fixedBufferStream(bytes);
             pkg_stream.pos = header_bytes.len;
 
             var reader = pkg_stream.reader();

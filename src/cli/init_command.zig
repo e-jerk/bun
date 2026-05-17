@@ -263,7 +263,7 @@ while (true) : (__loop_limit_1 += 1) {
             /// Format arguments
             args: anytype,
         ) !void {
-            var file = try std.fs.cwd().createFile(filename, .{ .truncate = true });
+            var file = try std.c.AT.FDCWD.createFile(filename, .{ .truncate = true });
             defer file.close();
             var file_w = file.writerStreaming(&.{});
             const file_i = &file_w.interface;
@@ -294,7 +294,7 @@ while (true) : (__loop_limit_1 += 1) {
             /// Format arguments
             args: anytype,
         ) !void {
-            var file = try std.fs.cwd().createFile(filename, .{ .truncate = true });
+            var file = try std.c.AT.FDCWD.createFile(filename, .{ .truncate = true });
             defer file.close();
             var file_w = file.writerStreaming(&.{});
             var file_i = &file_w.interface;
@@ -395,7 +395,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         if (initialize_in_folder) |ifdir| {
-            std.fs.cwd().makePath(ifdir) catch |err| {
+            std.c.AT.FDCWD.makePath(ifdir) catch |err| {
                 Output.prettyErrorln("Failed to create directory {s}: {s}", .{ ifdir, @errorName(err) });
                 Global.exit(1);
             };
@@ -407,7 +407,7 @@ while (true) : (__loop_limit_1 += 1) {
 
         var fs = try Fs.FileSystem.init(null);
         const pathname = Fs.PathName.init(fs.topLevelDirWithoutTrailingSlash());
-        const destination_dir = std.fs.cwd();
+        const destination_dir = std.c.AT.FDCWD;
 
         var fields = PackageJSONFields{};
 
@@ -514,7 +514,7 @@ while (true) : (__loop_limit_1 += 1) {
             }
 
             // Find any source file
-            var dir = std.fs.cwd().openDir(".", .{ .iterate = true }) catch break :infer;
+            var dir = std.c.AT.FDCWD.openDir(".", .{ .iterate = true }) catch break :infer;
             defer dir.close();
             var it = bun.DirIterator.iterate(.fromStdDir(dir), .u8);
             while (try it.next().unwrap()) |file| {
@@ -753,7 +753,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         write_package_json: {
-            var fd = bun.FD.fromStdFile(package_json_file orelse try std.fs.cwd().createFileZ("package.json", .{}));
+            var fd = bun.FD.fromStdFile(package_json_file orelse try std.c.AT.FDCWD.createFileZ("package.json", .{}));
             defer fd.close();
             var buffer_writer = JSPrinter.BufferWriter.init(bun.default_allocator);
             buffer_writer.append_newline = true;
@@ -801,7 +801,7 @@ while (true) : (__loop_limit_1 += 1) {
                 }
 
                 if (fields.entry_point.len > 0 and !exists(fields.entry_point)) {
-                    const cwd = std.fs.cwd();
+                    const cwd = std.c.AT.FDCWD;
                     if (std.fs.path.dirname(fields.entry_point)) |dirname| {
                         if (!strings.eqlComptime(dirname, ".")) {
                             cwd.makePath(dirname) catch {};

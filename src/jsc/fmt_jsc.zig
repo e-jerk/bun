@@ -17,12 +17,12 @@ pub const js_bindings = struct {
                     .enable_colors = true,
                     .check_for_unhighlighted_write = false,
                 });
-                writer.writer().print("{f}", .{formatter}) catch |err| {
+                writer.print("{f}", .{formatter}) catch |err| {
                     return global.throwError(err, "while formatting");
                 };
             },
             .escape_powershell => {
-                writer.writer().print("{f}", .{bun.fmt.escapePowershell(code)}) catch |err| {
+                writer.print("{f}", .{bun.fmt.escapePowershell(code)}) catch |err| {
                     return global.throwError(err, "while formatting");
                 };
             },

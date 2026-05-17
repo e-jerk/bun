@@ -273,7 +273,7 @@ pub const RouteBundle = @import("./DevServer/RouteBundle.zig");
 
 const DeferredPromise = struct {
     strong: jsc.JSPromise.Strong = .empty,
-    route_bundle_indices: std.AutoArrayHashMapUnmanaged(RouteBundle.Index, void) = .{},
+    route_bundle_indices: std.array_hash_map.Auto(RouteBundle.Index, void) = .{},
 
     pub fn setRouteBundleState(self: *DeferredPromise, dev: *DevServer, state: RouteBundle.State) void {
         for (self.route_bundle_indices.keys()) |route_bundle_index| {
@@ -299,7 +299,7 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
 
     var dump_dir = if (bun.FeatureFlags.bake_debugging_features)
         if (options.dump_sources) |dir|
-            std.fs.cwd().makeOpenPath(dir, .{}) catch |err| dir: {
+            std.c.AT.FDCWD.makeOpenPath(dir, .{}) catch |err| dir: {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 Output.warn("Could not open directory for dumping sources: {}", .{err});
                 break :dir null;
@@ -4261,7 +4261,7 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
     // being conservative about how much stuff is put on the stack.
     var filepath_buf: [@min(4096, bun.MAX_PATH_BYTES)]u8 = undefined;
     const filepath = std.fmt.bufPrintZ(&filepath_buf, "incremental-graph-crash-dump.{d}.html", .{std.time.timestamp()}) catch "incremental-graph-crash-dump.html";
-    const file = std.fs.cwd().createFileZ(filepath, .{}) catch |err| {
+    const file = std.c.AT.FDCWD.createFileZ(filepath, .{}) catch |err| {
         bun.handleErrorReturnTrace(err, @errorReturnTrace());
         Output.warn("Could not open file for dumping incremental graph: {}", .{err});
         return;
@@ -4774,5 +4774,5 @@ const Request = uws.Request;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.AutoArrayHashMapUnmanaged;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
 const Allocator = std.mem.Allocator;

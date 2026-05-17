@@ -38,7 +38,7 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
     var should_finalize_self = false;
     defer if (should_finalize_self) ctx.finalize();
 
-    var s = std.io.fixedBufferStream(body);
+    var s = @import("std-io-compat").fixedBufferStream(body);
     const reader = s.reader();
 
     var sfa_general = std.heap.stackFallback(65536, ctx.dev.allocator());
@@ -400,5 +400,5 @@ const Request = uws.Request;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.AutoArrayHashMapUnmanaged;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
 const Allocator = std.mem.Allocator;

@@ -1592,7 +1592,7 @@ const FormatDurationData = struct {
 fn formatDurationOneDecimal(data: FormatDurationData, writer: *std.Io.Writer) !void {
     // worst case: "-XXXyXXwXXdXXhXXmXX.XXXs".len = 24
     var buf: [24]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&buf);
+    var fbs = @import("std-io-compat").fixedBufferStream(&buf);
     var buf_writer = fbs.writer();
     if (data.negative) {
         buf_writer.writeByte('-') catch unreachable;

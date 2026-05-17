@@ -9,7 +9,7 @@ pub fn write(data: []const u8) void {
 pub fn load() void {
     if (bun.env_var.BUN_POSTGRES_SOCKET_MONITOR.get()) |monitor| {
         enabled = true;
-        file = std.fs.cwd().createFile(monitor, .{ .truncate = true }) catch {
+        file = std.c.AT.FDCWD.createFile(monitor, .{ .truncate = true }) catch {
             enabled = false;
             return;
         };

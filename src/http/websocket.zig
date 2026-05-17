@@ -37,7 +37,7 @@ pub const WebsocketHeader = packed struct(u16) {
         // lets check it worked right
         if (comptime Environment.allow_assert) {
             var buf_ = [2]u8{ 0, 0 };
-            var stream = std.io.fixedBufferStream(&buf_);
+            var stream = @import("std-io-compat").fixedBufferStream(&buf_);
             stream.writer().writeInt(u16, @as(u16, @bitCast(header)), .big) catch unreachable;
             stream.pos = 0;
             const casted = stream.reader().readInt(u16, .big) catch unreachable;

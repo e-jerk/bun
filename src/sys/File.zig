@@ -449,7 +449,7 @@ pub fn toSourceAt(dir_fd: anytype, path: anytype, allocator: std.mem.Allocator, 
 }
 
 pub fn toSource(path: anytype, allocator: std.mem.Allocator, opts: ToSourceOptions) Maybe(bun.logger.Source) {
-    return toSourceAt(std.fs.cwd(), path, allocator, opts);
+    return toSourceAt(std.c.AT.FDCWD, path, allocator, opts);
 }
 
 const bun = @import("bun");

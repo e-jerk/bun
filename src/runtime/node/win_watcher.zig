@@ -68,7 +68,7 @@ pub const PathWatcher = struct {
     handle: uv.uv_fs_event_t,
     manager: ?*PathWatcherManager,
     emit_in_progress: bool = false,
-    handlers: std.AutoArrayHashMapUnmanaged(*anyopaque, ChangeEvent) = .{},
+    handlers: std.array_hash_map.Auto(*anyopaque, ChangeEvent) = .{},
 
     pub const new = bun.TrivialNew(PathWatcher);
 

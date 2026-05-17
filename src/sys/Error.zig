@@ -268,31 +268,31 @@ pub fn toSystemError(this: Error) SystemError {
     // format taken from Node.js 'exceptions.cc'
     // search keyword: `Local<Value> UVException(Isolate* isolate,`
     var message_buf: [4096]u8 = @splat(0);
+    var message_len: usize = 0;
     const message = message: {
-        var stream = std.io.fixedBufferStream(&message_buf);
-        const writer = stream.writer();
         brk: {
             if (maybe_code) |code| {
-                writer.writeAll(code) catch break :brk;
-                writer.writeAll(": ") catch break :brk;
+                message_len = appendStr(&message_buf, message_len, code);
+                message_len = appendStr(&message_buf, message_len, ": ");
             }
-            writer.writeAll(label orelse "Unknown Error") catch break :brk;
-            writer.writeAll(", ") catch break :brk;
-            writer.writeAll(@tagName(this.syscall)) catch break :brk;
+            message_len = appendStr(&message_buf, message_len, label orelse "Unknown Error");
+            message_len = appendStr(&message_buf, message_len, ", ");
+            message_len = appendStr(&message_buf, message_len, @tagName(this.syscall));
             if (this.path.len > 0) {
-                writer.writeAll(" '") catch break :brk;
-                writer.writeAll(this.path) catch break :brk;
-                writer.writeAll("'") catch break :brk;
+                message_len = appendStr(&message_buf, message_len, " '");
+                message_len = appendStr(&message_buf, message_len, this.path);
+                message_len = appendStr(&message_buf, message_len, "'");
 
                 if (this.dest.len > 0) {
-                    writer.writeAll(" -> '") catch break :brk;
-                    writer.writeAll(this.dest) catch break :brk;
-                    writer.writeAll("'") catch break :brk;
+                    message_len = appendStr(&message_buf, message_len, " -> '");
+                    message_len = appendStr(&message_buf, message_len, this.dest);
+                    message_len = appendStr(&message_buf, message_len, "'");
                 }
             }
         }
-        break :message stream.getWritten();
+        break :message message_buf[0..message_len];
     };
+
     err.message = bun.String.cloneUTF8(message);
 
     if (this.path.len > 0) {
@@ -311,6 +311,12 @@ pub fn toSystemError(this: Error) SystemError {
     }
 
     return err;
+}
+
+fn appendStr(buf: []u8, pos: usize, str: []const u8) usize {
+    const end = @min(pos + str.len, buf.len);
+    @memcpy(buf[pos..end], str[0..(end - pos)]);
+    return end;
 }
 
 pub inline fn todo() Error {

@@ -218,7 +218,7 @@ pub fn doPatchCommit(
         // There isn't an option to exclude it with `git diff --no-index`, so we
         // will `rename()` it out and back again.
         const has_nested_node_modules = has_nested_node_modules: {
-            var new_folder_handle = std.fs.cwd().openDir(new_folder, .{}) catch |e| {
+            var new_folder_handle = std.c.AT.FDCWD.openDir(new_folder, .{}) catch |e| {
                 Output.err(e, "failed to open directory <b>{s}<r>", .{new_folder});
                 Global.crash();
             };
@@ -253,7 +253,7 @@ pub fn doPatchCommit(
                 }
                 break :has_bun_patch_tag null;
             };
-            var new_folder_handle = std.fs.cwd().openDir(new_folder, .{}) catch |e| {
+            var new_folder_handle = std.c.AT.FDCWD.openDir(new_folder, .{}) catch |e| {
                 Output.err(e, "failed to open directory <b>{s}<r>", .{new_folder});
                 Global.crash();
             };
@@ -273,7 +273,7 @@ pub fn doPatchCommit(
         };
         defer {
             if (has_nested_node_modules or bun_patch_tag != null) {
-                var new_folder_handle = std.fs.cwd().openDir(new_folder, .{}) catch |e| {
+                var new_folder_handle = std.c.AT.FDCWD.openDir(new_folder, .{}) catch |e| {
                     Output.prettyError(
                         "<r><red>error<r>: failed to open directory <b>{s}<r> {s}<r>\n",
                         .{ new_folder, @errorName(e) },

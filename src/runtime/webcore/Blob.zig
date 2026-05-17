@@ -669,7 +669,7 @@ fn _onStructuredCloneDeserialize(
 
 pub fn onStructuredCloneDeserialize(globalThis: *jsc.JSGlobalObject, ptr: *[*]u8, end: [*]u8) bun.JSError!JSValue {
     const total_length: usize = @intFromPtr(end) - @intFromPtr(ptr.*);
-    var buffer_stream = std.io.fixedBufferStream(ptr.*[0..total_length]);
+    var buffer_stream = @import("std-io-compat").fixedBufferStream(ptr.*[0..total_length]);
     const reader = buffer_stream.reader();
 
     const result = _onStructuredCloneDeserialize(globalThis, @TypeOf(reader), reader) catch |err| switch (err) {

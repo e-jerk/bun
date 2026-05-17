@@ -640,7 +640,8 @@ pub const QueryStringMap = struct {
         // this over-allocates
         // TODO: refactor this to support multiple slices instead of copying the whole thing
         var buf = try std.array_list.Managed(u8).initCapacity(allocator, estimated_str_len);
-        var writer = buf.writer();
+        var aw = std.Io.Writer.Allocating.fromArrayList(allocator, &buf);
+        var writer = aw.writer;
         var buf_writer_pos: u32 = 0;
 
         const Writer = @TypeOf(writer);
@@ -755,7 +756,8 @@ pub const QueryStringMap = struct {
         }
 
         var buf = try std.array_list.Managed(u8).initCapacity(allocator, estimated_str_len);
-        const writer = buf.writer();
+        var aw = std.Io.Writer.Allocating.fromArrayList(allocator, &buf);
+        const writer = aw.writer;
         var buf_writer_pos: u32 = 0;
 
         var list_slice = list.slice();
@@ -819,7 +821,7 @@ pub const PercentEncoding = struct {
         const buf = try allocator.alloc(u8, input.len);
         errdefer allocator.free(buf);
 
-        var stream = std.io.fixedBufferStream(buf);
+        var stream = @import("std-io-compat").fixedBufferStream(buf);
         const writer = stream.writer();
         const len = try decode(@TypeOf(writer), writer, input);
 

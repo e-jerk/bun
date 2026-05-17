@@ -331,7 +331,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     Output.prettyErrorln("Rendering routes", .{});
     Output.flush();
 
-    var root_dir = try std.fs.cwd().makeOpenPath("dist", .{});
+    var root_dir = try std.c.AT.FDCWD.makeOpenPath("dist", .{});
     defer root_dir.close();
 
     var maybe_runtime_file_index: ?u32 = null;
@@ -570,7 +570,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     // Example: ["/assets/main.css", "/assets/blog.css"]
     const route_style_references = try JSValue.createEmptyArray(global, navigatable_routes.items.len);
 
-    var params_buf: std.ArrayListUnmanaged([]const u8) = .{};
+    var params_buf: std.ArrayListUnmanaged([]const u8) = .empty;
     for (navigatable_routes.items, 0..) |route_index, nav_index| {
         defer params_buf.clearRetainingCapacity();
 

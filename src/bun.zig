@@ -1246,7 +1246,7 @@ var needs_proc_self_workaround: bool = false;
 // necessary on linux because other platforms don't have an optional
 // /proc/self/fd
 fn getFdPathViaCWD(fd: std.posix.fd_t, buf: *bun.PathBuffer) ![]u8 {
-    const prev_fd = try std.posix.openatZ(std.fs.cwd().fd, ".", .{ .DIRECTORY = true }, 0);
+    const prev_fd = try std.posix.openatZ(std.c.AT.FDCWD.fd, ".", .{ .DIRECTORY = true }, 0);
     var needs_chdir = false;
     defer {
         if (needs_chdir) std.posix.fchdir(prev_fd) catch unreachable;
@@ -1911,7 +1911,7 @@ pub const trace = tracy.trace;
 
 pub fn openFileForPath(file_path: [:0]const u8) !std.fs.File {
     if (Environment.isWindows)
-        return std.fs.cwd().openFileZ(file_path, .{});
+        return std.c.AT.FDCWD.openFileZ(file_path, .{});
 
     const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
     const flags: u32 = O.CLOEXEC | O.NOCTTY | O_PATH;
@@ -1924,7 +1924,7 @@ pub fn openFileForPath(file_path: [:0]const u8) !std.fs.File {
 
 pub fn openDirForPath(file_path: [:0]const u8) !std.fs.Dir {
     if (Environment.isWindows)
-        return std.fs.cwd().openDirZ(file_path, .{});
+        return std.c.AT.FDCWD.openDirZ(file_path, .{});
 
     const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
     const flags: u32 = O.CLOEXEC | O.NOCTTY | O.DIRECTORY | O_PATH;
@@ -2963,7 +2963,7 @@ pub fn runtimeEmbedFile(
         var once = bun.once(load);
 
         fn load() [:0]const u8 {
-            return std.fs.cwd().readFileAllocOptions(
+            return std.c.AT.FDCWD.readFileAllocOptions(
                 default_allocator,
                 abs_path,
                 std.math.maxInt(usize),

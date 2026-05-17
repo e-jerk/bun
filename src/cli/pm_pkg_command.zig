@@ -759,7 +759,7 @@ while (true) : (__loop_limit_1 += 1) {
         };
 
         const content = writer.ctx.writtenWithoutTrailingZero();
-        std.fs.cwd().writeFile(.{
+        std.c.AT.FDCWD.writeFile(.{
             .sub_path = path,
             .data = content,
         }) catch |err| {

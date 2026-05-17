@@ -7,7 +7,7 @@ const Timer = @This();
 /// The task queue runs after the event loop tasks have been run
 /// Therefore, there is a race condition where you cancel the task after it has already been enqueued
 /// In that case, it shouldn't run. It should be skipped.
-pub const TimeoutMap = std.AutoArrayHashMapUnmanaged(
+pub const TimeoutMap = std.array_hash_map.Auto(
     i32,
     *EventLoopTimer,
 );

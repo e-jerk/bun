@@ -855,7 +855,7 @@ fn doResolveWithArgs(ctx: *jsc.JSGlobalObject, specifier: bun.String, from: bun.
         const allocator = stack.get();
         var arraylist = std.array_list.Managed(u8).initCapacity(allocator, 1024) catch unreachable;
         defer arraylist.deinit();
-        try arraylist.writer().print("{f}{f}", .{
+        try arraylist.print("{f}{f}", .{
             errorable.result.value,
             query_string,
         });
@@ -2084,7 +2084,7 @@ pub const JSZstd = struct {
 //             .enable_colors = true,
 //             .check_for_unhighlighted_write = false,
 //         });
-//         writer.writer().print("{f}", .{formatter}) catch |err| {
+//         writer.print("{f}", .{formatter}) catch |err| {
 //             return globalThis.throwError(err, "Error formatting code");
 //         };
 

@@ -258,7 +258,7 @@ pub const Archiver = struct {
         _ = stream.openRead();
         const archive = stream.archive;
         const dir: std.fs.Dir = brk: {
-            const cwd = std.fs.cwd();
+            const cwd = std.c.AT.FDCWD;
 
             // if the destination doesn't exist, we skip the whole thing since nothing can overwrite it.
             if (std.fs.path.isAbsolute(root)) {
@@ -657,7 +657,7 @@ pub const Archiver = struct {
         comptime options: ExtractOptions,
     ) !u32 {
         var dir: std.fs.Dir = brk: {
-            const cwd = std.fs.cwd();
+            const cwd = std.c.AT.FDCWD;
             cwd.makePath(
                 root,
             ) catch {};

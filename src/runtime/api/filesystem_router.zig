@@ -610,7 +610,7 @@ pub const MatchedRoute = struct {
         globalThis: *jsc.JSGlobalObject,
     ) jsc.JSValue {
         var buf: bun.PathBuffer = undefined;
-        var stream = std.io.fixedBufferStream(&buf);
+        var stream = @import("std-io-compat").fixedBufferStream(&buf);
         var writer = stream.writer();
         jsc.API.Bun.getPublicPathWithAssetPrefix(
             this.route.file_path,

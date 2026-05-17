@@ -62,7 +62,7 @@ pub const Route = struct {
     /// registered with the bundler.
     dev_server_id: bun.bake.DevServer.RouteBundle.Index.Optional = .none,
     /// When state == .pending, incomplete responses are stored here.
-    pending_responses: std.ArrayListUnmanaged(*PendingResponse) = .{},
+    pending_responses: std.ArrayListUnmanaged(*PendingResponse) = .empty,
 
     method: union(enum) {
         any: void,

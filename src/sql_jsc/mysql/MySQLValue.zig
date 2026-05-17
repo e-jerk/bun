@@ -151,7 +151,7 @@ pub const Value = union(enum) {
         field_type: FieldType,
     ) AnyMySQLError.Error!Data {
         var buffer: [15]u8 = undefined; // Large enough for all fixed-size types
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         var writer = stream.writer();
         switch (this.*) {
             .null => return Data{ .empty = {} },

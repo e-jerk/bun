@@ -1555,7 +1555,7 @@ pub const ESModule = struct {
         // respectively), then throw an Invalid Module Specifier error.
         const PercentEncoding = @import("../url/url.zig").PercentEncoding;
         const resolved_path_buf_percent = &module_bufs.get().resolved_path_buf_percent;
-        var fbs = std.io.fixedBufferStream(resolved_path_buf_percent);
+        var fbs = @import("std-io-compat").fixedBufferStream(resolved_path_buf_percent);
         var writer = fbs.writer();
         const len = PercentEncoding.decode(@TypeOf(&writer), &writer, result.path) catch return Resolution{
             .status = .InvalidModuleSpecifier,

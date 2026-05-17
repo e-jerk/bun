@@ -11,7 +11,7 @@ pub const Chunk = struct {
 
     /// Maps source index to bytes contributed to this chunk's output (for metafile).
     /// The value is updated during chunk generation to track bytesInOutput.
-    files_with_parts_in_chunk: std.AutoArrayHashMapUnmanaged(Index.Int, usize) = .{},
+    files_with_parts_in_chunk: std.array_hash_map.Auto(Index.Int, usize) = .{},
 
     /// We must not keep pointers to this type until all chunks have been allocated.
     entry_bits: AutoBitSet = undefined,
@@ -474,7 +474,7 @@ pub const Chunk = struct {
                                         break :brk piece_chunk.final_rel_path;
                                     },
                                     .html_import => {
-                                        var fixed_buffer_stream = std.io.fixedBufferStream(remain);
+                                        var fixed_buffer_stream = @import("std-io-compat").fixedBufferStream(remain);
                                         const writer = fixed_buffer_stream.writer();
 
                                         HTMLImportManifest.writeEscapedJSON(index, graph, linker_graph, chunks, writer) catch unreachable;
@@ -774,7 +774,7 @@ pub const Chunk = struct {
         };
     };
 
-    pub const ImportsFromOtherChunks = std.AutoArrayHashMapUnmanaged(Index.Int, CrossChunkImport.Item.List);
+    pub const ImportsFromOtherChunks = std.array_hash_map.Auto(Index.Int, CrossChunkImport.Item.List);
 
     pub const Content = union(enum) {
         javascript: JavaScriptChunk,

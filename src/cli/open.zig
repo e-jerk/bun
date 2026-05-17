@@ -128,7 +128,7 @@ pub const Editor = enum(u8) {
     pub fn byFallbackPathForEditor(editor: Editor, out: ?*[]const u8) bool {
         if (bin_path.get(editor)) |paths| {
             for (paths) |path| {
-                if (std.fs.cwd().openFile(path, .{})) |opened| {
+                if (std.c.AT.FDCWD.openFile(path, .{})) |opened| {
                     opened.close();
                     if (out != null) {
                         (out.?).* = bun.asByteSlice(path);
@@ -228,7 +228,7 @@ pub const Editor = enum(u8) {
     ) !void {
         var spawned = try default_allocator.create(SpawnedEditorContext);
         spawned.* = .{};
-        var file_path_buf_stream = std.io.fixedBufferStream(&spawned.file_path_buf);
+        var file_path_buf_stream = @import("std-io-compat").fixedBufferStream(&spawned.file_path_buf);
         var file_path_buf_writer = file_path_buf_stream.writer();
         var args_buf = &spawned.buf;
         errdefer default_allocator.destroy(spawned);

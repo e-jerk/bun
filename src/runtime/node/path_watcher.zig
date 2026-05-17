@@ -100,7 +100,7 @@ pub const PathWatcher = struct {
     /// `manager.mutex` on all platforms — every emit path (inotify/kqueue reader
     /// threads and the Darwin FSEvents callback) holds it while iterating, so
     /// attach/detach can never race with dispatch.
-    handlers: std.AutoArrayHashMapUnmanaged(*anyopaque, ChangeEvent) = .{},
+    handlers: std.array_hash_map.Auto(*anyopaque, ChangeEvent) = .{},
 
     /// Per-platform per-watch state (inotify wds, kqueue fds, or the FSEventsWatcher).
     platform: Platform.Watch = .{},
@@ -440,7 +440,7 @@ const Linux = struct {
     pub const Watch = struct {
         /// All wds belonging to this PathWatcher (one for a file/non-recursive dir,
         /// many for a recursive dir).
-        wds: std.ArrayListUnmanaged(i32) = .{},
+        wds: std.ArrayListUnmanaged(i32) = .empty,
 
         pub fn deinit(this: *Watch) void {
             this.wds.deinit(bun.default_allocator);
@@ -591,7 +591,7 @@ const Linux = struct {
 
             manager.mutex.lock();
             // Track which PathWatchers got at least one event so we flush() each once.
-            var touched: std.AutoArrayHashMapUnmanaged(*PathWatcher, void) = .{};
+            var touched: std.array_hash_map.Auto(*PathWatcher, void) = .{};
             defer touched.deinit(bun.default_allocator);
 
             var i: usize = 0;
@@ -779,7 +779,7 @@ const Kqueue = struct {
     /// ident (fd number) → entry (by value — avoids a per-entry heap alloc for
     /// recursive trees). `udata` on the kevent carries a monotonic generation number
     /// so the reader can reject stale events after the fd is recycled.
-    entries: std.AutoArrayHashMapUnmanaged(i32, KqEntry) = .{},
+    entries: std.array_hash_map.Auto(i32, KqEntry) = .{},
     /// Bumped on every `addOne` and stored in both `KqEntry.gen` and `kev.udata`.
     next_gen: usize = 1,
 
@@ -793,7 +793,7 @@ const Kqueue = struct {
     };
 
     pub const Watch = struct {
-        fds: std.ArrayListUnmanaged(i32) = .{},
+        fds: std.ArrayListUnmanaged(i32) = .empty,
 
         pub fn deinit(this: *Watch) void {
             this.fds.deinit(bun.default_allocator);
@@ -903,7 +903,7 @@ const Kqueue = struct {
             if (count <= 0) continue;
 
             manager.mutex.lock();
-            var touched: std.AutoArrayHashMapUnmanaged(*PathWatcher, void) = .{};
+            var touched: std.array_hash_map.Auto(*PathWatcher, void) = .{};
             defer touched.deinit(bun.default_allocator);
 
             for (events[0..@intCast(count)]) |kev| {

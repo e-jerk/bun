@@ -48,7 +48,7 @@ pub const DepSorter = struct {
     }
 };
 
-pub const Stream = std.io.FixedBufferStream([]u8);
+pub const Stream = @import("std-io-compat").FixedBufferStream([]u8);
 pub const default_filename = "bun.lockb";
 
 pub const Scripts = struct {

@@ -19,7 +19,7 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
             @field(Ptr, fieldName)(ctx, extra);
         }
     };
-    const task = bun.handleOom(zust.Box(Wrapper).init(bun.default_allocator, undefined));
+    const task = bun.handleOom(bun.default_allocator.create(Wrapper));
     task.* = Wrapper{
         .any_task = AnyTaskWithExtraContext{
             .callback = &Wrapper.function,

@@ -767,7 +767,7 @@ const PGNummericString = union(enum) {
 fn parseBinaryNumeric(input: []const u8, result: *std.array_list.Managed(u8)) !PGNummericString {
     // Reference: https://github.com/postgres/postgres/blob/50e6eb731d98ab6d0e625a0b87fb327b172bbebd/src/backend/utils/adt/numeric.c#L7612-L7740
     if (input.len < 8) return error.InvalidBuffer;
-    var fixed_buffer = std.io.fixedBufferStream(input);
+    var fixed_buffer = @import("std-io-compat").fixedBufferStream(input);
     var reader = fixed_buffer.reader();
 
     // Read header values using big-endian

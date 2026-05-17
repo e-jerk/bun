@@ -163,9 +163,9 @@ export fn bun_free(bytes: u64) void {
 }
 
 var output_stream_buf: [16384]u8 = undefined;
-var output_stream = std.io.fixedBufferStream(&output_stream_buf);
+var output_stream = @import("std-io-compat").fixedBufferStream(&output_stream_buf);
 var error_stream_buf: [16384]u8 = undefined;
-var error_stream = std.io.fixedBufferStream(&error_stream_buf);
+var error_stream = @import("std-io-compat").fixedBufferStream(&error_stream_buf);
 var output_source: global.Output.Source = undefined;
 var init_counter: usize = 0;
 export fn init(heapsize: u32) void {

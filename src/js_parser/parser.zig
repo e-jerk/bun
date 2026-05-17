@@ -127,7 +127,7 @@ const MacroRefData = struct {
     name: ?string = null,
 };
 
-const MacroRefs = std.AutoArrayHashMap(Ref, MacroRefData);
+const MacroRefs = std.array_hash_map.Auto(Ref, MacroRefData);
 
 pub const Substitution = union(enum) {
     success: Expr,
@@ -918,13 +918,13 @@ pub const ImportItemForNamespaceMap = bun.StringArrayHashMap(LocRef);
 pub const MacroState = struct {
     refs: MacroRefs,
     prepend_stmts: *ListManaged(Stmt) = undefined,
-    imports: std.AutoArrayHashMap(i32, Ref),
+    imports: std.array_hash_map.Auto(i32, Ref),
 
     pub fn init(allocator: Allocator) MacroState {
         return MacroState{
             .refs = MacroRefs.init(allocator),
             .prepend_stmts = undefined,
-            .imports = std.AutoArrayHashMap(i32, Ref).init(allocator),
+            .imports = std.array_hash_map.Auto(i32, Ref).init(allocator),
         };
     }
 };
@@ -1139,7 +1139,7 @@ pub const ReactRefresh = struct {
     pub const HookContext = struct {
         hasher: std.hash.Wyhash,
         signature_cb: Ref,
-        user_hooks: std.AutoArrayHashMapUnmanaged(Ref, Expr),
+        user_hooks: std.array_hash_map.Auto(Ref, Expr),
     };
 
     // https://github.com/facebook/react/blob/d1afcb43fd506297109c32ff462f6f659f9110ae/packages/react-refresh/src/ReactFreshBabelPlugin.js#L42

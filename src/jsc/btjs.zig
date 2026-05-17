@@ -26,7 +26,7 @@ fn dumpBtjsTraceDebugImpl() [*:0]const u8 {
     // std.log.info("jsc_llint_begin: {x}", .{@intFromPtr(&jsc_llint_begin)});
     // std.log.info("jsc_llint_end: {x}", .{@intFromPtr(&jsc_llint_end)});
 
-    const tty_config = std.io.tty.detectConfig(std.fs.File.stdout());
+    const tty_config = @import("std-io-compat").detectConfig(std.fs.File.stdout());
 
     var context: std.debug.ThreadContext = undefined;
     const has_context = std.debug.getContext(&context);
@@ -63,7 +63,7 @@ fn dumpBtjsTraceDebugImpl() [*:0]const u8 {
     }).ptr);
 }
 
-fn printSourceAtAddress(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, tty_config: std.io.tty.Config, fp: usize) !void {
+fn printSourceAtAddress(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, tty_config: @import("std-io-compat").TtyConfig, fp: usize) !void {
     if (!bun.Environment.isDebug) unreachable;
     const module = debug_info.getModuleForAddress(address) catch |err| switch (err) {
         error.MissingDebugInfo, error.InvalidDebugInfo => return printUnknownSource(debug_info, out_stream, address, tty_config),
@@ -114,7 +114,7 @@ fn printSourceAtAddress(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Wri
     }
 }
 
-fn printUnknownSource(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, tty_config: std.io.tty.Config) !void {
+fn printUnknownSource(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, tty_config: @import("std-io-compat").TtyConfig) !void {
     if (!bun.Environment.isDebug) unreachable;
     const module_name = debug_info.getModuleNameForAddress(address);
     return printLineInfo(
@@ -134,7 +134,7 @@ fn printLineInfo(
     address: usize,
     symbol_name: []const u8,
     compile_unit_name: []const u8,
-    tty_config: std.io.tty.Config,
+    tty_config: @import("std-io-compat").TtyConfig,
     comptime printLineFromFile: anytype,
     do_llint: bool,
 ) !void {
@@ -184,7 +184,7 @@ fn printLineFromFileAnyOs(out_stream: *std.Io.Writer, source_location: std.debug
 
     // Need this to always block even in async I/O mode, because this could potentially
     // be called from e.g. the event loop code crashing.
-    var f = try std.fs.cwd().openFile(source_location.file_name, .{});
+    var f = try std.c.AT.FDCWD.openFile(source_location.file_name, .{});
     defer f.close();
     // TODO fstat and make sure that the file has the correct size
 
@@ -235,7 +235,7 @@ fn printLineFromFileAnyOs(out_stream: *std.Io.Writer, source_location: std.debug
     }
 }
 
-fn printLastUnwindError(it: *std.debug.StackIterator, debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, tty_config: std.io.tty.Config) void {
+fn printLastUnwindError(it: *std.debug.StackIterator, debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, tty_config: @import("std-io-compat").TtyConfig) void {
     if (!bun.Environment.isDebug) unreachable;
     if (!std.debug.have_ucontext) return;
     if (it.getLastError()) |unwind_error| {
@@ -243,7 +243,7 @@ fn printLastUnwindError(it: *std.debug.StackIterator, debug_info: *std.debug.Sel
     }
 }
 
-fn printUnwindError(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, err: std.debug.UnwindError, tty_config: std.io.tty.Config) !void {
+fn printUnwindError(debug_info: *std.debug.SelfInfo, out_stream: *std.Io.Writer, address: usize, err: std.debug.UnwindError, tty_config: @import("std-io-compat").TtyConfig) !void {
     if (!bun.Environment.isDebug) unreachable;
 
     const module_name = debug_info.getModuleNameForAddress(address) orelse "???";

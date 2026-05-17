@@ -49,7 +49,7 @@ pub fn format(this: *const Cp, writer: *std.Io.Writer) !void {
 /// not known until its corresponding ShellCpTask is executed by the
 /// threadpool.
 const EbusyState = struct {
-    tasks: std.ArrayListUnmanaged(*ShellCpTask) = .{},
+    tasks: std.ArrayListUnmanaged(*ShellCpTask) = .empty,
     absolute_targets: bun.StringArrayHashMapUnmanaged(void) = .{},
     absolute_srcs: bun.StringArrayHashMapUnmanaged(void) = .{},
 

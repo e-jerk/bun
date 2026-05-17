@@ -821,7 +821,7 @@ pub const H2FrameParser = struct {
             }
         };
         const PendingQueue = struct {
-            data: std.ArrayListUnmanaged(PendingFrame) = .{},
+            data: std.ArrayListUnmanaged(PendingFrame) = .empty,
             front: usize = 0,
             len: usize = 0,
 
@@ -1286,7 +1286,7 @@ pub const H2FrameParser = struct {
 
         var buffer: [FrameHeader.byteSize + FullSettingsPayload.byteSize]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
         var settingsHeader: FrameHeader = .{
             .type = @intFromEnum(FrameType.HTTP_FRAME_SETTINGS),
@@ -1310,7 +1310,7 @@ pub const H2FrameParser = struct {
         abortReason.ensureStillAlive();
         var buffer: [FrameHeader.byteSize + 4]u8 = undefined;
         @memset(&buffer, 0);
-        var writerStream = std.io.fixedBufferStream(&buffer);
+        var writerStream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = writerStream.writer();
 
         var frame: FrameHeader = .{
@@ -1340,7 +1340,7 @@ pub const H2FrameParser = struct {
         }
         var buffer: [FrameHeader.byteSize + 4]u8 = undefined;
         @memset(&buffer, 0);
-        var writerStream = std.io.fixedBufferStream(&buffer);
+        var writerStream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = writerStream.writer();
 
         var frame: FrameHeader = .{
@@ -1372,7 +1372,7 @@ pub const H2FrameParser = struct {
         log("HTTP_FRAME_GOAWAY {} code {} debug_data {s} emitError {}", .{ streamIdentifier, rstCode, debug_data, emitError });
         var buffer: [FrameHeader.byteSize + 8]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
 
         var frame: FrameHeader = .{
@@ -1410,7 +1410,7 @@ pub const H2FrameParser = struct {
 
         var buffer: [FrameHeader.byteSize + 2]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
 
         var frame: FrameHeader = .{
@@ -1435,7 +1435,7 @@ pub const H2FrameParser = struct {
 
         var buffer: [FrameHeader.byteSize + 8]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
         if (!ack) {
             this.outStandingPings += 1;
@@ -1456,7 +1456,7 @@ pub const H2FrameParser = struct {
         // PREFACE + Settings Frame
         var preface_buffer: [24 + FrameHeader.byteSize + FullSettingsPayload.byteSize]u8 = undefined;
         @memset(&preface_buffer, 0);
-        var preface_stream = std.io.fixedBufferStream(&preface_buffer);
+        var preface_stream = @import("std-io-compat").fixedBufferStream(&preface_buffer);
         const writer = preface_stream.writer();
         _ = writer.write("PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n") catch 0;
         var settingsHeader: FrameHeader = .{
@@ -1475,7 +1475,7 @@ pub const H2FrameParser = struct {
         log("send HTTP_FRAME_SETTINGS ack true", .{});
         var buffer: [FrameHeader.byteSize]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
         var settingsHeader: FrameHeader = .{
             .type = @intFromEnum(FrameType.HTTP_FRAME_SETTINGS),
@@ -1491,7 +1491,7 @@ pub const H2FrameParser = struct {
         log("HTTP_FRAME_WINDOW_UPDATE stream {} size {}", .{ streamIdentifier, windowSize.uint31 });
         var buffer: [FrameHeader.byteSize + 4]u8 = undefined;
         @memset(&buffer, 0);
-        var stream = std.io.fixedBufferStream(&buffer);
+        var stream = @import("std-io-compat").fixedBufferStream(&buffer);
         const writer = stream.writer();
         var settingsHeader: FrameHeader = .{
             .type = @intFromEnum(FrameType.HTTP_FRAME_WINDOW_UPDATE),
@@ -2155,7 +2155,7 @@ while (true) : (__loop_limit_1 += 1) {
             this.readBuffer.reset();
 
             while (payload.len > 0) {
-                var stream = std.io.fixedBufferStream(payload);
+                var stream = @import("std-io-compat").fixedBufferStream(payload);
                 const origin_length = stream.reader().readInt(u16, .big) catch |err| {
                     log("error reading ORIGIN frame size: {s}", .{@errorName(err)});
                     // origin length is the first 2 bytes of the payload
@@ -2202,7 +2202,7 @@ while (true) : (__loop_limit_1 += 1) {
         if (handleIncommingPayload(this, data, frame.streamIdentifier)) |content| {
             const payload = content.data;
 
-            var stream = std.io.fixedBufferStream(payload);
+            var stream = @import("std-io-compat").fixedBufferStream(payload);
             this.readBuffer.reset();
 
             const origin_length = stream.reader().readInt(u16, .big) catch {
@@ -3023,7 +3023,7 @@ while (true) : (__loop_limit_1 += 1) {
             // empty origin frame
             var buffer: [FrameHeader.byteSize]u8 = undefined;
             @memset(&buffer, 0);
-            var stream = std.io.fixedBufferStream(&buffer);
+            var stream = @import("std-io-compat").fixedBufferStream(&buffer);
             const writer = stream.writer();
 
             var frame: FrameHeader = .{
@@ -3048,7 +3048,7 @@ while (true) : (__loop_limit_1 += 1) {
 
             var buffer: [FrameHeader.byteSize + 2]u8 = undefined;
             @memset(&buffer, 0);
-            var stream = std.io.fixedBufferStream(&buffer);
+            var stream = @import("std-io-compat").fixedBufferStream(&buffer);
             const writer = stream.writer();
 
             var frame: FrameHeader = .{
@@ -3066,7 +3066,7 @@ while (true) : (__loop_limit_1 += 1) {
         } else if (origin_arg.isArray()) {
             var buffer: [FrameHeader.byteSize + 16384]u8 = undefined;
             @memset(&buffer, 0);
-            var stream = std.io.fixedBufferStream(&buffer);
+            var stream = @import("std-io-compat").fixedBufferStream(&buffer);
             const writer = stream.writer();
             stream.seekTo(FrameHeader.byteSize) catch {};
             var value_iter = try origin_arg.arrayIterator(globalObject);

@@ -72,7 +72,7 @@ pub const ManifestBindings = struct {
         const registry = registry_str.toUTF8(bun.default_allocator);
         defer registry.deinit();
 
-        const manifest_file = std.fs.cwd().openFile(manifest_filename.slice(), .{}) catch |err| {
+        const manifest_file = std.c.AT.FDCWD.openFile(manifest_filename.slice(), .{}) catch |err| {
             return global.throw("failed to open manifest file \"{s}\": {s}", .{ manifest_filename.slice(), @errorName(err) });
         };
         defer manifest_file.close();
@@ -96,7 +96,7 @@ pub const ManifestBindings = struct {
             return global.throw("manifest is invalid ", .{});
         };
 
-        var buf: std.ArrayListUnmanaged(u8) = .{};
+        var buf: std.ArrayListUnmanaged(u8) = .empty;
         const writer = buf.writer(bun.default_allocator);
 
         // TODO: we can add more information. for now just versions is fine

@@ -466,9 +466,9 @@ pub const BuildCommand = struct {
                 root_path = std.fs.path.dirname(ctx.args.entry_points[0]) orelse ".";
 
             const root_dir = if (root_path.len == 0 or strings.eqlComptime(root_path, "."))
-                std.fs.cwd()
+                std.c.AT.FDCWD
             else
-                std.fs.cwd().makeOpenPath(root_path, .{}) catch |err| {
+                std.c.AT.FDCWD.makeOpenPath(root_path, .{}) catch |err| {
                     Output.err(err, "could not open output directory {f}", .{bun.fmt.quote(root_path)});
                     exitOrWatch(1, ctx.debug.hot_reload == .watch);
                     unreachable;

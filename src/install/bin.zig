@@ -724,7 +724,7 @@ pub const Bin = extern struct {
 
                 const node_modules_path_save = this.node_modules_path.save();
                 this.node_modules_path.append(".bin");
-                bun.makePath(std.fs.cwd(), this.node_modules_path.slice()) catch {};
+                bun.makePath(std.c.AT.FDCWD, this.node_modules_path.slice()) catch {};
                 node_modules_path_save.restore();
 
                 break :bunx_file bun.sys.File.openatOSPath(bun.invalid_fd, abs_bunx_file, bun.O.WRONLY | bun.O.CREAT | bun.O.TRUNC, 0o664).unwrap() catch |real_err| {
@@ -822,7 +822,7 @@ pub const Bin = extern struct {
 
                         const node_modules_path_save = this.node_modules_path.save();
                         this.node_modules_path.append(".bin");
-                        bun.makePath(std.fs.cwd(), this.node_modules_path.slice()) catch {};
+                        bun.makePath(std.c.AT.FDCWD, this.node_modules_path.slice()) catch {};
                         node_modules_path_save.restore();
 
                         switch (bun.sys.symlinkRunningExecutable(rel_target, abs_dest)) {

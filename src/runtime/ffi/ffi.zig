@@ -77,10 +77,10 @@ pub const FFI = struct {
         library_dirs: StringArray = .{},
         include_dirs: StringArray = .{},
         symbols: SymbolsMap = .{},
-        define: std.ArrayListUnmanaged([2][:0]const u8) = .{},
+        define: std.ArrayListUnmanaged([2][:0]const u8) = .empty,
         // Flags to replace the default flags
         flags: [:0]const u8 = "",
-        deferred_errors: std.ArrayListUnmanaged([]const u8) = .{},
+        deferred_errors: std.ArrayListUnmanaged([]const u8) = .empty,
 
         const Source = union(enum) {
             file: [:0]const u8,
@@ -977,8 +977,8 @@ pub const FFI = struct {
         }
         for (symbols.values()) |*function| {
             var arraylist = std.array_list.Managed(u8).init(allocator);
-            var writer = arraylist.writer();
-            function.printSourceCode(&writer) catch {
+            var aw = std.Io.Writer.Allocating.fromArrayList(allocator, &arraylist);
+            function.printSourceCode(&aw.writer) catch {
                 // an error while generating source code
                 for (symbols.keys()) |key| {
                     allocator.free(@constCast(key));
@@ -1443,7 +1443,7 @@ pub const FFI = struct {
         state: ?*TCC.State = null,
 
         return_type: ABIType = ABIType.void,
-        arg_types: std.ArrayListUnmanaged(ABIType) = .{},
+        arg_types: std.ArrayListUnmanaged(ABIType) = .empty,
         step: Step = Step{ .pending = {} },
         threadsafe: bool = false,
         allocator: Allocator,
@@ -1542,8 +1542,8 @@ pub const FFI = struct {
 
         pub fn compile(this: *Function, napiEnv: ?*napi.NapiEnv) !void {
             var source_code = std.array_list.Managed(u8).init(this.allocator);
-            var source_code_writer = source_code.writer();
-            try this.printSourceCode(&source_code_writer);
+            var aw = std.Io.Writer.Allocating.fromArrayList(this.allocator, &source_code);
+            try this.printSourceCode(&aw.writer);
 
             try source_code.append(0);
             defer source_code.deinit();

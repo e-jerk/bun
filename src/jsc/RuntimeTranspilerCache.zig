@@ -232,12 +232,12 @@ pub const RuntimeTranspilerCache = struct {
                         metadata.esm_record_hash = hash(esm_record);
                     }
 
-                    var metadata_stream = std.io.fixedBufferStream(&metadata_buf);
+                    var metadata_stream = @import("std-io-compat").fixedBufferStream(&metadata_buf);
 
                     try metadata.encode(metadata_stream.writer());
 
                     if (comptime bun.Environment.isDebug) {
-                        var metadata_stream2 = std.io.fixedBufferStream(metadata_buf[0..Metadata.size]);
+                        var metadata_stream2 = @import("std-io-compat").fixedBufferStream(metadata_buf[0..Metadata.size]);
                         var metadata2 = Metadata{};
                         metadata2.decode(metadata_stream2.reader()) catch |err| bun.Output.panic("Metadata did not roundtrip encode -> decode  successfully: {s}", .{@errorName(err)});
                         bun.assert(std.meta.eql(metadata, metadata2));
@@ -545,7 +545,7 @@ pub const RuntimeTranspilerCache = struct {
         const file = cache_fd.stdFile();
         const metadata_bytes = try file.preadAll(&metadata_bytes_buf, 0);
         if (comptime bun.Environment.isWindows) try file.seekTo(0);
-        var metadata_stream = std.io.fixedBufferStream(metadata_bytes_buf[0..metadata_bytes]);
+        var metadata_stream = @import("std-io-compat").fixedBufferStream(metadata_bytes_buf[0..metadata_bytes]);
 
         var entry = Entry{
             .metadata = Metadata{},
@@ -603,7 +603,7 @@ pub const RuntimeTranspilerCache = struct {
 
         const cache_dir_fd = brk: {
             if (std.fs.path.dirname(cache_file_path)) |dirname| {
-                var dir = try std.fs.cwd().makeOpenPath(dirname, .{ .access_sub_paths = true });
+                var dir = try std.c.AT.FDCWD.makeOpenPath(dirname, .{ .access_sub_paths = true });
                 errdefer dir.close();
                 break :brk try bun.FD.fromStdDir(dir).makeLibUVOwned();
             }

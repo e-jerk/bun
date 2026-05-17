@@ -36,7 +36,7 @@ pub const PackageInstall = struct {
         /// Package name hash -> number of scripts skipped.
         /// Multiple versions of the same package might add to the count, and each version
         /// might have a different number of scripts
-        packages_with_blocked_scripts: std.AutoArrayHashMapUnmanaged(TruncatedPackageNameHash, usize) = .{},
+        packages_with_blocked_scripts: std.array_hash_map.Auto(TruncatedPackageNameHash, usize) = .{},
     };
 
     pub const Method = enum(u8) {
@@ -116,7 +116,7 @@ pub const PackageInstall = struct {
 
         var destination_dir = this.node_modules.openDir(root_node_modules_dir) catch return false;
         defer {
-            if (std.fs.cwd().fd != destination_dir.fd) destination_dir.close();
+            if (std.c.AT.FDCWD.fd != destination_dir.fd) destination_dir.close();
         }
 
         if (comptime bun.Environment.isPosix) {
@@ -1165,7 +1165,7 @@ pub const PackageInstall = struct {
                         };
                         const basename = std.fs.path.basename(unintall_task.absolute_path);
 
-                        var dir = bun.openDirA(std.fs.cwd(), dirname) catch |err| {
+                        var dir = bun.openDirA(std.c.AT.FDCWD, dirname) catch |err| {
                             if (comptime Environment.isDebug or Environment.enable_asan) {
                                 Output.debugWarn("Failed to delete {s}: {s}", .{ unintall_task.absolute_path, @errorName(err) });
                             }
