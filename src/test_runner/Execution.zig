@@ -37,7 +37,7 @@
 
 const safe = @import("safe");
 groups: []ConcurrentGroup,
-#sequences: []ExecutionSequence,
+_sequences: []ExecutionSequence,
 /// the entries themselves are owned by BunTest, which owns Execution.
 group_index: usize,
 
@@ -69,7 +69,7 @@ pub const ConcurrentGroup = struct {
     }
 
     pub fn sequences(this: ConcurrentGroup, execution: *Execution) []ExecutionSequence {
-        return execution.#sequences[this.sequence_start..this.sequence_end];
+        return execution._sequences[this.sequence_start..this.sequence_end];
     }
 };
 pub const ExecutionSequence = struct {
@@ -172,22 +172,22 @@ pub const Result = enum {
 pub fn init(_: std.mem.Allocator) Execution {
     return .{
         .groups = &.{},
-        .#sequences = &.{},
+        ._sequences = &.{},
         .group_index = 0,
     };
 }
 pub fn deinit(this: *Execution) void {
     this.bunTest().gpa.free(this.groups);
-    this.bunTest().gpa.free(this.#sequences);
+    this.bunTest().gpa.free(this._sequences);
 }
 pub fn loadFromOrder(this: *Execution, order: *Order) bun.JSError!void {
     bun.assert(this.groups.len == 0);
-    bun.assert(this.#sequences.len == 0);
+    bun.assert(this._sequences.len == 0);
     var alloc_safety = bun.safety.CheckedAllocator.init(this.bunTest().gpa);
     alloc_safety.assertEq(order.groups.allocator);
     alloc_safety.assertEq(order.sequences.allocator);
     this.groups = try order.groups.toOwnedSlice();
-    this.#sequences = try order.sequences.toOwnedSlice();
+    this._sequences = try order.sequences.toOwnedSlice();
 }
 
 fn bunTest(this: *Execution) *BunTest {
@@ -279,9 +279,9 @@ pub fn stepGroup(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalO
     const buntest = buntest_strong.get();
     const this = &buntest.execution;
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    var __loop_limit_1: usize = 0;
+    while (true) : (__loop_limit_1 += 1) {
+        if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const group = this.activeGroup() orelse return .complete;
         if (!group.executing) {
             this.onGroupStarted(group, globalThis);
@@ -347,9 +347,9 @@ const AdvanceSequenceStatus = union(enum) {
     },
 };
 fn stepSequence(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) !AdvanceSequenceStatus {
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    var __loop_limit_2: usize = 0;
+    while (true) : (__loop_limit_2 += 1) {
+        if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
         return try stepSequenceOne(buntest_strong, globalThis, group, sequence_index, now) orelse continue;
     }
 }

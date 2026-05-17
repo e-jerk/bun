@@ -1074,11 +1074,11 @@ pub const AST = struct {
 
         pub fn memoryCost(this: *const @This()) usize {
             var cost: usize = @sizeOf(CompoundAtom);
-            cost += this.#atomsMemoryCost();
+            cost += this._atomsMemoryCost();
             return cost;
         }
 
-        fn #atomsMemoryCost(this: *const @This()) usize {
+        fn _atomsMemoryCost(this: *const @This()) usize {
             var cost: usize = 0;
             for (this.atoms) |*atom| {
                 cost += atom.memoryCost();
@@ -1558,9 +1558,9 @@ pub const Parser = struct {
                 };
             },
             .elif => {
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+                var __loop_limit_1: usize = 0;
+                while (true) : (__loop_limit_1 += 1) {
+                    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                     _ = self.expectIfClauseTextToken(.elif);
                     const elif_cond = try self.parse_if_body(&.{.then});
                     if (!self.match_if_clausetok(.then)) {
@@ -2454,9 +2454,9 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
         }
 
         pub fn lex(self: *@This()) LexerError!void {
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+            var __loop_limit_2: usize = 0;
+            while (true) : (__loop_limit_2 += 1) {
+                if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
                 const input = self.eat() orelse {
                     try self.break_word(true);
                     break;

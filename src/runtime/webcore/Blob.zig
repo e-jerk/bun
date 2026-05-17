@@ -16,7 +16,7 @@ pub const copy_file = @import("./blob/copy_file.zig");
 
 pub fn new(blob: Blob) *Blob {
     const result = bun.new(Blob, blob);
-    result.#ref_count = .init(1);
+    result._ref_count = .init(1);
     return result;
 }
 
@@ -42,7 +42,7 @@ is_jsdom_file: bool = false,
 
 /// Reference count, for use with `bun.ptr.ExternalShared`. If the reference count is 0, that means
 /// this blob is *not* heap-allocated, and will not be freed in `deinit`.
-#ref_count: bun.ptr.RawRefCount(u32, .single_threaded) = .init(0),
+_ref_count: bun.ptr.RawRefCount(u32, .single_threaded) = .init(0),
 
 globalThis: *JSGlobalObject = undefined,
 
@@ -1065,9 +1065,9 @@ fn writeFileWithEmptySourceToDestination(ctx: *jsc.JSGlobalObject, destination_b
                         // not above, returning if it is.
                         var buf: bun.PathBuffer = undefined;
                         const mode: bun.Mode = options.mode orelse jsc.Node.fs.default_permission;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+                        var __loop_limit_1: usize = 0;
+                        while (true) : (__loop_limit_1 += 1) {
+                            if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                             const open_res = bun.sys.open(file.pathlike.path.sliceZ(&buf), bun.O.CREAT | bun.O.TRUNC, mode);
                             switch (open_res) {
                                 // errors fall through and are handled below
@@ -4225,9 +4225,9 @@ fn fromJSWithoutDeferGC(
 
     defer if (stack_allocator.fixed_buffer_allocator.end_index >= 1024) stack.deinit();
 
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
+    var __loop_limit_2: usize = 0;
+    while (true) : (__loop_limit_2 += 1) {
+        if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
         switch (current.jsTypeLoose()) {
             .NumberObject,
             jsc.JSValue.JSType.String,
@@ -4962,9 +4962,9 @@ pub fn FileOpener(comptime This: type) type {
                 return;
             }
 
-var __loop_limit_3: usize = 0;
-while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
+            var __loop_limit_3: usize = 0;
+            while (true) : (__loop_limit_3 += 1) {
+                if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
                 this.opened_fd = switch (bun.sys.open(path, open_flags_, jsc.Node.fs.default_permission)) {
                     .result => |fd| fd,
                     .err => |err| {
@@ -5097,11 +5097,11 @@ pub fn takeOwnership(self: *Blob) Blob {
 }
 
 pub fn isHeapAllocated(self: *const Blob) bool {
-    return self.#ref_count.raw_value != 0;
+    return self._ref_count.raw_value != 0;
 }
 
 fn setNotHeapAllocated(self: *Blob) void {
-    self.#ref_count = .init(0);
+    self._ref_count = .init(0);
 }
 
 pub const external_shared_descriptor = struct {
@@ -5111,13 +5111,13 @@ pub const external_shared_descriptor = struct {
 
 export fn Blob__ref(self: *Blob) void {
     bun.assertf(self.isHeapAllocated(), "cannot ref: this Blob is not heap-allocated", .{});
-    self.#ref_count.increment();
+    self._ref_count.increment();
 }
 
 export fn Blob__deref(self: *Blob) void {
     bun.assertf(self.isHeapAllocated(), "cannot deref: this Blob is not heap-allocated", .{});
-    if (self.#ref_count.decrement() == .should_destroy) {
-        self.#ref_count.increment(); // deinit has its own isHeapAllocated() guard around bun.destroy(this), so this is needed to ensure that returns true.
+    if (self._ref_count.decrement() == .should_destroy) {
+        self._ref_count.increment(); // deinit has its own isHeapAllocated() guard around bun.destroy(this), so this is needed to ensure that returns true.
         self.deinit();
     }
 }

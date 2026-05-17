@@ -750,7 +750,7 @@ pub const Interpreter = struct {
         }
     };
 
-    fn #computeEstimatedSizeForGC(this: *const ThisInterpreter) usize {
+    fn _computeEstimatedSizeForGC(this: *const ThisInterpreter) usize {
         var size: usize = @sizeOf(ThisInterpreter);
         size += this.args.memoryCost();
         size += this.root_shell.memoryCost();
@@ -764,7 +764,7 @@ pub const Interpreter = struct {
     }
 
     pub fn memoryCost(this: *const ThisInterpreter) usize {
-        return this.#computeEstimatedSizeForGC();
+        return this._computeEstimatedSizeForGC();
     }
 
     pub fn estimatedSize(this: *const ThisInterpreter) usize {
@@ -836,7 +836,7 @@ pub const Interpreter = struct {
 
         interpreter.flags.quiet = quiet;
         interpreter.globalThis = globalThis;
-        interpreter.estimated_size_for_gc = interpreter.#computeEstimatedSizeForGC();
+        interpreter.estimated_size_for_gc = interpreter._computeEstimatedSizeForGC();
 
         const js_value = Bun__createShellInterpreter(
             globalThis,
@@ -1095,7 +1095,7 @@ pub const Interpreter = struct {
         interp.exit_code = exit_code;
         switch (try interp.run()) {
             .err => |e| {
-                interp.#deinitFromExec();
+                interp._deinitFromExec();
                 bun.Output.err(e, "Failed to run script <b>{s}<r>", .{std.fs.path.basename(path)});
                 bun.Global.exit(1);
                 return 1;
@@ -1104,7 +1104,7 @@ pub const Interpreter = struct {
         }
         mini.tick(&is_done, @as(fn (*anyopaque) bool, IsDone.isDone));
         const code = interp.exit_code.?;
-        interp.#deinitFromExec();
+        interp._deinitFromExec();
         return code;
     }
 
@@ -1162,7 +1162,7 @@ pub const Interpreter = struct {
         interp.exit_code = exit_code;
         switch (try interp.run()) {
             .err => |e| {
-                interp.#deinitFromExec();
+                interp._deinitFromExec();
                 bun.Output.err(e, "Failed to run script <b>{s}<r>", .{path_for_errors});
                 bun.Global.exit(1);
                 return 1;
@@ -1171,7 +1171,7 @@ pub const Interpreter = struct {
         }
         mini.tick(&is_done, @as(fn (*anyopaque) bool, IsDone.isDone));
         const code = interp.exit_code.?;
-        interp.#deinitFromExec();
+        interp._deinitFromExec();
         return code;
     }
 
@@ -1241,7 +1241,7 @@ pub const Interpreter = struct {
         _ = callframe; // autofix
 
         if (this.setupIOBeforeRun().asErr()) |e| {
-            defer this.#derefRootShellAndIOIfNeeded(true);
+            defer this._derefRootShellAndIOIfNeeded(true);
             const shellerr = bun.shell.ShellErr.newSys(e);
             return try throwShellErr(&shellerr, .{ .js = globalThis.bunVM().event_loop });
         }
@@ -1299,7 +1299,7 @@ pub const Interpreter = struct {
                     const buffered_stdout = this.getBufferedStdout(globalThis);
                     const buffered_stderr = this.getBufferedStderr(globalThis);
                     this.keep_alive.disable();
-                    this.#derefRootShellAndIOIfNeeded(true);
+                    this._derefRootShellAndIOIfNeeded(true);
                     loop.enter();
                     _ = resolve.call(globalThis, .js_undefined, &.{
                         JSValue.jsNumberFromU16(exit_code),
@@ -1319,7 +1319,7 @@ pub const Interpreter = struct {
         return .done;
     }
 
-    fn #derefRootShellAndIOIfNeeded(this: *ThisInterpreter, free_buffered_io: bool) void {
+    fn _derefRootShellAndIOIfNeeded(this: *ThisInterpreter, free_buffered_io: bool) void {
         // Check if already cleaned up to prevent double-free
         if (this.cleanup_state == .runtime_cleaned) {
             return;
@@ -1372,7 +1372,7 @@ pub const Interpreter = struct {
         defer _ = this.deinit();
     }
 
-    fn #deinitFromExec(this: *ThisInterpreter) void {
+    fn _deinitFromExec(this: *ThisInterpreter) void {
         log("deinit interpreter", .{});
 
         this.this_jsvalue = .zero;

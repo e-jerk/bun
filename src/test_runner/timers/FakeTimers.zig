@@ -1,5 +1,5 @@
 const safe = @import("safe");
-#active: bool = false,
+_active: bool = false,
 /// The sorted fake timers. TimerHeap is not optimal here because we need these operations:
 /// - peek/takeFirst (provided by TimerHeap)
 /// - peekLast (cannot be implemented efficiently with TimerHeap)
@@ -62,13 +62,13 @@ pub fn isActive(this: *FakeTimers) bool {
     this.assertValid(.locked);
     defer this.assertValid(.locked);
 
-    return this.#active;
+    return this._active;
 }
 fn activate(this: *FakeTimers, js_now: f64, globalObject: *jsc.JSGlobalObject) void {
     this.assertValid(.locked);
     defer this.assertValid(.locked);
 
-    this.#active = true;
+    this._active = true;
     current_time.set(globalObject, .{ .offset = &.epoch, .js = js_now });
 }
 fn deactivate(this: *FakeTimers, globalObject: *jsc.JSGlobalObject) void {
@@ -77,7 +77,7 @@ fn deactivate(this: *FakeTimers, globalObject: *jsc.JSGlobalObject) void {
 
     this.clear();
     current_time.clear(globalObject);
-    this.#active = false;
+    this._active = false;
 }
 fn clear(this: *FakeTimers) void {
     this.assertValid(.locked);
@@ -123,9 +123,9 @@ fn executeUntil(this: *FakeTimers, globalObject: *jsc.JSGlobalObject, until: bun
     const vm = globalObject.bunVM();
     const timers = &vm.timer;
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
+    var __loop_limit_1: usize = 0;
+    while (true) : (__loop_limit_1 += 1) {
+        if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const next = blk: {
             timers.lock.lock();
             defer timers.lock.unlock();

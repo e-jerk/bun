@@ -317,14 +317,14 @@ fn renderAST(
 /// Uses HTML tag names (h1-h6, p, blockquote, a, em, strong, etc.).
 /// Text content is plain JS strings in children arrays.
 const ParseRenderer = struct {
-    #globalObject: *jsc.JSGlobalObject,
-    #marked_args: *jsc.MarkedArgumentBuffer,
-    #stack: std.ArrayListUnmanaged(StackEntry) = .{},
-    #stack_check: bun.StackCheck,
-    #src_text: []const u8,
-    #heading_tracker: md.helpers.HeadingIdTracker = md.helpers.HeadingIdTracker.init(false),
-    #components: Components = .{},
-    #react_version: ?u8 = null,
+    _globalObject: *jsc.JSGlobalObject,
+    _marked_args: *jsc.MarkedArgumentBuffer,
+    _stack: std.ArrayListUnmanaged(StackEntry) = .{},
+    _stack_check: bun.StackCheck,
+    _src_text: []const u8,
+    _heading_tracker: md.helpers.HeadingIdTracker = md.helpers.HeadingIdTracker.init(false),
+    _components: Components = .{},
+    _react_version: ?u8 = null,
 
     extern fn JSReactElement__create(
         globalObject: *jsc.JSGlobalObject,
@@ -384,23 +384,23 @@ const ParseRenderer = struct {
         react_version: ?u8,
     ) error{OutOfMemory}!ParseRenderer {
         var self = ParseRenderer{
-            .#globalObject = globalObject,
-            .#marked_args = marked_args,
-            .#src_text = src_text,
-            .#heading_tracker = md.helpers.HeadingIdTracker.init(heading_ids),
-            .#stack_check = bun.StackCheck.init(),
-            .#react_version = react_version,
+            ._globalObject = globalObject,
+            ._marked_args = marked_args,
+            ._src_text = src_text,
+            ._heading_tracker = md.helpers.HeadingIdTracker.init(heading_ids),
+            ._stack_check = bun.StackCheck.init(),
+            ._react_version = react_version,
         };
         // Root entry — its children array becomes the return value
         const root_array = JSValue.createEmptyArray(globalObject, 0) catch return error.OutOfMemory;
         marked_args.append(root_array);
-        try self.#stack.append(bun.default_allocator, .{ .children = root_array, .block_type = .doc });
+        try self._stack.append(bun.default_allocator, .{ .children = root_array, .block_type = .doc });
         return self;
     }
 
     fn deinit(self: *ParseRenderer) void {
-        self.#stack.deinit(bun.default_allocator);
-        self.#heading_tracker.deinit(bun.default_allocator);
+        self._stack.deinit(bun.default_allocator);
+        self._heading_tracker.deinit(bun.default_allocator);
     }
 
     /// Extract component overrides from options. Any non-boolean truthy value
@@ -409,10 +409,10 @@ const ParseRenderer = struct {
     fn extractComponents(self: *ParseRenderer, opts: JSValue) bun.JSError!void {
         if (opts.isUndefinedOrNull() or !opts.isObject()) return;
         inline for (@typeInfo(Components).@"struct".fields) |field| {
-            if (try opts.getTruthy(self.#globalObject, field.name)) |val| {
+            if (try opts.getTruthy(self._globalObject, field.name)) |val| {
                 if (!val.isBoolean()) {
-                    @field(self.#components, field.name) = val;
-                    self.#marked_args.append(val);
+                    @field(self._components, field.name) = val;
+                    self._marked_args.append(val);
                 }
             }
         }
@@ -421,42 +421,42 @@ const ParseRenderer = struct {
     fn getBlockComponent(self: *ParseRenderer, block_type: md.BlockType, data: u32) JSValue {
         return switch (block_type) {
             .h => switch (data) {
-                1 => self.#components.h1,
-                2 => self.#components.h2,
-                3 => self.#components.h3,
-                4 => self.#components.h4,
-                5 => self.#components.h5,
-                else => self.#components.h6,
+                1 => self._components.h1,
+                2 => self._components.h2,
+                3 => self._components.h3,
+                4 => self._components.h4,
+                5 => self._components.h5,
+                else => self._components.h6,
             },
-            .p => self.#components.p,
-            .quote => self.#components.blockquote,
-            .ul => self.#components.ul,
-            .ol => self.#components.ol,
-            .li => self.#components.li,
-            .code => self.#components.pre,
-            .hr => self.#components.hr,
-            .html => self.#components.html,
-            .table => self.#components.table,
-            .thead => self.#components.thead,
-            .tbody => self.#components.tbody,
-            .tr => self.#components.tr,
-            .th => self.#components.th,
-            .td => self.#components.td,
+            .p => self._components.p,
+            .quote => self._components.blockquote,
+            .ul => self._components.ul,
+            .ol => self._components.ol,
+            .li => self._components.li,
+            .code => self._components.pre,
+            .hr => self._components.hr,
+            .html => self._components.html,
+            .table => self._components.table,
+            .thead => self._components.thead,
+            .tbody => self._components.tbody,
+            .tr => self._components.tr,
+            .th => self._components.th,
+            .td => self._components.td,
             .doc => .zero,
         };
     }
 
     fn getSpanComponent(self: *ParseRenderer, span_type: md.SpanType) JSValue {
         return switch (span_type) {
-            .em => self.#components.em,
-            .strong => self.#components.strong,
-            .a => self.#components.a,
-            .img => self.#components.img,
-            .code => self.#components.code,
-            .del => self.#components.del,
-            .latexmath, .latexmath_display => self.#components.math,
-            .wikilink => self.#components.a,
-            .u => self.#components.u,
+            .em => self._components.em,
+            .strong => self._components.strong,
+            .a => self._components.a,
+            .img => self._components.img,
+            .code => self._components.code,
+            .del => self._components.del,
+            .latexmath, .latexmath_display => self._components.math,
+            .wikilink => self._components.a,
+            .u => self._components.u,
         };
     }
 
@@ -465,23 +465,23 @@ const ParseRenderer = struct {
     }
 
     fn getResult(self: *ParseRenderer) JSValue {
-        if (self.#stack.items.len == 0) return .js_undefined;
-        return self.#stack.items[0].children;
+        if (self._stack.items.len == 0) return .js_undefined;
+        return self._stack.items[0].children;
     }
 
     /// Creates an element node. In React mode, uses the C++ fast path with
     /// a cached Structure and putDirectOffset. In plain mode, creates a
     /// simple `{ type, props }` object.
     fn createElement(self: *ParseRenderer, type_val: JSValue, props: JSValue) JSValue {
-        if (self.#react_version) |version| {
-            const obj = JSReactElement__create(self.#globalObject, version, type_val, props);
-            self.#marked_args.append(obj);
+        if (self._react_version) |version| {
+            const obj = JSReactElement__create(self._globalObject, version, type_val, props);
+            self._marked_args.append(obj);
             return obj;
         } else {
-            const obj = JSValue.createEmptyObject(self.#globalObject, 2);
-            self.#marked_args.append(obj);
-            obj.put(self.#globalObject, ZigString.static("type"), type_val);
-            obj.put(self.#globalObject, ZigString.static("props"), props);
+            const obj = JSValue.createEmptyObject(self._globalObject, 2);
+            self._marked_args.append(obj);
+            obj.put(self._globalObject, ZigString.static("type"), type_val);
+            obj.put(self._globalObject, ZigString.static("props"), props);
             return obj;
         }
     }
@@ -500,16 +500,16 @@ const ParseRenderer = struct {
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: md.BlockType, data: u32, flags: u32) bun.JSError!void {
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
 
         if (block_type == .h) {
-            self.#heading_tracker.enterHeading();
+            self._heading_tracker.enterHeading();
         }
 
-        const array = try JSValue.createEmptyArray(self.#globalObject, 0);
-        self.#marked_args.append(array);
-        try self.#stack.append(bun.default_allocator, .{
+        const array = try JSValue.createEmptyArray(self._globalObject, 0);
+        self._marked_args.append(array);
+        try self._stack.append(bun.default_allocator, .{
             .children = array,
             .block_type = block_type,
             .data = data,
@@ -519,18 +519,18 @@ const ParseRenderer = struct {
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: md.BlockType, _: u32) bun.JSError!void {
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
 
-        if (self.#stack.items.len <= 1) return;
-        const entry = self.#stack.pop().?;
-        const g = self.#globalObject;
+        if (self._stack.items.len <= 1) return;
+        const entry = self._stack.pop().?;
+        const g = self._globalObject;
 
         // Determine HTML tag index for cached string
         const tag_index = getBlockTypeTag(block_type, entry.data);
 
         // For headings, compute slug before counting props
-        const slug: ?[]const u8 = if (block_type == .h) self.#heading_tracker.leaveHeading(bun.default_allocator) else null;
+        const slug: ?[]const u8 = if (block_type == .h) self._heading_tracker.leaveHeading(bun.default_allocator) else null;
 
         // Count props fields
         var props_count: usize = if (block_type == .hr) 0 else 1; // children
@@ -545,7 +545,7 @@ const ParseRenderer = struct {
             },
             .code => {
                 if (entry.flags & md.BLOCK_FENCED_CODE != 0) {
-                    const lang = extractLanguage(self.#src_text, entry.data);
+                    const lang = extractLanguage(self._src_text, entry.data);
                     if (lang.len > 0) props_count += 1;
                 }
             },
@@ -561,7 +561,7 @@ const ParseRenderer = struct {
         const type_val: JSValue = if (component != .zero) component else getCachedTagString(g, tag_index);
 
         const props = JSValue.createEmptyObject(g, props_count);
-        self.#marked_args.append(props);
+        self._marked_args.append(props);
 
         // Set metadata props
         switch (block_type) {
@@ -581,7 +581,7 @@ const ParseRenderer = struct {
             },
             .code => {
                 if (entry.flags & md.BLOCK_FENCED_CODE != 0) {
-                    const lang = extractLanguage(self.#src_text, entry.data);
+                    const lang = extractLanguage(self._src_text, entry.data);
                     if (lang.len > 0) {
                         props.put(g, ZigString.static("language"), try bun.String.createUTF8ForJS(g, lang));
                     }
@@ -604,12 +604,12 @@ const ParseRenderer = struct {
         const obj = self.createElement(type_val, props);
 
         // Push to parent's children array
-        if (self.#stack.items.len > 0) {
-            try self.#stack.items[self.#stack.items.len - 1].children.push(g, obj);
+        if (self._stack.items.len > 0) {
+            try self._stack.items[self._stack.items.len - 1].children.push(g, obj);
         }
 
         if (block_type == .h) {
-            self.#heading_tracker.clearAfterHeading();
+            self._heading_tracker.clearAfterHeading();
         }
     }
 
@@ -619,20 +619,20 @@ const ParseRenderer = struct {
 
     fn enterSpanImpl(ptr: *anyopaque, _: md.SpanType, detail: md.SpanDetail) bun.JSError!void {
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
-        const array = try JSValue.createEmptyArray(self.#globalObject, 0);
-        self.#marked_args.append(array);
-        try self.#stack.append(bun.default_allocator, .{ .children = array, .detail = detail });
+        const array = try JSValue.createEmptyArray(self._globalObject, 0);
+        self._marked_args.append(array);
+        try self._stack.append(bun.default_allocator, .{ .children = array, .detail = detail });
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: md.SpanType) bun.JSError!void {
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
-        if (self.#stack.items.len <= 1) return;
-        const entry = self.#stack.pop().?;
-        const g = self.#globalObject;
+        if (self._stack.items.len <= 1) return;
+        const entry = self._stack.pop().?;
+        const g = self._globalObject;
 
         const tag_index = getSpanTypeTag(span_type);
 
@@ -657,7 +657,7 @@ const ParseRenderer = struct {
         const type_val: JSValue = if (component != .zero) component else getCachedTagString(g, tag_index);
 
         const props = JSValue.createEmptyObject(g, props_count);
-        self.#marked_args.append(props);
+        self._marked_args.append(props);
 
         // Set metadata props
         switch (span_type) {
@@ -713,8 +713,8 @@ const ParseRenderer = struct {
         const obj = self.createElement(type_val, props);
 
         // Push to parent's children array
-        if (self.#stack.items.len > 0) {
-            try self.#stack.items[self.#stack.items.len - 1].children.push(g, obj);
+        if (self._stack.items.len > 0) {
+            try self._stack.items[self._stack.items.len - 1].children.push(g, obj);
         }
     }
 
@@ -724,45 +724,45 @@ const ParseRenderer = struct {
 
     fn textImpl(ptr: *anyopaque, text_type: md.TextType, content: []const u8) bun.JSError!void {
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
-        const g = self.#globalObject;
+        const g = self._globalObject;
 
         // Track plain text for slug generation when inside a heading
-        self.#heading_tracker.trackText(text_type, content, bun.default_allocator);
+        self._heading_tracker.trackText(text_type, content, bun.default_allocator);
 
-        if (self.#stack.items.len == 0) return;
-        const parent = &self.#stack.items[self.#stack.items.len - 1];
+        if (self._stack.items.len == 0) return;
+        const parent = &self._stack.items[self._stack.items.len - 1];
 
         switch (text_type) {
             .br => {
-                const br_component = self.#components.br;
+                const br_component = self._components.br;
                 const br_type: JSValue = if (br_component != .zero) br_component else getCachedTagString(g, .br);
                 const empty_props = JSValue.createEmptyObject(g, 0);
-                self.#marked_args.append(empty_props);
+                self._marked_args.append(empty_props);
                 const obj = self.createElement(br_type, empty_props);
                 try parent.children.push(g, obj);
             },
             .softbr => {
                 const str = try bun.String.createUTF8ForJS(g, "\n");
-                self.#marked_args.append(str);
+                self._marked_args.append(str);
                 try parent.children.push(g, str);
             },
             .null_char => {
                 const str = try bun.String.createUTF8ForJS(g, "\xEF\xBF\xBD");
-                self.#marked_args.append(str);
+                self._marked_args.append(str);
                 try parent.children.push(g, str);
             },
             .entity => {
                 var buf: [8]u8 = undefined;
                 const decoded = md.helpers.decodeEntityToUtf8(content, &buf) orelse content;
                 const str = try bun.String.createUTF8ForJS(g, decoded);
-                self.#marked_args.append(str);
+                self._marked_args.append(str);
                 try parent.children.push(g, str);
             },
             else => {
                 const str = try bun.String.createUTF8ForJS(g, content);
-                self.#marked_args.append(str);
+                self._marked_args.append(str);
                 try parent.children.push(g, str);
             },
         }
@@ -775,23 +775,23 @@ const ParseRenderer = struct {
 /// the JS callback with the accumulated children, and appends the
 /// callback's return value to the parent buffer.
 const JsCallbackRenderer = struct {
-    #globalObject: *jsc.JSGlobalObject,
-    #allocator: std.mem.Allocator,
-    #src_text: []const u8,
-    #stack: std.ArrayListUnmanaged(StackEntry) = .{},
-    #callbacks: Callbacks = .{},
-    #heading_tracker: md.helpers.HeadingIdTracker = md.helpers.HeadingIdTracker.init(false),
-    #stack_check: bun.StackCheck,
+    _globalObject: *jsc.JSGlobalObject,
+    _allocator: std.mem.Allocator,
+    _src_text: []const u8,
+    _stack: std.ArrayListUnmanaged(StackEntry) = .{},
+    _callbacks: Callbacks = .{},
+    _heading_tracker: md.helpers.HeadingIdTracker = md.helpers.HeadingIdTracker.init(false),
+    _stack_check: bun.StackCheck,
 
     fn init(globalObject: *jsc.JSGlobalObject, src_text: []const u8, heading_ids: bool) error{OutOfMemory}!JsCallbackRenderer {
         var self = JsCallbackRenderer{
-            .#globalObject = globalObject,
-            .#allocator = bun.default_allocator,
-            .#src_text = src_text,
-            .#heading_tracker = md.helpers.HeadingIdTracker.init(heading_ids),
-            .#stack_check = bun.StackCheck.init(),
+            ._globalObject = globalObject,
+            ._allocator = bun.default_allocator,
+            ._src_text = src_text,
+            ._heading_tracker = md.helpers.HeadingIdTracker.init(heading_ids),
+            ._stack_check = bun.StackCheck.init(),
         };
-        try self.#stack.append(bun.default_allocator, .{});
+        try self._stack.append(bun.default_allocator, .{});
         return self;
     }
 
@@ -833,20 +833,20 @@ const JsCallbackRenderer = struct {
     fn extractCallbacks(self: *JsCallbackRenderer, opts: JSValue) bun.JSError!void {
         if (opts.isUndefinedOrNull() or !opts.isObject()) return;
         inline for (@typeInfo(Callbacks).@"struct".fields) |field| {
-            if (try opts.getTruthy(self.#globalObject, field.name)) |val| {
+            if (try opts.getTruthy(self._globalObject, field.name)) |val| {
                 if (val.isCallable()) {
-                    @field(self.#callbacks, field.name) = val;
+                    @field(self._callbacks, field.name) = val;
                 }
             }
         }
     }
 
     fn deinit(self: *JsCallbackRenderer) void {
-        for (self.#stack.items) |*entry| {
-            entry.buffer.deinit(self.#allocator);
+        for (self._stack.items) |*entry| {
+            entry.buffer.deinit(self._allocator);
         }
-        self.#stack.deinit(self.#allocator);
-        self.#heading_tracker.deinit(self.#allocator);
+        self._stack.deinit(self._allocator);
+        self._heading_tracker.deinit(self._allocator);
     }
 
     fn renderer(self: *JsCallbackRenderer) md.Renderer {
@@ -866,15 +866,15 @@ const JsCallbackRenderer = struct {
     // ========================================
 
     fn appendToTop(self: *JsCallbackRenderer, data: []const u8) error{OutOfMemory}!void {
-        if (self.#stack.items.len == 0) return;
-        const top = &self.#stack.items[self.#stack.items.len - 1];
-        try top.buffer.appendSlice(self.#allocator, data);
+        if (self._stack.items.len == 0) return;
+        const top = &self._stack.items[self._stack.items.len - 1];
+        try top.buffer.appendSlice(self._allocator, data);
     }
 
     fn popAndCallback(self: *JsCallbackRenderer, callback: JSValue, meta: ?JSValue) bun.JSError!void {
-        if (self.#stack.items.len <= 1) return; // don't pop root
-        var entry = self.#stack.pop() orelse return;
-        defer entry.buffer.deinit(self.#allocator);
+        if (self._stack.items.len <= 1) return; // don't pop root
+        var entry = self._stack.pop() orelse return;
+        defer entry.buffer.deinit(self._allocator);
 
         const children = entry.buffer.items;
 
@@ -884,28 +884,28 @@ const JsCallbackRenderer = struct {
             return;
         }
 
-        if (!self.#stack_check.isSafeToRecurse()) {
-            return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) {
+            return self._globalObject.throwStackOverflow();
         }
 
         // Convert children to JS string
-        const children_js = try bun.String.createUTF8ForJS(self.#globalObject, children);
+        const children_js = try bun.String.createUTF8ForJS(self._globalObject, children);
 
         // Call the JS callback
         const result = if (meta) |m|
-            try callback.call(self.#globalObject, .js_undefined, &[_]JSValue{ children_js, m })
+            try callback.call(self._globalObject, .js_undefined, &[_]JSValue{ children_js, m })
         else
-            try callback.call(self.#globalObject, .js_undefined, &[_]JSValue{children_js});
+            try callback.call(self._globalObject, .js_undefined, &[_]JSValue{children_js});
 
         if (result.isUndefinedOrNull()) return; // callback returned null/undefined → omit element
-        const slice = try result.toSlice(self.#globalObject, self.#allocator);
+        const slice = try result.toSlice(self._globalObject, self._allocator);
         defer slice.deinit();
         try self.appendToTop(slice.slice());
     }
 
     fn getResult(self: *JsCallbackRenderer) []const u8 {
-        if (self.#stack.items.len == 0) return "";
-        return self.#stack.items[0].buffer.items;
+        if (self._stack.items.len == 0) return "";
+        return self._stack.items[0].buffer.items;
     }
 
     // ========================================
@@ -914,22 +914,22 @@ const JsCallbackRenderer = struct {
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: md.BlockType, data: u32, flags: u32) bun.JSError!void {
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
         if (block_type == .h) {
-            self.#heading_tracker.enterHeading();
+            self._heading_tracker.enterHeading();
         }
 
         // For li: record its 0-based index within the parent list, then
         // increment the parent's counter so the next sibling gets index+1.
         var child_index: u32 = 0;
-        if (block_type == .li and self.#stack.items.len > 0) {
-            const parent = &self.#stack.items[self.#stack.items.len - 1];
+        if (block_type == .li and self._stack.items.len > 0) {
+            const parent = &self._stack.items[self._stack.items.len - 1];
             child_index = parent.child_index;
             parent.child_index += 1;
         }
 
-        try self.#stack.append(self.#allocator, .{
+        try self._stack.append(self._allocator, .{
             .block_type = block_type,
             .data = data,
             .flags = flags,
@@ -939,35 +939,35 @@ const JsCallbackRenderer = struct {
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: md.BlockType, _: u32) bun.JSError!void {
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
 
         const callback = self.getBlockCallback(block_type);
-        const saved = if (self.#stack.items.len > 1)
-            self.#stack.items[self.#stack.items.len - 1]
+        const saved = if (self._stack.items.len > 1)
+            self._stack.items[self._stack.items.len - 1]
         else
             StackEntry{};
         const meta = try self.createBlockMeta(block_type, saved.data, saved.flags);
         try self.popAndCallback(callback, meta);
 
         if (block_type == .h) {
-            self.#heading_tracker.clearAfterHeading();
+            self._heading_tracker.clearAfterHeading();
         }
     }
 
     fn enterSpanImpl(ptr: *anyopaque, _: md.SpanType, detail: md.SpanDetail) bun.JSError!void {
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
-        try self.#stack.append(self.#allocator, .{ .detail = detail });
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
+        try self._stack.append(self._allocator, .{ .detail = detail });
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: md.SpanType) bun.JSError!void {
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
         const callback = self.getSpanCallback(span_type);
-        const detail = if (self.#stack.items.len > 1)
-            self.#stack.items[self.#stack.items.len - 1].detail
+        const detail = if (self._stack.items.len > 1)
+            self._stack.items[self._stack.items.len - 1].detail
         else
             md.SpanDetail{};
         const meta = try self.createSpanMeta(span_type, detail);
@@ -976,10 +976,10 @@ const JsCallbackRenderer = struct {
 
     fn textImpl(ptr: *anyopaque, text_type: md.TextType, content: []const u8) bun.JSError!void {
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
-        if (!self.#stack_check.isSafeToRecurse()) return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
         // Track plain text for slug generation when inside a heading
-        self.#heading_tracker.trackText(text_type, content, self.#allocator);
+        self._heading_tracker.trackText(text_type, content, self._allocator);
 
         switch (text_type) {
             .null_char => try self.appendToTop("\xEF\xBF\xBD"),
@@ -987,7 +987,7 @@ const JsCallbackRenderer = struct {
             .softbr => try self.appendToTop("\n"),
             .entity => try self.decodeAndAppendEntity(content),
             else => {
-                if (self.#callbacks.text != .zero) {
+                if (self._callbacks.text != .zero) {
                     try self.callTextCallback(content);
                 } else {
                     try self.appendToTop(content);
@@ -1001,13 +1001,13 @@ const JsCallbackRenderer = struct {
     // ========================================
 
     fn callTextCallback(self: *JsCallbackRenderer, content: []const u8) bun.JSError!void {
-        if (!self.#stack_check.isSafeToRecurse()) {
-            return self.#globalObject.throwStackOverflow();
+        if (!self._stack_check.isSafeToRecurse()) {
+            return self._globalObject.throwStackOverflow();
         }
-        const text_js = try bun.String.createUTF8ForJS(self.#globalObject, content);
-        const result = try self.#callbacks.text.call(self.#globalObject, .js_undefined, &[_]JSValue{text_js});
+        const text_js = try bun.String.createUTF8ForJS(self._globalObject, content);
+        const result = try self._callbacks.text.call(self._globalObject, .js_undefined, &[_]JSValue{text_js});
         if (!result.isUndefinedOrNull()) {
-            const slice = try result.toSlice(self.#globalObject, self.#allocator);
+            const slice = try result.toSlice(self._globalObject, self._allocator);
             defer slice.deinit();
             try self.appendToTop(slice.slice());
         }
@@ -1020,7 +1020,7 @@ const JsCallbackRenderer = struct {
 
     /// Append text through the text callback if one is set, otherwise raw append.
     fn appendTextOrRaw(self: *JsCallbackRenderer, content: []const u8) bun.JSError!void {
-        if (self.#callbacks.text != .zero) {
+        if (self._callbacks.text != .zero) {
             try self.callTextCallback(content);
         } else {
             try self.appendToTop(content);
@@ -1033,32 +1033,32 @@ const JsCallbackRenderer = struct {
 
     fn getBlockCallback(self: *JsCallbackRenderer, block_type: md.BlockType) JSValue {
         return switch (block_type) {
-            .h => self.#callbacks.heading,
-            .p => self.#callbacks.paragraph,
-            .quote => self.#callbacks.blockquote,
-            .code => self.#callbacks.code,
-            .ul, .ol => self.#callbacks.list,
-            .li => self.#callbacks.listItem,
-            .hr => self.#callbacks.hr,
-            .table => self.#callbacks.table,
-            .thead => self.#callbacks.thead,
-            .tbody => self.#callbacks.tbody,
-            .tr => self.#callbacks.tr,
-            .th => self.#callbacks.th,
-            .td => self.#callbacks.td,
-            .html => self.#callbacks.html,
+            .h => self._callbacks.heading,
+            .p => self._callbacks.paragraph,
+            .quote => self._callbacks.blockquote,
+            .code => self._callbacks.code,
+            .ul, .ol => self._callbacks.list,
+            .li => self._callbacks.listItem,
+            .hr => self._callbacks.hr,
+            .table => self._callbacks.table,
+            .thead => self._callbacks.thead,
+            .tbody => self._callbacks.tbody,
+            .tr => self._callbacks.tr,
+            .th => self._callbacks.th,
+            .td => self._callbacks.td,
+            .html => self._callbacks.html,
             .doc => .zero,
         };
     }
 
     fn getSpanCallback(self: *JsCallbackRenderer, span_type: md.SpanType) JSValue {
         return switch (span_type) {
-            .em => self.#callbacks.emphasis,
-            .strong => self.#callbacks.strong,
-            .a => self.#callbacks.link,
-            .img => self.#callbacks.image,
-            .code => self.#callbacks.codespan,
-            .del => self.#callbacks.strikethrough,
+            .em => self._callbacks.emphasis,
+            .strong => self._callbacks.strong,
+            .a => self._callbacks.link,
+            .img => self._callbacks.image,
+            .code => self._callbacks.codespan,
+            .del => self._callbacks.strikethrough,
             else => .zero,
         };
     }
@@ -1073,9 +1073,9 @@ const JsCallbackRenderer = struct {
     fn countListDepth(self: *JsCallbackRenderer) u32 {
         var depth: u32 = 0;
         // Skip the top entry (self) — we want enclosing lists only.
-        const len = self.#stack.items.len;
+        const len = self._stack.items.len;
         if (len < 2) return 0;
-        for (self.#stack.items[0 .. len - 1]) |entry| {
+        for (self._stack.items[0 .. len - 1]) |entry| {
             if (entry.block_type == .ul or entry.block_type == .ol) depth += 1;
         }
         return depth;
@@ -1084,18 +1084,18 @@ const JsCallbackRenderer = struct {
     /// Returns the parent ul/ol entry for the current li (top of stack).
     /// Returns null if the stack shape is unexpected.
     fn parentList(self: *JsCallbackRenderer) ?*const StackEntry {
-        const len = self.#stack.items.len;
+        const len = self._stack.items.len;
         if (len < 2) return null;
-        const parent = &self.#stack.items[len - 2];
+        const parent = &self._stack.items[len - 2];
         if (parent.block_type == .ul or parent.block_type == .ol) return parent;
         return null;
     }
 
     fn createBlockMeta(self: *JsCallbackRenderer, block_type: md.BlockType, data: u32, flags: u32) bun.JSError!?JSValue {
-        const g = self.#globalObject;
+        const g = self._globalObject;
         switch (block_type) {
             .h => {
-                const slug = self.#heading_tracker.leaveHeading(self.#allocator);
+                const slug = self._heading_tracker.leaveHeading(self._allocator);
                 const field_count: usize = if (slug != null) 2 else 1;
                 const obj = JSValue.createEmptyObject(g, field_count);
                 obj.put(g, ZigString.static("level"), JSValue.jsNumber(data));
@@ -1112,7 +1112,7 @@ const JsCallbackRenderer = struct {
             },
             .code => {
                 if (flags & md.BLOCK_FENCED_CODE != 0) {
-                    const lang = extractLanguage(self.#src_text, data);
+                    const lang = extractLanguage(self._src_text, data);
                     if (lang.len > 0) {
                         const obj = JSValue.createEmptyObject(g, 1);
                         obj.put(g, ZigString.static("language"), try bun.String.createUTF8ForJS(g, lang));
@@ -1131,8 +1131,8 @@ const JsCallbackRenderer = struct {
             },
             .li => {
                 // The li entry is still on top of the stack; parent ul/ol is at len-2.
-                const len = self.#stack.items.len;
-                const item_index = if (len > 1) self.#stack.items[len - 1].child_index else 0;
+                const len = self._stack.items.len;
+                const item_index = if (len > 1) self._stack.items[len - 1].child_index else 0;
                 const parent = self.parentList();
                 const is_ordered = parent != null and (if (parent) |v| v else return error.Null).block_type == .ol;
                 // countListDepth() includes the immediate parent list; subtract it
@@ -1154,7 +1154,7 @@ const JsCallbackRenderer = struct {
     }
 
     fn createSpanMeta(self: *JsCallbackRenderer, span_type: md.SpanType, detail: md.SpanDetail) bun.JSError!?JSValue {
-        const g = self.#globalObject;
+        const g = self._globalObject;
         switch (span_type) {
             .a => {
                 const href = try bun.String.createUTF8ForJS(g, detail.href);

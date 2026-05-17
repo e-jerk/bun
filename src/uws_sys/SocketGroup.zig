@@ -14,7 +14,7 @@ pub const SocketGroup = extern struct {
     /// Embedding owner — typed access via `owner(T)`. `?*anyopaque` only
     /// because the C ABI slot is heterogenous (Listener / uWS App / RareData /
     /// null); never read this field directly.
-    #ext: ?*anyopaque = null,
+    _ext: ?*anyopaque = null,
     head_sockets: ?*us_socket_t = null,
     head_connecting_sockets: ?*ConnectingSocket = null,
     head_listen_sockets: ?*uws.ListenSocket = null,
@@ -78,14 +78,14 @@ pub const SocketGroup = extern struct {
     /// zero-init'd by default and read directly by C; these accessors encode
     /// the post-init invariant.
     pub fn getLoop(self: *const SocketGroup) *Loop {
-        return if (self.loop) |__zust_v| __zust_v else return error.Null;
+        return self.loop.?;
     }
 
     /// Recover the embedding owner. Only valid for groups whose `init` passed a
     /// non-null owner (Listener, uWS App/Context). Per-kind VM groups in
     /// `RareData` pass `null`, so callers must know which they have.
     pub fn owner(self: *const SocketGroup, comptime T: type) *T {
-        return @ptrCast(@alignCast(self.#if (ext) |__zust_v| __zust_v else return error.Null));
+        return @ptrCast(@alignCast(self._ext.?));
     }
 
     pub fn isEmpty(self: *const SocketGroup) bool {
@@ -199,7 +199,6 @@ const c = struct {
 };
 
 const bun = @import("bun");
-const safe = @import("safe");
 
 const uws = bun.uws;
 const ConnectingSocket = uws.ConnectingSocket;
