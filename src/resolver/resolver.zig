@@ -2303,7 +2303,7 @@ pub const Resolver = struct {
                 existing.data.clearAndFree(allocator);
             }
 
-            var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
+            var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable;
             dir_entries_ptr.* = new_entry;
 
             if (r.store_fd) {
@@ -3011,7 +3011,7 @@ pub const Resolver = struct {
                     existing.data.clearAndFree(allocator);
                 }
                 new_entry.fd = if (r.store_fd) open_dir else .invalid;
-                var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
+                var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable;
                 dir_entries_ptr.* = new_entry;
                 dir_entries_option = try rfs.entries.put(&cached_dir_entry_result, .{
                     .entries = dir_entries_ptr,

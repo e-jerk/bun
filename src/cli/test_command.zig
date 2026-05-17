@@ -634,7 +634,7 @@ pub const CommandLineReporter = struct {
             };
 
             switch (Output.enable_ansi_colors_stderr) {
-                inline else => |_| switch (status) {
+                inline else => switch (status) {
                     .fail_because_expected_assertion_count => {
                         // not sent to writer so it doesn't get printed twice
                         const expected_count = if (sequence.expect_assertions == .exact) sequence.expect_assertions.exact else 12345;
@@ -1388,10 +1388,10 @@ pub const TestCommand = struct {
         }
 
         var env_loader = brk: {
-            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
-            const loader = try zust.Box(DotEnv.Loader,0,0,0).init(ctx.allocator, undefined);
+            const loader = try zust.Box(DotEnv.Loader).init(ctx.allocator, undefined);
             loader.* = DotEnv.Loader.init(map, ctx.allocator);
             break :brk loader;
         };
@@ -1413,7 +1413,7 @@ pub const TestCommand = struct {
         var inline_snapshots_to_write = std.AutoArrayHashMap(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
         jsc.VirtualMachine.isBunTest = true;
 
-        var reporter = try zust.Box(CommandLineReporter,0,0,0).init(ctx.allocator, undefined);
+        var reporter = try zust.Box(CommandLineReporter).init(ctx.allocator, undefined);
         defer {
             if (reporter.reporters.junit) |file_reporter| {
                 file_reporter.deinit();

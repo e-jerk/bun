@@ -85,7 +85,7 @@ const zust = @import("safe");
                 this.* = .{ .closed = {} };
                 fd.close();
             },
-            .fd => |_| {
+            .fd => {
                 this.* = .{ .closed = {} };
             },
             .pipe => {

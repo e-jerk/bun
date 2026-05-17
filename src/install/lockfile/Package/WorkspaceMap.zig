@@ -113,7 +113,7 @@ pub fn processNamesArray(
 
     var workspace_globs = std.array_list.Managed(string).init(allocator);
     defer workspace_globs.deinit();
-    const filepath_bufOS = zust.Box(bun.PathBuffer, 0, 0, 0).init(allocator, undefined) catch unreachable;
+    const filepath_bufOS = zust.Box(bun.PathBuffer).init(allocator, undefined) catch unreachable;
     const filepath_buf = std.mem.asBytes(filepath_bufOS);
     defer _ = filepath_bufOS.deinit();
 

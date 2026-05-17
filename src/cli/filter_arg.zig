@@ -1,5 +1,4 @@
 const SKIP_LIST = .{
-const zust = @import("safe");
     // skip hidden directories
     ".",
 

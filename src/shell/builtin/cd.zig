@@ -118,8 +118,8 @@ pub fn onIOWriterChunk(this: *Cd, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        defer (if (e) |v| v else return error.Null).deref();
-        return this.bltn().done((if (e) |v| v else return error.Null).getErrno());
+        defer (if (e) |v| v else unreachable).deref();
+        return this.bltn().done((if (e) |v| v else unreachable).getErrno());
     }
 
     this.state = .done;

@@ -161,11 +161,11 @@ pub const PendingValue = struct {
                         .getBlob => globalThis.readableStreamToBlob(readable.value),
                         .getFormData => |form_data| brk: {
                             defer {
-                                (if (form_data) |v| v else return error.Null).deinit();
+                                (if (form_data) |v| v else unreachable).deinit();
                                 value.action.getFormData = null;
                             }
 
-                            break :brk globalThis.readableStreamToFormData(readable.value, switch ((if (form_data) |v| v else return error.Null).encoding) {
+                            break :brk globalThis.readableStreamToFormData(readable.value, switch ((if (form_data) |v| v else unreachable).encoding) {
                                 .Multipart => |multipart| try bun.String.init(multipart).toJS(globalThis),
                                 .URLEncoded => .js_undefined,
                             });

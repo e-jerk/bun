@@ -2132,7 +2132,7 @@ pub const BundleV2 = struct {
                             .loader = loader,
                             .side_effects = .has_side_effects,
                         }) catch unreachable;
-                        var task = zust.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
+                        var task = zust.Box(ParseTask).init(bun.default_allocator, undefined) catch unreachable;
                         task.* = ParseTask{
                             .ctx = this,
                             .path = path,
@@ -2689,7 +2689,7 @@ pub const BundleV2 = struct {
         if (this.plugins) |plugins| {
             if (plugins.hasAnyMatches(&import_record.path, false)) {
                 // This is where onResolve plugins are enqueued
-                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable;
                 debug("enqueue onResolve: {s}:{s}", .{
                     import_record.path.namespace,
                     import_record.path.text,
@@ -2726,7 +2726,7 @@ pub const BundleV2 = struct {
             if (plugins.hasAnyMatches(&temp_path, false)) {
                 debug("Entry point '{s}' plugin match", .{entry_point});
 
-                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable;
                 this.incrementScanCounter();
 
                 resolve.* = jsc.API.JSBundler.Resolve.init(this, .{
@@ -2778,7 +2778,7 @@ pub const BundleV2 = struct {
                     parse.path.namespace,
                     parse.path.text,
                 });
-                const load = bun.handleOom(zust.Box(jsc.API.JSBundler.Load, 0, 0, 0).init(bun.default_allocator, undefined));
+                const load = bun.handleOom(zust.Box(jsc.API.JSBundler.Load).init(bun.default_allocator, undefined));
                 load.* = jsc.API.JSBundler.Load.init(this, parse);
                 load.dispatch();
                 return true;
@@ -3079,7 +3079,7 @@ pub const BundleV2 = struct {
                     import_record.path = path_primary;
                     resolve_entry.key_ptr.* = path_primary.text;
                     debug("created ParseTask from FileMap: {s}", .{path_primary.text});
-                    const resolve_task = bun.handleOom(zust.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined));
+                    const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined));
                     file_map_result.path_pair.primary = path_primary;
                     resolve_task.* = ParseTask.init(&file_map_result, Index.invalid, this);
                     resolve_task.known_target = target;
@@ -3345,7 +3345,7 @@ pub const BundleV2 = struct {
             import_record.path = path.*;
             resolve_entry.key_ptr.* = path.text;
             debug("created ParseTask: {s}", .{path.text});
-            const resolve_task = bun.handleOom(zust.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined));
+            const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined));
             resolve_task.* = ParseTask.init(&resolve_result, Index.invalid, this);
 
             resolve_task.known_target = if (import_record.kind == .html_manifest)

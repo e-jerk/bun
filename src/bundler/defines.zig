@@ -1,6 +1,5 @@
 const Globals = struct {
     pub const Undefined = js_ast.E.Undefined{};
-    const zust = @import("safe");
     pub const UndefinedPtr = &Globals.Undefined;
 
     pub const NaN = js_ast.E.Number{ .value = std.math.nan(f64) };
@@ -242,7 +241,7 @@ pub const DotDefine = struct {
     data: DefineData,
 };
 
-// var nan_val = try zust.Box(js_ast.E.Number,0,0,0).init(allocator, undefined);
+// var nan_val = try allocator.create(js_ast.E.Number);
 const nan_val = js_ast.E.Number{ .value = std.math.nan(f64) };
 
 pub const Define = struct {
@@ -344,8 +343,8 @@ pub const Define = struct {
     }
 
     pub fn init(allocator: std.mem.Allocator, _user_defines: ?UserDefines, string_defines: ?UserDefinesArray, drop_debugger: bool, omit_unused_global_calls: bool) bun.OOM!*@This() {
-        const define = try zust.Box(Define, 0, 0, 0).init(allocator, undefined);
-        errdefer _ = define.deinit();
+        const define = try allocator.create(Define);
+        errdefer allocator.destroy(define);
         define.* = .{
             .allocator = allocator,
             .identifiers = bun.StringHashMap(IdentifierDefine).init(allocator),
@@ -407,7 +406,7 @@ pub const Define = struct {
         while (diter.next()) |key| this.allocator.free(key.*);
         this.dots.clearAndFree();
         this.identifiers.clearAndFree();
-        _ = this.deinit();
+        this.allocator.destroy(this);
     }
 };
 

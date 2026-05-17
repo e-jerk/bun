@@ -2315,7 +2315,7 @@ pub const sync = struct {
 
     // The PID to forward signals to.
     // Set to 0 when unregistering.
-    extern "c" var Bun__currentSyncPID = zust.CheckedInt(i64).init(0);
+    extern "c" var Bun__currentSyncPID: i64;
 
     // Race condition: a signal could be sent before spawnProcessPosix returns.
     // We need to make sure to send it after the process is spawned.

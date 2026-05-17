@@ -1444,7 +1444,7 @@ pub fn getQueriesArray(this: *const PostgresSQLConnection) JSValue {
     return js.queriesGetCached(this.js_value) orelse .js_undefined;
 }
 
-pub fn on(this: *PostgresSQLConnection, comptime MessageType: @Type(.enum_literal), comptime Context: type, reader: protocol.NewReader(Context)) AnyPostgresError!void {
+pub fn on(this: *PostgresSQLConnection, comptime MessageType: anytype, comptime Context: type, reader: protocol.NewReader(Context)) AnyPostgresError!void {
     debug("on({s})", .{@tagName(MessageType)});
 
     switch (comptime MessageType) {
@@ -1951,7 +1951,7 @@ pub const fromJSDirect = js.fromJSDirect;
 pub const toJS = js.toJS;
 
 const DataCell = @import("./DataCell.zig");
-const PostgresCachedStructure = @import("../../sql_jsc/shared/CachedStructure.zig");
+const PostgresCachedStructure = @import("../shared/CachedStructure.zig");
 const PostgresRequest = @import("./PostgresRequest.zig");
 const PostgresSQLQuery = @import("./PostgresSQLQuery.zig");
 const PostgresSQLStatement = @import("./PostgresSQLStatement.zig");

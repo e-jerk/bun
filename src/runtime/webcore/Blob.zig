@@ -343,7 +343,7 @@ const FormDataContext = struct {
                         blob.resolveSize();
                     }
                     switch (store.data) {
-                        .s3 => |_| {
+                        .s3 => {
                             // TODO: s3
                             // we need to make this async and use download/downloadSlice
                         },
@@ -372,7 +372,7 @@ const FormDataContext = struct {
                                 },
                             }
                         },
-                        .bytes => |_| {
+                        .bytes => {
                             joiner.pushStatic(blob.sharedView());
                         },
                     }

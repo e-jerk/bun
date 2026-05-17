@@ -36,11 +36,10 @@ pub const AstBuilder = struct {
     } = .{},
     pub const parser_features = struct {
         pub const typescript = false;
-        const zust = @import("safe");
     };
 
     pub fn init(allocator: std.mem.Allocator, source: *const Logger.Source, hot_reloading: bool) !AstBuilder {
-        const scope = try zust.Box(Scope, 0, 0, 0).init(allocator, undefined);
+        const scope = try allocator.create(Scope);
         scope.* = .{
             .kind = .entry,
             .label_ref = null,
@@ -74,7 +73,7 @@ pub const AstBuilder = struct {
     pub fn pushScope(p: *AstBuilder, kind: Scope.Kind) *js_ast.Scope {
         try p.scopes.ensureUnusedCapacity(p.allocator, 1);
         try p.current_scope.children.ensureUnusedCapacity(p.allocator, 1);
-        const scope = try zust.Box(Scope, 0, 0, 0).init(p.allocator, undefined);
+        const scope = try p.allocator.create(Scope);
         scope.* = .{
             .kind = kind,
             .label_ref = null,

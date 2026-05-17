@@ -71,7 +71,7 @@ pub fn pop(this: *ASTMemoryAllocator) void {
 }
 
 pub fn append(this: *ASTMemoryAllocator, comptime ValueType: type, value: anytype) *ValueType {
-    const ptr = zust.Box(ValueType, 0, 0, 0).init(this.bump_allocator, undefined) catch unreachable;
+    const ptr = zust.Box(ValueType).init(this.bump_allocator, undefined) catch unreachable;
     ptr.* = value;
     return ptr;
 }

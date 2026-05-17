@@ -607,33 +607,8 @@ pub fn toAST(
             if (info.tag_type) |UnionTagType| {
                 inline for (info.fields) |u_field| {
                     if (value == @field(UnionTagType, u_field.name)) {
-                        const StructType = @Type(
-                            .{
-                                .Struct = .{
-                                    .layout = .Auto,
-                                    .decls = &.{},
-                                    .is_tuple = false,
-                                    .fields = &.{
-                                        .{
-                                            .name = u_field.name,
-                                            .type = @TypeOf(
-                                                @field(value, u_field.name),
-                                            ),
-                                            .is_comptime = false,
-                                            .default_value_ptr = undefined,
-                                            .alignment = @alignOf(
-                                                @TypeOf(
-                                                    @field(value, u_field.name),
-                                                ),
-                                            ),
-                                        },
-                                    },
-                                },
-                            },
-                        );
-                        var struct_value: StructType = undefined;
-                        @field(struct_value, u_field.name) = value;
-                        return try toAST(allocator, StructType, struct_value);
+                        const field_value = @field(value, u_field.name);
+                        return try toAST(allocator, @TypeOf(field_value), field_value);
                     }
                 }
             } else {

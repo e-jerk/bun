@@ -188,7 +188,7 @@ pub const ThreadPool = struct {
                 return entry.value_ptr.*;
             }
 
-            worker = zust.Box(Worker, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
+            worker = zust.Box(Worker).init(bun.default_allocator, undefined) catch unreachable;
             entry.value_ptr.* = worker;
         }
 
@@ -293,7 +293,7 @@ pub const ThreadPool = struct {
             this.ast_memory_allocator.reset();
 
             this.data = WorkerData{
-                .log = bun.handleOom(zust.Box(Logger.Log, 0, 0, 0).init(allocator, undefined)),
+                .log = bun.handleOom(zust.Box(Logger.Log).init(allocator, undefined)),
                 .transpiler = undefined,
             };
             this.data.log.* = Logger.Log.init(allocator);

@@ -156,7 +156,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
                 socket.strong_data = .create(socket_config.default_data, globalObject);
             }
 
-            const this: *Listener = bun.handleOom(zust.Box(Listener,0,0,0).init(handlers.vm.allocator, undefined));
+            const this: *Listener = bun.handleOom(zust.Box(Listener).init(handlers.vm.allocator, undefined));
             this.* = socket;
             // TODO: server_name is not supported on named pipes, I belive its , lets wait for
             // someone to ask for it
@@ -198,7 +198,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
     // Allocate the Listener up front so the embedded `group` has its final
     // address before we hand it to listen() (it's linked into the loop's
     // intrusive list).
-    var this: *Listener = bun.handleOom(zust.Box(Listener,0,0,0).init(handlers.vm.allocator, undefined));
+    var this: *Listener = bun.handleOom(zust.Box(Listener).init(handlers.vm.allocator, undefined));
     this.* = .{
         .handlers = handlers.*,
         .connection = undefined, // set after listen succeeds
@@ -658,7 +658,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
         if (isNamedPipe) {
             default_data.ensureStillAlive();
 
-            const handlers_ptr = bun.handleOom(zust.Box(Handlers,0,0,0).init(handlers.vm.allocator, undefined));
+            const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(handlers.vm.allocator, undefined));
             handlers_ptr.* = handlers.*;
             handlers_ptr.mode = .client;
 
@@ -806,7 +806,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
 
     default_data.ensureStillAlive();
 
-    const handlers_ptr = bun.handleOom(zust.Box(Handlers,0,0,0).init(handlers.vm.allocator, undefined));
+    const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(handlers.vm.allocator, undefined));
     handlers_ptr.* = handlers.*;
     handlers_ptr.mode = .client;
 

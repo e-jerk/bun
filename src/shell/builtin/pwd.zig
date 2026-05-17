@@ -58,7 +58,7 @@ pub fn onIOWriterChunk(this: *Pwd, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        defer (if (e) |v| v else return error.Null).deref();
+        defer (if (e) |v| v else unreachable).deref();
         this.state = .err;
         return this.next();
     }

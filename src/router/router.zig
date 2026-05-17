@@ -226,7 +226,7 @@ const RouteLoader = struct {
     pub fn appendRoute(this: *RouteLoader, route: Route) void {
         // /index.js
         if (route.full_hash == index_route_hash) {
-            const new_route = zust.Box(Route,0,0,0).init(this.allocator, undefined) catch unreachable;
+            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
             this.index = new_route;
             new_route.* = route;
             this.all_routes.append(this.allocator, new_route) catch unreachable;
@@ -249,7 +249,7 @@ const RouteLoader = struct {
                 return;
             }
 
-            const new_route = zust.Box(Route,0,0,0).init(this.allocator, undefined) catch unreachable;
+            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
             new_route.* = route;
 
             // Handle static routes with uppercase characters by ensuring exact case still matches
@@ -299,7 +299,7 @@ const RouteLoader = struct {
         }
 
         {
-            const new_route = zust.Box(Route,0,0,0).init(this.allocator, undefined) catch unreachable;
+            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
             new_route.* = route;
             this.all_routes.append(this.allocator, new_route) catch unreachable;
         }

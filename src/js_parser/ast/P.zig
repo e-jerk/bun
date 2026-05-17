@@ -2452,7 +2452,7 @@ pub fn NewParser_(
         pub fn pushScopeForParsePass(noalias p: *P, comptime kind: js_ast.Scope.Kind, loc: logger.Loc) !usize {
             var parent: *Scope = p.current_scope;
             const allocator = p.allocator;
-            var scope = try zust.Box(Scope, 0, 0, 0).init(allocator, undefined);
+            var scope = try zust.Box(Scope).init(allocator, undefined);
 
             scope.* = Scope{
                 .kind = kind,
@@ -3190,7 +3190,7 @@ pub fn NewParser_(
                 scope: js_ast.TSNamespaceScope,
             };
 
-            var pair = bun.handleOom(zust.Box(Pair, 0, 0, 0).init(p.allocator, undefined));
+            var pair = bun.handleOom(zust.Box(Pair).init(p.allocator, undefined));
             pair.map = .{};
             pair.scope = .{
                 .exported_members = &pair.map,
@@ -6756,7 +6756,7 @@ pub fn NewParser_(
             this: *P,
         ) anyerror!void {
             var scope_order = try ScopeOrderList.initCapacity(allocator, 1);
-            const scope = try zust.Box(Scope, 0, 0, 0).init(allocator, undefined);
+            const scope = try zust.Box(Scope).init(allocator, undefined);
             scope.* = Scope{
                 .members = .{},
                 .children = .{},

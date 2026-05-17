@@ -1,5 +1,4 @@
 pub const options = @import("./options.zig");
-const zust = @import("safe");
 
 /// Opaque carrier for the macro evaluation context. Aliases through
 /// `bundler_jsc/` so this file has no direct JSC type reference.
@@ -186,10 +185,10 @@ pub const Transpiler = struct {
         );
 
         var env_loader: *DotEnv.Loader = env_loader_ orelse DotEnv.instance orelse brk: {
-            const map = try zust.Box(DotEnv.Map, 0, 0, 0).init(allocator, undefined);
+            const map = try allocator.create(DotEnv.Map);
             map.* = DotEnv.Map.init(allocator);
 
-            const loader = try zust.Box(DotEnv.Loader, 0, 0, 0).init(allocator, undefined);
+            const loader = try allocator.create(DotEnv.Loader);
             loader.* = DotEnv.Loader.init(map, allocator);
             break :brk loader;
         };
@@ -201,11 +200,11 @@ pub const Transpiler = struct {
         // hide elapsed time when loglevel is warn or error
         env_loader.quiet = !log.level.atLeast(.info);
 
-        // var pool = try zust.Box(ThreadPool,0,0,0).init(allocator, undefined);
+        // var pool = try allocator.create(ThreadPool);
         // try pool.init(ThreadPool.InitConfig{
         //     .allocator = allocator,
         // });
-        const resolve_results = try zust.Box(ResolveResults, 0, 0, 0).init(allocator, undefined);
+        const resolve_results = try allocator.create(ResolveResults);
         resolve_results.* = ResolveResults.init(allocator);
         return Transpiler{
             .options = bundle_options,
@@ -1358,7 +1357,7 @@ pub const Transpiler = struct {
                 const loader = transpiler.options.loader(path.name.ext);
 
                 if (item.import_kind == .entry_point and loader.supportsClientEntryPoint()) {
-                    var client_entry_point = try transpiler.zust.Box(EntryPoints.ClientEntryPoint, 0, 0, 0).init(allocator, undefined);
+                    var client_entry_point = try transpiler.allocator.create(EntryPoints.ClientEntryPoint);
                     client_entry_point.* = EntryPoints.ClientEntryPoint{};
                     try client_entry_point.generate(Transpiler, transpiler, path.name, transpiler.options.framework.?.client.path);
 

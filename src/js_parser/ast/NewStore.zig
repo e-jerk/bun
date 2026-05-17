@@ -79,7 +79,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
         pub fn init() *Store {
             log("init", .{});
             // Avoid initializing the entire struct.
-            const prealloc = bun.handleOom(zust.Box(PreAlloc, 0, 0, 0).init(backing_allocator, undefined));
+            const prealloc = bun.handleOom(zust.Box(PreAlloc).init(backing_allocator, undefined));
             prealloc.zero();
 
             return &prealloc.metadata;
@@ -129,7 +129,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
                 next.bytes_used = 0;
                 break :brk next;
             } else brk: {
-                const new_block = zust.Box(Block, 0, 0, 0).init(backing_allocator, undefined) catch
+                const new_block = zust.Box(Block).init(backing_allocator, undefined) catch
                     bun.outOfMemory();
                 new_block.zero();
                 store.current.next = new_block;

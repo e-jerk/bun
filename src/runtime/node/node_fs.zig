@@ -2475,10 +2475,10 @@ pub const Arguments = struct {
             const buffer = try StringOrBuffer.fromJS(ctx, bun.default_allocator, buffer_value orelse {
                 return ctx.throwInvalidArguments("data is required", .{});
             }) orelse {
-                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else return error.Null));
+                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else unreachable));
             };
-            if ((if (buffer_value) |v| v else return error.Null).isString() and !(if (buffer_value) |v| v else return error.Null).isStringLiteral()) {
-                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else return error.Null));
+            if ((if (buffer_value) |v| v else unreachable).isString() and !(if (buffer_value) |v| v else unreachable).isStringLiteral()) {
+                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else unreachable));
             }
 
             var args = Write{
@@ -4589,7 +4589,7 @@ while (true) : (__loop_limit_4 += 1) {
         else
             null;
         defer if (is_u16 and args.encoding != .utf8)
-            bun.path_buffer_pool.put((if (re_encoding_buffer) |v| v else return error.Null));
+            bun.path_buffer_pool.put((if (re_encoding_buffer) |v| v else unreachable));
 
         while (switch (entry) {
             .err => |err| {
@@ -4666,7 +4666,7 @@ while (true) : (__loop_limit_4 += 1) {
                         // all encodings besides hex, base64, and base64url are mis-interpreting filesystem bytes.
                         .utf8 => bun.handleOom(entries.append(bun.String.cloneUTF16(utf16_name))),
                         else => |enc| {
-                            const utf8_path = bun.strings.fromWPath((if (re_encoding_buffer) |v| v else return error.Null), utf16_name);
+                            const utf8_path = bun.strings.fromWPath((if (re_encoding_buffer) |v| v else unreachable), utf16_name);
                             bun.handleOom(entries.append(jsc.WebCore.encoding.toBunString(utf8_path, enc)));
                         },
                     },

@@ -917,9 +917,6 @@ pub const FilePoll = struct {
                 else => unreachable,
             };
 
-            // output events only include change errors
-            const KEVENT_FLAG_ERROR_EVENTS = 0x000002;
-
             // The kevent() system call returns the number of events placed in
             // the eventlist, up to the value given by nevents.  If the time
             // limit expires, then kevent() returns 0.
@@ -934,7 +931,7 @@ pub const FilePoll = struct {
                         // we set 0 here so that if we get an error on
                         // registration, it becomes errno
                         0,
-                        KEVENT_FLAG_ERROR_EVENTS,
+                        .{ .ERROR_EVENTS = true },
                         &timeout,
                     );
 
@@ -1157,9 +1154,6 @@ pub const FilePoll = struct {
                 nchanges = 2;
             }
 
-            // output events only include change errors
-            const KEVENT_FLAG_ERROR_EVENTS = 0x000002;
-
             // The kevent() system call returns the number of events placed in
             // the eventlist, up to the value given by nevents.  If the time
             // limit expires, then kevent() returns 0.
@@ -1170,7 +1164,7 @@ pub const FilePoll = struct {
                 // The same array may be used for the changelist and eventlist.
                 &changelist,
                 nchanges,
-                KEVENT_FLAG_ERROR_EVENTS,
+                .{ .ERROR_EVENTS = true },
                 &timeout,
             );
 

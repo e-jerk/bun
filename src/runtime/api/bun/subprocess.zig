@@ -2,7 +2,6 @@
 //! code for `Bun.spawnSync`
 
 const Subprocess = @This();
-const zust = @import("safe");
 
 pub const js = jsc.Codegen.JSSubprocess;
 pub const toJS = js.toJS;
@@ -113,7 +112,7 @@ pub const StdioKind = enum {
 };
 
 pub fn onAbortSignal(subprocess_ctx: ?*anyopaque, _: jsc.JSValue) callconv(.c) void {
-    var this: *Subprocess = @ptrCast(@alignCast((if (subprocess_ctx) |v| v else return error.Null)));
+    var this: *Subprocess = @ptrCast(@alignCast(subprocess_ctx.?));
     this.clearAbortSignal();
     _ = this.tryKill(this.killSignal);
 }
@@ -417,7 +416,7 @@ pub fn tryKill(this: *Subprocess, sig: SignalCode) bun.sys.Maybe(void) {
     return this.process.kill(@intFromEnum(sig));
 }
 
-fn hasCalledGetter(this: *Subprocess, comptime getter: @Type(.enum_literal)) bool {
+fn hasCalledGetter(this: *Subprocess, comptime getter: anytype) bool {
     return this.observable_getters.contains(getter);
 }
 
@@ -471,7 +470,7 @@ pub fn disconnect(this: *Subprocess, globalThis: *JSGlobalObject, callframe: *js
 pub fn getConnected(this: *Subprocess, globalThis: *JSGlobalObject) JSValue {
     _ = globalThis;
     const ipc_data = this.ipc();
-    return JSValue.jsBoolean(ipc_data != null and (if (ipc_data) |v| v else return error.Null).isConnected());
+    return JSValue.jsBoolean(ipc_data != null and ipc_data.?.isConnected());
 }
 
 pub fn pid(this: *const Subprocess) i32 {
@@ -741,7 +740,7 @@ pub fn onProcessExit(this: *Subprocess, process: *Process, status: bun.spawn.Sta
     }
 }
 
-fn closeIO(this: *Subprocess, comptime io: @Type(.enum_literal)) void {
+fn closeIO(this: *Subprocess, comptime io: anytype) void {
     if (this.closed.contains(io)) return;
     this.closed.insert(io);
 

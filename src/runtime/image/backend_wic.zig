@@ -46,7 +46,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     var stream: ?*IWICStream = null;
     if (f.vt.CreateStream(f, &stream) < 0 or stream == null) return error.BackendUnavailable;
     defer release(stream);
-    if ((if (stream) |v| v else return error.Null).vt.InitializeFromMemory((if (stream) |v| v else return error.Null), bytes.ptr, @intCast(bytes.len)) < 0)
+    if ((if (stream) |v| v else unreachable).vt.InitializeFromMemory((if (stream) |v| v else unreachable), bytes.ptr, @intCast(bytes.len)) < 0)
         return error.DecodeFailed;
 
     var dec: ?*IWICBitmapDecoder = null;
@@ -56,19 +56,19 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     defer release(dec);
 
     var frame: ?*IWICBitmapSource = null;
-    if ((if (dec) |v| v else return error.Null).vt.GetFrame((if (dec) |v| v else return error.Null), 0, &frame) < 0 or frame == null) return error.DecodeFailed;
+    if ((if (dec) |v| v else unreachable).vt.GetFrame((if (dec) |v| v else unreachable), 0, &frame) < 0 or frame == null) return error.DecodeFailed;
     defer release(frame);
 
     var w: u32 = 0;
     var h: u32 = 0;
-    if ((if (frame) |v| v else return error.Null).vt.GetSize((if (frame) |v| v else return error.Null), &w, &h) < 0 or w == 0 or h == 0) return error.DecodeFailed;
+    if ((if (frame) |v| v else unreachable).vt.GetSize((if (frame) |v| v else unreachable), &w, &h) < 0 or w == 0 or h == 0) return error.DecodeFailed;
     if (@as(u64, w) * @as(u64, h) > max_pixels) return error.TooManyPixels;
 
     // WIC frames come in whatever pixel format the codec emits; normalise to
     // straight-alpha RGBA8 in one hop.
     const convertFn = wicConvertBitmapSource orelse return error.BackendUnavailable;
     var conv: ?*IWICBitmapSource = null;
-    if (convertFn(&GUID_WICPixelFormat32bppRGBA, (if (frame) |v| v else return error.Null), &conv) < 0 or conv == null)
+    if (convertFn(&GUID_WICPixelFormat32bppRGBA, (if (frame) |v| v else unreachable), &conv) < 0 or conv == null)
         return error.DecodeFailed;
     defer release(conv);
 
@@ -81,7 +81,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     if (out_len > std.math.maxInt(u32)) return error.TooManyPixels;
     const out = try bun.default_allocator.alloc(u8, @intCast(out_len));
     errdefer bun.default_allocator.free(out);
-    if ((if (conv) |v| v else return error.Null).vt.CopyPixels((if (conv) |v| v else return error.Null), null, @intCast(stride), @intCast(out_len), out.ptr) < 0)
+    if ((if (conv) |v| v else unreachable).vt.CopyPixels((if (conv) |v| v else unreachable), null, @intCast(stride), @intCast(out_len), out.ptr) < 0)
         return error.DecodeFailed;
 
     return .{ .rgba = out, .width = w, .height = h };
@@ -115,11 +115,11 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
         return error.BackendUnavailable;
     defer release(enc);
     // WICBitmapEncoderNoCache = 2.
-    if ((if (enc) |v| v else return error.Null).vt.Initialize((if (enc) |v| v else return error.Null), (if (stream) |v| v else return error.Null), 2) < 0) return error.EncodeFailed;
+    if ((if (enc) |v| v else unreachable).vt.Initialize((if (enc) |v| v else unreachable), (if (stream) |v| v else unreachable), 2) < 0) return error.EncodeFailed;
 
     var frame: ?*IWICBitmapFrameEncode = null;
     var props: ?*IUnknown = null;
-    if ((if (enc) |v| v else return error.Null).vt.CreateNewFrame((if (enc) |v| v else return error.Null), &frame, &props) < 0 or frame == null) return error.EncodeFailed;
+    if ((if (enc) |v| v else unreachable).vt.CreateNewFrame((if (enc) |v| v else unreachable), &frame, &props) < 0 or frame == null) return error.EncodeFailed;
     defer release(frame);
     defer release(props);
 
@@ -135,8 +135,8 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     const method: u8 = if (opts.format == .avif) WICHeifCompressionAV1 else WICHeifCompressionHEVC;
     if (bun_wic_propbag_write_u8(props, bun.strings.literal(u16, "HeifCompressionMethod"), method) == 0)
         return error.BackendUnavailable;
-    if ((if (frame) |v| v else return error.Null).vt.Initialize((if (frame) |v| v else return error.Null), props) < 0) return error.EncodeFailed;
-    if ((if (frame) |v| v else return error.Null).vt.SetSize((if (frame) |v| v else return error.Null), width, height) < 0) return error.EncodeFailed;
+    if ((if (frame) |v| v else unreachable).vt.Initialize((if (frame) |v| v else unreachable), props) < 0) return error.EncodeFailed;
+    if ((if (frame) |v| v else unreachable).vt.SetSize((if (frame) |v| v else unreachable), width, height) < 0) return error.EncodeFailed;
     // SetPixelFormat is in/out — the codec rewrites `pf` to its native sink
     // (the HEIF encoder wants 32bppBGRA, not RGBA). When it doesn't move,
     // WritePixels straight from our buffer; when it does, wrap our RGBA as a
@@ -144,10 +144,10 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     // the result via WriteSource. This is the documented dance; without it
     // .heic()/.avif() always rejected on Windows.
     var pf = GUID_WICPixelFormat32bppRGBA;
-    if ((if (frame) |v| v else return error.Null).vt.SetPixelFormat((if (frame) |v| v else return error.Null), &pf) < 0) return error.EncodeFailed;
+    if ((if (frame) |v| v else unreachable).vt.SetPixelFormat((if (frame) |v| v else unreachable), &pf) < 0) return error.EncodeFailed;
     const stride: u32 = width * 4;
     if (std.meta.eql(pf, GUID_WICPixelFormat32bppRGBA)) {
-        if ((if (frame) |v| v else return error.Null).vt.WritePixels((if (frame) |v| v else return error.Null), height, stride, @intCast(rgba.len), rgba.ptr) < 0)
+        if ((if (frame) |v| v else unreachable).vt.WritePixels((if (frame) |v| v else unreachable), height, stride, @intCast(rgba.len), rgba.ptr) < 0)
             return error.EncodeFailed;
     } else {
         var src: ?*IWICBitmapSource = null;
@@ -156,12 +156,12 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
         defer release(src);
         const convertFn = wicConvertBitmapSource orelse return error.BackendUnavailable;
         var conv: ?*IWICBitmapSource = null;
-        if (convertFn(&pf, (if (src) |v| v else return error.Null), &conv) < 0 or conv == null) return error.EncodeFailed;
+        if (convertFn(&pf, (if (src) |v| v else unreachable), &conv) < 0 or conv == null) return error.EncodeFailed;
         defer release(conv);
-        if ((if (frame) |v| v else return error.Null).vt.WriteSource((if (frame) |v| v else return error.Null), (if (conv) |v| v else return error.Null), null) < 0) return error.EncodeFailed;
+        if ((if (frame) |v| v else unreachable).vt.WriteSource((if (frame) |v| v else unreachable), (if (conv) |v| v else unreachable), null) < 0) return error.EncodeFailed;
     }
-    if ((if (frame) |v| v else return error.Null).vt.Commit((if (frame) |v| v else return error.Null)) < 0) return error.EncodeFailed;
-    if ((if (enc) |v| v else return error.Null).vt.Commit((if (enc) |v| v else return error.Null)) < 0) return error.EncodeFailed;
+    if ((if (frame) |v| v else unreachable).vt.Commit((if (frame) |v| v else unreachable)) < 0) return error.EncodeFailed;
+    if ((if (enc) |v| v else unreachable).vt.Commit((if (enc) |v| v else unreachable)) < 0) return error.EncodeFailed;
 
     // Logical length, not allocation size: GlobalSize() returns the HGLOBAL's
     // rounded-up allocation, which is ≥ what the encoder actually wrote and
@@ -169,14 +169,14 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     // sequentially from offset 0 and never seeks back, so the stream's current
     // position IS the byte count. (MSDN GetHGlobalFromStream: "use IStream::Stat
     // to obtain the actual size".)
-    const istream: *IStream = @ptrCast(@alignCast((if (stream) |v| v else return error.Null)));
+    const istream: *IStream = @ptrCast(@alignCast((if (stream) |v| v else unreachable)));
     var pos: u64 = 0;
     if (istream.vt.Seek(istream, 0, STREAM_SEEK_CUR, &pos) < 0) return error.EncodeFailed;
 
     var hg: ?*anyopaque = null;
-    if (GetHGlobalFromStream((if (stream) |v| v else return error.Null), &hg) < 0 or hg == null) return error.EncodeFailed;
-    const ptr: [*]const u8 = @ptrCast(GlobalLock((if (hg) |v| v else return error.Null)) orelse return error.EncodeFailed);
-    defer _ = GlobalUnlock((if (hg) |v| v else return error.Null));
+    if (GetHGlobalFromStream((if (stream) |v| v else unreachable), &hg) < 0 or hg == null) return error.EncodeFailed;
+    const ptr: [*]const u8 = @ptrCast(GlobalLock((if (hg) |v| v else unreachable)) orelse return error.EncodeFailed);
+    defer _ = GlobalUnlock((if (hg) |v| v else unreachable));
     return try bun.default_allocator.dupe(u8, ptr[0..@intCast(pos)]);
 }
 

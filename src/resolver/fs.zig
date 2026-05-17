@@ -1113,7 +1113,7 @@ pub const FileSystem = struct {
             };
 
             if (comptime FeatureFlags.enable_entry_cache) {
-                const entries_ptr = in_place orelse bun.handleOom(zust.Box(DirEntry, 0, 0, 0).init(bun.default_allocator, undefined));
+                const entries_ptr = in_place orelse bun.handleOom(zust.Box(DirEntry).init(bun.default_allocator, undefined));
                 if (in_place) |original| {
                     original.data.clearAndFree(bun.default_allocator);
                 }

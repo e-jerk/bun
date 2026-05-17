@@ -1,5 +1,4 @@
 const hex_chars = "0123456789ABCDEF";
-const zust = @import("safe");
 const first_ascii = 0x20;
 const last_ascii = 0x7E;
 const first_high_surrogate = 0xD800;
@@ -1931,7 +1930,7 @@ fn NewPrinter(
             return printClauseItemAs(p, item, .export_from);
         }
 
-        fn printClauseItemAs(p: *Printer, item: js_ast.ClauseItem, comptime as: @Type(.enum_literal)) void {
+        fn printClauseItemAs(p: *Printer, item: js_ast.ClauseItem, comptime as: anytype) void {
             const name = p.renamer.nameForSymbol(item.name.ref.?);
 
             if (comptime as == .import) {
@@ -6373,7 +6372,7 @@ pub fn serializeModuleInfo(module_info: ?*analyze_transpiled_module.ModuleInfo) 
         mi.finalize() catch return null;
     }
     const deserialized = mi.asDeserialized();
-    var buf: zust.ArrayList(u8) = .empty;
+    var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(bun.default_allocator);
     deserialized.serialize(buf.writer(bun.default_allocator)) catch return null;
     return buf.toOwnedSlice(bun.default_allocator) catch null;

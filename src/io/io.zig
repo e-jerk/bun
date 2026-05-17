@@ -114,9 +114,7 @@ pub const Loop = struct {
 
         this.updateNow();
 
-        var __loop_limit: u64 = 0;
-
-        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+        while (true) {
 
             // Process pending requests
             {
@@ -218,9 +216,7 @@ pub const Loop = struct {
 
         this.updateNow();
 
-        var __loop_limit: u64 = 0;
-
-        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+        while (true) {
             var stack_fallback = std.heap.stackFallback(@sizeOf([256]EventType), bun.default_allocator);
             var events_list: std.array_list.Managed(EventType) = std.array_list.Managed(EventType).initCapacity(stack_fallback.get(), 256) catch unreachable;
             defer events_list.deinit();
@@ -542,7 +538,7 @@ pub const Poll = struct {
         }
 
         pub fn applyKQueue(
-            comptime action: @Type(.enum_literal),
+            comptime action: anytype,
             tag: Pollable.Tag,
             poll: *Poll,
             fd: bun.FD,
@@ -741,6 +737,5 @@ const ReadFile = bun.webcore.Blob.read_file.ReadFile;
 const WriteFile = bun.webcore.Blob.write_file.WriteFile;
 
 const std = @import("std");
-const zust = @import("safe");
 const posix = std.posix;
 const linux = std.os.linux;

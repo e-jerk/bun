@@ -4000,29 +4000,15 @@ pub const HmrTopic = enum(u8) {
     _,
 
     pub const max_count = @typeInfo(HmrTopic).@"enum".fields.len;
-    pub const Bits = @Type(.{ .@"struct" = .{
-        .backing_integer = @Type(.{ .int = .{
-            .bits = max_count,
-            .signedness = .unsigned,
-        } }),
-        .fields = &brk: {
-            const enum_fields = @typeInfo(HmrTopic).@"enum".fields;
-            var fields: [enum_fields.len]std.builtin.Type.StructField = undefined;
-            for (enum_fields, &fields) |e, *s| {
-                s.* = .{
-                    .name = e.name,
-                    .type = bool,
-                    .default_value_ptr = &false,
-                    .is_comptime = false,
-                    .alignment = 0,
-                };
-            }
-            break :brk fields;
-        },
-        .decls = &.{},
-        .is_tuple = false,
-        .layout = .@"packed",
-    } });
+    pub const Bits = packed struct(u8) {
+        hot_update: bool = false,
+        errors: bool = false,
+        browser_error: bool = false,
+        incremental_visualizer: bool = false,
+        memory_visualizer: bool = false,
+        testing_watch_synchronization: bool = false,
+        _: bool = false,
+    };
 };
 
 pub const HmrSocket = @import("./DevServer/HmrSocket.zig");

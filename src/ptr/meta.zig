@@ -88,13 +88,20 @@ pub fn AddConst(Pointer: type) type {
     switch (type_info) {
         .pointer => |*ptr| {
             ptr.is_const = true;
+            const sentinel = if (ptr.sentinel_ptr) |sp| @as(*align(1) const ptr.child, @ptrCast(sp)).* else null;
+            return @Pointer(ptr.size, .{
+                .@"const" = ptr.is_const,
+                .@"volatile" = ptr.is_volatile,
+                .@"align" = ptr.alignment,
+                .@"addrspace" = ptr.address_space,
+                .@"allowzero" = ptr.is_allowzero,
+            }, ptr.child, sentinel);
         },
         .optional => |*opt| {
-            opt.child = AddConst(opt.child);
+            return ?AddConst(opt.child);
         },
         // Technically this function accepts things like `?????[]u8`, but `PointerInfo.parse`
         // verifies that's not the case.
         else => @compileError("`Pointer` must be a (possibly optional) pointer or slice"),
     }
-    return @Type(type_info);
 }

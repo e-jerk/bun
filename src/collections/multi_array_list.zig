@@ -32,12 +32,17 @@ pub fn MultiArrayList(comptime T: type) type {
         const Elem = switch (@typeInfo(T)) {
             .@"struct" => T,
             .@"union" => |u| struct {
-                pub const Bare = @Type(.{ .@"union" = .{
-                    .layout = u.layout,
-                    .tag_type = null,
-                    .fields = u.fields,
-                    .decls = &.{},
-                } });
+                pub const Bare = blk: {
+                    var bare_names: [u.fields.len][]const u8 = undefined;
+                    var bare_types: [u.fields.len]type = undefined;
+                    var bare_attrs: [u.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
+                    for (u.fields, 0..) |field, i| {
+                        bare_names[i] = field.name;
+                        bare_types[i] = field.type;
+                        bare_attrs[i] = .{ .@"align" = field.alignment };
+                    }
+                    break :blk @Union(u.layout, null, &bare_names, &bare_types, &bare_attrs);
+                };
                 pub const Tag =
                     u.tag_type orelse @compileError("MultiArrayList does not support untagged unions");
                 tags: Tag,
@@ -443,9 +448,6 @@ pub fn MultiArrayList(comptime T: type) type {
         fn growCapacity(current: usize, minimum: usize) usize {
             var new = current;
             while (true) {
-                var loop_limit: usize = 0;
-                loop_limit += 1;
-                std.debug.assert(loop_limit <= 1_000_000);
                 new +|= new / 2 + init_capacity;
                 if (new >= minimum)
                     return new;
@@ -605,20 +607,15 @@ pub fn MultiArrayList(comptime T: type) type {
         }
 
         const Entry = entry: {
-            var entry_fields: [fields.len]std.builtin.Type.StructField = undefined;
-            for (&entry_fields, sizes.fields) |*entry_field, i| entry_field.* = .{
-                .name = fields[i].name ++ "_ptr",
-                .type = *fields[i].type,
-                .default_value_ptr = null,
-                .is_comptime = fields[i].is_comptime,
-                .alignment = fields[i].alignment,
-            };
-            break :entry @Type(.{ .@"struct" = .{
-                .layout = .@"extern",
-                .fields = &entry_fields,
-                .decls = &.{},
-                .is_tuple = false,
-            } });
+            var entry_names: [fields.len][]const u8 = undefined;
+            var entry_types: [fields.len]type = undefined;
+            var entry_attrs: [fields.len]std.builtin.Type.StructField.Attributes = undefined;
+            for (0..fields.len) |i| {
+                entry_names[i] = fields[i].name ++ "_ptr";
+                entry_types[i] = *fields[i].type;
+                entry_attrs[i] = if (fields[i].alignment == 0) .{} else .{ .@"align" = fields[i].alignment };
+            }
+            break :entry @Struct(.@"extern", null, &entry_names, &entry_types, &entry_attrs);
         };
         /// This function is used in the debugger pretty formatters in tools/ to fetch the
         /// child field order and entry type to facilitate fancy debug printing for this type.

@@ -1690,7 +1690,7 @@ const zust = @import("safe");
         defer pack_list.deinit(ctx.allocator);
 
         var read_buf: [8192]u8 = undefined;
-        const file_reader = try zust.Box(BufferedFileReader,0,0,0).init(ctx.allocator, undefined);
+        const file_reader = try zust.Box(BufferedFileReader).init(ctx.allocator, undefined);
         defer _ = file_reader.deinit();
         file_reader.* = .{
             .unbuffered_reader = undefined,

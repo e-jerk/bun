@@ -354,6 +354,17 @@ pub fn build(b: *Build) !void {
     //     self_hosted_watch.selfHostedExeBuild(b, &build_options) catch @panic("OOM");
     // }
 
+    // zig build zust-analyze
+    {
+        var step = b.step("zust-analyze", "Run zust memory safety analyzer on src/ with strictest settings");
+        const zust_analyze = b.addSystemCommand(&.{
+            "/Users/barrett/github.com/e-jerk/zust/zig-out/bin/zust-analyze",
+            "src",
+            "--strictness=high",
+        });
+        step.dependOn(&zust_analyze.step);
+    }
+
     // zig build check-debug
     {
         const step = b.step("check-debug", "Check for semantic analysis errors on some platforms");
@@ -769,7 +780,7 @@ fn getTranslateC(b: *Build, initial_target: std.Build.ResolvedTarget, optimize: 
         // directly: SetCurrentDirectoryW. To make the error better, a post
         // processing step is applied to the translate-c file.
         //
-        // Additionally, this step makes it so that decls like NTSTATUS and
+        // Additionally, this step makes it so decls like NTSTATUS and
         // HANDLE point to the standard library structures.
         const helper_exe = b.addExecutable(.{
             .name = "process_windows_translate_c",
@@ -785,6 +796,21 @@ fn getTranslateC(b: *Build, initial_target: std.Build.ResolvedTarget, optimize: 
         const out = run.addOutputFileArg("c-headers-for-zig.zig");
         return out;
     }
+
+    if (target.result.os.tag.isDarwin()) {
+        // translate-c demotes certain macOS structs with bitfields to opaque,
+        // causing @sizeOf assertions to fail. Patch the generated file to
+        // replace opaque types with proper extern structs of the expected sizes.
+        const in = translate_c.getOutput();
+        const patch_script = b.addSystemCommand(&.{
+            "python3",
+            b.pathFromRoot("scripts/patch_darwin_c_headers.py"),
+        });
+        patch_script.addFileArg(in);
+        const out = patch_script.addOutputFileArg("c-headers-for-zig.zig");
+        return out;
+    }
+
     return translate_c.getOutput();
 }
 
@@ -961,6 +987,8 @@ fn addInternalImports(b: *Build, mod: *Module, opts: *BunBuildOptions) void {
     const os = opts.os;
 
     mod.addImport("build_options", opts.buildOptionsModule(b));
+
+    mod.addImport("safe", b.createModule(.{ .root_source_file = b.path("lib/safe.zig") }));
 
     const translate_c = getTranslateC(b, opts.target, opts.optimize, opts.android_ndk_sysroot, opts.freebsd_sysroot);
     mod.addImport("translated-c-headers", b.createModule(.{ .root_source_file = translate_c }));

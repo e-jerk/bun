@@ -221,7 +221,6 @@ pub const WorkspaceFilter = union(enum) {
         }
 
         const is_path = remain.len > 0 and remain[0] == '.';
-        const zust = @import("safe");
 
         const filter = if (is_path)
             strings.withoutTrailingSlash(bun.path.joinAbsStringBuf(cwd, path_buf, &.{remain}, .posix))
@@ -437,7 +436,7 @@ const Holder = struct {
 };
 
 pub fn allocatePackageManager() void {
-    Holder.ptr = bun.handleOom(zust.Box(PackageManager, 0, 0, 0).init(bun.default_allocator, undefined));
+    Holder.ptr = bun.handleOom(bun.default_allocator.create(PackageManager));
 }
 
 pub fn get() *PackageManager {
@@ -783,10 +782,10 @@ pub fn init(
     }
 
     var env: *DotEnv.Loader = brk: {
-        const map = try ctx.zust.Box(DotEnv.Map, 0, 0, 0).init(allocator, undefined);
+        const map = try ctx.allocator.create(DotEnv.Map);
         map.* = DotEnv.Map.init(ctx.allocator);
 
-        const loader = try ctx.zust.Box(DotEnv.Loader, 0, 0, 0).init(allocator, undefined);
+        const loader = try ctx.allocator.create(DotEnv.Loader);
         loader.* = DotEnv.Loader.init(map, ctx.allocator);
         break :brk loader;
     };
@@ -803,7 +802,7 @@ pub fn init(
         };
 
         bun.ini.loadNpmrcConfig(ctx.allocator, ctx.install orelse brk: {
-            const install_ = bun.handleOom(ctx.zust.Box(Api.BunInstall, 0, 0, 0).init(allocator, undefined));
+            const install_ = bun.handleOom(ctx.allocator.create(Api.BunInstall));
             install_.* = std.mem.zeroes(Api.BunInstall);
             ctx.install = install_;
             break :brk install_;
@@ -815,7 +814,7 @@ pub fn init(
         ), ".npmrc" });
     } else {
         bun.ini.loadNpmrcConfig(ctx.allocator, ctx.install orelse brk: {
-            const install_ = bun.handleOom(ctx.zust.Box(Api.BunInstall, 0, 0, 0).init(allocator, undefined));
+            const install_ = bun.handleOom(ctx.allocator.create(Api.BunInstall));
             install_.* = std.mem.zeroes(Api.BunInstall);
             ctx.install = install_;
             break :brk install_;
@@ -882,7 +881,7 @@ pub fn init(
         .root_package_json_name_at_time_of_init = root_package_json_name_at_time_of_init,
     };
     manager.event_loop.loop().internal_loop_data.setParentEventLoop(bun.jsc.EventLoopHandle.init(&manager.event_loop));
-    manager.lockfile = try ctx.zust.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
+    manager.lockfile = try ctx.allocator.create(Lockfile);
 
     {
         // make sure folder packages can find the root package without creating a new one
@@ -1055,7 +1054,7 @@ pub fn initWithRuntimeOnce(
         .original_package_json_path = original_package_json_path[0..original_package_json_path.len :0],
         .subcommand = .install,
     };
-    manager.lockfile = bun.handleOom(zust.Box(Lockfile, 0, 0, 0).init(allocator, undefined));
+    manager.lockfile = bun.handleOom(allocator.create(Lockfile));
 
     if (Output.enable_ansi_colors_stderr) {
         manager.progress = Progress{};

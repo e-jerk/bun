@@ -72,7 +72,7 @@ pub fn initializeMiniStore() void {
         pub threadlocal var instance: ?*@This() = null;
     };
     if (MiniStore.instance == null) {
-        var mini_store = bun.handleOom(zust.Box(MiniStore, 0, 0, 0).init(bun.default_allocator, undefined));
+        var mini_store = bun.handleOom(zust.Box(MiniStore).init(bun.default_allocator, undefined));
         mini_store.* = .{
             .heap = bun.MimallocArena.init(),
             .memory_allocator = undefined,

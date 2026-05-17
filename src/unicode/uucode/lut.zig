@@ -41,11 +41,11 @@ pub fn Generator(
 
         pub fn generate(self: *const Self, alloc: Allocator) !Tables(Elem) {
             var blocks_map = BlockMap.init(alloc);
-            defer blocks_map.deinit();
+            defer blocks_map.deinit(alloc);
 
-            var stage1: zust.ArrayList(u16) = .empty;
-            var stage2: zust.ArrayList(u8) = .empty;
-            var stage3: zust.ArrayList(Elem) = .empty;
+            var stage1: .{};
+            var stage2: .{};
+            var stage3: .{};
             defer {
                 stage1.deinit(alloc);
                 stage2.deinit(alloc);

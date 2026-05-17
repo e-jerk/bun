@@ -2983,7 +2983,7 @@ while (true) : (__loop_limit_1 += 1) {
                 extra_field.name = fn_args_fields[i].name;
             }
             extra_args_tuple_info.@"struct".fields = &extra_args_fields;
-            const ExtraArgsTuple = @Type(extra_args_tuple_info);
+            const ExtraArgsTuple = @TypeOf(extra_args_fields);
 
             return .{
                 .ArgsTuple = ArgsTuple,

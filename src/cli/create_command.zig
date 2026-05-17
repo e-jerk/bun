@@ -208,7 +208,7 @@ pub const CreateCommand = struct {
 
         var filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
-            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);
@@ -1682,7 +1682,7 @@ pub const CreateCommand = struct {
         }
 
         var env_loader: DotEnv.Loader = brk: {
-            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);
@@ -1994,11 +1994,11 @@ pub const Example = struct {
         }
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(api_url);
-        const mutable = try zust.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
+        const mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 8192);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
@@ -2067,7 +2067,7 @@ pub const Example = struct {
         refresher.refresh();
 
         var url_buf: [1024]u8 = undefined;
-        var mutable = try zust.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
+        var mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 2048);
 
         url = URL.parse(try std.fmt.bufPrint(&url_buf, "https://registry.npmjs.org/@bun-examples/{s}/latest", .{name}));
@@ -2075,7 +2075,7 @@ pub const Example = struct {
         var http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
@@ -2195,8 +2195,8 @@ pub const Example = struct {
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
-        const mutable = try zust.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
+        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
+        const mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 2048);
 
         async_http.* = HTTP.AsyncHTTP.initSync(
@@ -2281,7 +2281,7 @@ pub const CreateListExamplesCommand = struct {
     pub fn exec(ctx: Command.Context) !void {
         const filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
-            const map = try zust.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
+            const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);

@@ -12,7 +12,7 @@ const Entry = struct {
     }
 };
 
-pub fn writeOutput(this: *Export, comptime io_kind: @Type(.enum_literal), comptime fmt: []const u8, args: anytype) Yield {
+pub fn writeOutput(this: *Export, comptime io_kind: anytype, comptime fmt: []const u8, args: anytype) Yield {
     if (this.bltn().stdout.needsIO()) |safeguard| {
         var output: *BuiltinIO.Output = &@field(this.bltn(), @tagName(io_kind));
         this.printing = true;
@@ -30,8 +30,8 @@ pub fn onIOWriterChunk(this: *Export, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     const exit_code: ExitCode = if (e != null) brk: {
-        defer (if (e) |v| v else return error.Null).deref();
-        break :brk @intFromEnum((if (e) |v| v else return error.Null).getErrno());
+        defer (if (e) |v| v else unreachable).deref();
+        break :brk @intFromEnum((if (e) |v| v else unreachable).getErrno());
     } else 0;
 
     return this.bltn().done(exit_code);

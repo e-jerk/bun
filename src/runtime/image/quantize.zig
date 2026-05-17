@@ -10,7 +10,6 @@
 //! Floyd–Steinberg error diffusion (`dither: true`).
 
 pub const Result = struct {
-const zust = @import("safe");
     /// `[colors][4]u8` RGBA palette, `bun.default_allocator`-owned.
     palette: []u8,
     /// One palette index per input pixel, `bun.default_allocator`-owned.
@@ -68,7 +67,7 @@ pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemo
     defer bun.default_allocator.free(order);
     for (order, 0..) |*o, i| o.* = @intCast(i);
 
-    var boxes = try zust.ArrayList(Box).initCapacity(bun.default_allocator, want);
+    var boxes = try std.ArrayList(Box).initCapacity(bun.default_allocator, want);
     defer boxes.deinit(bun.default_allocator);
     boxes.appendAssumeCapacity(shrink(rgba, order, 0, n));
 

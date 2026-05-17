@@ -519,28 +519,25 @@ pub fn Field(comptime c: config.Field, comptime packing: config.Table.Packing) t
 }
 
 pub fn Data(comptime c: config.Table) type {
-    var data_fields: [c.fields.len]std.builtin.Type.StructField = undefined;
+    var names: [c.fields.len][]const u8 = undefined;
+    var types: [c.fields.len]type = undefined;
+    var attrs: [c.fields.len]std.builtin.Type.StructField.Attributes = undefined;
 
     for (c.fields, 0..) |cf, i| {
         const F = Field(cf, c.packing);
 
-        data_fields[i] = .{
-            .name = cf.name,
-            .type = F,
-            .default_value_ptr = null,
-            .is_comptime = false,
-            .alignment = if (c.packing == .@"packed") 0 else @alignOf(F),
-        };
+        names[i] = cf.name;
+        types[i] = F;
+        attrs[i] = if (c.packing == .@"packed") .{} else .{ .@"align" = @alignOf(F) };
     }
 
-    return @Type(.{
-        .@"struct" = .{
-            .layout = if (c.packing == .@"packed") .@"packed" else .auto,
-            .fields = &data_fields,
-            .decls = &[_]std.builtin.Type.Declaration{},
-            .is_tuple = false,
-        },
-    });
+    return @Struct(
+        if (c.packing == .@"packed") .@"packed" else .auto,
+        null,
+        &names,
+        &types,
+        &attrs,
+    );
 }
 
 pub fn writeDataItems(comptime D: type, writer: *std.Io.Writer, data_items: []const D) !void {
@@ -651,31 +648,22 @@ pub fn Table2(
 
 pub fn StructFromDecls(comptime Struct: type, comptime decl: []const u8) type {
     const fields = @typeInfo(Struct).@"struct".fields;
-    var decl_fields: [fields.len]std.builtin.Type.StructField = undefined;
+    var names: [fields.len][]const u8 = undefined;
+    var types: [fields.len]type = undefined;
+    var attrs: [fields.len]std.builtin.Type.StructField.Attributes = undefined;
     var i: usize = 0;
 
     for (@typeInfo(Struct).@"struct".fields) |f| {
         if (@typeInfo(f.type) == .@"struct" and @hasDecl(f.type, decl)) {
             const T = @field(f.type, decl);
-            decl_fields[i] = .{
-                .name = f.name,
-                .type = T,
-                .default_value_ptr = null, // TODO: can we set this?
-                .is_comptime = false,
-                .alignment = @alignOf(T),
-            };
+            names[i] = f.name;
+            types[i] = T;
+            attrs[i] = .{ .@"align" = @alignOf(T) };
             i += 1;
         }
     }
 
-    return @Type(.{
-        .@"struct" = .{
-            .layout = .auto,
-            .fields = decl_fields[0..i],
-            .decls = &[_]std.builtin.Type.Declaration{},
-            .is_tuple = false,
-        },
-    });
+    return @Struct(.auto, null, names[0..i], types[0..i], attrs[0..i]);
 }
 
 pub fn Slice(
@@ -1284,38 +1272,37 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
     }
 
     const info = @typeInfo(c.type).@"union";
-    const Tag = (if (info.tag_type) |v| v else return error.Null);
+    const Tag = info.tag_type.?;
     const Int = @typeInfo(Tag).@"enum".tag_type;
     std.debug.assert(Int == std.meta.Int(.unsigned, @bitSizeOf(Tag)));
 
     const ShiftMember = if (c.cp_packing == .shift) Shift(c, packing) else void;
 
-    var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
+    var union_names: [info.fields.len][]const u8 = undefined;
+    var union_types: [info.fields.len]type = undefined;
+    var union_attrs: [info.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
     var has_shift: bool = false;
     for (info.fields, 0..) |f, i| {
         const T = if (c.cp_packing == .shift and f.type == u21) blk: {
             has_shift = true;
             break :blk ShiftMember;
         } else f.type;
-        fields[i] = .{
-            .name = f.name,
-            .type = T,
-            .alignment = if (packing == .@"packed") 0 else @alignOf(T),
-        };
+        union_names[i] = f.name;
+        union_types[i] = T;
+        union_attrs[i] = if (packing == .@"packed") .{} else .{ .@"align" = @alignOf(T) };
     }
 
     if (c.cp_packing == .shift and !has_shift) {
         @compileError("Shift can only be used in unions with at least one field of type u21");
     }
 
-    const InnerUnion = @Type(.{
-        .@"union" = .{
-            .layout = if (packing == .@"packed") .@"packed" else .auto,
-            .tag_type = if (packing == .@"packed") null else Tag,
-            .fields = &fields,
-            .decls = &[_]std.builtin.Type.Declaration{},
-        },
-    });
+    const InnerUnion = @Union(
+        if (packing == .@"packed") .@"packed" else .auto,
+        if (packing == .@"packed") null else Tag,
+        &union_names,
+        &union_types,
+        &union_attrs,
+    );
 
     return if (packing == .unpacked) struct {
         @"union": InnerUnion,

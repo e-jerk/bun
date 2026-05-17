@@ -107,7 +107,7 @@ inline fn comptime_alloc(comptime tag_name: string, comptime typename: type, ori
 }
 
 fn allocateData(allocator: std.mem.Allocator, comptime tag_name: string, comptime typename: type, origData: anytype, loc: logger.Loc) Stmt {
-    const value = zust.Box(@TypeOf(origData, 0, 0, 0).init(allocator, undefined)) catch unreachable;
+    const value = zust.Box(@TypeOf(origData).init(allocator, undefined)) catch unreachable;
     value.* = origData;
 
     return comptime_init(tag_name, *typename, value, loc);

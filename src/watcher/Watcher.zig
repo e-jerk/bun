@@ -130,7 +130,6 @@ pub fn deinit(this: *Watcher, close_descriptors: bool) void {
             }
         }
         this.watchlist.deinit(this.allocator);
-        const allocator = this.allocator;
         _ = this.deinit();
     }
 }
@@ -257,7 +256,6 @@ fn threadMain(this: *Watcher) !void {
     // Close trace file if open
     WatcherTrace.deinit();
 
-    const allocator = this.allocator;
     _ = this.deinit();
 }
 

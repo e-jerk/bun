@@ -193,14 +193,14 @@ const FutexImpl = struct {
 
         var futex_deadline = Futex.Deadline.init(timeout);
 
-        var __loop_limit: u64 = 0;
+        var __loop_limit_inner: u64 = 0;
 
-        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+        while (__loop_limit_inner < 10_000_000) : (__loop_limit_inner += 1) {
             futex_deadline.wait(&self.epoch, epoch) catch |err| switch (err) {
                 // On timeout, we must decrement the waiter we added above.
                 error.Timeout => {
-                    var __loop_limit: u64 = 0;
-                    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+                    var __loop_limit_timeout: u64 = 0;
+                    while (__loop_limit_timeout < 10_000_000) : (__loop_limit_timeout += 1) {
                         // If there's a signal when we're timing out, consume it and report being woken up instead.
                         // Acquire barrier ensures code before the wake() which added the signal happens before we decrement it and return.
                         while (state & signal_mask != 0) {
@@ -229,8 +229,8 @@ const FutexImpl = struct {
 
     fn wake(self: *Impl, comptime notify: Notify) void {
         var state = self.state.load(.monotonic);
-        var __loop_limit: u64 = 0;
-        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+        var __loop_limit_inner: u64 = 0;
+        while (__loop_limit_inner < 10_000_000) : (__loop_limit_inner += 1) {
             const waiters = (state & waiter_mask) / one_waiter;
             const signals = (state & signal_mask) / one_signal;
 

@@ -492,7 +492,6 @@ pub const api = struct {
             var this = std.mem.zeroes(JsException);
 
             var loop_limit_0: u32 = 0;
-            var loop_limit_0: u32 = 0;
             while (true) {
                 if (loop_limit_0 > 1_000_000) return error.OutOfMemory;
                 loop_limit_0 += 1;
@@ -660,7 +659,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!FallbackMessageContainer {
             var this = std.mem.zeroes(FallbackMessageContainer);
 
-            var loop_limit_1: u32 = 0;
             var loop_limit_1: u32 = 0;
             while (true) {
                 if (loop_limit_1 > 1_000_000) return error.OutOfMemory;
@@ -1009,7 +1007,6 @@ pub const api = struct {
             var this = std.mem.zeroes(JavascriptBundleContainer);
 
             var loop_limit_2: u32 = 0;
-            var loop_limit_2: u32 = 0;
             while (true) {
                 if (loop_limit_2 > 1_000_000) return error.OutOfMemory;
                 loop_limit_2 += 1;
@@ -1219,7 +1216,6 @@ pub const api = struct {
             var this = std.mem.zeroes(EnvConfig);
 
             var loop_limit_3: u32 = 0;
-            var loop_limit_3: u32 = 0;
             while (true) {
                 if (loop_limit_3 > 1_000_000) return error.OutOfMemory;
                 loop_limit_3 += 1;
@@ -1311,7 +1307,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!FrameworkConfig {
             var this = std.mem.zeroes(FrameworkConfig);
 
-            var loop_limit_4: u32 = 0;
             var loop_limit_4: u32 = 0;
             while (true) {
                 if (loop_limit_4 > 1_000_000) return error.OutOfMemory;
@@ -1432,7 +1427,6 @@ pub const api = struct {
             var this = std.mem.zeroes(FrameworkEntryPointMap);
 
             var loop_limit_5: u32 = 0;
-            var loop_limit_5: u32 = 0;
             while (true) {
                 if (loop_limit_5 > 1_000_000) return error.OutOfMemory;
                 loop_limit_5 += 1;
@@ -1487,7 +1481,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!FrameworkEntryPointMessage {
             var this = std.mem.zeroes(FrameworkEntryPointMessage);
 
-            var loop_limit_6: u32 = 0;
             var loop_limit_6: u32 = 0;
             while (true) {
                 if (loop_limit_6 > 1_000_000) return error.OutOfMemory;
@@ -1614,7 +1607,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!RouteConfig {
             var this = std.mem.zeroes(RouteConfig);
 
-            var loop_limit_7: u32 = 0;
             var loop_limit_7: u32 = 0;
             while (true) {
                 if (loop_limit_7 > 1_000_000) return error.OutOfMemory;
@@ -1795,7 +1787,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!TransformOptions {
             var this = std.mem.zeroes(TransformOptions);
 
-            var loop_limit_8: u32 = 0;
             var loop_limit_8: u32 = 0;
             while (true) {
                 if (loop_limit_8 > 1_000_000) return error.OutOfMemory;
@@ -2098,7 +2089,6 @@ pub const api = struct {
             var this = std.mem.zeroes(Transform);
 
             var loop_limit_9: u32 = 0;
-            var loop_limit_9: u32 = 0;
             while (true) {
                 if (loop_limit_9 > 1_000_000) return error.OutOfMemory;
                 loop_limit_9 += 1;
@@ -2170,7 +2160,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!Scan {
             var this = std.mem.zeroes(Scan);
 
-            var loop_limit_10: u32 = 0;
             var loop_limit_10: u32 = 0;
             while (true) {
                 if (loop_limit_10 > 1_000_000) return error.OutOfMemory;
@@ -2434,7 +2423,6 @@ pub const api = struct {
             var this = std.mem.zeroes(MessageData);
 
             var loop_limit_11: u32 = 0;
-            var loop_limit_11: u32 = 0;
             while (true) {
                 if (loop_limit_11 > 1_000_000) return error.OutOfMemory;
                 loop_limit_11 += 1;
@@ -2482,7 +2470,6 @@ pub const api = struct {
         pub fn decode(reader: anytype) anyerror!MessageMeta {
             var this = std.mem.zeroes(MessageMeta);
 
-            var loop_limit_12: u32 = 0;
             var loop_limit_12: u32 = 0;
             while (true) {
                 if (loop_limit_12 > 1_000_000) return error.OutOfMemory;

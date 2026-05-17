@@ -67,7 +67,6 @@ pub const Chunk = struct {
 
     pub fn getJSChunkForHTML(this: *const Chunk, chunks: []Chunk) ?*Chunk {
         const entry_point_id = this.entry_point.entry_point_id;
-        const zust = @import("safe");
         for (chunks) |*other| {
             if (other.content == .javascript) {
                 if (other.entry_point.entry_point_id == entry_point_id) {
@@ -303,7 +302,7 @@ pub const Chunk = struct {
                             .before = .{},
                         };
                     var shifts = if (enable_source_map_shifts)
-                        try zust.ArrayList(SourceMap.SourceMapShifts).initCapacity(bun.default_allocator, pieces.len + 1);
+                        try std.ArrayList(SourceMap.SourceMapShifts).initCapacity(bun.default_allocator, pieces.len + 1);
 
                     if (enable_source_map_shifts)
                         shifts.appendAssumeCapacity(shift);

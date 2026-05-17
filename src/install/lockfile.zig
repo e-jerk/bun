@@ -1,5 +1,4 @@
 const Lockfile = @This();
-const zust = @import("safe");
 
 /// The version of the lockfile format, intended to prevent data corruption for format changes.
 format: FormatVersion = FormatVersion.current,
@@ -667,7 +666,7 @@ pub fn cleanWithLogger(
         try old.preprocessUpdateRequests(manager, updates, exact_versions);
     }
 
-    var new: *Lockfile = try old.zust.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
+    var new: *Lockfile = try old.allocator.create(Lockfile);
     new.initEmpty(
         old.allocator,
     );
@@ -1116,7 +1115,7 @@ pub const Printer = struct {
 
         _ = try FileSystem.init(null);
 
-        var lockfile = try zust.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
+        var lockfile = try allocator.create(Lockfile);
 
         const load_from_disk = lockfile.loadFromCwd(null, allocator, log, false);
         switch (load_from_disk) {
@@ -1177,10 +1176,10 @@ pub const Printer = struct {
         }
 
         var env_loader: *DotEnv.Loader = brk: {
-            const map = try zust.Box(DotEnv.Map, 0, 0, 0).init(allocator, undefined);
+            const map = try allocator.create(DotEnv.Map);
             map.* = DotEnv.Map.init(allocator);
 
-            const loader = try zust.Box(DotEnv.Loader, 0, 0, 0).init(allocator, undefined);
+            const loader = try allocator.create(DotEnv.Loader);
             loader.* = DotEnv.Loader.init(map, allocator);
             loader.quiet = true;
             break :brk loader;
