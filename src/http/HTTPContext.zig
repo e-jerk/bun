@@ -176,7 +176,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             if (comptime !ssl) {
                 unreachable;
             }
-            return this.secure.?;
+            return if (this.secure) |__zust_v| __zust_v else return error.Null;
         }
 
         fn deinit(this: *@This()) void {
@@ -226,12 +226,12 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             if (comptime ssl) {
                 if (this.secure) |c| BoringSSL.SSL_CTX_free(c);
             }
-            bun.default_allocator.destroy(this);
+            _ = this.deinit();
         }
 
         pub fn initWithClientConfig(this: *@This(), client: *HTTPClient) InitError!void {
             if (!comptime ssl) @compileError("ssl only");
-            const opts = client.tls_props.?.get().asUSocketsForClientVerification();
+            const opts = (if (client.tls_props) |__zust_v| __zust_v else return error.Null).get().asUSocketsForClientVerification();
             try this.initWithOpts(&opts);
         }
 
@@ -681,7 +681,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
                     // ran checkServerIdentity — a CA-valid wrong-hostname cert
                     // leaves did_have_handshaking_error=false so the outer
                     // guard passes. Block a strict caller from reusing it.
-                    if (reject_unauthorized and !socket.proxy_tunnel.?.data.established_with_reject_unauthorized) {
+                    if (reject_unauthorized and !(if (socket.proxy_tunnel) |__zust_v| __zust_v else return error.Null).data.established_with_reject_unauthorized) {
                         continue;
                     }
                 }
@@ -855,6 +855,7 @@ const std = @import("std");
 const TaggedPointerUnion = @import("../ptr/ptr.zig").TaggedPointerUnion;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const assert = bun.assert;

@@ -1,4 +1,5 @@
 const bloblog = bun.Output.scoped(.WriteFile, .hidden);
+const safe = @import("safe");
 
 const log = bun.Output.scoped(.ReadFile, .hidden);
 
@@ -197,7 +198,9 @@ pub const ReadFile = struct {
             break :brk bun.sys.read(this.opened_fd, buffer);
         };
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             switch (result) {
                 .result => |res| {
                     read_len.* = @truncate(res);

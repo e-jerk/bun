@@ -1100,7 +1100,10 @@ const Parser = struct {
 
         var pos = value.len - 2;
         var last = value.len;
+        var loop_limit: u32 = 0;
         while (true) : (pos -= 1) {
+            if (loop_limit > 1_000_000) return null;
+            loop_limit += 1;
             if (value[pos] == '$') {
                 if (pos > 0 and value[pos - 1] == '\\') {
                     try this.value_buffer.insertSlice(0, value[pos..last]);
@@ -1423,6 +1426,7 @@ const URL = @import("../url/url.zig").URL;
 const which = @import("../which/which.zig").which;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const OOM = bun.OOM;
 const Output = bun.Output;

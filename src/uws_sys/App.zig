@@ -98,7 +98,7 @@ pub fn NewApp(comptime ssl: bool) type {
                             bun.callmod_inline,
                             handler,
                             .{
-                                @as(UserDataType, @ptrCast(@alignCast(user_data.?))),
+                                @as(UserDataType, @ptrCast(@alignCast(if (user_data) |__zust_v| __zust_v else return error.Null))),
                                 req,
                                 @as(*Response, @ptrCast(@alignCast(res))),
                             },
@@ -251,7 +251,7 @@ pub fn NewApp(comptime ssl: bool) type {
                         @call(bun.callmod_inline, handler, .{ {}, @as(?*ThisApp.ListenSocket, @ptrCast(socket)), conf });
                     } else {
                         @call(bun.callmod_inline, handler, .{
-                            @as(UserData, @ptrCast(@alignCast(data.?))),
+                            @as(UserData, @ptrCast(@alignCast(if (data) |__zust_v| __zust_v else return error.Null))),
                             @as(?*ThisApp.ListenSocket, @ptrCast(socket)),
                             conf,
                         });
@@ -293,7 +293,7 @@ pub fn NewApp(comptime ssl: bool) type {
                         @call(bun.callmod_inline, handler, .{ {}, @as(?*ThisApp.ListenSocket, @ptrCast(socket)) });
                     } else {
                         @call(bun.callmod_inline, handler, .{
-                            @as(UserData, @ptrCast(@alignCast(data.?))),
+                            @as(UserData, @ptrCast(@alignCast(if (data) |__zust_v| __zust_v else return error.Null))),
                             @as(?*ThisApp.ListenSocket, @ptrCast(socket)),
                         });
                     }
@@ -456,6 +456,7 @@ pub const c = struct {
 };
 
 const bun = @import("bun");
+const safe = @import("safe");
 
 const uws = bun.uws;
 const ListenSocket = bun.uws.ListenSocket;

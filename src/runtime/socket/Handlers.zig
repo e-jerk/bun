@@ -1,4 +1,5 @@
 const Handlers = @This();
+const safe = @import("safe");
 
 onOpen: jsc.JSValue = .zero,
 onClose: jsc.JSValue = .zero,
@@ -97,7 +98,7 @@ pub fn markInactive(this: *Handlers) bool {
         } else {
             const vm = this.vm;
             this.deinit();
-            vm.allocator.destroy(this);
+            defer _ = this.deinit();
             return true;
         }
     }

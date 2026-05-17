@@ -9,6 +9,7 @@
 // Compressing the completions list saves about 100 KB of binary size.
 
 pub const FirstLetter = enum(u8) {
+const safe = @import("safe");
     a = 'a',
     b = 'b',
     c = 'c',
@@ -94,7 +95,7 @@ pub fn getPackages(letter: FirstLetter) []const []const u8 {
     const entry = index.get(letter);
     if (entry.length == 0) return &[_][]const u8{};
 
-    return packages_list.?[entry.offset .. entry.offset + entry.length];
+    return (if (packages_list) |v| v else return error.Null)[entry.offset .. entry.offset + entry.length];
 }
 
 pub const biggest_list: usize = 1034;

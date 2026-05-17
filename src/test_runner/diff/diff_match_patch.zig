@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 const Config = struct {
+const safe = @import("safe");
     /// Number of milliseconds to map a diff before giving up (0 for infinity).
     diff_timeout: u64 = 1000,
     /// Cost of an empty edit operation in terms of edit characters.
@@ -416,17 +417,17 @@ pub fn DMP(comptime Unit: type) type {
             if (half_match_1 == null and half_match_2 == null) {
                 return null;
             } else if (half_match_2 == null) {
-                half_match = half_match_1.?;
+                half_match = (if (half_match_1) |v| v else return error.Null);
             } else if (half_match_1 == null) {
-                half_match = half_match_2.?;
+                half_match = (if (half_match_2) |v| v else return error.Null);
             } else {
                 // Both matched. Select the longest.
                 half_match = half: {
-                    if (half_match_1.?.common_middle.len > half_match_2.?.common_middle.len) {
-                        half_match_2.?.deinit(allocator);
+                    if ((if (half_match_1) |v| v else return error.Null).common_middle.len > (if (half_match_2) |v| v else return error.Null).common_middle.len) {
+                        (if (half_match_2) |v| v else return error.Null).deinit(allocator);
                         break :half half_match_1;
                     } else {
-                        half_match_1.?.deinit(allocator);
+                        (if (half_match_1) |v| v else return error.Null).deinit(allocator);
                         break :half half_match_2;
                     }
                 };
@@ -434,10 +435,10 @@ pub fn DMP(comptime Unit: type) type {
 
             // A half-match was found, sort out the return data.
             if (before.len > after.len) {
-                return half_match.?;
+                return (if (half_match) |v| v else return error.Null);
             } else {
                 // Transfers ownership of all memory to new, permuted, half_match.
-                const half_match_yes = half_match.?;
+                const half_match_yes = (if (half_match) |v| v else return error.Null);
                 return .{
                     .prefix_before = half_match_yes.prefix_after,
                     .suffix_before = half_match_yes.suffix_after,
@@ -1123,8 +1124,8 @@ pub fn DMP(comptime Unit: type) type {
                     // Eliminate an equality that is smaller or equal to the edits on both
                     // sides of it.
                     if (last_equality != null and
-                        (last_equality.?.len <= @max(length_insertions1, length_deletions1)) and
-                        (last_equality.?.len <= @max(length_insertions2, length_deletions2)))
+                        ((if (last_equality) |v| v else return error.Null).len <= @max(length_insertions1, length_deletions1)) and
+                        ((if (last_equality) |v| v else return error.Null).len <= @max(length_insertions2, length_deletions2)))
                     {
                         // Duplicate record.
                         try diffs.ensureUnusedCapacity(allocator, 1);
@@ -1132,7 +1133,7 @@ pub fn DMP(comptime Unit: type) type {
                             @intCast(equalities.items[equalities.items.len - 1]),
                             .{
                                 .operation = .delete,
-                                .text = try allocator.dupe(Unit, last_equality.?),
+                                .text = try allocator.dupe(Unit, (if (last_equality) |v| v else return error.Null)),
                             },
                         );
                         // Change second copy to insert.
@@ -1523,7 +1524,9 @@ pub fn DMP(comptime Unit: type) type {
             // Performance analysis: https://neil.fraser.name/news/2010/11/04/
             var best: usize = 0;
             var length: usize = 1;
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 const pattern = text1[text_length - length ..];
                 const found = std.mem.indexOf(Unit, text2, pattern) orelse
                     return best;

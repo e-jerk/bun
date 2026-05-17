@@ -62,7 +62,7 @@ pub const Request = opaque {
     pub fn dateForHeader(req: *Request, name: []const u8) bun.JSError!?u64 {
         const value = header(req, name);
         if (value == null) return null;
-        var string = bun.String.init(value.?);
+        var string = bun.String.init(if (value) |__zust_v| __zust_v else return error.Null);
         defer string.deref();
         const date_f64 = try bun.String.parseDate(&string, bun.jsc.VirtualMachine.get().global);
         if (!std.math.isNan(date_f64) and std.math.isFinite(date_f64) and date_f64 >= 0) {
@@ -94,4 +94,5 @@ const c = struct {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const uws = bun.uws;

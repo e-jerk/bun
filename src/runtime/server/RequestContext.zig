@@ -9,6 +9,7 @@
 ///    If it did, it would *overwrite* the user data context pointer (this
 ///    is what it did before), causing segfaults.
 pub const AdditionalOnAbortCallback = struct {
+const safe = @import("safe");
     cb: *const fn (this: *anyopaque) void,
     data: *anyopaque,
     deref_fn: *const fn (this: *anyopaque) void,
@@ -1046,7 +1047,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
 
             stream.value.ensureStillAlive();
 
-            var response_stream = this.allocator.create(ResponseStream.JSSink) catch unreachable;
+            var response_stream = safe.Box(ResponseStream.JSSink,0,0,0).init(this.allocator, undefined) catch unreachable;
             response_stream.* = ResponseStream.JSSink{
                 .sink = .{
                     .res = resp,

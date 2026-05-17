@@ -1,4 +1,5 @@
 pub const css = @import("../css_parser.zig");
+const safe = @import("safe");
 const Result = css.Result;
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;
@@ -45,7 +46,7 @@ pub const SupportsCondition = union(enum) {
         switch (this.*) {
             .not => |not| {
                 not.deinit(allocator);
-                allocator.destroy(not);
+                _ = not.deinit();
             },
             inline .@"and", .@"or" => |*list| {
                 css.deepDeinit(SupportsCondition, allocator, list);

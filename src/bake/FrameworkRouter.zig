@@ -3,6 +3,7 @@
 //! updating for DevServer, or serializing to a binary for use in production.
 
 const FrameworkRouter = @This();
+const safe = @import("safe");
 
 /// Metadata for route files is specified out of line, either in DevServer where
 /// it is an IncrementalGraph(.server).FileIndex or the production build context
@@ -727,7 +728,9 @@ pub fn insert(
 
         var route_index = root_route;
         var route = fr.routePtr(root_route);
-        outer: while (true) {
+var __loop_limit_1: usize = 0;
+outer: while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             var next = route.first_child.unwrap();
             while (next) |current| {
                 const child = fr.routePtr(current);
@@ -739,7 +742,7 @@ pub fn insert(
                     route = fr.routePtr(current);
                     continue :outer;
                 }
-                next = fr.routePtr(next.?).next_sibling.unwrap() orelse
+                next = fr.routePtr((if (next) |v| v else return error.Null)).next_sibling.unwrap() orelse
                     break;
             }
 

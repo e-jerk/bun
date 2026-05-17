@@ -1,4 +1,5 @@
 const RefCount = bun.ptr.RefCount(@This(), "ref_count", deinit, .{});
+const safe = @import("safe");
 pub const ref = RefCount.ref;
 pub const deref = RefCount.deref;
 
@@ -137,7 +138,7 @@ const Context = struct {
                 this.pledged_src_size = pledged_src_size;
                 const state = c.ZSTD_createCCtx();
                 if (state == null) return .init("Could not initialize zstd instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
-                this.state = state.?;
+                this.state = (if (state) |v| v else return error.Null);
                 const result = c.ZSTD_CCtx_setPledgedSrcSize(state, pledged_src_size);
                 if (c.ZSTD_isError(result) > 0) {
                     _ = c.ZSTD_freeCCtx(state);
@@ -149,7 +150,7 @@ const Context = struct {
             .ZSTD_DECOMPRESS => {
                 const state = c.ZSTD_createDCtx();
                 if (state == null) return .init("Could not initialize zstd instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
-                this.state = state.?;
+                this.state = (if (state) |v| v else return error.Null);
                 return .ok;
             },
             else => @panic("unreachable"),

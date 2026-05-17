@@ -1,4 +1,5 @@
 const MAX_PAYLOAD_SIZE_WITHOUT_FRAME = 16384 - FrameHeader.byteSize - 1;
+const safe = @import("safe");
 const BunSocket = union(enum) {
     none: void,
     tls: *TLSSocket,
@@ -1914,7 +1915,9 @@ pub const H2FrameParser = struct {
         // RFC 7540 Section 6.5.2: Track cumulative header list size
         var headerListSize: usize = 0;
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const header = this.decode(payload[offset..]) catch break;
             offset += header.next;
             log("header {s} {s}", .{ header.name, header.value });
@@ -3123,7 +3126,7 @@ pub const H2FrameParser = struct {
             }
 
             origin_slice = try origin_string.toSlice(globalObject, bun.default_allocator);
-            origin_str = origin_slice.?.slice();
+            origin_str = (if (origin_slice) |v| v else return error.Null).slice();
         }
 
         const value_string = callframe.argument(1);
@@ -3132,7 +3135,7 @@ pub const H2FrameParser = struct {
                 return globalObject.throwInvalidArgumentTypeValue("value", "value", value_string);
             }
             value_slice = try value_string.toSlice(globalObject, bun.default_allocator);
-            value_str = value_slice.?.slice();
+            value_str = (if (value_slice) |v| v else return error.Null).slice();
         }
 
         const stream_id_js = callframe.argument(2);
@@ -3532,7 +3535,9 @@ pub const H2FrameParser = struct {
         if (in.len > 4096) return error.InvalidHeaderName;
         bun.assert(out.len >= in.len);
         // lets validate and convert to lowercase in one pass
-        begin: while (true) {
+var __loop_limit_2: usize = 0;
+begin: while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             for (in_slice, 0..) |c, i| {
                 switch (c) {
                     'A'...'Z' => {

@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn create(globalThis: *jsc.JSGlobalObject) jsc.JSValue {
     const object = JSValue.createEmptyObject(globalThis, 4);
     object.put(
@@ -1133,14 +1134,14 @@ const JsCallbackRenderer = struct {
                 const len = self.#stack.items.len;
                 const item_index = if (len > 1) self.#stack.items[len - 1].child_index else 0;
                 const parent = self.parentList();
-                const is_ordered = parent != null and parent.?.block_type == .ol;
+                const is_ordered = parent != null and (if (parent) |v| v else return error.Null).block_type == .ol;
                 // countListDepth() includes the immediate parent list; subtract it
                 // so that items in a top-level list report depth 0.
                 const enclosing = self.countListDepth();
                 const depth: u32 = if (enclosing > 0) enclosing - 1 else 0;
                 const task_mark = md.types.taskMarkFromData(data);
 
-                const start_js = if (is_ordered) JSValue.jsNumber(parent.?.data) else JSValue.js_undefined;
+                const start_js = if (is_ordered) JSValue.jsNumber((if (parent) |v| v else return error.Null).data) else JSValue.js_undefined;
                 const checked_js = if (task_mark != 0)
                     JSValue.jsBoolean(md.types.isTaskChecked(task_mark))
                 else

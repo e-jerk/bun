@@ -1,4 +1,5 @@
 const ReadableStream = @This();
+const safe = @import("safe");
 
 value: JSValue,
 ptr: Source,
@@ -261,20 +262,20 @@ pub fn fromJS(value: JSValue, globalThis: *JSGlobalObject) bun.JSError!?Readable
         .Blob => ReadableStream{
             .value = out,
             .ptr = .{
-                .Blob = @ptrCast(@alignCast(ptr.?)),
+                .Blob = @ptrCast(@alignCast((if (ptr) |v| v else return error.Null))),
             },
         },
         .File => ReadableStream{
             .value = out,
             .ptr = .{
-                .File = @ptrCast(@alignCast(ptr.?)),
+                .File = @ptrCast(@alignCast((if (ptr) |v| v else return error.Null))),
             },
         },
 
         .Bytes => ReadableStream{
             .value = out,
             .ptr = .{
-                .Bytes = @ptrCast(@alignCast(ptr.?)),
+                .Bytes = @ptrCast(@alignCast((if (ptr) |v| v else return error.Null))),
             },
         },
 
@@ -753,7 +754,7 @@ pub fn NewSource(
 
             fn onClose(ptr: ?*anyopaque) void {
                 jsc.markBinding(@src());
-                var this = bun.cast(*ReadableStreamSourceType, ptr.?);
+                var this = bun.cast(*ReadableStreamSourceType, (if (ptr) |v| v else return error.Null));
                 if (this.close_jsvalue.trySwap()) |cb| {
                     this.globalThis.queueMicrotask(cb, &.{});
                 }

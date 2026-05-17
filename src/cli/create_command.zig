@@ -1,3 +1,4 @@
+const safe = @import("safe");
 var bun_path_buf: bun.PathBuffer = undefined;
 
 const target_nextjs_version = "12.2.3";
@@ -207,7 +208,7 @@ pub const CreateCommand = struct {
 
         var filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
-            const map = try ctx.allocator.create(DotEnv.Map);
+            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);
@@ -1059,7 +1060,7 @@ pub const CreateCommand = struct {
                     .fromBorrowedSliceDangerous(&InjectionPrefill.bun_macros_relay_only_object_properties);
 
                 // if (needs_to_inject_dev_dependency and dev_dependencies == null) {
-                //     var e_object = try ctx.allocator.create(E.Object);
+                //     var e_object = try safe.Box(E.Object,0,0,0).init(ctx.allocator, undefined);
 
                 //     e_object.* = E.Object{};
 
@@ -1072,7 +1073,7 @@ pub const CreateCommand = struct {
                 // }
 
                 // if (needs_to_inject_dependency and dependencies == null) {
-                //     var e_object = try ctx.allocator.create(E.Object);
+                //     var e_object = try safe.Box(E.Object,0,0,0).init(ctx.allocator, undefined);
 
                 //     e_object.* = E.Object{};
 
@@ -1099,7 +1100,7 @@ pub const CreateCommand = struct {
                 // "bun.macros.react-relay.graphql"
                 // if (needs.bun_macro_relay and !needs_bun_prop and !needs_bun_macros_prop) {
                 //     // "graphql" is the only valid one for now, so anything else in this object is invalid.
-                //     bun_relay_prop.?.data.e_object = InjectionPrefill.bun_macros_relay_object.properties.ptr[0].value.?.data.e_object;
+                //     (if (bun_relay_prop) |v| v else return error.Null).data.e_object = InjectionPrefill.bun_macros_relay_object.properties.ptr[0].value.?.data.e_object;
                 //     needs_bun_macros_prop = false;
                 //     needs_bun_prop = false;
                 //     needs.bun_macro_relay = false;
@@ -1108,7 +1109,7 @@ pub const CreateCommand = struct {
 
                 // "bun.macros"
                 // if (needs_bun_macros_prop and !needs_bun_prop) {
-                //     var obj = bun_prop.?.data.e_object;
+                //     var obj = (if (bun_prop) |v| v else return error.Null).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + InjectionPrefill.bun_macros_relay_object.properties.len,
@@ -1136,7 +1137,7 @@ pub const CreateCommand = struct {
 
                 // if (needs_to_inject_dependency) {
                 //     defer needs_to_inject_dependency = false;
-                //     var obj = dependencies.?.data.e_object;
+                //     var obj = (if (dependencies) |v| v else return error.Null).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + dependencies_to_inject_count,
@@ -1151,7 +1152,7 @@ pub const CreateCommand = struct {
 
                 // if (needs_to_inject_dev_dependency) {
                 //     defer needs_to_inject_dev_dependency = false;
-                //     var obj = dev_dependencies.?.data.e_object;
+                //     var obj = (if (dev_dependencies) |v| v else return error.Null).data.e_object;
                 //     var properties = try std.array_list.Managed(js_ast.G.Property).initCapacity(
                 //         ctx.allocator,
                 //         obj.properties.len + dev_dependencies_to_inject_count,
@@ -1389,7 +1390,7 @@ pub const CreateCommand = struct {
                     package_json_expr.data.e_object.properties.shrinkRetainingCapacity(property_i);
                 }
 
-                const file: bun.FD = .fromStdFile(package_json_file.?);
+                const file: bun.FD = .fromStdFile((if (package_json_file) |v| v else return error.Null));
 
                 var buffer_writer = JSPrinter.BufferWriter.init(bun.default_allocator);
                 buffer_writer.append_newline = true;
@@ -1449,7 +1450,7 @@ pub const CreateCommand = struct {
 
         if (npm_client_ != null and preinstall_tasks.items.len > 0) {
             for (preinstall_tasks.items) |task| {
-                execTask(ctx.allocator, task, destination, PATH, npm_client_.?);
+                execTask(ctx.allocator, task, destination, PATH, (if (npm_client_) |v| v else return error.Null));
             }
         }
 
@@ -1681,7 +1682,7 @@ pub const CreateCommand = struct {
         }
 
         var env_loader: DotEnv.Loader = brk: {
-            const map = try ctx.allocator.create(DotEnv.Map);
+            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);
@@ -1993,11 +1994,11 @@ pub const Example = struct {
         }
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(api_url);
-        const mutable = try ctx.allocator.create(MutableString);
+        const mutable = try safe.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 8192);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = ctx.allocator.create(HTTP.AsyncHTTP) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = safe.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
@@ -2066,7 +2067,7 @@ pub const Example = struct {
         refresher.refresh();
 
         var url_buf: [1024]u8 = undefined;
-        var mutable = try ctx.allocator.create(MutableString);
+        var mutable = try safe.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 2048);
 
         url = URL.parse(try std.fmt.bufPrint(&url_buf, "https://registry.npmjs.org/@bun-examples/{s}/latest", .{name}));
@@ -2074,7 +2075,7 @@ pub const Example = struct {
         var http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = ctx.allocator.create(HTTP.AsyncHTTP) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = safe.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
@@ -2194,8 +2195,8 @@ pub const Example = struct {
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
-        var async_http: *HTTP.AsyncHTTP = ctx.allocator.create(HTTP.AsyncHTTP) catch unreachable;
-        const mutable = try ctx.allocator.create(MutableString);
+        var async_http: *HTTP.AsyncHTTP = safe.Box(HTTP.AsyncHTTP,0,0,0).init(ctx.allocator, undefined) catch unreachable;
+        const mutable = try safe.Box(MutableString,0,0,0).init(ctx.allocator, undefined);
         mutable.* = try MutableString.init(ctx.allocator, 2048);
 
         async_http.* = HTTP.AsyncHTTP.initSync(
@@ -2280,7 +2281,7 @@ pub const CreateListExamplesCommand = struct {
     pub fn exec(ctx: Command.Context) !void {
         const filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
-            const map = try ctx.allocator.create(DotEnv.Map);
+            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
             break :brk DotEnv.Loader.init(map, ctx.allocator);

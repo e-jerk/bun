@@ -35,6 +35,7 @@
 //! ]
 //! ```
 
+const safe = @import("safe");
 groups: []ConcurrentGroup,
 #sequences: []ExecutionSequence,
 /// the entries themselves are owned by BunTest, which owns Execution.
@@ -278,7 +279,9 @@ pub fn stepGroup(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalO
     const buntest = buntest_strong.get();
     const this = &buntest.execution;
 
-    while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const group = this.activeGroup() orelse return .complete;
         if (!group.executing) {
             this.onGroupStarted(group, globalThis);
@@ -344,7 +347,9 @@ const AdvanceSequenceStatus = union(enum) {
     },
 };
 fn stepSequence(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) !AdvanceSequenceStatus {
-    while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
         return try stepSequenceOne(buntest_strong, globalThis, group, sequence_index, now) orelse continue;
     }
 }

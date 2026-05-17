@@ -233,5 +233,6 @@ const GlobalCache = @import("./GlobalCache.zig").GlobalCache;
 const OfflineMode = @import("./OfflineMode.zig").OfflineMode;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const logger = bun.logger;
 const api = bun.schema.api;

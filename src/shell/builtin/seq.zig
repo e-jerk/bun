@@ -1,3 +1,4 @@
+const safe = @import("safe");
 state: enum { idle, err, done } = .idle,
 buf: std.ArrayListUnmanaged(u8) = .{},
 _start: f32 = 1,
@@ -52,7 +53,7 @@ pub fn start(this: *@This()) Yield {
 
     const maybe2 = iter.next();
     if (maybe2 == null) return this.do();
-    const int2 = std.fmt.parseFloat(f32, bun.sliceTo(maybe2.?, 0)) catch return this.fail("seq: invalid argument\n");
+    const int2 = std.fmt.parseFloat(f32, bun.sliceTo((if (maybe2) |v| v else return error.Null), 0)) catch return this.fail("seq: invalid argument\n");
     if (!std.math.isFinite(int2)) return this.fail("seq: invalid argument\n");
     this._start = int1;
     this._end = int2;
@@ -61,7 +62,7 @@ pub fn start(this: *@This()) Yield {
 
     const maybe3 = iter.next();
     if (maybe3 == null) return this.do();
-    const int3 = std.fmt.parseFloat(f32, bun.sliceTo(maybe3.?, 0)) catch return this.fail("seq: invalid argument\n");
+    const int3 = std.fmt.parseFloat(f32, bun.sliceTo((if (maybe3) |v| v else return error.Null), 0)) catch return this.fail("seq: invalid argument\n");
     if (!std.math.isFinite(int3)) return this.fail("seq: invalid argument\n");
     this._start = int1;
     this.increment = int2;

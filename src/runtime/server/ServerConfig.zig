@@ -1,4 +1,5 @@
 const ServerConfig = @This();
+const safe = @import("safe");
 
 address: union(enum) {
     tcp: struct {
@@ -174,7 +175,9 @@ fn normalizeStaticRoutesList(this: *ServerConfig) !void {
     var list = &this.static_routes;
     if (list.items.len > 0) {
         var index = list.items.len - 1;
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const route = &list.items[index];
             const hash = Context.hash(route);
             if (std.mem.indexOfScalar(u64, static_routes_dedupe_list.items, hash) != null) {

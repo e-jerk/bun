@@ -28,6 +28,7 @@ pub fn NewParser_(
     // P is for Parser!
     return struct {
         const js_parser_jsx = js_parser_features.jsx;
+        const safe = @import("safe");
         pub const is_typescript_enabled = js_parser_features.typescript;
         pub const is_jsx_enabled = js_parser_jsx != .none;
         pub const only_scan_imports_and_do_not_visit = js_parser_features.scan_only;
@@ -2451,7 +2452,7 @@ pub fn NewParser_(
         pub fn pushScopeForParsePass(noalias p: *P, comptime kind: js_ast.Scope.Kind, loc: logger.Loc) !usize {
             var parent: *Scope = p.current_scope;
             const allocator = p.allocator;
-            var scope = try allocator.create(Scope);
+            var scope = try safe.Box(Scope, 0, 0, 0).init(allocator, undefined);
 
             scope.* = Scope{
                 .kind = kind,
@@ -3189,7 +3190,7 @@ pub fn NewParser_(
                 scope: js_ast.TSNamespaceScope,
             };
 
-            var pair = bun.handleOom(p.allocator.create(Pair));
+            var pair = bun.handleOom(safe.Box(Pair, 0, 0, 0).init(p.allocator, undefined));
             pair.map = .{};
             pair.scope = .{
                 .exported_members = &pair.map,
@@ -6755,7 +6756,7 @@ pub fn NewParser_(
             this: *P,
         ) anyerror!void {
             var scope_order = try ScopeOrderList.initCapacity(allocator, 1);
-            const scope = try allocator.create(Scope);
+            const scope = try safe.Box(Scope, 0, 0, 0).init(allocator, undefined);
             scope.* = Scope{
                 .members = .{},
                 .children = .{},

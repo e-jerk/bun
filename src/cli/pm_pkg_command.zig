@@ -1,4 +1,5 @@
 pub const PmPkgCommand = struct {
+const safe = @import("safe");
     const SubCommand = enum {
         get,
         set,
@@ -65,7 +66,9 @@ pub const PmPkgCommand = struct {
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = cwd;
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const pkg_path = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.sys.existsZ(pkg_path)) {
                 return try allocator.dupe(u8, pkg_path);
@@ -560,17 +563,17 @@ pub const PmPkgCommand = struct {
         }
 
         var nested_obj = root.get(current_key);
-        if (nested_obj == null or nested_obj.?.data != .e_object) {
+        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
             const new_obj = js_ast.Expr.init(js_ast.E.Object, js_ast.E.Object{}, logger.Loc.Empty);
             try root.data.e_object.put(allocator, current_key, new_obj);
             nested_obj = root.get(current_key);
         }
 
-        if (nested_obj.?.data != .e_object) {
+        if ((if (nested_obj) |v| v else return error.Null).data != .e_object) {
             return error.ExpectedObject;
         }
 
-        var nested = nested_obj.?;
+        var nested = (if (nested_obj) |v| v else return error.Null);
         try setNestedSimple(allocator, &nested, remaining_path, value, parse_json);
         try root.data.e_object.put(allocator, current_key, nested);
     }
@@ -591,7 +594,7 @@ pub const PmPkgCommand = struct {
         }
 
         var nested_obj = root.get(current_key);
-        if (nested_obj == null or nested_obj.?.data != .e_object) {
+        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
             const new_obj = js_ast.Expr.init(js_ast.E.Object, js_ast.E.Object{}, logger.Loc.Empty);
 
             try root.data.e_object.put(allocator, current_key, new_obj);
@@ -600,11 +603,11 @@ pub const PmPkgCommand = struct {
             nested_obj = root.get(current_key);
         }
 
-        if (nested_obj.?.data != .e_object) {
+        if ((if (nested_obj) |v| v else return error.Null).data != .e_object) {
             return error.ExpectedObject;
         }
 
-        var nested = nested_obj.?;
+        var nested = (if (nested_obj) |v| v else return error.Null);
         try setNested(allocator, &nested, remaining_path, value, parse_json);
     }
 
@@ -679,11 +682,11 @@ pub const PmPkgCommand = struct {
         }
 
         const nested_obj = root.get(current_key);
-        if (nested_obj == null or nested_obj.?.data != .e_object) {
+        if (nested_obj == null or (if (nested_obj) |v| v else return error.Null).data != .e_object) {
             return false;
         }
 
-        var nested = nested_obj.?;
+        var nested = (if (nested_obj) |v| v else return error.Null);
         const deleted = try deleteNested(allocator, &nested, remaining_path);
 
         if (deleted) {

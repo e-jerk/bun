@@ -1,4 +1,5 @@
 pub const Start = union(Tag) {
+const safe = @import("safe");
     empty: void,
     err: Syscall.Error,
     chunk_size: Blob.SizeType,
@@ -1266,7 +1267,7 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             }
             this.buffer.deinit(this.allocator);
             this.unregisterAutoFlusher();
-            this.allocator.destroy(this);
+            defer _ = this.deinit();
         }
 
         // This can be called _many_ times for the same instance

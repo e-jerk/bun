@@ -107,7 +107,7 @@ pub fn Intrusive(
             // element. If it is NOT the root element, v can't be in this
             // heap and we trigger an assertion failure.
             const prev = v.heap.prev orelse {
-                assert(self.root.? == v);
+                assert(if (self.root) |__zust_v| __zust_v else return error.Null == v);
                 _ = self.deleteMin();
                 return;
             };
@@ -128,7 +128,7 @@ pub fn Intrusive(
             const child = v.heap.child orelse return;
             v.heap.child = null;
             const x = self.combine_siblings(child);
-            self.root = self.meld(x, self.root.?);
+            self.root = self.meld(x, if (self.root) |__zust_v| __zust_v else return error.Null);
         }
 
         /// Meld (union) two heaps together. This isn't a generalized
@@ -188,7 +188,8 @@ pub fn Intrusive(
             // Merge pairs right
             var root: *T = root: {
                 var a: *T = left;
-                while (true) {
+                var __loop_limit: u64 = 0;
+                while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                     var b = a.heap.next orelse break :root a;
                     a.heap.next = null;
                     b = self.meld(a, b);
@@ -197,7 +198,8 @@ pub fn Intrusive(
             };
 
             // Merge pairs left
-            while (true) {
+            var __loop_limit: u64 = 0;
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                 var b = root.heap.prev orelse return root;
                 b.heap.next = null;
                 root = self.meld(b, root);
@@ -217,4 +219,5 @@ pub fn IntrusiveField(comptime T: type) type {
 }
 
 const bun = @import("bun");
+const safe = @import("safe");
 const assert = bun.assert;

@@ -43,14 +43,14 @@ pub const ConcurrentTaskQueue = UnboundedQueue(AnyTaskWithExtraContext, .next);
 pub fn initGlobal(env: ?*bun.DotEnv.Loader, cwd: ?[]const u8) *MiniEventLoop {
     if (globalInitialized) return global;
     const loop = MiniEventLoop.init(bun.default_allocator);
-    global = bun.handleOom(bun.default_allocator.create(MiniEventLoop));
+    global = bun.handleOom(safe.Box(MiniEventLoop).init(bun.default_allocator, undefined));
     global.* = loop;
     global.loop.internal_loop_data.setParentEventLoop(bun.jsc.EventLoopHandle.init(global));
     global.env = env orelse bun.DotEnv.instance orelse env_loader: {
-        const map = bun.handleOom(bun.default_allocator.create(bun.DotEnv.Map));
+        const map = bun.handleOom(safe.Box(bun.DotEnv.Map).init(bun.default_allocator, undefined));
         map.* = bun.DotEnv.Map.init(bun.default_allocator);
 
-        const loader = bun.handleOom(bun.default_allocator.create(bun.DotEnv.Loader));
+        const loader = bun.handleOom(safe.Box(bun.DotEnv.Loader).init(bun.default_allocator, undefined));
         loader.* = bun.DotEnv.Loader.init(map, bun.default_allocator);
         break :env_loader loader;
     };
@@ -89,8 +89,8 @@ pub fn throwError(_: *MiniEventLoop, err: bun.sys.Error) void {
 
 pub fn pipeReadBuffer(this: *MiniEventLoop) []u8 {
     return this.pipe_read_buffer orelse {
-        this.pipe_read_buffer = bun.handleOom(this.allocator.create(PipeReadBuffer));
-        return this.pipe_read_buffer.?;
+        this.pipe_read_buffer = bun.handleOom(this.try safe.Box(PipeReadBuffer).init(allocator, undefined));
+        return if (this.pipe_read_buffer) |__zust_v| __zust_v else return error.Null;
     };
 }
 
@@ -105,9 +105,9 @@ pub fn onAfterEventLoop(this: *MiniEventLoop) void {
 
 pub fn filePolls(this: *MiniEventLoop) *Async.FilePoll.Store {
     return this.file_polls_ orelse {
-        this.file_polls_ = bun.handleOom(this.allocator.create(Async.FilePoll.Store));
+        this.file_polls_ = bun.handleOom(this.try safe.Box(Async.FilePoll.Store).init(allocator, undefined));
         this.file_polls_.?.* = Async.FilePoll.Store.init();
-        return this.file_polls_.?;
+        return if (this.file_polls_) |__zust_v| __zust_v else return error.Null;
     };
 }
 
@@ -172,7 +172,9 @@ pub fn tickWithoutIdle(
 ) void {
     defer this.onAfterEventLoop();
 
-    while (true) {
+    var __loop_limit: u64 = 0;
+
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         _ = this.tickConcurrentWithCount();
         while (this.tasks.readItem()) |task| {
             task.run(context);
@@ -317,7 +319,7 @@ pub const JsVM = struct {
     }
 
     pub inline fn platformEventLoop(this: @This()) *jsc.PlatformEventLoop {
-        return this.vm.event_loop_handle.?;
+        return if (this.vm.event_loop_handle) |__zust_v| __zust_v else return error.Null;
     }
 
     pub inline fn incrementPendingUnrefCounter(this: @This()) void {
@@ -402,6 +404,7 @@ pub fn AbstractVM(inner: anytype) switch (@TypeOf(inner)) {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Async = bun.Async;
 const Environment = bun.Environment;
 const uws = bun.uws;

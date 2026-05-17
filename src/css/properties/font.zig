@@ -1,4 +1,5 @@
 pub const css = @import("../css_parser.zig");
+const safe = @import("safe");
 
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;
@@ -956,7 +957,7 @@ pub const FontHandler = struct {
         }
 
         if (family != null and size != null and style != null and weight != null and stretch != null and line_height != null and variant_caps != null) {
-            const caps = variant_caps.?;
+            const caps = if (variant_caps) |v| v else return error.Null;
             push(this, decls, context, "font", Font{
                 .family = family.?,
                 .size = size.?,

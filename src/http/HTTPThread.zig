@@ -158,7 +158,7 @@ pub fn deflater(this: *@This()) *LibdeflateState {
         });
     }
 
-    return this.lazy_libdeflater.?;
+    return if (this.lazy_libdeflater) |__zust_v| __zust_v else return error.Null;
 }
 
 fn onInitErrorNoop(err: InitError, opts: InitOpts) noreturn {
@@ -280,13 +280,13 @@ pub fn connect(this: *@This(), client: *HTTPClient, comptime is_ssl: bool) !?New
             }
 
             // Cache miss - create new SSL context
-            var custom_context = try bun.default_allocator.create(NewHTTPContext(is_ssl));
+            var custom_context = try try safe.Box(NewHTTPContext(is_ssl).init(bun.default_allocator, undefined));
             custom_context.* = .{
                 .ref_count = .init(),
                 .pending_sockets = NewHTTPContext(is_ssl).PooledSocketHiveAllocator.empty,
             };
             custom_context.initWithClientConfig(client) catch |err| {
-                bun.default_allocator.destroy(custom_context);
+                _ = custom_context.deinit();
 
                 return switch (err) {
                     error.FailedToOpenSocket => |e| e,
@@ -378,7 +378,8 @@ fn abortPendingH2Waiter(this: *@This(), async_http_id: u32) bool {
 }
 
 fn drainQueuedShutdowns(this: *@This()) void {
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         // socket.close() can potentially be slow
         // Let's not block other threads while this runs.
         var queued_shutdowns = brk: {
@@ -437,7 +438,8 @@ fn drainQueuedShutdowns(this: *@This()) void {
 }
 
 fn drainQueuedWrites(this: *@This()) void {
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         var queued_writes = brk: {
             this.queued_writes_lock.lock();
             defer this.queued_writes_lock.unlock();
@@ -483,7 +485,8 @@ fn drainQueuedWrites(this: *@This()) void {
 }
 
 fn drainQueuedHTTPResponseBodyDrains(this: *@This()) void {
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         // socket.close() can potentially be slow
         // Let's not block other threads while this runs.
         var queued_response_body_drains = brk: {
@@ -622,7 +625,9 @@ fn processEvents(this: *@This()) noreturn {
         @compileError("TODO:");
     }
 
-    while (true) {
+    var __loop_limit: u64 = 0;
+
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         this.drainEvents();
         if (comptime Environment.isDebug and bun.asan.enabled) {
             for (bun.http.socket_async_http_abort_tracker.keys(), bun.http.socket_async_http_abort_tracker.values()) |http_id, socket| {
@@ -737,6 +742,7 @@ const ProxyTunnel = @import("./ProxyTunnel.zig");
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const Global = bun.Global;
 const Output = bun.Output;

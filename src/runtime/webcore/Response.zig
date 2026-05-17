@@ -1,4 +1,5 @@
 const Response = @This();
+const safe = @import("safe");
 
 // C++ helper functions for AsyncLocalStorage integration
 extern fn Response__getAsyncLocalStorageStore(global: *JSGlobalObject, als: JSValue) JSValue;
@@ -423,7 +424,7 @@ pub fn cloneValue(
             if (js.gc.stream.get(js_ref)) |stream| {
                 var readable = try jsc.WebCore.ReadableStream.fromJS(stream, globalThis);
                 if (readable != null) {
-                    break :brk try this.#body.cloneWithReadableStream(globalThis, &readable.?);
+                    break :brk try this.#body.cloneWithReadableStream(globalThis, &(if (readable) |v| v else return error.Null));
                 }
             }
         }

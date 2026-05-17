@@ -62,7 +62,7 @@ pub const PollOrFd = union(enum) {
                 if (close_fd) _ = fd.closeAllowingBadFileDescriptor(null);
             }
             if (comptime @TypeOf(onCloseFn) != void)
-                onCloseFn(@ptrCast(@alignCast(ctx.?)));
+                onCloseFn(@ptrCast(@alignCast(if (ctx) |__zust_v| __zust_v else return error.Null)));
         } else {
             this.* = .{ .closed = {} };
         }
@@ -101,5 +101,6 @@ pub const ReadState = enum {
 };
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Async = bun.Async;
 const Environment = bun.Environment;

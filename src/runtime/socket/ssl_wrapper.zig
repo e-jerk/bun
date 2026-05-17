@@ -1,4 +1,5 @@
 const log = bun.Output.scoped(.SSLWrapper, .hidden);
+const safe = @import("safe");
 
 /// Mimics the behavior of openssl.c in uSockets, wrapping data that can be received from any where (network, DuplexStream, etc)
 pub fn SSLWrapper(comptime T: type) type {
@@ -408,7 +409,9 @@ pub fn SSLWrapper(comptime T: type) type {
             var read: usize = 0;
 
             // read data from the input BIO
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 log("handleReading", .{});
                 const ssl = this.ssl orelse return false;
 
@@ -485,7 +488,9 @@ pub fn SSLWrapper(comptime T: type) type {
 
         fn handleWriting(this: *This, buffer: *[BUFFER_SIZE]u8) void {
             var read: usize = 0;
-            while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
                 const ssl = this.ssl orelse return;
                 const output = BoringSSL.SSL_get_wbio(ssl) orelse return;
                 const available = buffer[read..];

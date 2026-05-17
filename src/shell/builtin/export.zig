@@ -1,4 +1,5 @@
 const Export = @This();
+const safe = @import("safe");
 
 printing: bool = false,
 
@@ -29,8 +30,8 @@ pub fn onIOWriterChunk(this: *Export, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     const exit_code: ExitCode = if (e != null) brk: {
-        defer e.?.deref();
-        break :brk @intFromEnum(e.?.getErrno());
+        defer (if (e) |v| v else return error.Null).deref();
+        break :brk @intFromEnum((if (e) |v| v else return error.Null).getErrno());
     } else 0;
 
     return this.bltn().done(exit_code);

@@ -1,5 +1,6 @@
 // blocking, but off the main thread
 pub const CopyFile = struct {
+const safe = @import("safe");
     destination_file_store: Store.File,
     source_file_store: Store.File,
     store: ?*Store = null,
@@ -174,7 +175,9 @@ pub const CopyFile = struct {
         }
 
         if (which == .both or which == .destination) {
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 const dest = this.destination_file_store.pathlike.path.sliceZ(&path_buf1);
                 const mode = this.destination_mode orelse jsc.Node.fs.default_permission;
                 this.destination_fd = switch (bun.sys.open(
@@ -268,7 +271,9 @@ pub const CopyFile = struct {
             }
         }
 
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             // TODO: this should use non-blocking I/O.
             const written = switch (comptime use) {
                 .copy_file_range => linux.copy_file_range(src_fd.cast(), null, dest_fd.cast(), null, remain, 0),
@@ -389,7 +394,9 @@ pub const CopyFile = struct {
         var source_buf: bun.PathBuffer = undefined;
         var dest_buf: bun.PathBuffer = undefined;
 
-        while (true) {
+var __loop_limit_3: usize = 0;
+while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
             const dest = this.destination_file_store.pathlike.path.sliceZ(
                 &dest_buf,
             );
@@ -458,7 +465,7 @@ pub const CopyFile = struct {
                         }
 
                         if (this.doClonefile()) {
-                            if (this.max_length != Blob.max_size and this.max_length < @as(SizeType, @intCast(stat_.?.size))) {
+                            if (this.max_length != Blob.max_size and this.max_length < @as(SizeType, @intCast((if (stat_) |v| v else return error.Null).size))) {
                                 // If this fails...well, there's not much we can do about it.
                                 _ = bun.c.truncate(
                                     this.destination_file_store.pathlike.path.sliceZ(&path_buf),
@@ -466,7 +473,7 @@ pub const CopyFile = struct {
                                 );
                                 this.read_len = @as(SizeType, @intCast(this.max_length));
                             } else {
-                                this.read_len = @as(SizeType, @intCast(stat_.?.size));
+                                this.read_len = @as(SizeType, @intCast((if (stat_) |v| v else return error.Null).size));
                             }
                             // Apply destination mode if specified (clonefile copies source permissions)
                             if (this.destination_mode) |mode| {

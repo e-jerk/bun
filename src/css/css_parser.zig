@@ -1,4 +1,5 @@
 pub const SrcIndex = bun.bundle_v2.Index;
+const safe = @import("safe");
 
 pub const SymbolList = bun.ast.Symbol.List;
 
@@ -666,7 +667,7 @@ pub fn DeriveParse(comptime T: type) type {
                 }
             }
 
-            const first_void_index = maybe_first_void_index.?;
+            const first_void_index = if (maybe_first_void_index) |v| v else return error.Null;
 
             const void_fields = bun.meta.EnumFields(T)[first_void_index .. first_void_index + void_count];
 

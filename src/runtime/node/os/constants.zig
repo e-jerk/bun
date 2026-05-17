@@ -1,4 +1,5 @@
 const ConstantType = enum { ERRNO, ERRNO_WIN, SIG, DLOPEN, OTHER };
+const safe = @import("safe");
 
 fn getErrnoConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasField(std.posix.E, name))
@@ -55,7 +56,7 @@ fn __defineConstant(globalObject: *jsc.JSGlobalObject, object: jsc.JSValue, comp
             }
         },
         .OTHER => {
-            object.put(globalObject, jsc.ZigString.static(name), jsc.JSValue.jsNumberFromInt32(value.?));
+            object.put(globalObject, jsc.ZigString.static(name), jsc.JSValue.jsNumberFromInt32((if (value) |v| v else return error.Null)));
         },
     }
 }

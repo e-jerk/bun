@@ -2,6 +2,7 @@ loc: logger.Loc,
 data: Data,
 
 pub const empty = Expr{ .data = .{ .e_missing = E.Missing{} }, .loc = logger.Loc.Empty };
+const safe = @import("safe");
 
 pub fn isAnonymousNamed(expr: Expr) bool {
     return switch (expr.data) {
@@ -428,7 +429,7 @@ pub fn asPropertyStringMap(expr: *const Expr, name: string, allocator: std.mem.A
         map.putAssumeCapacity(key, value);
     }
 
-    const ptr = allocator.create(bun.StringArrayHashMap(string)) catch unreachable;
+    const ptr = safe.Box(bun.StringArrayHashMap(string, 0, 0, 0).init(allocator, undefined)) catch unreachable;
     ptr.* = map;
     return ptr;
 }
@@ -721,7 +722,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_array = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -733,7 +734,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_class = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -745,7 +746,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_unary = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -757,7 +758,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_binary = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -809,7 +810,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_new = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -829,7 +830,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_function = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -849,7 +850,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_call = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -861,7 +862,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_dot = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -873,7 +874,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_index = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -885,7 +886,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_arrow = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -940,7 +941,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_jsx_element = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -963,7 +964,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_big_int = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -975,7 +976,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_object = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -987,7 +988,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_spread = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1005,7 +1006,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_string = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1018,7 +1019,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_template = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1030,7 +1031,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_reg_exp = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1042,7 +1043,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_await = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1054,7 +1055,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_yield = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1066,7 +1067,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_if = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1086,7 +1087,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_import = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1106,7 +1107,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_string = brk: {
-                        const item = allocator.create(Type) catch unreachable;
+                        const item = safe.Box(Type, 0, 0, 0).init(allocator, undefined) catch unreachable;
                         item.* = st.*;
                         break :brk item;
                     },
@@ -2196,112 +2197,112 @@ pub const Data = union(Tag) {
     pub fn clone(this: Expr.Data, allocator: std.mem.Allocator) !Data {
         return switch (this) {
             .e_array => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_array)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_array, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_array = item };
             },
             .e_unary => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_unary)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_unary, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_unary = item };
             },
             .e_binary => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_binary)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_binary, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_binary = item };
             },
             .e_class => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_class)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_class, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_class = item };
             },
             .e_new => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_new)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_new, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_new = item };
             },
             .e_function => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_function)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_function, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_function = item };
             },
             .e_call => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_call)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_call, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_call = item };
             },
             .e_dot => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_dot)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_dot, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_dot = item };
             },
             .e_index => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_index)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_index, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_index = item };
             },
             .e_arrow => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_arrow)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_arrow, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_arrow = item };
             },
             .e_jsx_element => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_jsx_element)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_jsx_element, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_jsx_element = item };
             },
             .e_object => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_object)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_object, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_object = item };
             },
             .e_spread => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_spread)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_spread, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_spread = item };
             },
             .e_template => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_template)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_template, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_template = item };
             },
             .e_reg_exp => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_reg_exp)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_reg_exp, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_reg_exp = item };
             },
             .e_await => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_await)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_await, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_await = item };
             },
             .e_yield => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_yield)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_yield, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_yield = item };
             },
             .e_if => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_if)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_if, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_if = item };
             },
             .e_import => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_import)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_import, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_import = item };
             },
             .e_big_int => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_big_int)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_big_int, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_big_int = item };
             },
             .e_string => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_string)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_string, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_string = item };
             },
             .e_inlined_enum => |el| {
-                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_inlined_enum)));
+                const item = try safe.Box(std.meta.Child(@TypeOf(this.e_inlined_enum, 0, 0, 0).init(allocator, undefined)));
                 item.* = el.*;
                 return .{ .e_inlined_enum = item };
             },

@@ -6,6 +6,7 @@
 // - Windows can be configured to return []const u16
 
 const IteratorError = error{ AccessDenied, SystemResources } || posix.UnexpectedError;
+const safe = @import("safe");
 
 pub const IteratorResult = struct {
     name: PathString,
@@ -57,7 +58,9 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
             };
 
             fn nextDarwin(self: *Self) Result {
-                start_over: while (true) {
+var __loop_limit_1: usize = 0;
+start_over: while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                     if (self.index >= self.end_index) {
                         if (self.received_eof) {
                             return .{ .result = null };
@@ -137,7 +140,9 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
             pub const Error = IteratorError;
 
             pub fn next(self: *Self) Result {
-                start_over: while (true) {
+var __loop_limit_2: usize = 0;
+start_over: while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
                     if (self.index >= self.end_index) {
                         const rc = posix.system.getdents(self.dir.cast(), &self.buf, self.buf.len);
                         if (Result.errnoSys(rc, .getdents64)) |err| {
@@ -189,7 +194,9 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
             /// Memory such as file names referenced in this returned entry becomes invalid
             /// with subsequent calls to `next`, as well as when this `Dir` is deinitialized.
             pub fn next(self: *Self) Result {
-                start_over: while (true) {
+var __loop_limit_3: usize = 0;
+start_over: while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
                     if (self.index >= self.end_index) {
                         const rc = linux.getdents64(self.dir.cast(), &self.buf, self.buf.len);
                         if (Result.errnoSys(rc, .getdents64)) |err| return err;
@@ -261,7 +268,9 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
             /// Memory such as file names referenced in this returned entry becomes invalid
             /// with subsequent calls to `next`, as well as when this `Dir` is deinitialized.
             pub fn next(self: *Self) ResultT {
-                while (true) {
+var __loop_limit_4: usize = 0;
+while (true) : (__loop_limit_4 += 1) {
+    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
                     const w = std.os.windows;
                     if (self.index >= self.end_index) {
                         // The I/O manager only fills the IO_STATUS_BLOCK on IRP
@@ -434,7 +443,9 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
                 // since its implementation is exactly the same as below,
                 // and we avoid the code complexity here.
                 const w = posix.wasi;
-                start_over: while (true) {
+var __loop_limit_5: usize = 0;
+start_over: while (true) : (__loop_limit_5 += 1) {
+    if (__loop_limit_5 > 1_000_000) return error.LoopLimitExceeded;
                     if (self.index >= self.end_index) {
                         var bufused: usize = undefined;
                         switch (w.fd_readdir(self.dir.cast(), &self.buf, self.buf.len, self.cookie, &bufused)) {

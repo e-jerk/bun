@@ -1,6 +1,7 @@
 //! https://developer.mozilla.org/en-US/docs/Web/API/Request
 
 const Request = @This();
+const safe = @import("safe");
 
 url: bun.String = bun.String.empty,
 
@@ -864,9 +865,9 @@ pub fn constructInto(globalThis: *jsc.JSGlobalObject, arguments: []const jsc.JSV
     if (req.#body.value == .Blob and
         req.#headers != null and
         req.#body.value.Blob.content_type.len > 0 and
-        !req.#headers.?.fastHas(.ContentType))
+        !req.#(if (headers) |v| v else return error.Null).fastHas(.ContentType))
     {
-        try req.#headers.?.put(.ContentType, req.#body.value.Blob.content_type, globalThis);
+        try req.#(if (headers) |v| v else return error.Null).put(.ContentType, req.#body.value.Blob.content_type, globalThis);
     }
 
     req.calculateEstimatedByteSize();
@@ -968,12 +969,12 @@ pub fn ensureFetchHeaders(
 
         if (content_type) |content_type_| {
             if (content_type_.len > 0) {
-                try this.#headers.?.put(.ContentType, content_type_, globalThis);
+                try this.#(if (headers) |v| v else return error.Null).put(.ContentType, content_type_, globalThis);
             }
         }
     }
 
-    return this.#headers.?;
+    return this.#(if (headers) |v| v else return error.Null);
 }
 
 pub fn getFetchHeadersUnlessEmpty(
@@ -1041,7 +1042,7 @@ pub fn cloneInto(
             if (js.gc.stream.get(js_ref)) |stream| {
                 var readable = try jsc.WebCore.ReadableStream.fromJS(stream, globalThis);
                 if (readable != null) {
-                    break :brk try this.#body.value.cloneWithReadableStream(globalThis, &readable.?);
+                    break :brk try this.#body.value.cloneWithReadableStream(globalThis, &(if (readable) |v| v else return error.Null));
                 }
             }
         }

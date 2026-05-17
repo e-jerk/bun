@@ -342,6 +342,7 @@ test "ShellIterator" {
 const bun = @import("bun");
 
 const std = @import("std");
+const safe = @import("safe");
 const debug = std.debug;
 const mem = std.mem;
 const process = std.process;

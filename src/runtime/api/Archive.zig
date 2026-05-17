@@ -1,4 +1,5 @@
 const Archive = @This();
+const safe = @import("safe");
 
 pub const js = jsc.Codegen.JSArchive;
 pub const toJS = js.toJS;
@@ -379,7 +380,7 @@ fn parsePatternArg(globalThis: *jsc.JSGlobalObject, arg: jsc.JSValue, api_name: 
         // Empty array = no filter
         if (len == 0) return null;
 
-        var patterns = std.ArrayList([]const u8).initCapacity(allocator, @intCast(len)) catch return error.OutOfMemory;
+        var patterns = safe.ArrayList([]const u8).initCapacity(allocator, @intCast(len)) catch return error.OutOfMemory;
         errdefer {
             for (patterns.items) |p| allocator.free(p);
             patterns.deinit(allocator);
@@ -760,7 +761,7 @@ fn startWriteTask(
 
 const FilesContext = struct {
     const FileEntry = struct { path: []u8, data: []u8, mtime: i64 };
-    const FileEntryList = std.ArrayList(FileEntry);
+    const FileEntryList = safe.ArrayList(FileEntry);
     const Error = error{ OutOfMemory, ReadError };
     const Result = union(enum) {
         success: FileEntryList,

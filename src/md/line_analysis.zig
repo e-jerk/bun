@@ -245,7 +245,10 @@ pub fn isCompleteHtmlTag(self: *const Parser, off: OFF) bool {
         pos += 1;
 
     // Parse attributes
+    var attr_loop_limit: u32 = 0;
     while (true) {
+        if (attr_loop_limit > 1_000_000) return false;
+        attr_loop_limit += 1;
         const ws_start = pos;
         while (pos < self.size and helpers.isBlank(self.text[pos])) pos += 1;
         if (pos >= self.size or helpers.isNewline(self.text[pos])) return false;

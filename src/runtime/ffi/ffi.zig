@@ -1,4 +1,5 @@
 const debug = Output.scoped(.TCC, .visible);
+const safe = @import("safe");
 
 extern fn pthread_jit_write_protect_np(enable: c_int) void;
 
@@ -1522,7 +1523,7 @@ pub const FFI = struct {
         }
 
         pub fn handleTCCError(ctx: ?*Function, message: [*c]const u8) callconv(.c) void {
-            var this = ctx.?;
+            var this = (if (ctx) |v| v else return error.Null);
             var msg = std.mem.span(message);
             if (msg.len > 0) {
                 var offset: usize = 0;

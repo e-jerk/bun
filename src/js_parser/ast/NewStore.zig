@@ -21,6 +21,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
     };
 
     const backing_allocator = bun.default_allocator;
+    const safe = @import("safe");
 
     const log = Output.scoped(.Store, .hidden);
 
@@ -78,7 +79,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
         pub fn init() *Store {
             log("init", .{});
             // Avoid initializing the entire struct.
-            const prealloc = bun.handleOom(backing_allocator.create(PreAlloc));
+            const prealloc = bun.handleOom(safe.Box(PreAlloc, 0, 0, 0).init(backing_allocator, undefined));
             prealloc.zero();
 
             return &prealloc.metadata;
@@ -91,12 +92,12 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
                 if (Environment.isDebug or Environment.enable_asan)
                     @memset(next.buffer, undefined);
                 it = next.next;
-                backing_allocator.destroy(next);
+                _ = next.deinit();
             }
 
             const prealloc: PreAlloc = @fieldParentPtr("metadata", store);
             bun.assert(&prealloc.first_block == store.head);
-            backing_allocator.destroy(prealloc);
+            _ = prealloc.deinit();
         }
 
         pub fn reset(store: *Store) void {
@@ -128,7 +129,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
                 next.bytes_used = 0;
                 break :brk next;
             } else brk: {
-                const new_block = backing_allocator.create(Block) catch
+                const new_block = safe.Box(Block, 0, 0, 0).init(backing_allocator, undefined) catch
                     bun.outOfMemory();
                 new_block.zero();
                 store.current.next = new_block;

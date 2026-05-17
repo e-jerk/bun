@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn loader_resolver(in: string) !Api.Loader {
     const option_loader = options.Loader.fromString(in) orelse return error.InvalidLoader;
     return option_loader.toAPI();
@@ -1683,7 +1684,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
 
     opts.output_dir = output_dir;
     if (output_file != null)
-        ctx.debug.output_file = output_file.?;
+        ctx.debug.output_file = (if (output_file) |v| v else return error.Null);
 
     if (cmd == .RunCommand or cmd == .AutoCommand) {
         if (args.option("--shell")) |shell| {

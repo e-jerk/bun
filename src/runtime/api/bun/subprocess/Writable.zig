@@ -1,4 +1,5 @@
 pub const Writable = union(enum) {
+const safe = @import("safe");
     pipe: *jsc.WebCore.FileSink,
     fd: bun.FD,
     buffer: *StaticPipeWriter,
@@ -160,14 +161,14 @@ pub const Writable = union(enum) {
 
         if (comptime Environment.isPosix) {
             if (stdio.* == .pipe) {
-                _ = bun.sys.setNonblocking(result.?);
+                _ = bun.sys.setNonblocking((if (result) |v| v else return error.Null));
             }
         }
 
         switch (stdio.*) {
             .dup2 => @panic("TODO dup2 stdio"),
             .pipe, .readable_stream => {
-                const pipe = jsc.WebCore.FileSink.create(event_loop, result.?);
+                const pipe = jsc.WebCore.FileSink.create(event_loop, (if (result) |v| v else return error.Null));
 
                 switch (pipe.writer.start(pipe.fd, true)) {
                     .result => {},
@@ -221,7 +222,7 @@ pub const Writable = union(enum) {
                 return Writable{ .memfd = memfd };
             },
             .fd => {
-                return Writable{ .fd = result.? };
+                return Writable{ .fd = (if (result) |v| v else return error.Null) };
             },
             .inherit => {
                 return Writable{ .inherit = {} };

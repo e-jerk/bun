@@ -4,6 +4,7 @@
 //! - `cd -` will put the user in the previous directory
 
 const Cd = @This();
+const safe = @import("safe");
 
 state: union(enum) {
     idle,
@@ -117,8 +118,8 @@ pub fn onIOWriterChunk(this: *Cd, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        defer e.?.deref();
-        return this.bltn().done(e.?.getErrno());
+        defer (if (e) |v| v else return error.Null).deref();
+        return this.bltn().done((if (e) |v| v else return error.Null).getErrno());
     }
 
     this.state = .done;

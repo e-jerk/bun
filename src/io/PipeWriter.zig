@@ -802,12 +802,12 @@ fn BaseWindowsPipeWriter(
 
         fn onPipeClose(handle: *uv.Pipe) callconv(.c) void {
             const this = bun.cast(*uv.Pipe, handle.data);
-            bun.default_allocator.destroy(this);
+            _ = this.deinit();
         }
 
         fn onTTYClose(handle: *uv.uv_tty_t) callconv(.c) void {
             const this = bun.cast(*uv.uv_tty_t, handle.data);
-            bun.default_allocator.destroy(this);
+            _ = this.deinit();
         }
 
         pub fn close(this: *WindowsPipeWriter) void {
@@ -1474,13 +1474,13 @@ pub fn WindowsStreamingWriter(comptime Parent: type, function_table: anytype) ty
                 return .{ .done = 0 };
             }
 
-            if (this.source != null and this.source.? == .sync_file) {
+            if (this.source != null and if (this.source) |__zust_v| __zust_v else return error.Null == .sync_file) {
                 defer this.outgoing.reset();
                 var remain = StreamBuffer.writeOrFallback(&this.outgoing, buffer, comptime writeFn) catch {
                     return .{ .err = bun.sys.Error.oom };
                 };
                 const initial_len = remain.len;
-                const fd: bun.FD = .fromUV(this.source.?.sync_file.file);
+                const fd: bun.FD = .fromUV((if (this.source) |__zust_v| __zust_v else return error.Null).sync_file.file);
 
                 while (remain.len > 0) {
                     switch (fd.write(remain)) {
@@ -1569,6 +1569,7 @@ const FileType = @import("./pipes.zig").FileType;
 const PollOrFd = @import("./pipes.zig").PollOrFd;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Async = bun.Async;
 const Environment = bun.Environment;
 const OOM = bun.OOM;

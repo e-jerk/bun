@@ -1,4 +1,5 @@
 pub const opener = switch (@import("builtin").target.os.tag) {
+const safe = @import("safe");
     .macos => "/usr/bin/open",
     .windows => "start",
     else => "xdg-open",
@@ -131,7 +132,7 @@ pub const Editor = enum(u8) {
                 if (std.fs.cwd().openFile(path, .{})) |opened| {
                     opened.close();
                     if (out != null) {
-                        out.?.* = bun.asByteSlice(path);
+                        (if (out) |v| v else return error.Null).* = bun.asByteSlice(path);
                     }
                     return true;
                 } else |_| {}
@@ -251,7 +252,7 @@ pub const Editor = enum(u8) {
         args_buf[i] = binary;
         i += 1;
 
-        if (editor == .vscode and line != null and line.?.len > 0) {
+        if (editor == .vscode and line != null and (if (line) |v| v else return error.Null).len > 0) {
             args_buf[i] = "--goto";
 
             i += 1;

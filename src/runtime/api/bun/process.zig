@@ -1,4 +1,5 @@
 const pid_t = if (Environment.isPosix) std.posix.pid_t else uv.uv_pid_t;
+const safe = @import("safe");
 const fd_t = if (Environment.isPosix) std.posix.fd_t else i32;
 const log = bun.Output.scoped(.PROCESS, .visible);
 
@@ -663,13 +664,13 @@ pub const Status = union(enum) {
         if (exit_code != null) {
             return .{
                 .exited = .{
-                    .code = exit_code.?,
+                    .code = (if (exit_code) |v| v else return error.Null),
                     .signal = @enumFromInt(signal orelse 0),
                 },
             };
         } else if (signal != null) {
             return .{
-                .signaled = @enumFromInt(signal.?),
+                .signaled = @enumFromInt((if (signal) |v| v else return error.Null)),
             };
         }
 
@@ -1021,7 +1022,9 @@ const WaiterThreadPosix = struct {
         reloadHandlers();
         var this = &instance;
 
-        outer: while (true) {
+var __loop_limit_1: usize = 0;
+outer: while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             this.js_process.loop();
 
             if (comptime Environment.isLinux) {
@@ -1274,7 +1277,9 @@ pub const PosixSpawnResult = struct {
 
         const pidfd_flags = pidfdFlagsForLinux();
 
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             switch (brk: {
                 const rc = bun.sys.pidfd_open(
                     @intCast(this.pid),
@@ -1306,7 +1311,9 @@ pub const PosixSpawnResult = struct {
                         // For all other cases, ensure we don't leak the child process on error
                         // That would cause Zombie processes to accumulate.
                         else => {
-                            while (true) {
+var __loop_limit_3: usize = 0;
+while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
                                 var status: u32 = 0;
                                 const rc = std.os.linux.wait4(this.pid, &status, 0, null);
 
@@ -1905,9 +1912,9 @@ pub fn spawnProcessWindows(
         const stdio = stdio_containers.items[i];
         const result_stdio: *WindowsSpawnResult.StdioResult = result_stdios[i];
 
-        if (dup_src != null and i == dup_src.?) {
+        if (dup_src != null and i == (if (dup_src) |v| v else return error.Null)) {
             result_stdio.* = .unavailable;
-        } else if (dup_tgt != null and i == dup_tgt.?) {
+        } else if (dup_tgt != null and i == (if (dup_tgt) |v| v else return error.Null)) {
             result_stdio.* = .{ .buffer_fd = .fromUV(dup_fds[0]) };
         } else switch (stdio_options[i]) {
             .buffer => {
@@ -2308,7 +2315,7 @@ pub const sync = struct {
 
     // The PID to forward signals to.
     // Set to 0 when unregistering.
-    extern "c" var Bun__currentSyncPID: i64;
+    extern "c" var Bun__currentSyncPID = safe.CheckedInt(i64).init(0);
 
     // Race condition: a signal could be sent before spawnProcessPosix returns.
     // We need to make sure to send it after the process is spawned.
@@ -2679,7 +2686,9 @@ pub const sync = struct {
         var events: [16]std.c.Kevent = undefined;
         var child_exited = false;
         var child_status: ?Status = null;
-        while (true) {
+var __loop_limit_4: usize = 0;
+while (true) : (__loop_limit_4 += 1) {
+    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
             const got = switch (bun.sys.kevent(kq_fd, &.{}, events[0..], null)) {
                 .err => |err| return .{ .err = err },
                 .result => |c| c,
@@ -2818,7 +2827,9 @@ pub const sync = struct {
         const timeout_ms: i32 = if (need_ppid_fallback or chld_fd == bun.invalid_fd) 100 else -1;
 
         var child_status: ?Status = null;
-        while (true) {
+var __loop_limit_5: usize = 0;
+while (true) : (__loop_limit_5 += 1) {
+    if (__loop_limit_5 > 1_000_000) return error.LoopLimitExceeded;
             // Reap *before* poll(). Covers (a) the SIGCHLD-before-block race —
             // child may have exited between spawnProcessPosix and the
             // sigprocmask above, in which case the kernel discarded SIGCHLD
@@ -2833,7 +2844,9 @@ pub const sync = struct {
             // Non-TTY callers never see stops, matching plain `bun run`.
             const wopts = std.posix.W.NOHANG |
                 if (jc.isActive()) std.posix.W.UNTRACED else @as(u32, 0);
-            while (true) {
+var __loop_limit_6: usize = 0;
+while (true) : (__loop_limit_6 += 1) {
+    if (__loop_limit_6 > 1_000_000) return error.LoopLimitExceeded;
                 const r = PosixSpawn.wait4(-1, wopts, null);
                 const w = switch (r) {
                     .err => break,
@@ -2889,7 +2902,7 @@ pub const sync = struct {
             }
         }
         for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| _ = drainFd(fd, out_fd, bytes);
-        return .{ .result = child_status.? };
+        return .{ .result = (if (child_status) |v| v else return error.Null) };
     }
 
     /// Non-blocking drain of `fd` into `bytes`. Closes and invalidates both
@@ -2898,7 +2911,9 @@ pub const sync = struct {
     /// otherwise. Shared by the `poll()` path and the no-orphans wait loops.
     fn drainFd(fd: *bun.FD, out_fd: *bun.FD, bytes: *std.array_list.Managed(u8)) ?bun.sys.Error {
         if (fd.* == bun.invalid_fd) return null;
-        while (true) {
+var __loop_limit_7: usize = 0;
+while (true) : (__loop_limit_7 += 1) {
+    if (__loop_limit_7 > 1_000_000) return error.LoopLimitExceeded;
             bytes.ensureUnusedCapacity(16384) catch return bun.sys.Error.fromCode(.NOMEM, .recv);
             switch (bun.sys.recvNonBlock(fd.*, bytes.unusedCapacitySlice())) {
                 .err => |err| {
@@ -2921,7 +2936,9 @@ pub const sync = struct {
     /// Blocking `wait4()` until `Status.from` returns a terminal status.
     /// Shared by the `poll()` path and the no-orphans wait loops.
     fn reapChild(child: std.c.pid_t) Status {
-        while (true) {
+var __loop_limit_8: usize = 0;
+while (true) : (__loop_limit_8 += 1) {
+    if (__loop_limit_8 > 1_000_000) return error.LoopLimitExceeded;
             if (Status.from(child, &PosixSpawn.wait4(child, 0, null))) |stat| return stat;
         }
     }

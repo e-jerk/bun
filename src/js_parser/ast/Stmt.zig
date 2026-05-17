@@ -2,6 +2,7 @@ loc: logger.Loc,
 data: Data,
 
 pub const Batcher = NewBatcher(Stmt);
+const safe = @import("safe");
 
 pub fn assign(a: Expr, b: Expr) Stmt {
     return Stmt.alloc(
@@ -106,7 +107,7 @@ inline fn comptime_alloc(comptime tag_name: string, comptime typename: type, ori
 }
 
 fn allocateData(allocator: std.mem.Allocator, comptime tag_name: string, comptime typename: type, origData: anytype, loc: logger.Loc) Stmt {
-    const value = allocator.create(@TypeOf(origData)) catch unreachable;
+    const value = safe.Box(@TypeOf(origData, 0, 0, 0).init(allocator, undefined)) catch unreachable;
     value.* = origData;
 
     return comptime_init(tag_name, *typename, value, loc);

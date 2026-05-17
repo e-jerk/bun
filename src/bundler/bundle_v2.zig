@@ -43,6 +43,7 @@
 //
 
 pub const logPartDependencyTree = Output.scoped(.part_dep_tree, .visible);
+const safe = @import("safe");
 
 pub const MangledProps = std.AutoArrayHashMapUnmanaged(Ref, []const u8);
 pub const PathToSourceIndexMap = @import("./PathToSourceIndexMap.zig");
@@ -2131,7 +2132,7 @@ pub const BundleV2 = struct {
                             .loader = loader,
                             .side_effects = .has_side_effects,
                         }) catch unreachable;
-                        var task = bun.default_allocator.create(ParseTask) catch unreachable;
+                        var task = safe.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
                         task.* = ParseTask{
                             .ctx = this,
                             .path = path,
@@ -2688,7 +2689,7 @@ pub const BundleV2 = struct {
         if (this.plugins) |plugins| {
             if (plugins.hasAnyMatches(&import_record.path, false)) {
                 // This is where onResolve plugins are enqueued
-                var resolve: *jsc.API.JSBundler.Resolve = bun.default_allocator.create(jsc.API.JSBundler.Resolve) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = safe.Box(jsc.API.JSBundler.Resolve, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
                 debug("enqueue onResolve: {s}:{s}", .{
                     import_record.path.namespace,
                     import_record.path.text,
@@ -2725,7 +2726,7 @@ pub const BundleV2 = struct {
             if (plugins.hasAnyMatches(&temp_path, false)) {
                 debug("Entry point '{s}' plugin match", .{entry_point});
 
-                var resolve: *jsc.API.JSBundler.Resolve = bun.default_allocator.create(jsc.API.JSBundler.Resolve) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = safe.Box(jsc.API.JSBundler.Resolve, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
                 this.incrementScanCounter();
 
                 resolve.* = jsc.API.JSBundler.Resolve.init(this, .{
@@ -2777,7 +2778,7 @@ pub const BundleV2 = struct {
                     parse.path.namespace,
                     parse.path.text,
                 });
-                const load = bun.handleOom(bun.default_allocator.create(jsc.API.JSBundler.Load));
+                const load = bun.handleOom(safe.Box(jsc.API.JSBundler.Load, 0, 0, 0).init(bun.default_allocator, undefined));
                 load.* = jsc.API.JSBundler.Load.init(this, parse);
                 load.dispatch();
                 return true;
@@ -3078,7 +3079,7 @@ pub const BundleV2 = struct {
                     import_record.path = path_primary;
                     resolve_entry.key_ptr.* = path_primary.text;
                     debug("created ParseTask from FileMap: {s}", .{path_primary.text});
-                    const resolve_task = bun.handleOom(bun.default_allocator.create(ParseTask));
+                    const resolve_task = bun.handleOom(safe.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined));
                     file_map_result.path_pair.primary = path_primary;
                     resolve_task.* = ParseTask.init(&file_map_result, Index.invalid, this);
                     resolve_task.known_target = target;
@@ -3344,7 +3345,7 @@ pub const BundleV2 = struct {
             import_record.path = path.*;
             resolve_entry.key_ptr.* = path.text;
             debug("created ParseTask: {s}", .{path.text});
-            const resolve_task = bun.handleOom(bun.default_allocator.create(ParseTask));
+            const resolve_task = bun.handleOom(safe.Box(ParseTask, 0, 0, 0).init(bun.default_allocator, undefined));
             resolve_task.* = ParseTask.init(&resolve_result, Index.invalid, this);
 
             resolve_task.known_target = if (import_record.kind == .html_manifest)
@@ -3439,7 +3440,7 @@ pub const BundleV2 = struct {
                     graph.estimated_file_loader_count += 1;
                 }
 
-                bun.default_allocator.destroy(value);
+                _ = value.deinit();
             }
         }
         return diff;
@@ -3579,7 +3580,7 @@ pub const BundleV2 = struct {
             }
         }
 
-        defer bun.default_allocator.destroy(parse_result);
+        defer _ = parse_result.deinit();
 
         var diff: i32 = -1;
         defer {
@@ -4410,7 +4411,7 @@ const ExternalFreeFunctionAllocator = struct {
     fn free(ext_free_function: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize) void {
         const info: *ExternalFreeFunctionAllocator = @ptrCast(@alignCast(ext_free_function));
         info.free_callback(info.context);
-        bun.default_allocator.destroy(info);
+        _ = info.deinit();
     }
 };
 

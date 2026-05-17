@@ -1,3 +1,4 @@
+const safe = @import("safe");
 var path_buf: bun.PathBuffer = undefined;
 var path_buf2: bun.PathBuffer = undefined;
 const NpmArgs = struct {
@@ -551,8 +552,8 @@ pub const RunCommand = struct {
                             if (!silent) {
                                 const is_probably_trying_to_run_a_pkg_script =
                                     original_script_for_bun_run != null and
-                                    ((code == 1 and bun.strings.eqlComptime(original_script_for_bun_run.?, "test")) or
-                                        (code == 2 and bun.strings.eqlAnyComptime(original_script_for_bun_run.?, &.{
+                                    ((code == 1 and bun.strings.eqlComptime((if (original_script_for_bun_run) |v| v else return error.Null), "test")) or
+                                        (code == 2 and bun.strings.eqlAnyComptime((if (original_script_for_bun_run) |v| v else return error.Null), &.{
                                             "install",
                                             "kill",
                                             "link",
@@ -566,7 +567,7 @@ pub const RunCommand = struct {
                                     //
                                     // so for these script names, print the entire exe name.
                                     Output.errGeneric("\"<b>{s}<r>\" exited with code {d}", .{ executable, code });
-                                    Output.note("a package.json script \"{s}\" was not found", .{original_script_for_bun_run.?});
+                                    Output.note("a package.json script \"{s}\" was not found", .{(if (original_script_for_bun_run) |v| v else return error.Null)});
                                 }
                                 // 128 + 2 is the exit code of a process killed by SIGINT, which is caused by CTRL + C
                                 else if (code > 0 and code != 130) {
@@ -674,7 +675,9 @@ pub const RunCommand = struct {
             const paths = .{ bun_node_dir ++ "/node", bun_node_dir ++ "/bun" };
             inline for (paths) |path| {
                 var retried = false;
-                while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                     inner: {
                         std.posix.symlinkZ(argv0, path) catch |err| {
                             if (err == error.PathAlreadyExists) break :inner;
@@ -1639,7 +1642,7 @@ pub const RunCommand = struct {
             };
         }
 
-        _ = _bootAndHandleError(ctx, absolute_script_path.?, null);
+        _ = _bootAndHandleError(ctx, (if (absolute_script_path) |v| v else return error.Null), null);
         return true;
     }
     pub fn exec(
@@ -1678,7 +1681,7 @@ pub const RunCommand = struct {
         } else if (cfg.allow_fast_run_for_extensions) {
             const ext = std.fs.path.extension(target_name);
             const default_loader = options.defaultLoaders.get(ext);
-            if (default_loader != null and (default_loader.?.canBeRunByBun() or default_loader.? == .md)) {
+            if (default_loader != null and ((if (default_loader) |v| v else return error.Null).canBeRunByBun() or (if (default_loader) |v| v else return error.Null) == .md)) {
                 try_fast_run = true;
             }
         }
@@ -1931,7 +1934,7 @@ pub const RunCommand = struct {
             } else {
                 const ext = std.fs.path.extension(target_name);
                 const default_loader = options.defaultLoaders.get(ext);
-                if (default_loader != null and default_loader.?.isJavaScriptLikeOrJSON() or target_name.len > 0 and (target_name[0] == '.' or target_name[0] == '/' or std.fs.path.isAbsolute(target_name))) {
+                if (default_loader != null and (if (default_loader) |v| v else return error.Null).isJavaScriptLikeOrJSON() or target_name.len > 0 and (target_name[0] == '.' or target_name[0] == '/' or std.fs.path.isAbsolute(target_name))) {
                     Output.prettyError("<r><red>error<r><d>:<r> <b>Module not found \"<b>{s}<r>\"\n", .{target_name});
                 } else if (ext.len > 0) {
                     Output.prettyError("<r><red>error<r><d>:<r> <b>File not found \"<b>{s}<r>\"\n", .{target_name});

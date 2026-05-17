@@ -141,7 +141,7 @@ pub fn SinglyLinkedList(comptime T: type) type {
             if (list.first == node) {
                 list.first = node.next;
             } else {
-                var current_elm = list.first.?;
+                var current_elm = MANUAL_EDIT_TEST;
                 while (current_elm.next != node) {
                     current_elm = current_elm.next.?;
                 }
@@ -205,15 +205,15 @@ test "basic SinglyLinkedList test" {
     _ = list.remove(&five); // {2, 3, 4}
     _ = two.removeNext(); // {2, 4}
 
-    try testing.expect(list.first.?.data == 2);
-    try testing.expect(list.first.?.next.?.data == 4);
-    try testing.expect(list.first.?.next.?.next == null);
+    try testing.expect(MANUAL_EDIT_TEST.data == 2);
+    try testing.expect(MANUAL_EDIT_TEST.next.?.data == 4);
+    try testing.expect(MANUAL_EDIT_TEST.next.?.next == null);
 
     L.Node.reverse(&list.first);
 
-    try testing.expect(list.first.?.data == 4);
-    try testing.expect(list.first.?.next.?.data == 2);
-    try testing.expect(list.first.?.next.?.next == null);
+    try testing.expect(MANUAL_EDIT_TEST.data == 4);
+    try testing.expect(MANUAL_EDIT_TEST.next.?.data == 2);
+    try testing.expect(MANUAL_EDIT_TEST.next.?.next == null);
 }
 
 /// A doubly-linked list has a pair of pointers to both the head and
@@ -425,7 +425,7 @@ test "basic DoublyLinkedList test" {
     _ = list.pop(); // {2, 3, 4}
     list.remove(&three); // {2, 4}
 
-    try testing.expect(list.first.?.data == 2);
+    try testing.expect(MANUAL_EDIT_TEST.data == 2);
     try testing.expect(list.last.?.data == 4);
     try testing.expect(list.len == 2);
 }

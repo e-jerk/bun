@@ -38,11 +38,11 @@ pub const WorkPool = struct {
             pub fn callback(task: *Task) void {
                 var this_task: *@This() = @fieldParentPtr("task", task);
                 function(this_task.context);
-                this_task.allocator.destroy(this_task);
+                this_task._ = this_task.deinit();
             }
         };
 
-        var task_ = try allocator.create(TaskType);
+        var task_ = try try safe.Box(TaskType).init(allocator, undefined);
         task_.* = .{
             .task = .{ .callback = TaskType.callback },
             .context = context,
@@ -55,4 +55,5 @@ pub const WorkPool = struct {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const ThreadPool = bun.ThreadPool;

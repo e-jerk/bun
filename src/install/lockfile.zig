@@ -1,4 +1,5 @@
 const Lockfile = @This();
+const safe = @import("safe");
 
 /// The version of the lockfile format, intended to prevent data corruption for format changes.
 format: FormatVersion = FormatVersion.current,
@@ -666,7 +667,7 @@ pub fn cleanWithLogger(
         try old.preprocessUpdateRequests(manager, updates, exact_versions);
     }
 
-    var new: *Lockfile = try old.allocator.create(Lockfile);
+    var new: *Lockfile = try old.safe.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
     new.initEmpty(
         old.allocator,
     );
@@ -1115,7 +1116,7 @@ pub const Printer = struct {
 
         _ = try FileSystem.init(null);
 
-        var lockfile = try allocator.create(Lockfile);
+        var lockfile = try safe.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
 
         const load_from_disk = lockfile.loadFromCwd(null, allocator, log, false);
         switch (load_from_disk) {
@@ -1176,10 +1177,10 @@ pub const Printer = struct {
         }
 
         var env_loader: *DotEnv.Loader = brk: {
-            const map = try allocator.create(DotEnv.Map);
+            const map = try safe.Box(DotEnv.Map, 0, 0, 0).init(allocator, undefined);
             map.* = DotEnv.Map.init(allocator);
 
-            const loader = try allocator.create(DotEnv.Loader);
+            const loader = try safe.Box(DotEnv.Loader, 0, 0, 0).init(allocator, undefined);
             loader.* = DotEnv.Loader.init(map, allocator);
             loader.quiet = true;
             break :brk loader;

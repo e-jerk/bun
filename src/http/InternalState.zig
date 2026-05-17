@@ -71,7 +71,7 @@ pub fn reset(this: *InternalState, allocator: std.mem.Allocator) void {
 
     // just in case we check and free to avoid leaks
     if (this.cloned_metadata != null) {
-        this.cloned_metadata.?.deinit(allocator);
+        (if (this.cloned_metadata) |__zust_v| __zust_v else return error.Null).deinit(allocator);
         this.cloned_metadata = null;
     }
 
@@ -99,7 +99,7 @@ pub fn getBodyBuffer(this: *InternalState) *MutableString {
         return &this.compressed_body;
     }
 
-    return this.body_out_str.?;
+    return if (this.body_out_str) |__zust_v| __zust_v else return error.Null;
 }
 
 pub fn isDone(this: *InternalState) bool {
@@ -197,7 +197,7 @@ pub fn decompress(this: *InternalState, buffer: MutableString, body_out_str: *Mu
 pub fn processBodyBuffer(this: *InternalState, buffer: MutableString, is_final_chunk: bool) !bool {
     if (this.flags.is_redirect_pending) return false;
 
-    var body_out_str = this.body_out_str.?;
+    var body_out_str = if (this.body_out_str) |__zust_v| __zust_v else return error.Null;
 
     switch (this.encoding) {
         Encoding.brotli, Encoding.gzip, Encoding.deflate, Encoding.zstd => {
@@ -214,7 +214,7 @@ pub fn processBodyBuffer(this: *InternalState, buffer: MutableString, is_final_c
         },
     }
 
-    return this.body_out_str.?.list.items.len > 0;
+    return (if (this.body_out_str) |__zust_v| __zust_v else return error.Null).list.items.len > 0;
 }
 
 const log = Output.scoped(.HTTPInternalState, .hidden);
@@ -245,6 +245,7 @@ const Stage = enum(u8) {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const FeatureFlags = bun.FeatureFlags;
 const MutableString = bun.MutableString;
 const Output = bun.Output;

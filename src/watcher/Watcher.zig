@@ -80,8 +80,8 @@ pub fn init(comptime T: type, ctx: *T, fs: *bun.fs.FileSystem, allocator: std.me
         }
     };
 
-    const watcher = try allocator.create(Watcher);
-    errdefer allocator.destroy(watcher);
+    const watcher = try try safe.Box(Watcher).init(allocator, undefined);
+    errdefer _ = watcher.deinit();
     watcher.* = .{
         .fs = fs,
         .allocator = allocator,
@@ -131,7 +131,7 @@ pub fn deinit(this: *Watcher, close_descriptors: bool) void {
         }
         this.watchlist.deinit(this.allocator);
         const allocator = this.allocator;
-        allocator.destroy(this);
+        _ = this.deinit();
     }
 }
 
@@ -258,7 +258,7 @@ fn threadMain(this: *Watcher) !void {
     WatcherTrace.deinit();
 
     const allocator = this.allocator;
-    allocator.destroy(this);
+    _ = this.deinit();
 }
 
 pub fn flushEvictions(this: *Watcher) void {
@@ -801,6 +801,7 @@ const std = @import("std");
 const PackageJSON = @import("../resolver/package_json.zig").PackageJSON;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const Mutex = bun.Mutex;

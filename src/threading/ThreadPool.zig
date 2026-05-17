@@ -111,11 +111,11 @@ pub const Batch = struct {
         if (len == 0) {
             return null;
         }
-        const task = this.head.?;
+        const task = if (this.head) |__zust_v| __zust_v else return error.Null;
         if (task.node.next) |node| {
             this.head = @fieldParentPtr("node", node);
         } else {
-            if (task != this.tail.?) unreachable;
+            if (task != if (this.tail) |__zust_v| __zust_v else return error.Null) unreachable;
             this.tail = null;
             this.head = null;
         }
@@ -142,7 +142,7 @@ pub const Batch = struct {
         if (self.len == 0) {
             self.* = batch;
         } else {
-            self.tail.?.node.next = if (batch.head) |h| &h.node else null;
+            (if (self.tail) |__zust_v| __zust_v else return error.Null).node.next = if (batch.head) |h| &h.node else null;
             self.tail = batch.tail;
             self.len += batch.len;
         }
@@ -236,8 +236,8 @@ fn scheduleImpl(self: *ThreadPool, batch: Batch, try_current: bool) void {
 
     // Extract out the `Node`s from the `Task`s
     var list = Node.List{
-        .head = &batch.head.?.node,
-        .tail = &batch.tail.?.node,
+        .head = &(if (batch.head) |__zust_v| __zust_v else return error.Null).node,
+        .tail = &(if (batch.tail) |__zust_v| __zust_v else return error.Null).node,
     };
 
     // .monotonic access is okay because:
@@ -401,7 +401,9 @@ noinline fn wait(self: *ThreadPool, _is_waking: bool) error{Shutdown}!bool {
     var is_waking = _is_waking;
     var sync = self.sync.load(.monotonic);
 
-    while (true) {
+    var __loop_limit: u64 = 0;
+
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         if (sync.state == .shutdown) return error.Shutdown;
         if (is_waking) assert(sync.state == .waking);
 
@@ -478,7 +480,8 @@ pub noinline fn shutdown(self: *ThreadPool) void {
 fn register(noalias self: *ThreadPool, noalias thread: *Thread) void {
     // Push the thread onto the threads stack in a lock-free manner.
     var threads = self.threads.load(.monotonic);
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         thread.next = threads;
         threads = self.threads.cmpxchgWeak(
             threads,
@@ -569,7 +572,8 @@ pub const Thread = struct {
         defer thread_pool.unregister(self);
 
         var is_waking = false;
-        while (true) {
+        var __loop_limit: u64 = 0;
+        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
             is_waking = thread_pool.wait(is_waking) catch return;
 
             while (self.pop(thread_pool)) |result| {
@@ -663,7 +667,9 @@ const Event = struct {
         var state = self.state.load(.monotonic);
         var has_shrunk_memory: bool = false;
 
-        while (true) {
+        var __loop_limit: u64 = 0;
+
+        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
             // If we're shutdown then exit early.
             // Acquire barrier to ensure operations before the shutdown() are seen after the wait().
             // Shutdown is rare so it's better to have an Acquire barrier here instead of on CAS failure + load which are common.
@@ -761,7 +767,8 @@ pub const Node = struct {
 
         fn push(noalias self: *Queue, list: List) void {
             var stack = self.stack.load(.monotonic);
-            while (true) {
+            var __loop_limit: u64 = 0;
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                 // Attach the list to the stack (pt. 1)
                 list.tail.next = @as(?*Node, @ptrFromInt(stack & PTR_MASK));
 
@@ -783,7 +790,8 @@ pub const Node = struct {
 
         fn tryAcquireConsumer(self: *Queue) error{ Empty, Contended }!?*Node {
             var stack = self.stack.load(.monotonic);
-            while (true) {
+            var __loop_limit: u64 = 0;
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                 if (stack & IS_CONSUMING != 0)
                     return error.Contended; // The queue already has a consumer.
                 if (stack & (HAS_CACHE | PTR_MASK) == 0)
@@ -863,7 +871,9 @@ pub const Node = struct {
             var head = self.head.load(.monotonic);
             var tail = self.tail.raw; // we're the only thread that can change this
 
-            while (true) {
+            var __loop_limit: u64 = 0;
+
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                 var size = tail -% head;
                 assert(size <= capacity);
 
@@ -923,7 +933,9 @@ pub const Node = struct {
             var head = self.head.load(.monotonic);
             const tail = self.tail.raw; // we're the only thread that can change this
 
-            while (true) {
+            var __loop_limit: u64 = 0;
+
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                 // Quick sanity check and return null when not empty
                 const size = tail -% head;
                 assert(size <= capacity);
@@ -991,7 +1003,9 @@ pub const Node = struct {
             assert(size <= capacity);
             assert(size == 0); // we should only be stealing if our array is empty
 
-            while (true) : (std.atomic.spinLoopHint()) {
+            var __loop_limit: u64 = 0;
+
+            while (__loop_limit < 10_000_000) : (__loop_limit += 1) : (std.atomic.spinLoopHint()) {
                 const buffer_head = buffer.head.load(.acquire);
                 const buffer_tail = buffer.tail.load(.acquire);
 
@@ -1047,6 +1061,7 @@ const std = @import("std");
 const Atomic = std.atomic.Value;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const Output = bun.Output;
 const assert = bun.assert;

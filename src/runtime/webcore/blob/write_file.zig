@@ -1,4 +1,5 @@
 pub const WriteFileResultType = SystemError.Maybe(SizeType);
+const safe = @import("safe");
 pub const WriteFileOnWriteFileCallback = *const fn (ctx: *anyopaque, count: WriteFileResultType) bun.JSTerminated!void;
 pub const WriteFileTask = jsc.WorkTask(WriteFile);
 
@@ -130,7 +131,9 @@ pub const WriteFile = struct {
             // non-seekable file.
             bun.sys.write(fd, buffer);
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             switch (result) {
                 .result => |res| {
                     wrote.* = res;

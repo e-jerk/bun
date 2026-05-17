@@ -8,6 +8,7 @@
 /// OS-level uses crontab (Linux), launchctl + launchd plist (macOS), or
 /// schtasks (Windows). Async, event-loop-integrated via bun.spawn.
 /// Shared base for CronRegisterJob and CronRemoveJob.
+const safe = @import("safe");
 fn CronJobBase(comptime Self: type) type {
     return struct {
         pub fn loop(_: *const Self) *bun.Async.Loop {
@@ -1510,10 +1511,10 @@ fn cronToTaskXml(
     // Case 2: Single minute, evenly-spaced hours that divide 24
     //   e.g. "0 * * * *" → PT1H, "0 */2 * * *" → PT2H, "30 */6 * * *" → PT6H
     const can_use_repetition = days_is_wild and weekdays_is_wild and months_is_wild and blk: {
-        if (hours_count == 24 and minute_interval != null and minute_interval.? <= 60 and 60 % minute_interval.? == 0 and minutes_count == 60 / minute_interval.?) {
+        if (hours_count == 24 and minute_interval != null and (if (minute_interval) |v| v else return error.Null) <= 60 and 60 % (if (minute_interval) |v| v else return error.Null) == 0 and minutes_count == 60 / (if (minute_interval) |v| v else return error.Null)) {
             break :blk true; // Case 1
         }
-        if (minutes_count == 1 and hour_interval != null and hour_interval.? <= 24 and 24 % hour_interval.? == 0 and hours_count == 24 / hour_interval.?) {
+        if (minutes_count == 1 and hour_interval != null and (if (hour_interval) |v| v else return error.Null) <= 24 and 24 % (if (hour_interval) |v| v else return error.Null) == 0 and hours_count == 24 / (if (hour_interval) |v| v else return error.Null)) {
             break :blk true; // Case 2
         }
         break :blk false;
@@ -1533,7 +1534,7 @@ fn cronToTaskXml(
 
         if (hours_count == 24) {
             // Case 1: minute-based repetition
-            const m = minute_interval.?;
+            const m = (if (minute_interval) |v| v else return error.Null);
             if (m == 1) {
                 try xml.appendSlice("      <Repetition><Interval>PT1M</Interval></Repetition>\n");
             } else {
@@ -1542,7 +1543,7 @@ fn cronToTaskXml(
             }
         } else {
             // Case 2: hour-based repetition
-            const h = hour_interval.?;
+            const h = (if (hour_interval) |v| v else return error.Null);
             if (h > 1) {
                 const rep = std.fmt.bufPrint(&line_buf, "      <Repetition><Interval>PT{d}H</Interval></Repetition>\n", .{h}) catch return error.InvalidCron;
                 try xml.appendSlice(rep);

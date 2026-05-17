@@ -964,3 +964,4 @@ const mimalloc = bun.mimalloc;
 const internal = @import("zlib-internal");
 const DataType = @import("zlib-internal").DataType;
 const zStream_struct = @import("zlib-internal").zStream_struct;
+const safe = @import("safe");

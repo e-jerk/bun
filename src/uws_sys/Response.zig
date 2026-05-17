@@ -268,7 +268,7 @@ pub fn NewResponse(ssl_flag: i32) type {
                 const handler_fn = handler;
                 const Args = *@TypeOf(args_tuple);
                 pub fn handle(user_data: ?*anyopaque) callconv(.c) void {
-                    const args: Args = @ptrCast(@alignCast(user_data.?));
+                    const args: Args = @ptrCast(@alignCast(if (user_data) |__zust_v| __zust_v else return error.Null));
                     @call(bun.callmod_inline, handler_fn, args.*);
                 }
             };
@@ -290,7 +290,7 @@ pub fn NewResponse(ssl_flag: i32) type {
                         });
                     } else {
                         @call(bun.callmod_inline, handler, .{
-                            @as(UserDataType, @ptrCast(@alignCast(user_data.?))),
+                            @as(UserDataType, @ptrCast(@alignCast(if (user_data) |__zust_v| __zust_v else return error.Null))),
                         });
                     }
                 }
@@ -775,6 +775,7 @@ const c = struct {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 
 const uws = bun.uws;

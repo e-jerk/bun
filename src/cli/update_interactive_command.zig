@@ -1,4 +1,5 @@
 pub const TerminalHyperlink = struct {
+const safe = @import("safe");
     link: []const u8,
     text: []const u8,
     enabled: bool,
@@ -1206,7 +1207,9 @@ pub const UpdateInteractiveCommand = struct {
             }
         }
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             // Check for terminal resize
             const current_size = getTerminalSize();
             if (current_size.width != last_terminal_width) {
@@ -1278,7 +1281,7 @@ pub const UpdateInteractiveCommand = struct {
                     const selected = state.selected[i];
 
                     // Check if we need a header and if we have room for it
-                    const needs_header = current_dep_type == null or !strings.eql(current_dep_type.?, pkg.dependency_type);
+                    const needs_header = current_dep_type == null or !strings.eql((if (current_dep_type) |v| v else return error.Null), pkg.dependency_type);
 
                     // Print dependency type header with column headers if changed
                     if (needs_header) {

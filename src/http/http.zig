@@ -353,7 +353,7 @@ pub fn retryFromH2(this: *HTTPClient) void {
     this.flags.protocol = .http1_1;
     this.h2_retries += 1;
     const body = this.state.original_request_body;
-    const body_out = this.state.body_out_str.?;
+    const body_out = if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null;
     this.state.original_request_body = .{ .bytes = "" };
     this.state.reset(this.allocator);
     this.start(body, body_out);
@@ -430,7 +430,7 @@ pub fn onClose(
         client.allow_retry = false;
         // we need to retry the request, clean up the response message buffer and start again
         client.state.response_message_buffer.deinit();
-        client.start(client.state.original_request_body, client.state.body_out_str.?);
+        client.start(client.state.original_request_body, if (client.state.body_out_str) |__zust_v| __zust_v else return error.Null);
         return;
     }
 
@@ -1139,7 +1139,7 @@ pub fn doRedirect(
 
     this.state.response_message_buffer.deinit();
 
-    const body_out_str = this.state.body_out_str.?;
+    const body_out_str = if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null;
     this.remaining_redirect_count -|= 1;
     this.flags.redirected = true;
     assert(this.redirect_type == FetchRedirect.follow);
@@ -1898,7 +1898,9 @@ pub fn handleOnDataHeaders(
         needs_move = false;
     }
 
-    while (true) {
+    var __loop_limit: u64 = 0;
+
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         var amount_read: usize = 0;
 
         // we reset the pending_response each time wich means that on parse error this will be always be empty
@@ -1964,7 +1966,7 @@ pub fn handleOnDataHeaders(
 
         break;
     }
-    var response = this.state.pending_response.?;
+    var response = if (this.state.pending_response) |__zust_v| __zust_v else return error.Null;
     const should_continue = this.handleResponseMetadata(
         &response,
     ) catch |err| {
@@ -2209,7 +2211,7 @@ pub fn cloneMetadata(this: *HTTPClient) void {
     assert(this.state.pending_response != null);
     if (this.state.pending_response) |response| {
         if (this.state.cloned_metadata != null) {
-            this.state.cloned_metadata.?.deinit(this.allocator);
+            (if (this.state.cloned_metadata) |__zust_v| __zust_v else return error.Null).deinit(this.allocator);
             this.state.cloned_metadata = null;
         }
         var builder_ = StringBuilder{};
@@ -2226,7 +2228,7 @@ pub fn cloneMetadata(this: *HTTPClient) void {
 
         const href = builder.append(this.url.href);
         this.state.cloned_metadata = .{
-            .owned_buf = builder.ptr.?[0..builder.cap],
+            .owned_buf = (if (builder.ptr) |__zust_v| __zust_v else return error.Null)[0..builder.cap],
             .response = cloned_response,
             .url = href,
         };
@@ -2283,7 +2285,7 @@ pub fn drainResponseBody(this: *HTTPClient, comptime is_ssl: bool, socket: NewHT
 
 fn sendProgressUpdateWithoutStageCheck(this: *HTTPClient, comptime is_ssl: bool, ctx: *NewHTTPContext(is_ssl), socket: NewHTTPContext(is_ssl).HTTPSocket) void {
     if (this.flags.protocol != .http1_1) return this.sendProgressUpdateMultiplexed();
-    const out_str = this.state.body_out_str.?;
+    const out_str = if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null;
     const body = out_str.*;
     const result = this.toResult();
     const is_done = !result.has_more;
@@ -2371,7 +2373,7 @@ fn sendProgressUpdateWithoutStageCheck(this: *HTTPClient, comptime is_ssl: bool,
 /// transport, so there is no `ctx`/`socket` to hand back to the pool here.
 fn sendProgressUpdateMultiplexed(this: *HTTPClient) void {
     bun.debugAssert(this.flags.protocol != .http1_1);
-    const out_str = this.state.body_out_str.?;
+    const out_str = if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null;
     const body = out_str.*;
     const result = this.toResult();
     const is_done = !result.has_more;
@@ -2405,7 +2407,7 @@ fn doRedirectMultiplexed(this: *HTTPClient) void {
     else
         "";
     this.state.response_message_buffer.deinit();
-    const body_out_str = this.state.body_out_str.?;
+    const body_out_str = if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null;
     this.remaining_redirect_count -|= 1;
     this.flags.redirected = true;
     assert(this.redirect_type == FetchRedirect.follow);
@@ -2586,8 +2588,8 @@ pub fn handleResponseBody(this: *HTTPClient, incoming_data: []const u8, is_only_
     assert(this.state.transfer_encoding == .identity);
     const content_length = this.state.content_length;
     // is it exactly as much as we need?
-    if (is_only_buffer and content_length != null and incoming_data.len >= content_length.?) {
-        try handleResponseBodyFromSinglePacket(this, incoming_data[0..content_length.?]);
+    if (is_only_buffer and content_length != null and incoming_data.len >= if (content_length) |__zust_v| __zust_v else return error.Null) {
+        try handleResponseBodyFromSinglePacket(this, incoming_data[0..if (content_length) |__zust_v| __zust_v else return error.Null]);
         return true;
     } else {
         return handleResponseBodyFromMultiplePackets(this, incoming_data);
@@ -2610,7 +2612,7 @@ fn handleResponseBodyFromSinglePacket(this: *HTTPClient, incoming_data: []const 
     if (this.state.flags.is_redirect_pending) return;
 
     if (this.state.encoding.isCompressed()) {
-        try this.state.decompressBytes(incoming_data, this.state.body_out_str.?, true);
+        try this.state.decompressBytes(incoming_data, if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null, true);
     } else {
         try this.state.getBodyBuffer().appendSliceExact(incoming_data);
     }
@@ -2632,7 +2634,7 @@ fn handleResponseBodyFromMultiplePackets(this: *HTTPClient, incoming_data: []con
 
     var remainder: []const u8 = undefined;
     if (content_length != null) {
-        const remaining_content_length = content_length.? -| this.state.total_body_received;
+        const remaining_content_length = if (content_length) |__zust_v| __zust_v else return error.Null -| this.state.total_body_received;
         remainder = incoming_data[0..@min(incoming_data.len, remaining_content_length)];
     } else {
         remainder = incoming_data;
@@ -2656,7 +2658,7 @@ fn handleResponseBodyFromMultiplePackets(this: *HTTPClient, incoming_data: []con
     }
 
     // done or streaming
-    const is_done = content_length != null and this.state.total_body_received >= content_length.?;
+    const is_done = content_length != null and this.state.total_body_received >= if (content_length) |__zust_v| __zust_v else return error.Null;
     if (is_done or this.signals.get(.response_body_streaming) or content_length == null) {
         const is_final_chunk = is_done;
         const processed = try this.state.processBodyBuffer(buffer.*, is_final_chunk);
@@ -2817,7 +2819,7 @@ fn handleResponseBodyChunkedEncodingFromSinglePacket(
         else => {
             this.state.flags.received_last_chunk = true;
             try this.handleResponseBodyFromSinglePacket(buffer);
-            assert(this.state.body_out_str.?.list.items.ptr != buffer.ptr);
+            assert((if (this.state.body_out_str) |__zust_v| __zust_v else return error.Null).list.items.ptr != buffer.ptr);
             if (this.progress_node) |progress| {
                 progress.activate();
                 progress.setCompletedItems(buffer.len);
@@ -3244,7 +3246,7 @@ pub fn handleResponseMetadata(
         return ShouldContinue.continue_streaming;
     }
 
-    if (this.method.hasBody() and (content_length == null or content_length.? > 0 or !this.state.flags.allow_keepalive or this.state.transfer_encoding == .chunked or is_server_sent_events)) {
+    if (this.method.hasBody() and (content_length == null or if (content_length) |__zust_v| __zust_v else return error.Null > 0 or !this.state.flags.allow_keepalive or this.state.transfer_encoding == .chunked or is_server_sent_events)) {
         return ShouldContinue.continue_streaming;
     } else {
         return ShouldContinue.finished;
@@ -3292,6 +3294,7 @@ const std = @import("std");
 const URL = @import("../url/url.zig").URL;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const Global = bun.Global;

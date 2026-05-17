@@ -1,3 +1,4 @@
+const safe = @import("safe");
 var path_buf: bun.PathBuffer = undefined;
 var path_buf2: bun.PathBuffer = undefined;
 
@@ -1387,10 +1388,10 @@ pub const TestCommand = struct {
         }
 
         var env_loader = brk: {
-            const map = try ctx.allocator.create(DotEnv.Map);
+            const map = try safe.Box(DotEnv.Map,0,0,0).init(ctx.allocator, undefined);
             map.* = DotEnv.Map.init(ctx.allocator);
 
-            const loader = try ctx.allocator.create(DotEnv.Loader);
+            const loader = try safe.Box(DotEnv.Loader,0,0,0).init(ctx.allocator, undefined);
             loader.* = DotEnv.Loader.init(map, ctx.allocator);
             break :brk loader;
         };
@@ -1412,7 +1413,7 @@ pub const TestCommand = struct {
         var inline_snapshots_to_write = std.AutoArrayHashMap(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
         jsc.VirtualMachine.isBunTest = true;
 
-        var reporter = try ctx.allocator.create(CommandLineReporter);
+        var reporter = try safe.Box(CommandLineReporter,0,0,0).init(ctx.allocator, undefined);
         defer {
             if (reporter.reporters.junit) |file_reporter| {
                 file_reporter.deinit();
@@ -2019,7 +2020,9 @@ pub const TestCommand = struct {
     fn runEventLoopForWatch(vm: *jsc.VirtualMachine) void {
         vm.eventLoop().tickPossiblyForever();
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             while (vm.isEventLoopAlive()) {
                 vm.tick();
                 vm.eventLoop().autoTickActive();

@@ -1,4 +1,5 @@
 pub const css = @import("./css_parser.zig");
+const safe = @import("safe");
 pub const Error = css.Error;
 
 const Length = css.css_values.length.Length;
@@ -1049,8 +1050,8 @@ pub fn QueryFeature(comptime FeatureId: type) type {
             }
 
             if (input.tryParse(consumeOperationOrColon, .{false}).asValue()) |end_operator_| {
-                const start_operator = operator.?;
-                const end_operator = end_operator_.?;
+                const start_operator = if (operator) |v| v else return error.Null;
+                const end_operator = if (end_operator_) |v| v else return error.Null;
                 // Start and end operators must be matching.
                 const GT: u8 = comptime @intFromEnum(MediaFeatureComparison.@"greater-than");
                 const GTE: u8 = comptime @intFromEnum(MediaFeatureComparison.@"greater-than-equal");

@@ -524,4 +524,5 @@ const ref_defs_mod = @import("./ref_defs.zig");
 const RefDef = ref_defs_mod.RefDef;
 
 const types = @import("./types.zig");
+const safe = @import("safe");
 const OFF = types.OFF;

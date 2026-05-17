@@ -1,4 +1,5 @@
 const Echo = @This();
+const safe = @import("safe");
 
 /// Should be allocated with the arena from Builtin
 output: std.array_list.Managed(u8),
@@ -204,8 +205,8 @@ pub fn onIOWriterChunk(this: *Echo, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        defer e.?.deref();
-        return this.bltn().done(e.?.getErrno());
+        defer (if (e) |v| v else return error.Null).deref();
+        return this.bltn().done((if (e) |v| v else return error.Null).getErrno());
     }
 
     this.state = .done;

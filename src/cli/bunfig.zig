@@ -1,4 +1,5 @@
 pub const MacroImportReplacementMap = bun.StringArrayHashMap(string);
+const safe = @import("safe");
 pub const MacroMap = bun.StringArrayHashMapUnmanaged(MacroImportReplacementMap);
 pub const BundlePackageOverride = bun.StringArrayHashMapUnmanaged(options.BundleOverride);
 const LoaderMap = bun.StringArrayHashMapUnmanaged(options.Loader);
@@ -512,7 +513,7 @@ pub const Bunfig = struct {
             if (comptime cmd.isNPMRelated() or cmd == .RunCommand or cmd == .AutoCommand or cmd == .TestCommand) {
                 if (json.getObject("install")) |install_obj| {
                     var install: *api.BunInstall = this.ctx.install orelse brk: {
-                        const install = try this.allocator.create(api.BunInstall);
+                        const install = try safe.Box(api.BunInstall,0,0,0).init(this.allocator, undefined);
                         install.* = std.mem.zeroes(api.BunInstall);
                         this.ctx.install = install;
                         break :brk install;

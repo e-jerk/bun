@@ -269,7 +269,10 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
                 };
 
                 var did_retry = false;
+                var move_loop_limit: u32 = 0;
                 while (true) {
+                    if (move_loop_limit > 100) return error.ExtractionFailed;
+                    move_loop_limit += 1;
                     bun.sys.moveFileZ(.fromStdDir(tmpdir), if (this.os == .windows) "bun.exe" else "bun", bun.invalid_fd, dest_z) catch {
                         if (!did_retry) {
                             did_retry = true;

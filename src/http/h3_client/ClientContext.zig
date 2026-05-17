@@ -31,7 +31,7 @@ pub fn getOrCreate(loop: *uws.Loop) ?*ClientContext {
     ) orelse return null;
     callbacks.register(qctx);
 
-    const self = bun.handleOom(bun.default_allocator.create(ClientContext));
+    const self = bun.handleOom(safe.Box(ClientContext).init(bun.default_allocator, undefined));
     self.* = .{ .qctx = qctx };
     instance = self;
     return self;
@@ -111,6 +111,7 @@ const callbacks = @import("./callbacks.zig");
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const HTTPClient = bun.http;
 
 const uws = bun.uws;

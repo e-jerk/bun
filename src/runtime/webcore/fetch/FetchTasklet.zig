@@ -1,4 +1,5 @@
 pub const FetchTasklet = struct {
+const safe = @import("safe");
     pub const ResumableSink = jsc.WebCore.ResumableFetchSink;
 
     const log = Output.scoped(.FetchTasklet, .visible);
@@ -930,7 +931,7 @@ pub const FetchTasklet = struct {
     }
 
     fn onStreamCancelledCallback(ctx: ?*anyopaque) void {
-        const this = bun.cast(*FetchTasklet, ctx.?);
+        const this = bun.cast(*FetchTasklet, (if (ctx) |v| v else return error.Null));
         if (this.ignore_data) return;
         this.ignoreRemainingResponseBody();
     }

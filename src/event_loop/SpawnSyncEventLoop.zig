@@ -72,7 +72,7 @@ pub fn init(self: *SpawnSyncEventLoop, vm: *jsc.VirtualMachine) void {
 }
 
 fn onCloseUVTimer(timer: *bun.windows.libuv.Timer) callconv(.c) void {
-    bun.default_allocator.destroy(timer);
+    _ = timer.deinit();
 }
 
 pub fn deinit(this: *SpawnSyncEventLoop) void {
@@ -127,7 +127,7 @@ const TickState = enum { timeout, completed };
 
 fn prepareTimerOnWindows(this: *SpawnSyncEventLoop, ts: *const bun.timespec) void {
     const timer: *bun.windows.libuv.Timer = this.uv_timer orelse brk: {
-        const uv_timer: *bun.windows.libuv.Timer = bun.default_allocator.create(bun.windows.libuv.Timer) catch |e| bun.handleOom(e);
+        const uv_timer: *bun.windows.libuv.Timer = try safe.Box(bun.windows.libuv.Timer).init(bun.default_allocator, undefined) catch |e| bun.handleOom(e);
         uv_timer.* = std.mem.zeroes(bun.windows.libuv.Timer);
         uv_timer.init(this.uws_loop.uv_loop);
         break :brk uv_timer;
@@ -167,8 +167,8 @@ pub fn tickWithTimeout(this: *SpawnSyncEventLoop, timeout: ?*const bun.timespec)
 
     if (timeout) |ts| {
         if (bun.Environment.isWindows) {
-            this.uv_timer.?.unref();
-            this.uv_timer.?.stop();
+            (if (this.uv_timer) |__zust_v| __zust_v else return error.Null).unref();
+            (if (this.uv_timer) |__zust_v| __zust_v else return error.Null).stop();
         } else {
             this.did_timeout = bun.timespec.now(.allow_mocked_time).order(ts) != .lt;
         }
@@ -194,6 +194,7 @@ pub fn isActive(this: *const SpawnSyncEventLoop) bool {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const jsc = bun.jsc;
 const uws = bun.uws;
 const libuv = bun.windows.libuv;

@@ -1,4 +1,5 @@
 const SKIP_LIST = .{
+const safe = @import("safe");
     // skip hidden directories
     ".",
 
@@ -224,7 +225,9 @@ pub const PackageFilterIterator = struct {
     }
 
     fn walkerNext(self: *PackageFilterIterator) !?[]const u8 {
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             switch (try self.iter.next()) {
                 .err => |err| {
                     Output.prettyErrorln("Error: {f}", .{err});
@@ -253,7 +256,9 @@ pub const PackageFilterIterator = struct {
     }
 
     pub fn next(self: *PackageFilterIterator) !?[]const u8 {
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             if (!self.valid) {
                 if (self.pattern_idx < self.patterns.len) {
                     try self.initWalker();

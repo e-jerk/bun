@@ -1,4 +1,5 @@
 pub const ACL = @import("../../../s3_signing/acl.zig").ACL;
+const safe = @import("safe");
 pub const S3HttpDownloadStreamingTask = @import("./download_stream.zig").S3HttpDownloadStreamingTask;
 pub const MultiPartUploadOptions = @import("./multipart_options.zig").MultiPartUploadOptions;
 pub const MultiPartUpload = @import("./multipart.zig").MultiPartUpload;
@@ -694,7 +695,7 @@ pub fn readableStream(
         }
 
         fn onStreamCancelled(ctx: ?*anyopaque) void {
-            const self: *@This() = @ptrCast(@alignCast(ctx.?));
+            const self: *@This() = @ptrCast(@alignCast((if (ctx) |v| v else return error.Null)));
             // Release the Strong ref so the ReadableStream can be GC'd.
             // The download may still be in progress, but the callback will
             // see readable_stream_ref.get() return null and skip data delivery.

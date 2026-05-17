@@ -1,6 +1,7 @@
 //! This is the code for the object returned by Bun.listen().
 
 const Listener = @This();
+const safe = @import("safe");
 
 handlers: Handlers,
 listener: ListenerType = .none,
@@ -155,7 +156,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
                 socket.strong_data = .create(socket_config.default_data, globalObject);
             }
 
-            const this: *Listener = bun.handleOom(handlers.vm.allocator.create(Listener));
+            const this: *Listener = bun.handleOom(safe.Box(Listener,0,0,0).init(handlers.vm.allocator, undefined));
             this.* = socket;
             // TODO: server_name is not supported on named pipes, I belive its , lets wait for
             // someone to ask for it
@@ -168,7 +169,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
                 this.strong_data.deinit();
                 this.connection.deinit();
                 if (this.protos) |protos| bun.default_allocator.free(protos);
-                handlers.vm.allocator.destroy(this);
+                defer _ = this.deinit();
             }
 
             // we need to add support for the backlog parameter on listen here we use the
@@ -197,7 +198,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
     // Allocate the Listener up front so the embedded `group` has its final
     // address before we hand it to listen() (it's linked into the loop's
     // intrusive list).
-    var this: *Listener = bun.handleOom(handlers.vm.allocator.create(Listener));
+    var this: *Listener = bun.handleOom(safe.Box(Listener,0,0,0).init(handlers.vm.allocator, undefined));
     this.* = .{
         .handlers = handlers.*,
         .connection = undefined, // set after listen succeeds
@@ -221,7 +222,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
         if (this.protos) |p| bun.default_allocator.free(p);
         bun.asan.unregisterRootRegion(&this.group, @sizeOf(uws.SocketGroup));
         this.group.deinit();
-        handlers.vm.allocator.destroy(this);
+        defer _ = this.deinit();
     };
 
     if (ssl) |ssl_cfg| {
@@ -497,7 +498,7 @@ pub fn deinit(this: *Listener) void {
         bun.default_allocator.free(protos);
     }
     this.handlers.deinit();
-    vm.allocator.destroy(this);
+    defer _ = this.deinit();
 }
 
 pub fn getConnectionsCount(this: *Listener, _: *jsc.JSGlobalObject) JSValue {
@@ -657,7 +658,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
         if (isNamedPipe) {
             default_data.ensureStillAlive();
 
-            const handlers_ptr = bun.handleOom(handlers.vm.allocator.create(Handlers));
+            const handlers_ptr = bun.handleOom(safe.Box(Handlers,0,0,0).init(handlers.vm.allocator, undefined));
             handlers_ptr.* = handlers.*;
             handlers_ptr.mode = .client;
 
@@ -669,7 +670,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 var tls = if (prev_maybe_tls) |prev| blk: {
                     if (prev.handlers) |prev_handlers| {
                         prev_handlers.deinit();
-                        handlers.vm.allocator.destroy(prev_handlers);
+                        defer _ = prev_handlers.deinit();
                     }
                     bun.assert(prev.this_value.isNotEmpty());
                     prev.handlers = handlers_ptr;
@@ -713,7 +714,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 const named_pipe = switch (connection) {
                     .unix => WindowsNamedPipeContext.connect(
                         globalObject,
-                        pipe_name.?,
+                        (if (pipe_name) |v| v else return error.Null),
                         if (ssl) |s| s.* else null,
                         ctx_for_pipe,
                         .{ .tls = tls },
@@ -733,7 +734,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                     bun.assert(prev.this_value.isNotEmpty());
                     if (prev.handlers) |prev_handlers| {
                         prev_handlers.deinit();
-                        handlers.vm.allocator.destroy(prev_handlers);
+                        defer _ = prev_handlers.deinit();
                     }
                     prev.handlers = handlers_ptr;
                     bun.assert(prev.socket.socket == .detached);
@@ -763,7 +764,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 const named_pipe = switch (connection) {
                     .unix => WindowsNamedPipeContext.connect(
                         globalObject,
-                        pipe_name.?,
+                        (if (pipe_name) |v| v else return error.Null),
                         null,
                         null,
                         .{ .tcp = tcp },
@@ -805,7 +806,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
 
     default_data.ensureStillAlive();
 
-    const handlers_ptr = bun.handleOom(handlers.vm.allocator.create(Handlers));
+    const handlers_ptr = bun.handleOom(safe.Box(Handlers,0,0,0).init(handlers.vm.allocator, undefined));
     handlers_ptr.* = handlers.*;
     handlers_ptr.mode = .client;
 
@@ -825,7 +826,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 bun.assert(prev.this_value.isNotEmpty());
                 if (prev.handlers) |prev_handlers| {
                     prev_handlers.deinit();
-                    handlers.vm.allocator.destroy(prev_handlers);
+                    defer _ = prev_handlers.deinit();
                 }
                 prev.handlers = handlers_ptr;
                 bun.assert(prev.socket.socket == .detached);

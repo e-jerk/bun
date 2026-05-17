@@ -774,7 +774,8 @@ pub fn GlobWalker_(
             }
 
             pub fn next(this: *Iterator) !Maybe(?MatchedPath) {
-                while (true) {
+                var __loop_limit: u64 = 0;
+                while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
                     switch (this.iter_state) {
                         .matched => |path| {
                             this.iter_state = .get_next;
@@ -1318,7 +1319,7 @@ pub fn GlobWalker_(
                 // Example: src/**/*.js
                 // - Matches: src/bun.js/
                 //            src/bun.js/foo/bar/baz.js
-                if (!is_last and this.matchPatternImpl(next_pattern.?, entry_name)) {
+                if (!is_last and this.matchPatternImpl(if (next_pattern) |__zust_v| __zust_v else return error.Null, entry_name)) {
                     // But if the next pattern is the last
                     // component, it should match and propagate the
                     // double wildcard recursion to the directory's
@@ -1378,8 +1379,8 @@ pub fn GlobWalker_(
             // Handle case b)
             if (!is_last) return pattern.syntax_hint == .Double and
                 component_idx + 1 == this.patternComponents.items.len -| 1 and
-                next_pattern.?.syntax_hint != .Double and
-                this.matchPatternImpl(next_pattern.?, entry_name);
+                (if (next_pattern) |__zust_v| __zust_v else return error.Null).syntax_hint != .Double and
+                this.matchPatternImpl(if (next_pattern) |__zust_v| __zust_v else return error.Null, entry_name);
 
             // Handle case a)
             return this.matchPatternImpl(pattern, entry_name);
@@ -1852,6 +1853,7 @@ const Syscall = bun.sys;
 const Maybe = bun.sys.Maybe;
 
 const std = @import("std");
+const safe = @import("safe");
 const ArrayList = std.ArrayListUnmanaged;
 const mem = std.mem;
 const Arena = std.heap.ArenaAllocator;

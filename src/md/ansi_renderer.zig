@@ -2242,6 +2242,7 @@ const PercentEncoding = @import("../url/url.zig").PercentEncoding;
 const Allocator = std.mem.Allocator;
 
 const types = @import("./types.zig");
+const safe = @import("safe");
 const BlockType = types.BlockType;
 const Renderer = types.Renderer;
 const SpanDetail = types.SpanDetail;

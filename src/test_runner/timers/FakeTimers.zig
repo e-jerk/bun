@@ -1,3 +1,4 @@
+const safe = @import("safe");
 #active: bool = false,
 /// The sorted fake timers. TimerHeap is not optimal here because we need these operations:
 /// - peek/takeFirst (provided by TimerHeap)
@@ -110,7 +111,7 @@ fn fire(this: *FakeTimers, globalObject: *jsc.JSGlobalObject, next: *bun.api.Tim
     if (bun.Environment.ci_assert) {
         const prev = current_time.getTimespecNow();
         bun.assert(prev != null);
-        bun.assert(next.next.eql(&prev.?) or next.next.greater(&prev.?));
+        bun.assert(next.next.eql(&(if (prev) |v| v else return error.Null)) or next.next.greater(&(if (prev) |v| v else return error.Null)));
     }
     const now = next.next;
     current_time.set(globalObject, .{ .offset = &now });
@@ -122,7 +123,9 @@ fn executeUntil(this: *FakeTimers, globalObject: *jsc.JSGlobalObject, until: bun
     const vm = globalObject.bunVM();
     const timers = &vm.timer;
 
-    while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const next = blk: {
             timers.lock.lock();
             defer timers.lock.unlock();

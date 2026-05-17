@@ -60,11 +60,12 @@ pub const ModuleInfoDeserialized = struct {
         switch (self.owner) {
             .module_info => {
                 const mi: *ModuleInfo = @fieldParentPtr("_deserialized", self);
+                const safe = @import("safe");
                 mi.destroy();
             },
             .allocated_slice => |as| {
                 as.allocator.free(as.slice);
-                as.allocator.destroy(self);
+                _ = self.deinit();
             },
         }
     }

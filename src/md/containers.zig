@@ -186,6 +186,7 @@ const Parser = parser_mod.Parser;
 const BlockHeader = Parser.BlockHeader;
 
 const types = @import("./types.zig");
+const safe = @import("safe");
 const Align = types.Align;
 const BlockType = types.BlockType;
 const Container = types.Container;

@@ -1,5 +1,6 @@
 // This is split into a separate function to conserve stack space.
 // On Windows, a single path buffer can take 64 KB.
+const safe = @import("safe");
 fn getArgv0(globalThis: *jsc.JSGlobalObject, PATH: []const u8, cwd: []const u8, pretend_argv0: ?[*:0]const u8, first_cmd: JSValue, allocator: std.mem.Allocator) bun.JSError!struct {
     argv0: [:0]const u8,
     arg0: [:0]u8,
@@ -429,7 +430,7 @@ pub fn spawnMaybeSync(
                     }
 
                     if (comptime Environment.isPosix) {
-                        const terminal = existing_terminal orelse terminal_info.?.terminal;
+                        const terminal = existing_terminal orelse (if (terminal_info) |v| v else return error.Null).terminal;
                         const slave_fd = terminal.getSlaveFd();
                         stdio[0] = .{ .fd = slave_fd };
                         stdio[1] = .{ .fd = slave_fd };

@@ -9,6 +9,7 @@
 //! `toBase64`/`metadata`) is awaited, via `jsc.ConcurrentPromiseTask`.
 
 const Image = @This();
+const safe = @import("safe");
 
 pub const js = jsc.Codegen.JSImage;
 pub const fromJS = js.fromJS;
@@ -945,7 +946,7 @@ pub const PipelineTask = struct {
                 return;
             }
             owned_file = r.bytes.items;
-            break :blk owned_file.?;
+            break :blk (if (owned_file) |v| v else return error.Null);
         } else this.input.slice();
 
         // Header-only fast path for `.metadata()` — Sharp parses just the
@@ -1075,7 +1076,7 @@ pub const PipelineTask = struct {
                 w = @max(1, @as(u32, @intFromFloat(@round(max_in * r))));
             }
             owned = try codecs.resize(rgba, sw, sh, w, h, .box);
-            pixels = owned.?;
+            pixels = (if (owned) |v| v else return error.Null);
         }
         var buf: [thumbhash.max_len]u8 = undefined;
         const hash = thumbhash.encode(&buf, w, h, pixels);

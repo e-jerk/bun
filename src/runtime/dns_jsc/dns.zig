@@ -1,4 +1,5 @@
 const dns = @This();
+const safe = @import("safe");
 
 const GetAddrInfoAsyncCallback = fn (i32, ?*std.c.addrinfo, ?*anyopaque) callconv(.c) void;
 const INET6_ADDRSTRLEN = if (bun.Environment.isWindows) 65 else 46;
@@ -88,7 +89,7 @@ const LibInfo = struct {
             &request.backend.libinfo.machport,
             name_z.ptr,
             null,
-            if (hints != null) &hints.? else null,
+            if (hints != null) &(if (hints) |v| v else return error.Null) else null,
             GetAddrInfoRequest.getAddrInfoAsyncCallback,
             request,
         );
@@ -106,7 +107,7 @@ const LibInfo = struct {
             }
             // Drop the KeepAlive + resolver ref that `GetAddrInfoRequest.init` took.
             request.head.deinit();
-            this.vm.allocator.destroy(request);
+            defer _ = request.deinit();
 
             return promise_value;
         }
@@ -333,7 +334,7 @@ pub fn ResolveInfoRequest(comptime cares_type: type, comptime type_name: []const
                 request.cache = @This().CacheConfig{
                     .pending_cache = true,
                     .entry_cache = false,
-                    .pos_in_pending = @as(u5, @truncate(@field(resolver.?, cache_field).indexOf(cache.new).?)),
+                    .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else return error.Null), cache_field).indexOf(cache.new).?)),
                     .name_len = @as(u9, @truncate(name.len)),
                 };
                 cache.new.lookup = request;
@@ -439,7 +440,7 @@ pub const GetHostByAddrInfoRequest = struct {
             request.cache = @This().CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-                .pos_in_pending = @as(u5, @truncate(@field(resolver.?, cache_field).indexOf(cache.new).?)),
+                .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else return error.Null), cache_field).indexOf(cache.new).?)),
                 .name_len = @as(u9, @truncate(name.len)),
             };
             cache.new.lookup = request;
@@ -532,7 +533,7 @@ pub const CAresNameInfo = struct {
             this.deinit();
             return;
         }
-        var name_info = result.?;
+        var name_info = (if (result) |v| v else return error.Null);
         const array = name_info.toJSResponse(this.globalThis.allocator(), this.globalThis) catch .zero; // TODO: properly propagate exception upwards
         this.onComplete(array);
         return;
@@ -592,7 +593,7 @@ pub const GetNameInfoRequest = struct {
             request.cache = @This().CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-                .pos_in_pending = @as(u5, @truncate(@field(resolver.?, cache_field).indexOf(cache.new).?)),
+                .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else return error.Null), cache_field).indexOf(cache.new).?)),
                 .name_len = @as(u9, @truncate(name.len)),
             };
             cache.new.lookup = request;
@@ -693,7 +694,7 @@ pub const GetAddrInfoRequest = struct {
             request.cache = CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-                .pos_in_pending = @as(u5, @truncate(@field(resolver.?, cache_field).indexOf(cache.new).?)),
+                .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else return error.Null), cache_field).indexOf(cache.new).?)),
                 .name_len = @as(u9, @truncate(query.name.len)),
             };
             cache.new.lookup = request;
@@ -807,9 +808,9 @@ pub const GetAddrInfoRequest = struct {
 
                     // do not free addrinfo when err != 0
                     // https://github.com/ziglang/zig/pull/14242
-                    defer std.c.freeaddrinfo(addrinfo.?);
+                    defer std.c.freeaddrinfo((if (addrinfo) |v| v else return error.Null));
 
-                    this.* = .{ .success = bun.handleOom(GetAddrInfo.Result.toList(default_allocator, addrinfo.?)) };
+                    this.* = .{ .success = bun.handleOom(GetAddrInfo.Result.toList(default_allocator, (if (addrinfo) |v| v else return error.Null))) };
                 }
             },
 
@@ -845,8 +846,8 @@ pub const GetAddrInfoRequest = struct {
                 const any = GetAddrInfo.Result.Any{ .list = result };
                 defer any.deinit();
                 if (this.resolver_for_caching) |resolver| {
-                    // if (this.cache.entry_cache and result != null and result.?.node != null) {
-                    //     resolver.putEntryInCache(this.hash, this.cache.name_len, result.?);
+                    // if (this.cache.entry_cache and result != null and (if (result) |v| v else return error.Null).node != null) {
+                    //     resolver.putEntryInCache(this.hash, this.cache.name_len, (if (result) |v| v else return error.Null));
                     // }
 
                     if (this.cache.pending_cache) {
@@ -868,8 +869,8 @@ pub const GetAddrInfoRequest = struct {
     pub fn onCaresComplete(this: *GetAddrInfoRequest, err_: ?c_ares.Error, timeout: i32, result: ?*c_ares.AddrInfo) void {
         log("onCaresComplete", .{});
         if (this.resolver_for_caching) |resolver| {
-            // if (this.cache.entry_cache and result != null and result.?.node != null) {
-            //     resolver.putEntryInCache(this.hash, this.cache.name_len, result.?);
+            // if (this.cache.entry_cache and result != null and (if (result) |v| v else return error.Null).node != null) {
+            //     resolver.putEntryInCache(this.hash, this.cache.name_len, (if (result) |v| v else return error.Null));
             // }
 
             if (this.cache.pending_cache) {
@@ -951,7 +952,7 @@ pub const CAresReverse = struct {
             this.deinit();
             return;
         }
-        var node = result.?;
+        var node = (if (result) |v| v else return error.Null);
         const array = node.toJSResponse(this.globalThis.allocator(), this.globalThis, "") catch .zero; // TODO: properly propagate exception upwards
         this.onComplete(array);
         return;
@@ -1036,7 +1037,7 @@ pub fn CAresLookup(comptime cares_type: type, comptime type_name: []const u8) ty
                 return;
             }
 
-            var node = result.?;
+            var node = (if (result) |v| v else return error.Null);
             const array = node.toJSResponse(this.globalThis.allocator(), this.globalThis, type_name) catch .zero; // TODO: properly propagate exception upwards
             this.onComplete(array);
             return;
@@ -1125,12 +1126,12 @@ pub const DNSLookup = struct {
             return;
         }
 
-        if (result == null or result.?.node == null) {
+        if (result == null or (if (result) |v| v else return error.Null).node == null) {
             c_ares.Error.ENOTFOUND.toDeferred("getaddrinfo", null, &this.promise).rejectLater(this.globalThis);
             this.deinit();
             return;
         }
-        this.onComplete(result.?);
+        this.onComplete((if (result) |v| v else return error.Null));
     }
 
     pub fn onComplete(this: *DNSLookup, result: *c_ares.AddrInfo) void {
@@ -1189,7 +1190,7 @@ pub const internal = struct {
         return __max_dns_time_to_live_seconds orelse {
             const value = bun.env_var.BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS.get();
             __max_dns_time_to_live_seconds = @truncate(@as(u64, @intCast(value)));
-            return __max_dns_time_to_live_seconds.?;
+            return (if (__max_dns_time_to_live_seconds) |v| v else return error.Null);
         };
     }
 
@@ -1764,7 +1765,7 @@ pub const internal = struct {
                 entry.refcount += 1;
 
                 if (entry.result != null) {
-                    is_cache_hit.?.* = true;
+                    (if (is_cache_hit) |v| v else return error.Null).* = true;
                     log("getaddrinfo({s}) = cache hit", .{host orelse ""});
                     dns_cache_hits_completed += 1;
                 } else {

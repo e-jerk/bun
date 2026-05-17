@@ -1,4 +1,5 @@
 const SelectorMap = std.ArrayListUnmanaged(*LOLHTML.HTMLSelector);
+const safe = @import("safe");
 pub const LOLHTMLContext = struct {
     const RefCount = bun.ptr.RefCount(@This(), "ref_count", deinit, .{});
     pub const ref = RefCount.ref;
@@ -1145,7 +1146,7 @@ pub const TextChunk = struct {
         Callback(
             text_chunk,
             content_slice.slice(),
-            contentOptions != null and contentOptions.?.html,
+            contentOptions != null and (if (contentOptions) |v| v else return error.Null).html,
         ) catch return createLOLHTMLError(globalObject);
 
         return thisObject;
@@ -1342,7 +1343,7 @@ pub const DocEnd = struct {
         Callback(
             this.doc_end.?,
             content_slice.slice(),
-            contentOptions != null and contentOptions.?.html,
+            contentOptions != null and (if (contentOptions) |v| v else return error.Null).html,
         ) catch return createLOLHTMLError(globalObject);
 
         return thisObject;
@@ -1399,7 +1400,7 @@ pub const Comment = struct {
         Callback(
             this.comment.?,
             content_slice.slice(),
-            contentOptions != null and contentOptions.?.html,
+            contentOptions != null and (if (contentOptions) |v| v else return error.Null).html,
         ) catch return createLOLHTMLError(globalObject);
 
         return thisObject;
@@ -1546,7 +1547,7 @@ pub const EndTag = struct {
         Callback(
             this.end_tag.?,
             content_slice.slice(),
-            contentOptions != null and contentOptions.?.html,
+            contentOptions != null and (if (contentOptions) |v| v else return error.Null).html,
         ) catch return createLOLHTMLError(globalObject);
 
         return thisObject;
@@ -1851,7 +1852,7 @@ pub const Element = struct {
         Callback(
             this.element.?,
             content_slice.slice(),
-            contentOptions != null and contentOptions.?.html,
+            contentOptions != null and (if (contentOptions) |v| v else return error.Null).html,
         ) catch return createLOLHTMLError(globalObject);
 
         return thisObject;

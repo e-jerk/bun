@@ -16,4 +16,5 @@ pub fn generate(key: []const u8, data: []const u8, algorithm: bun.jsc.API.Bun.Cr
 }
 
 const bun = @import("bun");
+const safe = @import("safe");
 const boring = bun.BoringSSL.c;

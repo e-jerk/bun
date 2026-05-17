@@ -14,7 +14,7 @@ pub fn run(this: *AnyTask) bun.JSError!void {
     @setRuntimeSafety(false);
     const callback = this.callback;
     const ctx = this.ctx;
-    try callback(ctx.?);
+    try callback(if (ctx) |__zust_v| __zust_v else return error.Null);
 }
 
 pub fn New(comptime Type: type, comptime Callback: anytype) type {
@@ -27,12 +27,13 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
-            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
+            return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(if (this.*) |__zust_v| __zust_v else return error.Null)))});
         }
     };
 }
 
 const bun = @import("bun");
+const safe = @import("safe");
 
 const jsc = bun.jsc;
 const Task = jsc.Task;

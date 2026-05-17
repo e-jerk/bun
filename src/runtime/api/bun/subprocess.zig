@@ -2,6 +2,7 @@
 //! code for `Bun.spawnSync`
 
 const Subprocess = @This();
+const safe = @import("safe");
 
 pub const js = jsc.Codegen.JSSubprocess;
 pub const toJS = js.toJS;
@@ -112,7 +113,7 @@ pub const StdioKind = enum {
 };
 
 pub fn onAbortSignal(subprocess_ctx: ?*anyopaque, _: jsc.JSValue) callconv(.c) void {
-    var this: *Subprocess = @ptrCast(@alignCast(subprocess_ctx.?));
+    var this: *Subprocess = @ptrCast(@alignCast((if (subprocess_ctx) |v| v else return error.Null)));
     this.clearAbortSignal();
     _ = this.tryKill(this.killSignal);
 }
@@ -470,7 +471,7 @@ pub fn disconnect(this: *Subprocess, globalThis: *JSGlobalObject, callframe: *js
 pub fn getConnected(this: *Subprocess, globalThis: *JSGlobalObject) JSValue {
     _ = globalThis;
     const ipc_data = this.ipc();
-    return JSValue.jsBoolean(ipc_data != null and ipc_data.?.isConnected());
+    return JSValue.jsBoolean(ipc_data != null and (if (ipc_data) |v| v else return error.Null).isConnected());
 }
 
 pub fn pid(this: *const Subprocess) i32 {

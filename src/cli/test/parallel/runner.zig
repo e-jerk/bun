@@ -7,6 +7,7 @@
 /// Overridable via BUN_TEST_PARALLEL_SCALE_MS for tests, where debug-build
 /// module load alone can exceed the production 5ms threshold.
 pub const default_scale_up_after_ms = 5;
+const safe = @import("safe");
 
 /// Returns true if files were actually run via the worker pool, false if it
 /// fell back to the sequential path (≤1 effective worker). The caller uses
@@ -322,7 +323,9 @@ pub fn runAsWorker(
             worker_frame.begin(.ready);
             self.cmds.send(worker_frame.finish());
 
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 while (self.cmds.pending_idx == null and !self.cmds.done) {
                     self.vm.eventLoop().tick();
                     if (self.cmds.pending_idx != null or self.cmds.done) break;

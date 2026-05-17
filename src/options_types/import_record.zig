@@ -219,6 +219,7 @@ pub const ImportRecord = struct {
 const std = @import("std");
 
 const bun = @import("bun");
+const safe = @import("safe");
 const fs = bun.fs;
 const logger = bun.logger;
 const Index = bun.ast.Index;

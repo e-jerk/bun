@@ -1,4 +1,5 @@
 //! Implements prompt, alert, and confirm Web API
+const safe = @import("safe");
 comptime {
     const js_alert = jsc.toJSHostFn(alert);
     @export(&js_alert, .{ .name = "WebCore__alert" });
@@ -50,7 +51,9 @@ fn alert(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSErr
     var stdin_buf: [1]u8 = undefined;
     var stdin_reader = stdin.readerStreaming(&stdin_buf);
     const reader = &stdin_reader.interface;
-    while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const byte = reader.takeByte() catch break;
         if (byte == '\n') break;
     }
@@ -162,7 +165,9 @@ pub const prompt = struct {
         delimiter: u8,
         max_size: usize,
     ) !void {
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             if (array_list.items.len == max_size) {
                 return error.StreamTooLong;
             }
@@ -184,7 +189,9 @@ pub const prompt = struct {
         array_list: *std.array_list.Managed(u8),
         delimiter: u8,
     ) !void {
-        while (true) {
+var __loop_limit_3: usize = 0;
+while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
             const byte: u8 = try reader.readByte();
 
             if (byte == delimiter) {

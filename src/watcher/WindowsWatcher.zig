@@ -152,7 +152,8 @@ pub fn next(this: *WindowsWatcher, timeout: Timeout) bun.sys.Maybe(?EventIterato
     var nbytes: w.DWORD = 0;
     var key: w.ULONG_PTR = 0;
     var overlapped: ?*w.OVERLAPPED = null;
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         const rc = w.kernel32.GetQueuedCompletionStatus(this.iocp, &nbytes, &key, &overlapped, @intFromEnum(timeout));
         if (rc == 0) {
             const err = w.kernel32.GetLastError();
@@ -205,7 +206,8 @@ pub fn watchLoopCycle(this: *bun.Watcher) bun.sys.Maybe(void) {
 
     // first wait has infinite timeout - we're waiting for the next event and don't want to spin
     var timeout = WindowsWatcher.Timeout.infinite;
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         var iter = switch (this.platform.next(timeout)) {
             .err => |err| return .{ .err = err },
             .result => |iter| iter orelse break,
@@ -316,6 +318,7 @@ const std = @import("std");
 const w = std.os.windows;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Mutex = bun.Mutex;
 const Output = bun.Output;
 

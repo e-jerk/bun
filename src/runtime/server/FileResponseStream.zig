@@ -9,6 +9,7 @@
 //! once; after it fires the caller must not touch `resp` body methods again.
 
 const FileResponseStream = @This();
+const safe = @import("safe");
 
 ref_count: RefCount,
 resp: AnyResponse,
@@ -234,7 +235,9 @@ fn onSendfile(this: *FileResponseStream) bool {
     }
 
     if (comptime bun.Environment.isLinux) {
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const adjusted = @min(this.sendfile.remain, @as(u64, std.math.maxInt(i32)));
             var off: i64 = @intCast(this.sendfile.offset);
             const rc = std.os.linux.sendfile(
@@ -265,7 +268,9 @@ fn onSendfile(this: *FileResponseStream) bool {
             }
         }
     } else if (comptime bun.Environment.isMac) {
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             var sbytes: std.posix.off_t = @intCast(@min(this.sendfile.remain, @as(u64, std.math.maxInt(i32))));
             const errno = bun.sys.getErrno(std.c.sendfile(
                 this.fd.cast(),

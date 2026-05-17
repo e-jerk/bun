@@ -1,4 +1,5 @@
 const Pwd = @This();
+const safe = @import("safe");
 
 state: union(enum) {
     idle,
@@ -57,7 +58,7 @@ pub fn onIOWriterChunk(this: *Pwd, _: usize, e: ?jsc.SystemError) Yield {
     }
 
     if (e != null) {
-        defer e.?.deref();
+        defer (if (e) |v| v else return error.Null).deref();
         this.state = .err;
         return this.next();
     }

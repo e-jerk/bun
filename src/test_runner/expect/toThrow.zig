@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn toThrow(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JSError!JSValue {
     defer this.postMatch(globalThis);
 
@@ -41,7 +42,7 @@ pub fn toThrow(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFrame
 
         if (!did_throw) return .js_undefined;
 
-        const result: JSValue = result_.?;
+        const result: JSValue = (if (result_) |v| v else return error.Null);
         var formatter = jsc.ConsoleObject.Formatter{ .globalThis = globalThis, .quote_strings = true };
         defer formatter.deinit();
 
@@ -128,10 +129,10 @@ pub fn toThrow(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFrame
     if (did_throw) {
         if (expected_value == .zero or expected_value.isUndefined()) return .js_undefined;
 
-        const result: JSValue = if (result_.?.toError()) |r|
+        const result: JSValue = if ((if (result_) |v| v else return error.Null).toError()) |r|
             r
         else
-            result_.?;
+            (if (result_) |v| v else return error.Null);
 
         const _received_message: ?JSValue = if (result.isObject())
             try result.fastGet(globalThis, .message)

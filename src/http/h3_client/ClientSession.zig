@@ -63,7 +63,7 @@ pub fn enqueue(this: *ClientSession, client: *HTTPClient) void {
     this.ref();
 
     if (this.handshake_done) {
-        this.qsocket.?.makeStream();
+        (if (this.qsocket) |__zust_v| __zust_v else return error.Null).makeStream();
     }
 }
 

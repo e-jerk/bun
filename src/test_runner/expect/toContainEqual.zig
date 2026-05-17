@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn toContainEqual(
     this: *Expect,
     globalThis: *JSGlobalObject,
@@ -70,7 +71,7 @@ pub fn toContainEqual(
                 entry_: ?*anyopaque,
                 item: JSValue,
             ) callconv(.c) void {
-                const entry = bun.cast(*ExpectedEntry, entry_.?);
+                const entry = bun.cast(*ExpectedEntry, (if (entry_) |v| v else return error.Null));
                 if (item.jestDeepEquals(entry.expected, entry.globalThis) catch return) {
                     entry.pass.* = true;
                     // TODO(perf): break out of the `forEach` when a match is found

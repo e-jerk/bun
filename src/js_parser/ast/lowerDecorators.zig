@@ -7,6 +7,7 @@ pub fn LowerDecorators(
 ) type {
     return struct {
         const P = js_parser.NewParser_(parser_feature__typescript, parser_feature__jsx, parser_feature__scan_only);
+        const safe = @import("safe");
 
         // ── Types ────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ pub fn LowerDecorators(
         fn makeStaticBlock(p: *P, expr: Expr, l: logger.Loc) Property {
             const stmts = bun.handleOom(p.allocator.alloc(Stmt, 1));
             stmts[0] = p.s(S.SExpr{ .value = expr }, l);
-            const sb = bun.handleOom(p.allocator.create(G.ClassStaticBlock));
+            const sb = bun.handleOom(safe.Box(G.ClassStaticBlock, 0, 0, 0).init(p.allocator, undefined));
             sb.* = .{ .loc = l, .stmts = bun.BabyList(Stmt).fromOwnedSlice(stmts) };
             return .{ .kind = .class_static_block, .class_static_block = sb };
         }
@@ -834,7 +835,7 @@ pub fn LowerDecorators(
                             p.newExpr(E.This{}, loc),
                             useRef(p, wm_ref, loc),
                         }) }, loc);
-                        const get_fn = bun.handleOom(p.allocator.create(G.Fn));
+                        const get_fn = bun.handleOom(safe.Box(G.Fn, 0, 0, 0).init(p.allocator, undefined));
                         get_fn.* = .{ .body = .{ .stmts = get_body, .loc = loc } };
 
                         // Setter: set foo(v) { __privateSet(this, _foo, v); }
@@ -847,7 +848,7 @@ pub fn LowerDecorators(
                         }) }, loc);
                         const setter_fn_args = bun.handleOom(p.allocator.alloc(G.Arg, 1));
                         setter_fn_args[0] = .{ .binding = p.b(B.Identifier{ .ref = setter_param_ref }, loc) };
-                        const set_fn = bun.handleOom(p.allocator.create(G.Fn));
+                        const set_fn = bun.handleOom(safe.Box(G.Fn, 0, 0, 0).init(p.allocator, undefined));
                         set_fn.* = .{ .args = setter_fn_args, .body = .{ .stmts = set_body, .loc = loc } };
 
                         var getter_flags = prop.flags;

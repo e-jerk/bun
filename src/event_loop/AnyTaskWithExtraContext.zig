@@ -14,12 +14,12 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
         wrapped: *Ptr,
         pub fn function(this: *anyopaque, extra: *anyopaque) void {
             const that: *@This() = @ptrCast(@alignCast(this));
-            defer bun.default_allocator.destroy(that);
+            defer _ = that.deinit();
             const ctx = that.wrapped;
             @field(Ptr, fieldName)(ctx, extra);
         }
     };
-    const task = bun.handleOom(bun.default_allocator.create(Wrapper));
+    const task = bun.handleOom(safe.Box(Wrapper).init(bun.default_allocator, undefined));
     task.* = Wrapper{
         .any_task = AnyTaskWithExtraContext{
             .callback = &Wrapper.function,
@@ -40,7 +40,7 @@ pub fn run(this: *AnyTaskWithExtraContext, extra: *anyopaque) void {
     @setRuntimeSafety(false);
     const callback = this.callback;
     const ctx = this.ctx;
-    callback(ctx.?, extra);
+    callback(if (ctx) |__zust_v| __zust_v else return error.Null, extra);
 }
 
 pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: anytype) type {
@@ -57,8 +57,8 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
                 bun.callmod_inline,
                 Callback,
                 .{
-                    @as(*Type, @ptrCast(@alignCast(this.?))),
-                    @as(*ContextType, @ptrCast(@alignCast(extra.?))),
+                    @as(*Type, @ptrCast(@alignCast(if (this.*) |__zust_v| __zust_v else return error.Null))),
+                    @as(*ContextType, @ptrCast(@alignCast(if (extra) |__zust_v| __zust_v else return error.Null))),
                 },
             );
         }
@@ -67,6 +67,7 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
 
 const bun = @import("bun");
 const std = @import("std");
+const safe = @import("safe");
 
 const jsc = bun.jsc;
 const Task = jsc.Task;

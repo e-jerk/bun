@@ -1,4 +1,5 @@
 const Glob = @This();
+const safe = @import("safe");
 
 pub const js = jsc.Codegen.JSGlob;
 pub const toJS = js.toJS;
@@ -228,7 +229,7 @@ fn makeGlobWalker(
         switch (try globWalker.initWithCwd(
             arena,
             this.pattern,
-            cwd.?,
+            (if (cwd) |v| v else return error.Null),
             dot,
             absolute,
             follow_symlinks,

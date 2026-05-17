@@ -1,3 +1,4 @@
+const safe = @import("safe");
 extern fn bun_sysconf__SC_NPROCESSORS_ONLN() i32;
 
 pub fn createNodeOsBinding(global: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
@@ -97,7 +98,7 @@ fn cpusImplLinux(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
             // CPU lines are formatted as `cpu0 user nice sys idle iowait irq softirq`
             var toks = std.mem.tokenizeAny(u8, line, " \t");
             const cpu_name = toks.next();
-            if (cpu_name == null or !std.mem.startsWith(u8, cpu_name.?, "cpu")) break; // done with CPUs
+            if (cpu_name == null or !std.mem.startsWith(u8, (if (cpu_name) |v| v else return error.Null), "cpu")) break; // done with CPUs
 
             //NOTE: libuv assumes this is fixed on Linux, not sure that's actually the case
             const scale = 10;

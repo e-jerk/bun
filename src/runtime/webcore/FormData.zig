@@ -2,6 +2,7 @@
 //! struct is webcore (fetch Body) and JSC-heavy; `url/` is JSC-free.
 
 pub const FormData = struct {
+const safe = @import("safe");
     fields: Map,
     buffer: []const u8,
     const log = Output.scoped(.FormData, .visible);
@@ -51,7 +52,7 @@ pub const FormData = struct {
         pub fn deinit(this: *AsyncFormData) void {
             if (this.encoding == .Multipart)
                 this.allocator.free(this.encoding.Multipart);
-            this.allocator.destroy(this);
+            defer _ = this.deinit();
         }
 
         pub fn toJS(this: *AsyncFormData, global: *jsc.JSGlobalObject, data: []const u8, promise: jsc.AnyPromise) bun.JSTerminated!void {

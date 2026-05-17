@@ -1,4 +1,5 @@
 const SFA = std.heap.StackFallbackAllocator(@min(8192, std.heap.page_size_min));
+const safe = @import("safe");
 
 stack_allocator: SFA = undefined,
 bump_allocator: std.mem.Allocator = undefined,
@@ -70,7 +71,7 @@ pub fn pop(this: *ASTMemoryAllocator) void {
 }
 
 pub fn append(this: *ASTMemoryAllocator, comptime ValueType: type, value: anytype) *ValueType {
-    const ptr = this.bump_allocator.create(ValueType) catch unreachable;
+    const ptr = safe.Box(ValueType, 0, 0, 0).init(this.bump_allocator, undefined) catch unreachable;
     ptr.* = value;
     return ptr;
 }

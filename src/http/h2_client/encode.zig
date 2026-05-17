@@ -88,7 +88,7 @@ pub fn writeRequest(session: *ClientSession, client: *HTTPClient, stream: *Strea
             strings.copyLowercaseIfNeeded(h.name, &lower_buf)
         else blk: {
             heap = bun.handleOom(bun.default_allocator.alloc(u8, h.name.len));
-            break :blk strings.copyLowercaseIfNeeded(h.name, heap.?);
+            break :blk strings.copyLowercaseIfNeeded(h.name, if (heap) |__zust_v| __zust_v else return error.Null);
         };
         var never_index = false;
         if (RequestHeader.map.get(name)) |kind| switch (kind) {
@@ -121,7 +121,8 @@ pub fn writeHeaderBlock(session: *ClientSession, stream_id: u31, block: []const 
     const max: usize = session.remote_max_frame_size;
     var remaining = block;
     var first = true;
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         const chunk = remaining[0..@min(remaining.len, max)];
         remaining = remaining[chunk.len..];
         const last = remaining.len == 0;
@@ -140,7 +141,8 @@ pub fn writeHeaderBlock(session: *ClientSession, stream_id: u31, block: []const 
 pub fn writeDataWindowed(session: *ClientSession, stream: *Stream, data: []const u8, end_stream: bool, cap: usize) usize {
     var remaining = data;
     var consumed: usize = 0;
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         const window: usize = @intCast(@max(0, @min(stream.send_window, session.conn_send_window)));
         if (remaining.len > 0 and window == 0) break;
         // Socket-side backpressure: don't keep memcpy'ing into write_buffer
@@ -250,6 +252,7 @@ const local_max_header_list_size = H2.local_max_header_list_size;
 const write_buffer_high_water = H2.write_buffer_high_water;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const HTTPClient = bun.http;
 const picohttp = bun.picohttp;
 const strings = bun.strings;

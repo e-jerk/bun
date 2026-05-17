@@ -1,6 +1,7 @@
 //! libwebp decode/encode for `Bun.Image`.
 //! Dispatch lives in codecs.zig; this file is the codec body.
 
+const safe = @import("safe");
 pub extern fn WebPGetInfo(data: [*]const u8, len: usize, w: *c_int, h: *c_int) c_int;
 extern fn WebPDecodeRGBA(data: [*]const u8, len: usize, w: *c_int, h: *c_int) ?[*]u8;
 extern fn WebPEncodeRGBA(rgba: [*]const u8, w: c_int, h: c_int, stride: c_int, q: f32, out: *?[*]u8) usize;
@@ -127,7 +128,7 @@ pub fn encode(rgba: []const u8, w: u32, h: u32, quality: u8, lossless: bool, icc
     else
         WebPEncodeRGBA(rgba.ptr, @intCast(w), @intCast(h), stride, @floatFromInt(quality), &out);
     if (len == 0 or out == null) return error.EncodeFailed;
-    const bitstream = out.?[0..len];
+    const bitstream = (if (out) |v| v else return error.Null)[0..len];
 
     // Fast path: no profile to attach, so the bare VP8/VP8L RIFF that
     // `WebPEncodeRGBA` produced is already the final container. Avoids the

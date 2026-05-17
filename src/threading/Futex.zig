@@ -38,7 +38,9 @@ pub fn wait(ptr: *const atomic.Value(u32), expect: u32, timeout_ns: ?u64) error{
 pub fn waitForever(ptr: *const atomic.Value(u32), expect: u32) void {
     @branchHint(.cold);
 
-    while (true) {
+    var __loop_limit: u64 = 0;
+
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         Impl.wait(ptr, expect, null) catch |err| switch (err) {
             // Shouldn't happen, but people can override system calls sometimes.
             error.Timeout => continue,
@@ -199,7 +201,9 @@ const DarwinImpl = struct {
             .WAKE_ALL = max_waiters > 1,
         };
 
-        while (true) {
+        var __loop_limit: u64 = 0;
+
+        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
             const addr: *const anyopaque = ptr;
             const status = c.__ulock_wake(flags, addr, 0);
 
@@ -414,6 +418,7 @@ const bun = @import("bun");
 const assert = bun.assert;
 
 const std = @import("std");
+const safe = @import("safe");
 const atomic = std.atomic;
 const c = std.c;
 

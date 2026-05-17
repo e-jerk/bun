@@ -1,4 +1,5 @@
 pub const EventType = enum(u8) {
+const safe = @import("safe");
     Event,
     MessageEvent,
     CloseEvent,
@@ -167,7 +168,9 @@ pub const JestPrettyFormat = struct {
             if (level == .Error) {
                 writer.writeAll(comptime Output.prettyFmt("<r><red>", true)) catch unreachable;
             }
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }
@@ -190,7 +193,9 @@ pub const JestPrettyFormat = struct {
                 writer.writeAll(comptime Output.prettyFmt("<r>", true)) catch unreachable;
             }
         } else {
-            while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }
@@ -755,7 +760,7 @@ pub const JestPrettyFormat = struct {
                 ) callconv(.c) void {
                     if (is_private_symbol) return;
 
-                    const key = key_.?[0];
+                    const key = (if (key_) |v| v else return error.Null)[0];
                     if (key.eqlComptime("constructor")) return;
 
                     var ctx: *@This() = bun.cast(*@This(), ctx_ptr orelse return);

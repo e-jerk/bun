@@ -118,8 +118,10 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
         Futex.waitForever(&this.watch_count, 0);
         i = ptr.i;
         break :brk this.eventlist_bytes[0..ptr.len];
-    } else outer: while (true) {
-        Futex.waitForever(&this.watch_count, 0);
+    } else {
+        var __loop_limit_outer: u64 = 0;
+        outer: while (__loop_limit_outer < 10_000_000) : (__loop_limit_outer += 1) {
+            Futex.waitForever(&this.watch_count, 0);
 
         const rc = std.posix.system.read(
             this.fd.cast(),

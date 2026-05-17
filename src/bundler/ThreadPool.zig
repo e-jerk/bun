@@ -12,6 +12,7 @@ pub const ThreadPool = struct {
     v2: *BundleV2,
 
     const debug = Output.scoped(.ThreadPool, .visible);
+    const safe = @import("safe");
 
     const IOThreadPool = struct {
         var thread_pool: ThreadPoolLib = undefined;
@@ -187,7 +188,7 @@ pub const ThreadPool = struct {
                 return entry.value_ptr.*;
             }
 
-            worker = bun.default_allocator.create(Worker) catch unreachable;
+            worker = safe.Box(Worker, 0, 0, 0).init(bun.default_allocator, undefined) catch unreachable;
             entry.value_ptr.* = worker;
         }
 
@@ -240,7 +241,7 @@ pub const ThreadPool = struct {
                 this.heap.deinit();
             }
 
-            bun.default_allocator.destroy(this);
+            _ = this.deinit();
         }
 
         pub fn get(ctx: *BundleV2) *Worker {
@@ -292,7 +293,7 @@ pub const ThreadPool = struct {
             this.ast_memory_allocator.reset();
 
             this.data = WorkerData{
-                .log = bun.handleOom(allocator.create(Logger.Log)),
+                .log = bun.handleOom(safe.Box(Logger.Log, 0, 0, 0).init(allocator, undefined)),
                 .transpiler = undefined,
             };
             this.data.log.* = Logger.Log.init(allocator);

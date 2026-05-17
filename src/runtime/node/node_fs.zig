@@ -2,6 +2,7 @@
 // for interacting with the filesystem from JavaScript.
 // The top-level functions assume the arguments are already validated
 pub const constants = @import("./node_fs_constant.zig");
+const safe = @import("safe");
 pub const Binding = @import("./node_fs_binding.zig").Binding;
 pub const Watcher = @import("./node_fs_watcher.zig").FSWatcher;
 pub const StatWatcher = @import("./node_fs_stat_watcher.zig").StatWatcher;
@@ -2474,10 +2475,10 @@ pub const Arguments = struct {
             const buffer = try StringOrBuffer.fromJS(ctx, bun.default_allocator, buffer_value orelse {
                 return ctx.throwInvalidArguments("data is required", .{});
             }) orelse {
-                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", buffer_value.?);
+                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else return error.Null));
             };
-            if (buffer_value.?.isString() and !buffer_value.?.isStringLiteral()) {
-                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", buffer_value.?);
+            if ((if (buffer_value) |v| v else return error.Null).isString() and !(if (buffer_value) |v| v else return error.Null).isStringLiteral()) {
+                return ctx.throwInvalidArgumentTypeValue("buffer", "string or TypedArray", (if (buffer_value) |v| v else return error.Null));
             }
 
             var args = Write{
@@ -3492,7 +3493,9 @@ pub const NodeFS = struct {
                 slice = slice[written..];
             }
         } else {
-            outer: while (true) {
+var __loop_limit_1: usize = 0;
+outer: while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 const amt = switch (Syscall.read(src_fd, buf)) {
                     .result => |result| result,
                     .err => |err| return Maybe(Return.CopyFile){ .err = if (src.len > 0) err.withPath(src) else err },
@@ -3524,7 +3527,9 @@ pub const NodeFS = struct {
     // However, sendfile() is supported across devices.
     // Only on Linux. There are constraints though. It cannot be used if the file type does not support
     pub noinline fn copyFileUsingSendfileOnLinuxWithReadWriteFallback(src: [:0]const u8, dest: [:0]const u8, src_fd: FD, dest_fd: FD, stat_size: usize, wrote: *u64) Maybe(Return.CopyFile) {
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             const amt = switch (bun.sys.sendfile(src_fd, dest_fd, std.math.maxInt(i32) - 1)) {
                 .err => {
                     return copyFileUsingReadWriteLoop(src, dest, src_fd, dest_fd, stat_size, wrote);
@@ -3683,7 +3688,9 @@ pub const NodeFS = struct {
             // FreeBSD 13+ has copy_file_range(2). Try the kernel-side copy
             // first; fall back to read/write on cross-device or unsupported
             // fd types.
-            cfr: while (true) {
+var __loop_limit_3: usize = 0;
+cfr: while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
                 const rc = std.c.copy_file_range(src_fd.native(), null, dest_fd.native(), null, std.math.maxInt(i32) - 1, 0);
                 switch (bun.sys.getErrno(rc)) {
                     .SUCCESS => if (rc == 0) {
@@ -3786,7 +3793,9 @@ pub const NodeFS = struct {
 
             if (size == 0) {
                 // copy until EOF
-                while (true) {
+var __loop_limit_4: usize = 0;
+while (true) : (__loop_limit_4 += 1) {
+    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
                     // Linux Kernel 5.3 or later
                     // Not supported in gVisor
                     const written = linux.copy_file_range(src_fd.cast(), &off_in_copy, dest_fd.cast(), &off_out_copy, std.heap.pageSize(), 0);
@@ -4580,7 +4589,7 @@ pub const NodeFS = struct {
         else
             null;
         defer if (is_u16 and args.encoding != .utf8)
-            bun.path_buffer_pool.put(re_encoding_buffer.?);
+            bun.path_buffer_pool.put((if (re_encoding_buffer) |v| v else return error.Null));
 
         while (switch (entry) {
             .err => |err| {
@@ -4657,7 +4666,7 @@ pub const NodeFS = struct {
                         // all encodings besides hex, base64, and base64url are mis-interpreting filesystem bytes.
                         .utf8 => bun.handleOom(entries.append(bun.String.cloneUTF16(utf16_name))),
                         else => |enc| {
-                            const utf8_path = bun.strings.fromWPath(re_encoding_buffer.?, utf16_name);
+                            const utf8_path = bun.strings.fromWPath((if (re_encoding_buffer) |v| v else return error.Null), utf16_name);
                             bun.handleOom(entries.append(jsc.WebCore.encoding.toBunString(utf8_path, enc)));
                         },
                     },
@@ -5365,7 +5374,9 @@ pub const NodeFS = struct {
                 },
             }
         } else {
-            while (true) {
+var __loop_limit_5: usize = 0;
+while (true) : (__loop_limit_5 += 1) {
+    if (__loop_limit_5 > 1_000_000) return error.LoopLimitExceeded;
                 if (args.aborted()) return Maybe(Return.ReadFileWithOptions).aborted;
                 switch (Syscall.read(fd, buf.items.ptr[total..@min(buf.capacity, max_size)])) {
                     .err => |err| return .{ .err = err },
@@ -6677,7 +6688,9 @@ pub const NodeFS = struct {
 
             if (size == 0) {
                 // copy until EOF
-                while (true) {
+var __loop_limit_6: usize = 0;
+while (true) : (__loop_limit_6 += 1) {
+    if (__loop_limit_6 > 1_000_000) return error.LoopLimitExceeded;
                     // Linux Kernel 5.3 or later
                     // Not supported in gVisor
                     const written = linux.copy_file_range(src_fd.cast(), &off_in_copy, dest_fd.cast(), &off_out_copy, std.heap.pageSize(), 0);
@@ -6813,7 +6826,9 @@ pub const NodeFS = struct {
             // freebsd_errno.getErrno).
             var off_in: i64 = 0;
             var off_out: i64 = 0;
-            cfr: while (true) {
+var __loop_limit_7: usize = 0;
+cfr: while (true) : (__loop_limit_7 += 1) {
+    if (__loop_limit_7 > 1_000_000) return error.LoopLimitExceeded;
                 const rc: isize = @bitCast(std.c.copy_file_range(src_fd.native(), &off_in, dest_fd.native(), &off_out, if (size == 0) std.math.maxInt(i32) - 1 else size -| wrote, 0));
                 switch (bun.sys.getErrno(rc)) {
                     .SUCCESS => {
@@ -6955,7 +6970,9 @@ pub fn zigDeleteTree(self: std.fs.Dir, sub_path: []const u8, kind_hint: std.fs.F
         var top = &stack.items[stack.items.len - 1];
         while (try top.iter.next()) |entry| {
             var treat_as_dir = entry.kind == .directory;
-            handle_entry: while (true) {
+var __loop_limit_8: usize = 0;
+handle_entry: while (true) : (__loop_limit_8 += 1) {
+    if (__loop_limit_8 > 1_000_000) return error.LoopLimitExceeded;
                 if (treat_as_dir) {
                     if (stack.unusedCapacitySlice().len >= 1) {
                         var iterable_dir = top.iter.dir.openDir(entry.name, .{
@@ -7047,7 +7064,9 @@ pub fn zigDeleteTree(self: std.fs.Dir, sub_path: []const u8, kind_hint: std.fs.F
             // need to re-open the dir and re-create the iterator.
             var iterable_dir = iterable_dir: {
                 var treat_as_dir = true;
-                handle_entry: while (true) {
+var __loop_limit_9: usize = 0;
+handle_entry: while (true) : (__loop_limit_9 += 1) {
+    if (__loop_limit_9 > 1_000_000) return error.LoopLimitExceeded;
                     if (treat_as_dir) {
                         break :iterable_dir parent_dir.openDir(name, .{
                             .no_follow = true,
@@ -7125,7 +7144,9 @@ fn zigDeleteTreeOpenInitialSubpath(self: std.fs.Dir, sub_path: []const u8, kind_
         // Treat as a file by default
         var treat_as_dir = kind_hint == .directory;
 
-        handle_entry: while (true) {
+var __loop_limit_10: usize = 0;
+handle_entry: while (true) : (__loop_limit_10 += 1) {
+    if (__loop_limit_10 > 1_000_000) return error.LoopLimitExceeded;
             if (treat_as_dir) {
                 break :iterable_dir self.openDir(sub_path, .{
                     .no_follow = true,
@@ -7182,7 +7203,9 @@ fn zigDeleteTreeOpenInitialSubpath(self: std.fs.Dir, sub_path: []const u8, kind_
 }
 
 fn zigDeleteTreeMinStackSizeWithKindHint(self: std.fs.Dir, sub_path: []const u8, kind_hint: std.fs.File.Kind) !void {
-    start_over: while (true) {
+var __loop_limit_11: usize = 0;
+start_over: while (true) : (__loop_limit_11 += 1) {
+    if (__loop_limit_11 > 1_000_000) return error.LoopLimitExceeded;
         var dir = (try zigDeleteTreeOpenInitialSubpath(self, sub_path, kind_hint)) orelse return;
         var cleanup_dir_parent: ?std.fs.Dir = null;
         defer if (cleanup_dir_parent) |*d| d.close();
@@ -7200,11 +7223,15 @@ fn zigDeleteTreeMinStackSizeWithKindHint(self: std.fs.Dir, sub_path: []const u8,
         // Go through each entry and if it is not a directory, delete it. If it is a directory,
         // open it, and close the original directory. Repeat. Then start the entire operation over.
 
-        scan_dir: while (true) {
+var __loop_limit_12: usize = 0;
+scan_dir: while (true) : (__loop_limit_12 += 1) {
+    if (__loop_limit_12 > 1_000_000) return error.LoopLimitExceeded;
             var dir_it = dir.iterateAssumeFirstIteration();
             dir_it: while (try dir_it.next()) |entry| {
                 var treat_as_dir = entry.kind == .directory;
-                handle_entry: while (true) {
+var __loop_limit_13: usize = 0;
+handle_entry: while (true) : (__loop_limit_13 += 1) {
+    if (__loop_limit_13 > 1_000_000) return error.LoopLimitExceeded;
                     if (treat_as_dir) {
                         const new_dir = dir.openDir(entry.name, .{
                             .no_follow = true,

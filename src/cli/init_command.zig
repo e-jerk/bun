@@ -1,4 +1,5 @@
 pub const InitCommand = struct {
+const safe = @import("safe");
     pub fn prompt(
         alloc: std.mem.Allocator,
         comptime label: string,
@@ -85,7 +86,9 @@ pub const InitCommand = struct {
             }
         }
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             if (!initial_draw) {
                 // Move cursor up by number of choices
                 Output.up(choices.len);

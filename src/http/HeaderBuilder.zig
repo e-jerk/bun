@@ -50,7 +50,7 @@ pub fn appendFmt(this: *HeaderBuilder, name: string, comptime fmt: string, args:
 
 pub fn apply(this: *HeaderBuilder, client: *HTTPClient) void {
     client.header_entries = this.entries;
-    client.header_buf = this.content.ptr.?[0..this.content.len];
+    client.header_buf = (if (this.content.ptr) |__zust_v| __zust_v else return error.Null)[0..this.content.len];
 }
 
 const string = []const u8;

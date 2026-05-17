@@ -449,7 +449,8 @@ const PosixBufferedReader = struct {
 
     fn readBlockingPipe(parent: *PosixBufferedReader, resizable_buffer: *std.array_list.Managed(u8), fd: bun.FD, _: isize, received_hup_initially: bool) void {
         var received_hup = received_hup_initially;
-        while (true) {
+        var __loop_limit: u64 = 0;
+        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
             const streaming = parent.vtable.isStreamingEnabled();
             var got_retry = false;
 
@@ -677,7 +678,9 @@ const PosixBufferedReader = struct {
             // Allow falling through
         }
 
-        while (true) {
+        var __loop_limit: u64 = 0;
+
+        while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
             bun.handleOom(resizable_buffer.ensureUnusedCapacity(16 * 1024));
             var buf: []u8 = resizable_buffer.unusedCapacitySlice();
 
@@ -944,8 +947,8 @@ pub const WindowsBufferedReader = struct {
     }
 
     pub fn startWithCurrentPipe(this: *WindowsBufferedReader) bun.sys.Maybe(void) {
-        bun.assert(!this.source.?.isClosed());
-        this.source.?.setData(this);
+        bun.assert(!(if (this.source) |__zust_v| __zust_v else return error.Null).isClosed());
+        (if (this.source) |__zust_v| __zust_v else return error.Null).setData(this);
         this.buffer().clearRetainingCapacity();
         this.flags.is_done = false;
         return this.startReading();
@@ -1248,7 +1251,7 @@ pub const WindowsBufferedReader = struct {
 
     fn onTTYClose(handle: *uv.uv_tty_t) callconv(.c) void {
         const this = bun.cast(*uv.uv_tty_t, handle.data);
-        bun.default_allocator.destroy(this);
+        _ = this.deinit();
     }
 
     pub fn onRead(this: *WindowsBufferedReader, amount: bun.sys.Maybe(usize), slice: []u8, hasMore: ReadState) void {
@@ -1308,6 +1311,7 @@ const PollOrFd = @import("./pipes.zig").PollOrFd;
 const ReadState = @import("./pipes.zig").ReadState;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const Async = bun.Async;
 const jsc = bun.jsc;
 const uv = bun.windows.libuv;

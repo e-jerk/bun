@@ -1,4 +1,5 @@
 pub const PmVersionCommand = struct {
+const safe = @import("safe");
     const VersionType = enum {
         patch,
         minor,
@@ -188,7 +189,9 @@ pub const PmVersionCommand = struct {
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = start_dir;
 
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const package_json_path_z = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.FD.cwd().existsAt(package_json_path_z)) {
                 return try allocator.dupe(u8, current_dir);
@@ -343,7 +346,7 @@ pub const PmVersionCommand = struct {
 
     fn calculateNewVersion(allocator: std.mem.Allocator, current_str: []const u8, version_type: VersionType, specific_version: ?[]const u8, preid: []const u8, cwd: []const u8) bun.OOM![]const u8 {
         if (version_type == .specific) {
-            return try allocator.dupe(u8, specific_version.?);
+            return try allocator.dupe(u8, (if (specific_version) |v| v else return error.Null));
         }
 
         if (version_type == .from_git) {

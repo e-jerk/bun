@@ -1,4 +1,5 @@
 pub const css = @import("../css_parser.zig");
+const safe = @import("safe");
 const Result = css.Result;
 const Printer = css.Printer;
 const PrintErr = css.PrintErr;
@@ -155,22 +156,22 @@ pub fn Calc(comptime V: type) type {
                     if (comptime needs_deinit) {
                         v.deinit(allocator);
                     }
-                    allocator.destroy(this.value);
+                    _ = this.value.deinit();
                 },
                 .number => {},
                 .sum => |sum| {
                     sum.left.deinit(allocator);
                     sum.right.deinit(allocator);
-                    allocator.destroy(sum.left);
-                    allocator.destroy(sum.right);
+                    _ = sum.left.deinit();
+                    _ = sum.right.deinit();
                 },
                 .product => |product| {
                     product.expression.deinit(allocator);
-                    allocator.destroy(product.expression);
+                    _ = product.expression.deinit();
                 },
                 .function => |function| {
                     function.deinit(allocator);
-                    allocator.destroy(function);
+                    _ = function.deinit();
                 },
             };
         }
@@ -463,7 +464,7 @@ pub fn Calc(comptime V: type) type {
                     // Otherwise, if center is known to be less than the maximum, remove the max argument.
                     if (cmp) |cmp_val| {
                         if (cmp_val == std.math.Order.gt) {
-                            const val = max.?;
+                            const val = if (max) |v| v else return error.Null;
                             center = val;
                             max = null;
                         } else {

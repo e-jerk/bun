@@ -1,4 +1,5 @@
 const log = Output.scoped(.@"fs.watch", .hidden);
+const safe = @import("safe");
 const PathWatcher = if (Environment.isWindows) @import("./win_watcher.zig") else @import("./path_watcher.zig");
 
 // TODO: make this a top-level struct
@@ -263,7 +264,7 @@ pub const FSWatcher = struct {
     };
 
     pub fn onPathUpdatePosix(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-        const this = bun.cast(*FSWatcher, ctx.?);
+        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
 
         if (this.verbose) {
             switch (event) {
@@ -283,7 +284,7 @@ pub const FSWatcher = struct {
     }
 
     pub fn onPathUpdateWindows(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-        const this = bun.cast(*FSWatcher, ctx.?);
+        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
 
         if (this.verbose) {
             switch (event) {
@@ -312,7 +313,7 @@ pub const FSWatcher = struct {
     pub const onPathUpdate = if (Environment.isWindows) onPathUpdateWindows else onPathUpdatePosix;
 
     pub fn onUpdateEnd(ctx: ?*anyopaque) void {
-        const this = bun.cast(*FSWatcher, ctx.?);
+        const this = bun.cast(*FSWatcher, (if (ctx) |v| v else return error.Null));
         if (this.verbose) {
             Output.flush();
         }

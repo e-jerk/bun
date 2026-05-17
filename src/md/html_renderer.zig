@@ -489,7 +489,10 @@ pub const HtmlRenderer = struct {
         var i: usize = 0;
         const needle = "&<>\"";
 
+        var escape_loop_limit: u32 = 0;
         while (true) {
+            if (escape_loop_limit > 1_000_000) return;
+            escape_loop_limit += 1;
             const next = bun.strings.indexOfAny(txt[i..], needle) orelse {
                 self.write(txt[i..]);
                 return;

@@ -24,8 +24,8 @@ pub const Context = opaque {
         var qs: ?*Socket = null;
         var pc: ?*PendingConnect = null;
         return switch (us_quic_socket_context_connect(ctx, host, port, sni, @intFromBool(reject_unauthorized), &qs, &pc, user)) {
-            1 => .{ .socket = qs.? },
-            0 => .{ .pending = pc.? },
+            1 => .{ .socket = if (qs) |__zust_v| __zust_v else return error.Null },
+            0 => .{ .pending = if (pc) |__zust_v| __zust_v else return error.Null },
             else => .err,
         };
     }
@@ -49,6 +49,7 @@ pub const Context = opaque {
 };
 
 const bun = @import("bun");
+const safe = @import("safe");
 const uws = bun.uws;
 
 const PendingConnect = uws.quic.PendingConnect;

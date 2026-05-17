@@ -10,7 +10,8 @@
 /// frame is carried over, saving one memcpy of every body byte.
 pub fn parseFrames(session: *ClientSession, buf: []const u8) usize {
     var consumed: usize = 0;
-    while (true) {
+    var __loop_limit: u64 = 0;
+    while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
         const remaining = buf[consumed..];
         if (remaining.len < wire.FrameHeader.byteSize) break;
         var header: wire.FrameHeader = .{ .flags = 0 };
@@ -244,7 +245,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                 }
                 return;
             }
-            const stream = maybe_stream.?;
+            const stream = if (maybe_stream) |__zust_v| __zust_v else return error.Null;
             session.stream_progressed = true;
             if (header.flags & @intFromEnum(wire.HeadersFrameFlags.PADDED) != 0) {
                 fragment = stripPadding(fragment) orelse {
@@ -580,4 +581,5 @@ const local_max_header_list_size = H2.local_max_header_list_size;
 const write_buffer_control_limit = H2.write_buffer_control_limit;
 
 const bun = @import("bun");
+const safe = @import("safe");
 const strings = bun.strings;

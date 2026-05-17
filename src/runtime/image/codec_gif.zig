@@ -13,6 +13,7 @@
 //! default `pages:1` does the same.
 
 const Bits = struct {
+const safe = @import("safe");
     /// Sub-block-aware bit reader. GIF wraps the LZW bitstream in length-
     /// prefixed sub-blocks (≤255 bytes each, terminated by a 0 block), and
     /// codes are LSB-first across byte boundaries — so this pulls one byte at
@@ -217,7 +218,7 @@ fn decodeFrame(bytes: []const u8, lzw_off: usize, w: u32, h: u32, interlace: boo
             written += r[0];
             first = r[1];
         } else if (code == avail and prev != null) {
-            const r = dict.emit(prev.?, clear, idx[written..], &scratch);
+            const r = dict.emit((if (prev) |v| v else return error.Null), clear, idx[written..], &scratch);
             written += r[0];
             first = r[1];
             if (written < npix) {

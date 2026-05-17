@@ -58,6 +58,7 @@
 //! `allocScope.leakSlice(str)` to tell it not to track the allocation anymore
 //! and let `EnvStr` handle it.
 const string = []const u8;
+const safe = @import("safe");
 pub const Arena = std.heap.ArenaAllocator;
 pub const Braces = @import("../shell_parser/braces.zig");
 pub const Syscall = bun.sys;
@@ -1049,7 +1050,7 @@ pub const Interpreter = struct {
         ) catch |err| {
             if (err == bun.shell.ParseError.Lex) {
                 assert(out_lex_result != null);
-                const str = out_lex_result.?.combineErrors(shargs.arena_allocator());
+                const str = (if (out_lex_result) |v| v else return error.Null).combineErrors(shargs.arena_allocator());
                 bun.Output.prettyErrorln("<r><red>error<r>: Failed to run <b>{s}<r> due to error <b>{s}<r>", .{ std.fs.path.basename(path), str });
                 bun.Global.exit(1);
             }
@@ -1118,7 +1119,7 @@ pub const Interpreter = struct {
         const script = ThisInterpreter.parse(shargs.arena_allocator(), src, jsobjs, &[_]bun.String{}, &out_parser, &out_lex_result) catch |err| {
             if (err == bun.shell.ParseError.Lex) {
                 assert(out_lex_result != null);
-                const str = out_lex_result.?.combineErrors(shargs.arena_allocator());
+                const str = (if (out_lex_result) |v| v else return error.Null).combineErrors(shargs.arena_allocator());
                 bun.Output.prettyErrorln("<r><red>error<r>: Failed to run script <b>{s}<r> due to error <b>{s}<r>", .{ path_for_errors, str });
                 bun.Global.exit(1);
             }
@@ -1368,7 +1369,7 @@ pub const Interpreter = struct {
             str.deinit();
         }
         this.vm_args_utf8.deinit();
-        this.allocator.destroy(this);
+        defer _ = this.deinit();
     }
 
     fn #deinitFromExec(this: *ThisInterpreter) void {
@@ -1382,7 +1383,7 @@ pub const Interpreter = struct {
             str.deinit();
         }
         this.vm_args_utf8.deinit();
-        this.allocator.destroy(this);
+        defer _ = this.deinit();
     }
 
     pub fn setQuiet(this: *ThisInterpreter, _: *JSGlobalObject, _: *jsc.CallFrame) bun.JSError!jsc.JSValue {

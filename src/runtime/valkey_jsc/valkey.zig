@@ -3,6 +3,7 @@
 // This file contains the core Valkey client implementation with protocol handling
 
 pub const ValkeyContext = @import("./ValkeyContext.zig");
+const safe = @import("safe");
 
 /// Connection flags to track Valkey client state
 pub const ConnectionFlags = struct {
@@ -541,7 +542,9 @@ pub const ValkeyClient = struct {
             this.read_buffer.write(this.allocator, data) catch @panic("failed to write to read buffer");
 
             // Process as many complete messages from the buffer as possible
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 const remaining_buffer = this.read_buffer.remaining();
                 if (remaining_buffer.len == 0) {
                     break; // Buffer processed completely

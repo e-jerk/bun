@@ -1,4 +1,5 @@
 pub const BunSpawn = struct {
+const safe = @import("safe");
     pub const Action = extern struct {
         pub const FileActionType = enum(u8) {
             none = 0,
@@ -500,7 +501,9 @@ pub const PosixSpawn = struct {
     pub fn waitpid(pid: pid_t, flags: u32) Maybe(WaitPidResult) {
         const PidStatus = c_int;
         var status: PidStatus = 0;
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             const rc = system.waitpid(pid, &status, @as(c_int, @intCast(flags)));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){
@@ -520,7 +523,9 @@ pub const PosixSpawn = struct {
     pub fn wait4(pid: pid_t, flags: u32, usage: ?*process.Rusage) Maybe(WaitPidResult) {
         const PidStatus = c_int;
         var status: PidStatus = 0;
-        while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
             const rc = system.wait4(pid, &status, @as(c_int, @intCast(flags)), @ptrCast(usage));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){

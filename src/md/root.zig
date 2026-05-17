@@ -122,3 +122,4 @@ pub const detectKittyGraphics = ansi.detectKittyGraphics;
 
 const parser = @import("./parser.zig");
 const std = @import("std");
+const safe = @import("safe");

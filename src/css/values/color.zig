@@ -1,4 +1,5 @@
 pub const css = @import("../css_parser.zig");
+const safe = @import("safe");
 pub const Result = css.Result;
 
 const Percentage = css.css_values.percentage.Percentage;
@@ -71,14 +72,14 @@ pub const CssColor = union(enum) {
         pub fn takeLightFreeDark(this: *const @This(), allocator: Allocator) *CssColor {
             const ret = this.light;
             this.dark.deinit(allocator);
-            allocator.destroy(this.dark);
+            _ = this.dark.deinit();
             return ret;
         }
 
         pub fn takeDarkFreeLight(this: *const @This(), allocator: Allocator) *CssColor {
             const ret = this.dark;
             this.light.deinit(allocator);
-            allocator.destroy(this.light);
+            _ = this.light.deinit();
             return ret;
         }
 
@@ -284,19 +285,19 @@ pub const CssColor = union(enum) {
             .current_color => {},
             .rgba => {},
             .lab => {
-                allocator.destroy(this.lab);
+                _ = this.lab.deinit();
             },
             .predefined => {
-                allocator.destroy(this.predefined);
+                _ = this.predefined.deinit();
             },
             .float => {
-                allocator.destroy(this.float);
+                _ = this.float.deinit();
             },
             .light_dark => {
                 this.light_dark.light.deinit(allocator);
                 this.light_dark.dark.deinit(allocator);
-                allocator.destroy(this.light_dark.light);
-                allocator.destroy(this.light_dark.dark);
+                _ = this.light_dark.light.deinit();
+                _ = this.light_dark.dark.deinit();
             },
             .system => {},
         }

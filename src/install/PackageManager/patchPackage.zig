@@ -15,7 +15,7 @@ pub fn doPatchCommit(
     log_level: Options.LogLevel,
 ) !?PatchCommitResult {
     var folder_path_buf: bun.PathBuffer = undefined;
-    var lockfile: *Lockfile = try manager.allocator.create(Lockfile);
+    var lockfile: *Lockfile = try manager.safe.Box(Lockfile, 0, 0, 0).init(allocator, undefined);
     defer lockfile.deinit();
     switch (lockfile.loadFromCwd(manager, manager.allocator, manager.log, true)) {
         .not_found => {
@@ -54,6 +54,7 @@ pub fn doPatchCommit(
 
     var argument = manager.options.positionals[1];
     const arg_kind: PatchArgKind = PatchArgKind.fromArg(argument);
+    const safe = @import("safe");
 
     const not_in_workspace_root = manager.root_package_id.get(lockfile, manager.workspace_name_hash) != 0;
     var free_argument = false;

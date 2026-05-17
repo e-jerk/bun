@@ -1,4 +1,5 @@
 const Path = @This();
+const safe = @import("safe");
 
 // Allow on the stack:
 // - 8 string slices
@@ -664,7 +665,7 @@ pub fn extnamePosixT(comptime T: type, path: []const T) []const T {
             // If this is our first dot, mark it as the start of our extension
             if (startDot == null) {
                 startDot = i;
-            } else if (preDotState != null and preDotState.? != 1) {
+            } else if (preDotState != null and (if (preDotState) |v| v else return error.Null) != 1) {
                 preDotState = 1;
             }
         } else if (startDot != null) {
@@ -921,7 +922,7 @@ pub fn format(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]j
 
     if (try pathObject_ptr.getTruthy(globalObject, "root")) |jsValue| {
         root_slice = try jsValue.toSlice(globalObject, allocator);
-        root = root_slice.?.slice();
+        root = (if (root_slice) |v| v else return error.Null).slice();
     }
     var dir: []const u8 = "";
     var dir_slice: ?jsc.ZigString.Slice = null;
@@ -929,7 +930,7 @@ pub fn format(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]j
 
     if (try pathObject_ptr.getTruthy(globalObject, "dir")) |jsValue| {
         dir_slice = try jsValue.toSlice(globalObject, allocator);
-        dir = dir_slice.?.slice();
+        dir = (if (dir_slice) |v| v else return error.Null).slice();
     }
     var base: []const u8 = "";
     var base_slice: ?jsc.ZigString.Slice = null;
@@ -937,7 +938,7 @@ pub fn format(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]j
 
     if (try pathObject_ptr.getTruthy(globalObject, "base")) |jsValue| {
         base_slice = try jsValue.toSlice(globalObject, allocator);
-        base = base_slice.?.slice();
+        base = (if (base_slice) |v| v else return error.Null).slice();
     }
     var _name: []const u8 = "";
     var _name_slice: ?jsc.ZigString.Slice = null;
@@ -945,7 +946,7 @@ pub fn format(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]j
 
     if (try pathObject_ptr.getTruthy(globalObject, "name")) |jsValue| {
         _name_slice = try jsValue.toSlice(globalObject, allocator);
-        _name = _name_slice.?.slice();
+        _name = (if (_name_slice) |v| v else return error.Null).slice();
     }
     var ext: []const u8 = "";
     var ext_slice: ?jsc.ZigString.Slice = null;
@@ -953,7 +954,7 @@ pub fn format(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]j
 
     if (try pathObject_ptr.getTruthy(globalObject, "ext")) |jsValue| {
         ext_slice = try jsValue.toSlice(globalObject, allocator);
-        ext = ext_slice.?.slice();
+        ext = (if (ext_slice) |v| v else return error.Null).slice();
     }
     return formatJS_T(u8, globalObject, allocator, isWindows, .{ .root = root, .dir = dir, .base = base, .ext = ext, .name = _name });
 }
@@ -1265,11 +1266,11 @@ fn normalizeStringT(comptime T: type, path: []const T, allowAboveRoot: bool, sep
             // Translated from the following JS code:
             //   if (lastSlash === i - 1 || dots === 1) {
             if ((lastSlash == null and i == 0) or
-                (lastSlash != null and i > 0 and lastSlash.? == i - 1) or
-                (dots != null and dots.? == 1))
+                (lastSlash != null and i > 0 and (if (lastSlash) |v| v else return error.Null) == i - 1) or
+                (dots != null and (if (dots) |v| v else return error.Null) == 1))
             {
                 // NOOP
-            } else if (dots != null and dots.? == 2) {
+            } else if (dots != null and (if (dots) |v| v else return error.Null) == 2) {
                 if (bufSize < 2 or
                     lastSegmentLength != 2 or
                     buf[bufSize - 1] != CHAR_DOT or
@@ -1281,7 +1282,7 @@ fn normalizeStringT(comptime T: type, path: []const T, allowAboveRoot: bool, sep
                             bufSize = 0;
                             lastSegmentLength = 0;
                         } else {
-                            bufSize = lastSlashIndex.?;
+                            bufSize = (if (lastSlashIndex) |v| v else return error.Null);
                             // Translated from the following JS code:
                             //   lastSegmentLength =
                             //     res.length - 1 - StringPrototypeLastIndexOf(res, separator);
@@ -1296,7 +1297,7 @@ fn normalizeStringT(comptime T: type, path: []const T, allowAboveRoot: bool, sep
                                 //   lastSegmentLength = res.length;
                                 lastSegmentLength = bufSize;
                             } else {
-                                lastSegmentLength = bufSize - 1 - lastIndexOfSep.?;
+                                lastSegmentLength = bufSize - 1 - (if (lastIndexOfSep) |v| v else return error.Null);
                             }
                         }
                         lastSlash = i;
@@ -1340,7 +1341,7 @@ fn normalizeStringT(comptime T: type, path: []const T, allowAboveRoot: bool, sep
                     bufSize += 1;
                     buf[bufOffset] = separator;
                 }
-                const sliceStart = if (lastSlash != null) lastSlash.? + 1 else 0;
+                const sliceStart = if (lastSlash != null) (if (lastSlash) |v| v else return error.Null) + 1 else 0;
                 const slice = path[sliceStart..i];
 
                 bufOffset = bufSize;
@@ -1349,14 +1350,14 @@ fn normalizeStringT(comptime T: type, path: []const T, allowAboveRoot: bool, sep
 
                 // Translated from the following JS code:
                 //   lastSegmentLength = i - lastSlash - 1;
-                const subtract = if (lastSlash != null) lastSlash.? + 1 else 2;
+                const subtract = if (lastSlash != null) (if (lastSlash) |v| v else return error.Null) + 1 else 2;
                 lastSegmentLength = if (i >= subtract) i - subtract else 0;
             }
             lastSlash = i;
             dots = 0;
             continue;
         } else if (byte == CHAR_DOT and dots != null) {
-            dots = if (dots != null) dots.? + 1 else 0;
+            dots = if (dots != null) (if (dots) |v| v else return error.Null) + 1 else 0;
             continue;
         } else {
             dots = null;
@@ -2042,7 +2043,7 @@ pub fn relativePosixT(comptime T: type, from: []const T, to: []const T, buf: []T
 
         // Translated from the following JS code:
         //  for (i = fromStart + lastCommonSep + 1; i <= fromEnd; ++i) {
-        var i: usize = fromStart + (if (lastCommonSep != null) lastCommonSep.? + 1 else 0);
+        var i: usize = fromStart + (if (lastCommonSep != null) (if (lastCommonSep) |v| v else return error.Null) + 1 else 0);
         while (i <= fromEnd) : (i += 1) {
             if (i == fromEnd or fromOrig[i] == CHAR_FORWARD_SLASH) {
                 // Translated from the following JS code:
@@ -2068,7 +2069,7 @@ pub fn relativePosixT(comptime T: type, from: []const T, to: []const T, buf: []T
 
     // Translated from the following JS code:
     //   return `${out}${StringPrototypeSlice(to, toStart + lastCommonSep)}`;
-    toStart = if (lastCommonSep != null) toStart + lastCommonSep.? else 0;
+    toStart = if (lastCommonSep != null) toStart + (if (lastCommonSep) |v| v else return error.Null) else 0;
     const sliceSize = toOrigLen - toStart;
     const outLen = out.len;
     bufSize = outLen;
@@ -2215,7 +2216,7 @@ pub fn relativeWindowsT(comptime T: type, from: []const T, to: []const T, buf: [
     {
         // Generate the relative path based on the path difference between `to`
         // and `from`.
-        var i: usize = fromStart + (if (lastCommonSep != null) lastCommonSep.? + 1 else 0);
+        var i: usize = fromStart + (if (lastCommonSep != null) (if (lastCommonSep) |v| v else return error.Null) + 1 else 0);
         while (i <= fromEnd) : (i += 1) {
             if (i == fromEnd or fromOrig[i] == CHAR_BACKWARD_SLASH) {
                 // Translated from the following JS code:
@@ -2243,7 +2244,7 @@ pub fn relativeWindowsT(comptime T: type, from: []const T, to: []const T, buf: [
         // mimic String#slice with a negative start.
         toStart = if (toStart > 0) toStart - 1 else toOrigLen - 1;
     } else {
-        toStart += lastCommonSep.?;
+        toStart += (if (lastCommonSep) |v| v else return error.Null);
     }
 
     // Lastly, append the rest of the destination (`to`) path that comes after

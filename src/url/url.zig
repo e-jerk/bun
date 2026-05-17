@@ -1,5 +1,6 @@
 // This is close to WHATWG URL, but we don't want the validation errors
 pub const URL = struct {
+const safe = @import("safe");
     const log = Output.scoped(.URL, .visible);
 
     hash: string = "",
@@ -851,7 +852,7 @@ pub const PercentEncoding = struct {
                             // We can't expect other tools to be as fault tolerant
                             if (i + "PUBLIC_URL%".len < input.len and strings.eqlComptime(input[i + 1 ..][0.."PUBLIC_URL%".len], "PUBLIC_URL%")) {
                                 i += "PUBLIC_URL%".len + 1;
-                                needs_redirect.?.* = true;
+                                (if (needs_redirect) |v| v else return error.Null).* = true;
                                 continue;
                             }
                             return error.DecodingError;
@@ -1005,7 +1006,9 @@ pub const Scanner = struct {
 
         // reuse stack space
         // otherwise we'd recursively call the function
-        loop: while (true) {
+var __loop_limit_1: usize = 0;
+loop: while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             if (this.i >= this.query_string.len) return null;
 
             const slice = this.query_string[this.i..];

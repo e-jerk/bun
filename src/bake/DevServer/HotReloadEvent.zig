@@ -1,5 +1,6 @@
 /// This task informs the DevServer's thread about new files to be bundled.
 pub const HotReloadEvent = @This();
+const safe = @import("safe");
 
 /// Align to cache lines to eliminate false sharing.
 _: u0 align(std.atomic.cache_line) = 0,
@@ -197,7 +198,9 @@ pub fn run(first: *HotReloadEvent) void {
     const timer = first.timer;
 
     var current = first;
-    while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         current.processFileList(dev, &entry_points, temp_alloc);
         current = dev.watcher_atomics.recycleEventFromDevServer(current) orelse break;
         if (comptime Environment.isDebug) {

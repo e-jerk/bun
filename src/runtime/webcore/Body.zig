@@ -1,6 +1,7 @@
 //! https://developer.mozilla.org/en-US/docs/Web/API/Body
 
 const Body = @This();
+const safe = @import("safe");
 
 value: Value, // = Value.empty,
 
@@ -160,11 +161,11 @@ pub const PendingValue = struct {
                         .getBlob => globalThis.readableStreamToBlob(readable.value),
                         .getFormData => |form_data| brk: {
                             defer {
-                                form_data.?.deinit();
+                                (if (form_data) |v| v else return error.Null).deinit();
                                 value.action.getFormData = null;
                             }
 
-                            break :brk globalThis.readableStreamToFormData(readable.value, switch (form_data.?.encoding) {
+                            break :brk globalThis.readableStreamToFormData(readable.value, switch ((if (form_data) |v| v else return error.Null).encoding) {
                                 .Multipart => |multipart| try bun.String.init(multipart).toJS(globalThis),
                                 .URLEncoded => .js_undefined,
                             });

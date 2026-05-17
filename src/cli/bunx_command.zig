@@ -1,4 +1,5 @@
 const debug = Output.scoped(.bunx, .visible);
+const safe = @import("safe");
 
 pub const BunxCommand = struct {
     var path_buf: bun.PathBuffer = undefined;
@@ -114,7 +115,7 @@ pub const BunxCommand = struct {
                 opts.package_name = opts.specified_package.?;
             } else {
                 // Normal case: package_name is the first non-flag argument
-                if (maybe_package_name == null or maybe_package_name.?.len == 0) {
+                if (maybe_package_name == null or (if (maybe_package_name) |v| v else return error.Null).len == 0) {
                     // no need to free memory b/c we're exiting
                     if (has_revision) {
                         cli.printRevisionAndExit();
@@ -124,7 +125,7 @@ pub const BunxCommand = struct {
                         exitWithUsage();
                     }
                 }
-                opts.package_name = maybe_package_name.?;
+                opts.package_name = (if (maybe_package_name) |v| v else return error.Null);
             }
             return opts;
         }

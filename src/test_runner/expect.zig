@@ -1,4 +1,5 @@
 pub const Counter = struct {
+const safe = @import("safe");
     expected: u32 = 0,
     actual: u32 = 0,
 };
@@ -2148,7 +2149,9 @@ fn sanityCheck(input: []const u8, res: Expect.TrimResult) void {
     // sanity check: output has same number of lines & all input lines endWith output lines
     var input_iter = std.mem.splitScalar(u8, input, '\n');
     var output_iter = std.mem.splitScalar(u8, res.trimmed, '\n');
-    while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
         const next_input = input_iter.next();
         const next_output = output_iter.next();
         if (next_input == null) {
@@ -2156,7 +2159,7 @@ fn sanityCheck(input: []const u8, res: Expect.TrimResult) void {
             break;
         }
         std.debug.assert(next_output != null);
-        std.debug.assert(std.mem.endsWith(u8, next_input.?, next_output.?));
+        std.debug.assert(std.mem.endsWith(u8, (if (next_input) |v| v else return error.Null), (if (next_output) |v| v else return error.Null)));
     }
 }
 fn testOne(input: []const u8) anyerror!void {

@@ -1,4 +1,5 @@
 const Fs = @This();
+const safe = @import("safe");
 
 pub const debug = Output.scoped(.fs, .hidden);
 
@@ -364,7 +365,7 @@ pub const FileSystem = struct {
 
             allocator.free(e.dir);
             allocator.free(e.cache.symlink.slice());
-            allocator.destroy(e);
+            _ = e.deinit();
         }
 
         pub const Cache = struct {
@@ -1112,7 +1113,7 @@ pub const FileSystem = struct {
             };
 
             if (comptime FeatureFlags.enable_entry_cache) {
-                const entries_ptr = in_place orelse bun.handleOom(bun.default_allocator.create(DirEntry));
+                const entries_ptr = in_place orelse bun.handleOom(safe.Box(DirEntry,0,0,0).init(bun.default_allocator, undefined));
                 if (in_place) |original| {
                     original.data.clearAndFree(bun.default_allocator);
                 }

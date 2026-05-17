@@ -9,6 +9,7 @@
 //! For questions about DevServer, please consult the delusional @paperclover
 
 const DevServer = @This();
+const safe = @import("safe");
 
 pub const debug = bun.Output.Scoped(.DevServer, .visible);
 pub const igLog = bun.Output.scoped(.IncrementalGraph, .visible);
@@ -1388,7 +1389,9 @@ fn computeArgumentsForFrameworkRequest(
             const keys = dev.server_graph.bundled_files.keys();
             var n: usize = 1;
             var route = dev.router.routePtr(framework_bundle.route_index);
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 if (route.file_layout != .none) n += 1;
                 route = dev.router.routePtr(route.parent.unwrap() orelse break);
             }
@@ -1401,7 +1404,9 @@ fn computeArgumentsForFrameworkRequest(
                 try arr.putIndex(global, 0, try route_name.transferToJS(global));
             }
             n = 1;
-            while (true) {
+var __loop_limit_2: usize = 0;
+while (true) : (__loop_limit_2 += 1) {
+    if (__loop_limit_2 > 1_000_000) return error.LoopLimitExceeded;
                 if (route.file_layout.unwrap()) |layout| {
                     const relative_path_buf = bun.path_buffer_pool.get();
                     defer bun.path_buffer_pool.put(relative_path_buf);
@@ -2165,7 +2170,9 @@ fn traceAllRouteImports(dev: *DevServer, route_bundle: *RouteBundle, gts: *Graph
             }
 
             // For all parents, the layout is considered
-            while (true) {
+var __loop_limit_3: usize = 0;
+while (true) : (__loop_limit_3 += 1) {
+    if (__loop_limit_3 > 1_000_000) return error.LoopLimitExceeded;
                 if (route.file_layout.unwrap()) |id| {
                     try dev.server_graph.traceImports(fromOpaqueFileId(.server, id), gts, goal);
                 }
@@ -3034,7 +3041,9 @@ fn startNextBundleIfPresent(dev: *DevServer) void {
             const reload_event_timer = event.timer;
 
             var current = event;
-            while (true) {
+var __loop_limit_4: usize = 0;
+while (true) : (__loop_limit_4 += 1) {
+    if (__loop_limit_4 > 1_000_000) return error.LoopLimitExceeded;
                 current.processFileList(dev, &entry_points, temp_alloc);
                 current = dev.watcher_atomics.recycleEventFromDevServer(current) orelse break;
                 if (comptime Environment.isDebug) {

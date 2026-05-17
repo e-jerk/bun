@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn cloneActiveStrong() ?BunTestPtr {
     const runner = bun.jsc.Jest.Jest.runner orelse return null;
     return runner.bun_test_root.cloneActiveFile();
@@ -678,7 +679,9 @@ pub const BunTest = struct {
         done_callback.ensureStillAlive();
 
         // Drain unhandled promise rejections.
-        while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
             // Prevent the user's Promise rejection from going into the uncaught promise rejection queue.
             if (result != .zero)
                 if (result.asPromise()) |promise|
@@ -772,7 +775,7 @@ pub const BunTest = struct {
             bun.Output.flush();
         }
 
-        globalThis.bunVM().runErrorHandler(exception.?, null);
+        globalThis.bunVM().runErrorHandler((if (exception) |v| v else return error.Null), null);
 
         if (handle_status == .show_unhandled_error_between_tests or handle_status == .show_unhandled_error_in_describe) {
             bun.Output.prettyError("<r><d>-------------------------------<r>\n\n", .{});

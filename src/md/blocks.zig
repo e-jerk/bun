@@ -104,7 +104,10 @@ pub fn analyzeLine(self: *Parser, off_start: OFF, p_end: *OFF, pivot_line: *cons
     var effective_pivot_type = pivot_line.type;
 
     // Determine line type
+    var loop_limit: u32 = 0;
     while (true) {
+        if (loop_limit > 1_000_000) return error.OutOfMemory;
+        loop_limit += 1;
         // Check for fenced code continuation/closing (BEFORE blank line check, like md4c)
         if (effective_pivot_type == .fencedcode) {
             line.beg = off;
@@ -863,4 +866,3 @@ const Container = types.Container;
 const Line = types.Line;
 const OFF = types.OFF;
 const VerbatimLine = types.VerbatimLine;
--- test commit

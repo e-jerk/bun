@@ -1,4 +1,5 @@
 pub const PublishCommand = struct {
+const safe = @import("safe");
     pub fn Context(comptime directory_publish: bool) type {
         return struct {
             manager: *PackageManager,
@@ -842,7 +843,9 @@ pub const PublishCommand = struct {
                 ctx.manager.options.publish_config.auth_type,
             );
 
-            while (true) {
+var __loop_limit_1: usize = 0;
+while (true) : (__loop_limit_1 += 1) {
+    if (__loop_limit_1 > 1_000_000) return error.LoopLimitExceeded;
                 response_buf.reset();
 
                 var req = http.AsyncHTTP.initSync(

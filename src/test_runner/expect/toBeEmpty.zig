@@ -1,3 +1,4 @@
+const safe = @import("safe");
 pub fn toBeEmpty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JSError!JSValue {
     defer this.postMatch(globalThis);
 
@@ -24,7 +25,7 @@ pub fn toBeEmpty(this: *Expect, globalThis: *JSGlobalObject, callFrame: *CallFra
                         any_: ?*anyopaque,
                         _: JSValue,
                     ) callconv(.c) void {
-                        bun.cast(*bool, any_.?).* = true;
+                        bun.cast(*bool, (if (any_) |v| v else return error.Null)).* = true;
                     }
                 }.anythingInIterator);
                 pass = !any_properties_in_iterator;

@@ -1,4 +1,5 @@
 const WorkspaceMap = @This();
+const safe = @import("safe");
 
 map: Map,
 
@@ -112,9 +113,9 @@ pub fn processNamesArray(
 
     var workspace_globs = std.array_list.Managed(string).init(allocator);
     defer workspace_globs.deinit();
-    const filepath_bufOS = allocator.create(bun.PathBuffer) catch unreachable;
+    const filepath_bufOS = safe.Box(bun.PathBuffer, 0, 0, 0).init(allocator, undefined) catch unreachable;
     const filepath_buf = std.mem.asBytes(filepath_bufOS);
-    defer allocator.destroy(filepath_bufOS);
+    defer _ = filepath_bufOS.deinit();
 
     for (arr.slice()) |item| {
         // TODO: when does this get deallocated?

@@ -1,4 +1,5 @@
 pub const DataURL = @import("./data_url.zig").DataURL;
+const safe = @import("safe");
 pub const DirInfo = @import("./dir_info.zig");
 
 const debuglog = Output.scoped(.Resolver, .hidden);
@@ -926,7 +927,7 @@ pub const Resolver = struct {
             if (maybe_suffix == null or maybe_suffix.? < 1)
                 break :try_without_suffix;
 
-            const suffix = maybe_suffix.?;
+            const suffix = if (maybe_suffix) |v| v else return error.Null;
             if (r.debug_logs) |*debug| {
                 debug.addNoteFmt("Retrying resolution after removing the suffix {s}", .{import_path[suffix..]});
             }
@@ -2302,7 +2303,7 @@ pub const Resolver = struct {
                 existing.data.clearAndFree(allocator);
             }
 
-            var dir_entries_ptr = in_place orelse allocator.create(Fs.FileSystem.DirEntry) catch unreachable;
+            var dir_entries_ptr = in_place orelse safe.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
             dir_entries_ptr.* = new_entry;
 
             if (r.store_fd) {
@@ -2960,7 +2961,7 @@ pub const Resolver = struct {
                     }
                 }
 
-                const safe_path = _safe_path.?;
+                const safe_path = if (_safe_path) |v| v else return error.Null;
 
                 const dir_path_i = std.mem.indexOf(u8, safe_path, queue_top.unsafe_path) orelse unreachable;
                 var end = dir_path_i +
@@ -3010,7 +3011,7 @@ pub const Resolver = struct {
                     existing.data.clearAndFree(allocator);
                 }
                 new_entry.fd = if (r.store_fd) open_dir else .invalid;
-                var dir_entries_ptr = in_place orelse allocator.create(Fs.FileSystem.DirEntry) catch unreachable;
+                var dir_entries_ptr = in_place orelse safe.Box(Fs.FileSystem.DirEntry, 0, 0, 0).init(allocator, undefined) catch unreachable;
                 dir_entries_ptr.* = new_entry;
                 dir_entries_option = try rfs.entries.put(&cached_dir_entry_result, .{
                     .entries = dir_entries_ptr,

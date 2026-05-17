@@ -1,3 +1,4 @@
+const safe = @import("safe");
 var default_manager: ?*PathWatcherManager = null;
 
 // TODO: make this a generic so we can reuse code with path_watcher
@@ -279,7 +280,7 @@ pub fn watch(
 
     const manager = default_manager orelse brk: {
         default_manager = PathWatcherManager.init(vm);
-        break :brk default_manager.?;
+        break :brk (if (default_manager) |v| v else return error.Null);
     };
     var watcher = switch (PathWatcher.init(manager, path, recursive)) {
         .err => |err| return .{ .err = err },

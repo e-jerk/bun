@@ -1,4 +1,5 @@
 pub const CFAbsoluteTime = f64;
+const safe = @import("safe");
 pub const CFTimeInterval = f64;
 pub const CFArrayCallBacks = anyopaque;
 
@@ -121,7 +122,7 @@ pub const CoreFoundation = struct {
 
         InitLibrary();
 
-        return fsevents_cf.?;
+        return (if (fsevents_cf) |v| v else return error.Null);
     }
 
     // We Actually never deinit it
@@ -153,7 +154,7 @@ pub const CoreServices = struct {
 
         InitLibrary();
 
-        return fsevents_cs.?;
+        return (if (fsevents_cs) |v| v else return error.Null);
     }
 
     // We Actually never deinit it
@@ -224,7 +225,7 @@ pub const FSEventsLoop = struct {
         pub fn run(this: *Task) void {
             const callback = this.callback;
             const ctx = this.ctx;
-            callback(ctx.?);
+            callback((if (ctx) |v| v else return error.Null));
         }
 
         pub fn New(comptime Type: type, comptime Callback: anytype) type {
@@ -237,7 +238,7 @@ pub const FSEventsLoop = struct {
                 }
 
                 pub fn wrap(this: ?*anyopaque) void {
-                    @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
+                    @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast((if (this) |v| v else return error.Null))))});
                 }
             };
         }
@@ -630,7 +631,7 @@ pub fn watch(path: string, recursive: bool, callback: FSEventsWatcher.Callback, 
         if (fsevents_default_loop == null) {
             fsevents_default_loop = try FSEventsLoop.init();
         }
-        return FSEventsWatcher.init(fsevents_default_loop.?, path, recursive, callback, updateEnd, ctx);
+        return FSEventsWatcher.init((if (fsevents_default_loop) |v| v else return error.Null), path, recursive, callback, updateEnd, ctx);
     }
 }
 

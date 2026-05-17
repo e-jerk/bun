@@ -1,4 +1,5 @@
 const NodeHTTPResponse = @This();
+const safe = @import("safe");
 
 const log = bun.Output.scoped(.NodeHTTPResponse, .visible);
 
@@ -170,7 +171,7 @@ pub fn upgrade(this: *NodeHTTPResponse, data_value: JSValue, sec_websocket_proto
             }
         }
         sec_websocket_protocol_str = sec_websocket_protocol.toSlice(bun.default_allocator);
-        break :brk sec_websocket_protocol_str.?.slice();
+        break :brk (if (sec_websocket_protocol_str) |v| v else return error.Null).slice();
     };
 
     const sec_websocket_extensions_value = brk: {
@@ -182,7 +183,7 @@ pub fn upgrade(this: *NodeHTTPResponse, data_value: JSValue, sec_websocket_proto
             }
         }
         sec_websocket_extensions_str = sec_websocket_extensions.toSlice(bun.default_allocator);
-        break :brk sec_websocket_extensions_str.?.slice();
+        break :brk (if (sec_websocket_extensions_str) |v| v else return error.Null).slice();
     };
 
     const websocket_key = if (this.upgrade_context.request) |request|
