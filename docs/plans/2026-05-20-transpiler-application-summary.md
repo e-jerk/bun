@@ -3,10 +3,10 @@
 ## Results
 
 - **128 files successfully transpiled** out of 1,305 total `.zig` files (stable baseline)
-- **Transpiler improvements committed**: `4f55bfc` (6 major bug fixes, 48 tests passing)
+- **Transpiler improvements committed**: `4f55bfc` + `d4ca8e2` (11 major bug fixes, 48 tests passing)
 - **Build status**: `vendor/zig/zig build obj` → **PASS** (0 errors)
 - **Test status**: `vendor/zig/zig build test` → 3 pre-existing errors in test runner (`main_test.zig`), unrelated to transpiled code
-- **Bulk expansion attempted**: 529 files with no `safe.Box` changes applied, but 208 compilation errors from remaining transpiler edge cases — reverted to 128-file baseline
+- **Bulk expansion attempted**: 528 files with no `safe.Box` changes applied, reduced to 91 errors, then to 73 errors, but reverting individual erroring files breaks dependent transpiled files — **128 files remain the proven stable set**
 
 ## Why Only 128 Files?
 
@@ -78,27 +78,30 @@ Full list: See `git diff --stat` on commit `68dff1fa7`
 4. **Core runtime files** (`runtime/`, `bun.zig`, `Output.zig`): Too many callers
 5. **Files with no transpiler changes**: 945 files had no `safe.Box` or body modifications
 
-## Transpiler Fixes Implemented (Commit `4f55bfc`)
+## Transpiler Fixes Implemented (Commits `4f55bfc` + `d4ca8e2`)
 
-### Completed Fixes
-1. **Skip `extern` variables entirely** - `handleVarDecl` now detects `extern` keyword and returns early
-2. **Handle `.{}` array init correctly** - arrays keep `undefined` instead of `.{}` (which creates 0-element array literal)
+### Completed Fixes (11 total)
+1. **Skip `extern` variables entirely** - `handleVarDecl` detects `extern` keyword and returns early
+2. **Handle `.{}` array init correctly** - arrays keep `undefined` instead of `.{}` (0-element array literal)
 3. **Fix `std.mem.zeroes()` for non-zeroable types** - skips types containing `*`, `enum`, or `union`
 4. **Skip `*T` → `safe.Box` for public APIs** - `handleFnDecl` checks for `pub` keyword and skips Box conversion
-5. **Scope body rewrite to function body only** - `rewriteBoxDereferencesInBody` now limits scan to function body span instead of entire AST
-6. **Skip labeled while loops for counter insertion** - inserting `var __zust_loop_counter` before `label: while` breaks syntax; now skipped
-7. **Disable for loop pointer capture rewrite** - too fragile in switch arms and single-statement contexts; now adds comment only
+5. **Scope body rewrite to function body only** - `rewriteBoxDereferencesInBody` limits scan to function body span
+6. **Skip labeled while loops for counter insertion** - inserting `var __zust_loop_counter` before `label: while` breaks syntax
+7. **Disable for loop pointer capture rewrite** - too fragile in switch arms; now adds comment only
+8. **Unique loop counter names** - `__zust_loop_counter_0`, `_1`, etc. instead of bare `__zust_loop_counter`
+9. **Builtin comments before line** - `@ptrCast`, `@intCast`, etc. get comments before the line, not mid-expression
+10. **Safe import auto-injection** - files using `safe.` types without `@import("safe")` get `const safe = @import("safe")` prepended
+11. **Always comment for `.?` unwraps** - block rewrite (`if (opt) |v| v else ...`) is invalid in expression contexts; now always comments
 
-### Transpiler Bugs Still Causing Compilation Errors
+### Transpiler Bugs Still Causing Compilation Errors (528-file attempt)
 
 These issues prevent expanding beyond 128 files:
 
-1. **Duplicate comments inserted** - `safe-transpile:` comments are added multiple times per function (up to 3-4x)
-2. **`@ptrCast` comment breaks mid-expression** - comment inserted inside `@as([*]T, @ptrCast(...))` splits expression across lines, sometimes invalid
-3. **`safe` module import missing** - 9 files reference `safe` types but don't have `const safe = @import("safe")`
-4. **`std` module reference broken** - 7 files lose `std` import context after transpilation
-5. **`__zust_loop_counter` shadowing/redeclaration** - multiple `while (true)` loops in same scope get duplicate counter names
-6. **Unused captures after `for` body rewrite** - `_` capture replacement leaves unused variables in some contexts
+1. **`safe` module imported under different alias** - some files use `const zust = @import("safe")` but transpiler generates `safe.SimdUtils` references
+2. **`allocator.free` removal makes `if` captures unused** - when `if (x) |text| allocator.free(text)` becomes `if (x) |text| _ = undefined`, `text` is unused
+3. **`allocator` parameter becomes unused** - functions whose only `allocator` use was `allocator.free(...)` lose their parameter usage
+4. **`std` module reference issues** - some files get `std.mem.zeroes()` inserted but `std` isn't available in that scope
+5. **Duplicate comments** - `safe-transpile:` comments inserted multiple times per function (2-4x) when multiple params match
 
 ## Lessons Learned
 
@@ -125,11 +128,11 @@ Even "safe" transpiler changes need human review:
 
 ## Next Steps
 
-1. **Fix remaining transpiler bugs** (duplicate comments, @ptrCast mid-expression, missing imports)
-2. **Re-run bulk transpilation** after fixes to attempt 200-300 file target
-3. **Consider whole-program approach** for signature-safe conversions
-4. **Add file-level deduplication** to prevent duplicate comment insertion
-5. **Validate `safe` module availability** before inserting safe types
+1. **Fix remaining transpiler bugs** (safe alias detection, if-capture unused after free removal, param unused after free removal)
+2. **Consider targeted manual expansion** - hand-pick 50-100 additional internal modules and transpile individually
+3. **Consider whole-program approach** for signature-safe conversions (parse all files, build call graph)
+4. **Add file-level deduplication** to prevent duplicate comment insertion (track already-commented functions)
+5. **Validate `safe` module alias** before inserting safe types — detect `const zust = @import("safe")` and use `zust.` instead
 
 ## Test Command Reference
 
@@ -157,4 +160,5 @@ echo "Transpiled: $diff_count files"
 
 - **Transpiler enhancements**: `e84357b` (`*T` → `safe.Box` param conversion + unwrap fix)
 - **Bulk application**: `68dff1fa7` (128 files transpiled, 1,289 insertions, 193 deletions)
-- **Transpiler bug fixes**: `4f55bfc` (extern vars, pub fn filter, body rewrite scoping, array init, zeroes detection, labeled while loops, for loop rewrite disabled)
+- **Transpiler bug fixes (batch 1)**: `4f55bfc` (extern vars, pub fn filter, body rewrite scoping, array init, zeroes detection, labeled while loops, for loop rewrite disabled)
+- **Transpiler bug fixes (batch 2)**: `d4ca8e2` (unique loop counters, builtin comments before line, safe import injection, unwrap comment-only, expanded is_chained check)
