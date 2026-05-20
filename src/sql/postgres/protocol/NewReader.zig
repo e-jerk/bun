@@ -1,6 +1,7 @@
 pub fn NewReaderWrap(
     comptime Context: type,
     comptime markMessageStartFn_: (fn (ctx: Context) void),
+// safe-transpile: function returns small constant slice — consider safe.String
     comptime peekFn_: (fn (ctx: Context) []const u8),
     comptime skipFn_: (fn (ctx: Context, count: usize) void),
     comptime ensureCapacityFn_: (fn (ctx: Context, count: usize) bool),
@@ -40,6 +41,7 @@ pub fn NewReaderWrap(
             skipFn(this.wrapped, count);
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn peek(this: @This()) []const u8 {
             return peekFn(this.wrapped);
         }
@@ -64,7 +66,8 @@ pub fn NewReaderWrap(
             if (comptime Int == u8) {
                 return @as(Int, slice[0]);
             }
-            return @byteSwap(@as(Int, @bitCast(slice[0..@sizeOf(Int)].*)));
+            return @byteSwap(@as(Int, // safe-transpile: @bitCast requires manual review
+    @bitCast(slice[0..@sizeOf(Int)].*)));
         }
 
         pub fn peekInt(this: @This(), comptime Int: type) ?Int {
@@ -72,7 +75,8 @@ pub fn NewReaderWrap(
             if (remain.len < @sizeOf(Int)) {
                 return null;
             }
-            return @byteSwap(@as(Int, @bitCast(remain[0..@sizeOf(Int)].*)));
+            return @byteSwap(@as(Int, // safe-transpile: @bitCast requires manual review
+    @bitCast(remain[0..@sizeOf(Int)].*)));
         }
 
         pub fn expectInt(this: @This(), comptime Int: type, comptime value: comptime_int) !bool {
@@ -91,6 +95,7 @@ pub fn NewReaderWrap(
         pub fn length(this: @This()) !PostgresInt32 {
             const expected = try this.int(PostgresInt32);
             if (expected > -1) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try this.ensureCapacity(@intCast(expected -| 4));
             }
 

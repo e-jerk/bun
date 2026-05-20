@@ -210,8 +210,10 @@ pub const Tag = enum(short) {
                 // the backing buffer length before calling this.
                 if (this.len <= 0) return &.{};
 
-                var head = @as([*]T, @ptrCast(&this.first_value));
+                var head = @as([*]T, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&this.first_value));
                 var current = head;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const len: usize = @intCast(this.len);
                 for (0..len) |i| {
                     // Skip every other value as it contains the size of the element
@@ -219,9 +221,11 @@ pub const Tag = enum(short) {
 
                     const val = current[0];
                     const Int = std.meta.Int(.unsigned, @bitSizeOf(T));
-                    const swapped = @byteSwap(@as(Int, @bitCast(val)));
+                    const swapped = @byteSwap(@as(Int, // safe-transpile: @bitCast requires manual review
+    @bitCast(val)));
 
-                    head[i] = @bitCast(swapped);
+                    head[i] = // safe-transpile: @bitCast requires manual review
+    @bitCast(swapped);
 
                     current = current[1..];
                 }
@@ -229,8 +233,10 @@ pub const Tag = enum(short) {
                 return head[0..len];
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn init(bytes: []const u8) *@This() {
-                const this: *@This() = @ptrCast(@alignCast(@constCast(bytes.ptr)));
+                const this: *@This() = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(@alignCast(@constCast(bytes.ptr)));
                 this.ndim = @byteSwap(this.ndim);
                 this.offset_for_data = @byteSwap(this.offset_for_data);
                 this.element_type = @byteSwap(this.element_type);

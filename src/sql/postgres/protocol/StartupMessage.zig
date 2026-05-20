@@ -12,6 +12,7 @@ pub fn writeInternal(
     const options = this.options.slice();
     const count: usize = @sizeOf((int4)) + @sizeOf((int4)) + zFieldCount("user", user) + zFieldCount("database", database) + zFieldCount("client_encoding", "UTF8") + options.len + 1;
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const header = toBytes(Int32(@as(u32, @truncate(count))));
     try writer.write(&header);
     try writer.int4(196608);

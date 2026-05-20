@@ -16,7 +16,7 @@ test {
 }
 
 test "name" {
-    try testing.expect(std.mem.eql(u8, get(.name, 65), "LATIN CAPITAL LETTER A"));
+    try testing.expect(safe.SimdUtils.eql(get(.name, 65), "LATIN CAPITAL LETTER A"));
 }
 
 test "is_alphabetic" {
@@ -109,7 +109,7 @@ test "special_casing_condition" {
 }
 
 test "special_lowercase_mapping" {
-    var buffer: [1]u21 = undefined;
+    var buffer: [1]u21 = .{};
 
     // Greek Capital Sigma (U+03A3) which has Final_Sigma condition
     const mapping = get(.special_lowercase_mapping, 0x03A3).with(&buffer, 0x03A3);
@@ -125,7 +125,7 @@ test "info extension" {
     try testing.expect(!get(.has_simple_lowercase, 0x1FE0)); // ῠ
 
     // MALAYALAM FRACTION ONE ONE-HUNDRED-AND-SIXTIETH
-    try testing.expect(std.mem.eql(u8, "061/1", get(.numeric_value_numeric_reversed, 0x0D58)));
+    try testing.expect(safe.SimdUtils.eql("061/1", get(.numeric_value_numeric_reversed, 0x0D58)));
 }
 
 test "is_emoji_vs_base" {

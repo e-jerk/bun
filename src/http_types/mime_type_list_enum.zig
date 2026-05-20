@@ -2329,20 +2329,24 @@ pub const MimeTypeList = enum(u14) {
     @"x-shader/x-fragment" = 13184,
     @"x-shader/x-vertex" = 6294,
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: MimeTypeList) []const u8 {
-        const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
+        const p: Packed = // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(PackedInt, @intFromEnum(this)));
         const length: usize = _lengths[p.length_group];
         const offset = @as(usize, _group_start_offsets[p.length_group]) + @as(usize, p.position) * @as(usize, length);
         return _bytes[offset..][0..length];
     }
 
     pub fn len(this: MimeTypeList) usize {
-        const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
+        const p: Packed = // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(PackedInt, @intFromEnum(this)));
         return _lengths[p.length_group];
     }
 
     pub fn ptr(this: MimeTypeList) [*]const u8 {
-        const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
+        const p: Packed = // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(PackedInt, @intFromEnum(this)));
         const length: usize = _lengths[p.length_group];
         const offset = @as(usize, _group_start_offsets[p.length_group]) + @as(usize, p.position) * @as(usize, length);
         return _bytes[offset..].ptr;

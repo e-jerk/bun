@@ -33,11 +33,13 @@ pub const ColumnFlags = packed struct {
     _padding: u2 = 0,
 
     pub fn toInt(this: ColumnFlags) u16 {
-        return @bitCast(this);
+        return // safe-transpile: @bitCast requires manual review
+    @bitCast(this);
     }
 
     pub fn fromInt(flags: u16) ColumnFlags {
-        return @bitCast(flags);
+        return // safe-transpile: @bitCast requires manual review
+    @bitCast(flags);
     }
 };
 

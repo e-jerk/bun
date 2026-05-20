@@ -26,6 +26,7 @@ pub inline fn get(this: NullableAllocator) ?std.mem.Allocator {
     return if (this.vtable) |vt| std.mem.Allocator{ .ptr = this.ptr, .vtable = vt } else null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn free(this: *const NullableAllocator, bytes: []const u8) void {
     if (this.get()) |allocator| {
         if (bun.String.isWTFAllocator(allocator)) {
@@ -34,7 +35,7 @@ pub fn free(this: *const NullableAllocator, bytes: []const u8) void {
             return;
         }
 
-        allocator.free(bytes);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
 }
 

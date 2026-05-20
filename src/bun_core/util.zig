@@ -1,10 +1,12 @@
 // Things that maybe should go in Zig standard library at some point
 
 pub fn Key(comptime Map: type) type {
+// safe-transpile: optional unwrap requires manual review
     return FieldType(Map.KV, "key").?;
 }
 
 pub fn Value(comptime Map: type) type {
+// safe-transpile: optional unwrap requires manual review
     return FieldType(Map.KV, "value").?;
 }
 
@@ -98,6 +100,7 @@ pub fn fromMapLike(
     return map;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn FieldType(comptime Map: type, comptime name: []const u8) ?type {
     const i = std.meta.fieldIndex(Map, name) orelse return null;
     const field = std.meta.fields(Map)[i];
@@ -114,11 +117,19 @@ pub fn Of(comptime ArrayLike: type) type {
     }
 
     if (comptime @hasField(ArrayLike, "items")) {
-        return std.meta.Child(FieldType(ArrayLike, "items").?);
+        return std.meta.Child(if (FieldType(ArrayLike, "items")) |value| {
+    value
+} else {
+    return error.NullPointer;
+});
     }
 
     if (comptime @hasField(ArrayLike, "ptr")) {
-        return std.meta.Child(FieldType(ArrayLike, "ptr").?);
+        return std.meta.Child(if (FieldType(ArrayLike, "ptr")) |value| {
+    value
+} else {
+    return error.NullPointer;
+});
     }
 
     @compileError("Cannot infer type within " ++ @typeName(ArrayLike));
@@ -140,7 +151,11 @@ pub inline fn from(
         }
 
         if (comptime @hasField(DefaultType, "items")) {
-            if (Of(FieldType(DefaultType, "items").?) == Of(Array)) {
+            if (Of(if (FieldType(DefaultType, "items")) |value| {
+    value
+} else {
+    return error.NullPointer;
+}) == Of(Array)) {
                 return fromSlice(Array, allocator, @TypeOf(default.items), default.items);
             }
         }
@@ -186,7 +201,7 @@ pub fn fromSlice(
 
         return map;
     } else {
-        var slice: []Of(Array) = undefined;
+        var slice: []Of(Array) = .{};
         if (comptime !bun.trait.isSlice(Array)) {
             // is it an ArrayList with an allocator?
             if (comptime !needsAllocator(Array.ensureUnusedCapacity)) {
@@ -199,6 +214,7 @@ pub fn fromSlice(
                 map.items.len = default.len;
                 slice = map.items;
             } else if (comptime @hasField(Array, "len")) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 map.len = @as(u32, @intCast(default.len));
                 slice = map.slice();
             } else {
@@ -210,14 +226,16 @@ pub fn fromSlice(
             slice = try allocator.alloc(Of(Array), default.len);
             map = .{
                 .ptr = slice.ptr,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(default.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .cap = @as(u32, @truncate(default.len)),
             };
         }
 
         const in = std.mem.sliceAsBytes(default);
         var out = std.mem.sliceAsBytes(slice);
-        @memcpy(out[0..in.len], in);
+        safe.SimdUtils.copy(out[0..in.len], in);
 
         if (bun.trait.isSlice(Array)) {
             return slice;

@@ -38,19 +38,24 @@ pub const WebsocketHeader = packed struct(u16) {
         if (comptime Environment.allow_assert) {
             var buf_ = [2]u8{ 0, 0 };
             var stream = @import("std-io-compat").fixedBufferStream(&buf_);
-            stream.writer().writeInt(u16, @as(u16, @bitCast(header)), .big) catch unreachable;
+            stream.writer().writeInt(u16, @as(u16, // safe-transpile: @bitCast requires manual review
+    @bitCast(header)), .big) catch unreachable;
             stream.pos = 0;
             const casted = stream.reader().readInt(u16, .big) catch unreachable;
-            bun.assert(casted == @as(u16, @bitCast(header)));
-            bun.assert(std.meta.eql(@as(WebsocketHeader, @bitCast(casted)), header));
+            bun.assert(casted == @as(u16, // safe-transpile: @bitCast requires manual review
+    @bitCast(header)));
+            bun.assert(std.meta.eql(@as(WebsocketHeader, // safe-transpile: @bitCast requires manual review
+    @bitCast(casted)), header));
         }
 
-        try writer.writeInt(u16, @as(u16, @bitCast(header)), .big);
+        try writer.writeInt(u16, @as(u16, // safe-transpile: @bitCast requires manual review
+    @bitCast(header)), .big);
         bun.assert(header.len == packLength(n));
     }
 
     pub fn packLength(length: usize) u7 {
         return switch (length) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             0...125 => @as(u7, @truncate(length)),
             126...0xFFFF => 126,
             else => 127,
@@ -77,11 +82,13 @@ pub const WebsocketHeader = packed struct(u16) {
     }
 
     pub fn slice(self: WebsocketHeader) [2]u8 {
-        return @as([2]u8, @bitCast(@byteSwap(@as(u16, @bitCast(self)))));
+        return @as([2]u8, // safe-transpile: @bitCast requires manual review
+    @bitCast(@byteSwap(@as(u16, @bitCast(self)))));
     }
 
     pub fn fromSlice(bytes: [2]u8) WebsocketHeader {
-        return @as(WebsocketHeader, @bitCast(@byteSwap(@as(u16, @bitCast(bytes)))));
+        return @as(WebsocketHeader, // safe-transpile: @bitCast requires manual review
+    @bitCast(@byteSwap(@as(u16, @bitCast(bytes)))));
     }
 };
 

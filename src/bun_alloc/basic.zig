@@ -1,5 +1,6 @@
 const log = bun.Output.scoped(.mimalloc, .hidden);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn mimalloc_free(
     _: *anyopaque,
     buf: []u8,
@@ -41,7 +42,8 @@ const MimallocAllocator = struct {
             }
         }
 
-        return @as(?[*]u8, @ptrCast(ptr));
+        return @as(?[*]u8, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(ptr));
     }
 
     fn alignedAllocSize(ptr: [*]u8) usize {
@@ -52,12 +54,15 @@ const MimallocAllocator = struct {
         return alignedAlloc(len, alignment);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize_with_default_allocator(_: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
         return mimalloc.mi_expand(buf.ptr, new_len) != null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn remap_with_default_allocator(_: *anyopaque, buf: []u8, alignment: Alignment, new_len: usize, _: usize) ?[*]u8 {
-        return @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
+        return // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
     }
 
     const free_with_default_allocator = mimalloc_free;
@@ -93,7 +98,8 @@ const ZAllocator = struct {
             }
         }
 
-        return @as(?[*]u8, @ptrCast(ptr));
+        return @as(?[*]u8, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(ptr));
     }
 
     fn alignedAllocSize(ptr: [*]u8) usize {
@@ -104,6 +110,7 @@ const ZAllocator = struct {
         return alignedAlloc(len, alignment);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize_with_z_allocator(_: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
         if (new_len <= buf.len) {
             return true;

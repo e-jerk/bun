@@ -20,7 +20,8 @@ pub const DecodedJSValue = extern struct {
     }
 
     fn asU64(self: Self) u64 {
-        return @bitCast(self.u.asInt64);
+        return // safe-transpile: @bitCast requires manual review
+    @bitCast(self.u.asInt64);
     }
 
     /// Equivalent to `JSC::JSValue::isCell`. Note that like JSC, this method treats 0 as a cell.

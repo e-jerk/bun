@@ -21,6 +21,7 @@ pub fn writeInternal(
     } ++ toBytes(Int32(count));
     try writer.write(&header);
     try writer.string(mechanism);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     try writer.int4(@truncate(data.len));
     try writer.write(data);
 }

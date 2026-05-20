@@ -1,7 +1,9 @@
 pub fn NewWriterWrap(
     comptime Context: type,
     comptime offsetFn_: (fn (ctx: Context) usize),
+// safe-transpile: function uses raw slice parameter — consider safe.String
     comptime writeFunction_: (fn (ctx: Context, bytes: []const u8) AnyPostgresError!void),
+// safe-transpile: function uses raw slice parameter — consider safe.String
     comptime pwriteFunction_: (fn (ctx: Context, bytes: []const u8, offset: usize) AnyPostgresError!void),
 ) type {
     return struct {
@@ -14,6 +16,7 @@ pub fn NewWriterWrap(
 
         pub const WrappedWriter = @This();
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub inline fn write(this: @This(), data: []const u8) AnyPostgresError!void {
             try writeFn(this.wrapped, data);
         }
@@ -44,6 +47,7 @@ pub fn NewWriterWrap(
             return offsetFn(this.wrapped);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub inline fn pwrite(this: @This(), data: []const u8, i: usize) AnyPostgresError!void {
             try pwriteFn(this.wrapped, data, i);
         }
@@ -61,11 +65,13 @@ pub fn NewWriterWrap(
         }
 
         pub fn @"f64"(this: @This(), value: f64) !void {
-            try this.write(std.mem.asBytes(&@byteSwap(@as(u64, @bitCast(value)))));
+            try this.write(std.mem.asBytes(&@byteSwap(@as(u64, // safe-transpile: @bitCast requires manual review
+    @bitCast(value)))));
         }
 
         pub fn @"f32"(this: @This(), value: f32) !void {
-            try this.write(std.mem.asBytes(&@byteSwap(@as(u32, @bitCast(value)))));
+            try this.write(std.mem.asBytes(&@byteSwap(@as(u32, // safe-transpile: @bitCast requires manual review
+    @bitCast(value)))));
         }
 
         pub fn short(this: @This(), value: anytype) !void {
@@ -77,12 +83,14 @@ pub fn NewWriterWrap(
             try this.write(std.mem.asBytes(&@byteSwap(std.math.cast(u16, int_value) orelse return error.TooManyParameters)));
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn string(this: @This(), value: []const u8) !void {
             try this.write(value);
             if (value.len == 0 or value[value.len - 1] != 0)
                 try this.write(&[_]u8{0});
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn bytes(this: @This(), value: []const u8) !void {
             try this.write(value);
             if (value.len == 0 or value[value.len - 1] != 0)

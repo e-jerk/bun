@@ -41,18 +41,18 @@ const Context = struct {
 };
 
 pub fn main() !void {
-    var arena_state = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    var arena_state = std.heap.ArenaAllocator.init(safe.Pool);
     defer arena_state.deinit();
     const alloc = arena_state.allocator();
 
     const gen: lut.Generator(GraphemeBreakNoControl, Context) = .{};
 
     const t = try gen.generate(alloc);
-    defer alloc.free(t.stage1);
-    defer alloc.free(t.stage2);
-    defer alloc.free(t.stage3);
+    // safe-transpile: free removed (memory owned by safe type);
+    // safe-transpile: free removed (memory owned by safe type);
+    // safe-transpile: free removed (memory owned by safe type);
 
-    var buf: [4096]u8 = undefined;
+    var buf: [4096]u8 = .{};
     var stdout_file = @import("std-fs-compat").File.stdout().writer(&buf);
     const stdout = &stdout_file.interface;
 

@@ -25,6 +25,7 @@ pub fn deinit(this: *@This()) void {
     //dirname
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn fail(this: *@This(), msg: []const u8) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .err;
@@ -34,6 +35,7 @@ fn fail(this: *@This(), msg: []const u8) Yield {
     return this.bltn().done(1);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn print(this: *@This(), msg: []const u8) Maybe(void) {
     if (this.bltn().stdout.needsIO() != null) {
         bun.handleOom(this.buf.appendSlice(bun.default_allocator, msg));
@@ -58,7 +60,8 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("dirname", this));
+    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("dirname", this));
     return @fieldParentPtr("impl", impl);
 }
 

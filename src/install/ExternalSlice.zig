@@ -47,7 +47,9 @@ pub fn ExternalSlice(comptime Type: type) type {
             // }
 
             return Slice{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .off = @as(u32, @truncate((@intFromPtr(in.ptr) - @intFromPtr(buf.ptr)) / @sizeOf(Type))),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(in.len)),
             };
         }

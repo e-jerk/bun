@@ -6,7 +6,8 @@ pub const Execute = struct {
     param_types: []const Param,
 
     pub fn deinit(this: *Execute) void {
-        for (this.params) |*param| {
+        for (0..this.params.len) |__zust_i| {
+    var param = &this.params[__zust_i];
             param.deinit();
         }
     }
@@ -22,9 +23,10 @@ pub const Execute = struct {
             // Always 1. Malformed packet error if not 1
             try writer.int1(1);
             // if 22 chars = u64 + 2 for :p and this should be more than enough
-            var param_name_buf: [22]u8 = undefined;
+            var param_name_buf: [22]u8 = .{};
             // Write parameter types
-            for (this.param_types, 1..) |param_type, i| {
+            // safe-transpile: for with index access requires manual review
+    for (this.param_types, 1..) |param_type, i| {
                 debug("New params bind flag {s} unsigned? {}", .{ @tagName(param_type.type), param_type.flags.UNSIGNED });
                 try writer.int1(@intFromEnum(param_type.type));
                 try writer.int1(if (param_type.flags.UNSIGNED) 0x80 else 0);
@@ -33,7 +35,8 @@ pub const Execute = struct {
             }
 
             // Write parameter values
-            for (this.params, this.param_types) |*param, param_type| {
+            // safe-transpile: for with index access requires manual review
+    for (this.params, this.param_types) |*param, param_type| {
                 if (param.* == .empty or param_type.type == .MYSQL_TYPE_NULL) continue;
 
                 const value = param.slice();
@@ -51,6 +54,7 @@ pub const Execute = struct {
     pub const write = writeWrap(Execute, writeInternal).write;
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn execute(query: []const u8, writer: anytype) !void {
     var packet = try writer.start(0);
     try writer.int1(@intFromEnum(CommandType.COM_QUERY));

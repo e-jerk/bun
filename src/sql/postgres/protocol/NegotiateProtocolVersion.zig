@@ -10,14 +10,16 @@ pub fn decodeInternal(
     bun.assert(length >= 4);
 
     const version = try reader.int4();
-    this.* = .{
+    this[0] = .{
         .version = version,
     };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const unrecognized_options_count: u32 = @intCast(@max(try reader.int4(), 0));
     try this.unrecognized_options.ensureTotalCapacity(bun.default_allocator, unrecognized_options_count);
     errdefer {
-        for (this.unrecognized_options.items) |*option| {
+        for (0..this.unrecognized_options.items.len) |__zust_i| {
+    var option = &this.unrecognized_options.items[__zust_i];
             option.deinit();
         }
         this.unrecognized_options.deinit(bun.default_allocator);

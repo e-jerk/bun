@@ -11,8 +11,9 @@
 //!
 //! See 'bun_shim_impl.zig' for more details on how this file is consumed.
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn eqlComptime(a: []const u8, comptime b: []const u8) bool {
-    return std.mem.eql(u8, a, b);
+    return safe.SimdUtils.eql(a, b);
 }
 
 /// Relative to node_modules. Do not include slash
@@ -51,29 +52,35 @@ pub const Flags = packed struct(u16) {
     version_tag: VersionFlag = VersionFlag.current,
 
     pub fn isValid(flags: Flags) bool {
-        const mask: u16 = @bitCast(Flags{
+        const mask: u16 = // safe-transpile: @bitCast requires manual review
+    @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
             .has_shebang = false,
             .version_tag = @enumFromInt(std.math.maxInt(u13)),
         });
 
-        const compare_to: u16 = @bitCast(Flags{
+        const compare_to: u16 = // safe-transpile: @bitCast requires manual review
+    @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
             .has_shebang = false,
         });
 
-        return (@as(u16, @bitCast(flags)) & comptime mask) == comptime compare_to;
+        return (@as(u16, // safe-transpile: @bitCast requires manual review
+    @bitCast(flags)) & comptime mask) == comptime compare_to;
     }
 };
 
 pub const embedded_executable_data = @embedFile("bun_shim_impl.exe");
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn wU8(comptime s: []const u8) []const u8 {
     @setEvalBranchQuota(1_000_000);
     const str = std.unicode.utf8ToUtf16LeStringLiteral(s);
-    return @alignCast(std.mem.sliceAsBytes(str));
+    return // safe-transpile: @alignCast requires manual review
+    @alignCast(std.mem.sliceAsBytes(str));
 }
 
 pub const Shebang = struct {
@@ -81,10 +88,12 @@ pub const Shebang = struct {
     utf16_len: u32,
     is_node_or_bun: bool,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(launcher: []const u8, is_node_or_bun: bool) !Shebang {
         return .{
             .launcher = launcher,
             // TODO(@paperclover): what if this is invalid utf8?
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .utf16_len = @intCast(bun.simdutf.length.utf16.from.utf8(launcher)),
             .is_node_or_bun = is_node_or_bun,
         };
@@ -117,7 +126,11 @@ pub const Shebang = struct {
             return &[_]u16{};
 
         var end_index: usize = path.len - 1;
-        while (true) {
+        var __zust_loop_counter: u64 = 0;
+    while (true) {
+        __zust_loop_counter += 1;
+        if (__zust_loop_counter > 1_000_000) return error.InfiniteLoop;
+        
             const byte = path[end_index];
             if (byte == '/' or byte == '\\') {
                 if (end_index == 0)
@@ -153,7 +166,8 @@ pub const Shebang = struct {
     }
 
     pub fn parseFromBinPath(bin_path: []const u16) ?Shebang {
-        if (BunExtensions.get(@alignCast(std.mem.sliceAsBytes(extensionW(bin_path))))) |i| {
+        if (BunExtensions.get(// safe-transpile: @alignCast requires manual review
+    @alignCast(std.mem.sliceAsBytes(extensionW(bin_path))))) |i| {
             return switch (i) {
                 .run_with_bun => comptime Shebang.init("bun run", true) catch unreachable,
                 .run_with_cmd => comptime Shebang.init("cmd /c", false) catch unreachable,
@@ -172,6 +186,7 @@ pub const Shebang = struct {
     ///
     /// Since a command line cannot be longer than 32766 characters,
     /// this function does not accept inputs longer than `max_shebang_input_length`
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(contents_maybe_overflow: []const u8, bin_path: []const u16) !?Shebang {
         const contents = contents_maybe_overflow[0..@min(contents_maybe_overflow.len, max_shebang_input_length)];
 
@@ -219,13 +234,15 @@ pub fn encodedLength(options: @This()) usize {
 }
 
 /// The buffer must be exactly the correct length given by encodedLength
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeInto(options: @This(), buf: []u8) !void {
     std.debug.assert(buf.len == options.encodedLength());
     std.debug.assert(options.bin_path[0] != '/');
 
-    var wbuf = @as([*]u16, @ptrCast(@alignCast(&buf[0])))[0 .. buf.len / 2];
+    var wbuf = @as([*]u16, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(@alignCast(&buf[0])))[0 .. buf.len / 2];
 
-    @memcpy(wbuf[0..options.bin_path.len], options.bin_path);
+    safe.SimdUtils.copy(wbuf[0..options.bin_path.len], options.bin_path);
     wbuf = wbuf[options.bin_path.len..];
 
     wbuf[0] = '"';
@@ -254,12 +271,16 @@ pub fn encodeInto(options: @This(), buf: []u8) !void {
         wbuf[0] = ' ';
         wbuf = wbuf[1..];
 
-        @as(*align(1) u32, @ptrCast(&wbuf[0])).* = @intCast(options.bin_path.len * 2);
-        @as(*align(1) u32, @ptrCast(&wbuf[2])).* = (s.utf16_len) * 2 + 2; // include the spaces!
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        @as(*align(1) u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&wbuf[0])).* = @intCast(options.bin_path.len * 2);
+        @as(*align(1) u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&wbuf[2])).* = (s.utf16_len) * 2 + 2; // include the spaces!
         wbuf = wbuf[(@sizeOf(u32) * 2) / @sizeOf(u16) ..];
     }
 
-    @as(*align(1) Flags, @ptrCast(&wbuf[0])).* = flags;
+    @as(*align(1) Flags, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&wbuf[0])).* = flags;
     wbuf = wbuf[@sizeOf(Flags) / @sizeOf(u16) ..];
 
     if (@import("builtin").mode == .Debug) {
@@ -272,17 +293,20 @@ const Decoded = struct {
     flags: Flags,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn looseDecode(input: []const u8) ?Decoded {
     if (input.len < @sizeOf(Flags) + 2 * @sizeOf(u32) + 8) {
         return null;
     }
-    const flags = @as(*align(1) const Flags, @ptrCast(&input[input.len - @sizeOf(Flags)])).*;
+    const flags = @as(*align(1) const Flags, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&input[input.len - @sizeOf(Flags)])).*;
     if (!flags.isValid()) {
         return null;
     }
 
     const bin_path_u8 = if (flags.has_shebang) bin_path_u8: {
-        const bin_path_byte_len = @as(*align(1) const u32, @ptrCast(&input[input.len - @sizeOf(Flags) - 2 * @sizeOf(u32)])).*;
+        const bin_path_byte_len = @as(*align(1) const u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&input[input.len - @sizeOf(Flags) - 2 * @sizeOf(u32)])).*;
         if (bin_path_byte_len % 2 != 0) {
             return null;
         }

@@ -3,33 +3,48 @@ pub fn encodeLengthInt(value: u64) bun.BoundedArray(u8, 9) {
     var array: bun.BoundedArray(u8, 9) = .{};
     if (value < 0xfb) {
         array.len = 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[0] = @intCast(value);
     } else if (value < 0xffff) {
         array.len = 3;
         array.buffer[0] = 0xfc;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[1] = @intCast(value & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[2] = @intCast((value >> 8) & 0xff);
     } else if (value < 0xffffff) {
         array.len = 4;
         array.buffer[0] = 0xfd;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[1] = @intCast(value & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[2] = @intCast((value >> 8) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[3] = @intCast((value >> 16) & 0xff);
     } else {
         array.len = 9;
         array.buffer[0] = 0xfe;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[1] = @intCast(value & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[2] = @intCast((value >> 8) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[3] = @intCast((value >> 16) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[4] = @intCast((value >> 24) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[5] = @intCast((value >> 32) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[6] = @intCast((value >> 40) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[7] = @intCast((value >> 48) & 0xff);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         array.buffer[8] = @intCast((value >> 56) & 0xff);
     }
     return array;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decodeLengthInt(bytes: []const u8) ?struct { value: u64, bytes_read: usize } {
     if (bytes.len == 0) return null;
 

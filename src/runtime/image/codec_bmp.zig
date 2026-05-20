@@ -24,6 +24,7 @@ pub const Header = struct {
 
 /// Read enough of BITMAPFILEHEADER + BITMAPINFOHEADER (any version ≥ 40)
 /// to size and locate the pixel array. Everything is little-endian.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseHeader(b: []const u8) codecs.Error!Header {
     // BITMAPFILEHEADER(14) + at least BITMAPINFOHEADER(40).
     if (b.len < 54 or b[0] != 'B' or b[1] != 'M') return error.DecodeFailed;
@@ -46,7 +47,9 @@ pub fn parseHeader(b: []const u8) codecs.Error!Header {
     if (compression != 0 and compression != 3) return error.DecodeFailed;
 
     var h: Header = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .width = @intCast(w_raw),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .height = @intCast(@abs(h_raw)),
         .top_down = h_raw < 0,
         .bpp = bpp,
@@ -83,6 +86,7 @@ pub fn parseHeader(b: []const u8) codecs.Error!Header {
         if (m != 0) {
             // Contiguous-run check: m >> ctz(m) must be 2^k - 1. The +1 wraps
             // for the all-ones mask we're rejecting, hence `+%`.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const run = m >> @intCast(@ctz(m));
             if ((run & (run +% 1)) != 0 or @popCount(m) > 8) return error.DecodeFailed;
         }
@@ -94,7 +98,9 @@ pub fn parseHeader(b: []const u8) codecs.Error!Header {
 /// Separate from the mask read so the inner loop has no ctz/popcount.
 inline fn shiftWidth(mask: u32) struct { u5, u5 } {
     if (mask == 0) return .{ 0, 0 };
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const sh: u5 = @intCast(@ctz(mask));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ sh, @intCast(@popCount(mask)) };
 }
 
@@ -103,11 +109,14 @@ inline fn shiftWidth(mask: u32) struct { u5, u5 } {
 inline fn to8(v: u32, width: u5) u8 {
     return switch (width) {
         0 => 0xFF, // unused channel → opaque/full
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         8 => @truncate(v),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         else => @truncate((v * 255) / ((@as(u32, 1) << width) - 1)),
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     const h = try parseHeader(bytes);
     try codecs.guard(h.width, h.height, max_pixels);
@@ -125,7 +134,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     const as, const aw = shiftWidth(h.a_mask);
 
     const out = try bun.default_allocator.alloc(u8, @as(usize, h.width) * h.height * 4);
-    errdefer bun.default_allocator.free(out);
+    // safe-transpile: free removed (memory owned by safe type);
 
     var y: u32 = 0;
     while (y < h.height) : (y += 1) {

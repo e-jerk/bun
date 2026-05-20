@@ -16,6 +16,7 @@ pub fn start(this: *Exit) Yield {
         1 => {
             const first_arg = args[0][0..std.mem.len(args[0]) :0];
             const exit_code: ExitCode = std.fmt.parseInt(u8, first_arg, 10) catch |err| switch (err) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 error.Overflow => @intCast((std.fmt.parseInt(usize, first_arg, 10) catch return this.fail("exit: numeric argument required\n")) % 256),
                 error.InvalidCharacter => return this.fail("exit: numeric argument required\n"),
             };
@@ -27,6 +28,7 @@ pub fn start(this: *Exit) Yield {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn fail(this: *Exit, msg: []const u8) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_io;
@@ -69,7 +71,8 @@ pub fn deinit(this: *Exit) void {
 }
 
 pub inline fn bltn(this: *Exit) *Builtin {
-    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("exit", this));
+    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("exit", this));
     return @fieldParentPtr("impl", impl);
 }
 

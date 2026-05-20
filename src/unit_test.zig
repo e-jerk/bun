@@ -8,7 +8,11 @@ test "basic string usage" {
     defer s.deref();
     try t.expect(s.tag != .Dead and s.tag != .Empty);
     try t.expectEqual(s.length(), 2);
-    try t.expectEqualStrings(s.asUTF8().?, "hi");
+    try t.expectEqualStrings(if (s.asUTF8()) |value| {
+    value
+} else {
+    return error.NullPointer;
+}, "hi");
 }
 
 const bun = @import("bun");

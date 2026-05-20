@@ -27,6 +27,7 @@ pub const ArrayIdentityContext = struct {
 
     pub const U64 = struct {
         pub fn hash(_: @This(), key: u64) u32 {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(key);
         }
 

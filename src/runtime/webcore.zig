@@ -84,7 +84,8 @@ pub const Pipe = struct {
         return struct {
             pub fn pipe(self: *anyopaque, stream: streams.Result, allocator: std.mem.Allocator) void {
                 function(
-                    @as(*Type, @ptrCast(@alignCast(self))),
+                    @as(*Type, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(@alignCast(self))),
                     stream,
                     allocator,
                 );

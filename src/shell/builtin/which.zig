@@ -132,7 +132,8 @@ pub fn deinit(this: *Which) void {
 }
 
 pub inline fn bltn(this: *Which) *Builtin {
-    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("which", this));
+    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("which", this));
     return @fieldParentPtr("impl", impl);
 }
 

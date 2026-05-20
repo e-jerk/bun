@@ -1,7 +1,8 @@
-var file: @import("std-fs-compat").File = undefined;
+var file: @import("std-fs-compat").File = std.mem.zeroes(@import("std-fs-compat").File);
 pub var enabled = false;
 pub var check_done = false;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(data: []const u8) void {
     file.writeAll(data) catch {};
 }

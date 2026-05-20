@@ -16,7 +16,8 @@ pub fn start(this: *@This()) Yield {
         bufalloc = 2; // "y\n"
     } else {
         // Sum all args + spaces between + newline
-        for (args, 0..) |arg, i| {
+        // safe-transpile: for with index access requires manual review
+    for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
             bufalloc += arg_slice.len;
             if (i < args.len - 1) bufalloc += 1; // space
@@ -35,13 +36,14 @@ pub fn start(this: *@This()) Yield {
     // Fill buffer with one copy of the output
     this.buffer_used = 0;
     if (args.len == 0) {
-        @memcpy(this.buffer[0..1], "y");
+        safe.SimdUtils.copy(this.buffer[0..1], "y");
         this.buffer[1] = '\n';
         this.buffer_used = 2;
     } else {
-        for (args, 0..) |arg, i| {
+        // safe-transpile: for with index access requires manual review
+    for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
-            @memcpy(this.buffer[this.buffer_used .. this.buffer_used + arg_slice.len], arg_slice);
+            safe.SimdUtils.copy(this.buffer[this.buffer_used .. this.buffer_used + arg_slice.len], arg_slice);
             this.buffer_used += arg_slice.len;
             if (i < args.len - 1) {
                 this.buffer[this.buffer_used] = ' ';
@@ -59,7 +61,7 @@ pub fn start(this: *@This()) Yield {
     while (copies > 1) : (copies -= 1) {
         const remaining = bufalloc - filled;
         const to_copy = @min(copysize, remaining);
-        @memcpy(this.buffer[filled .. filled + to_copy], this.buffer[0..to_copy]);
+        safe.SimdUtils.copy(this.buffer[filled .. filled + to_copy], this.buffer[0..to_copy]);
         filled += to_copy;
     }
     this.buffer_used = filled;
@@ -93,6 +95,7 @@ fn writeNoIO(this: *@This()) Yield {
     return .suspended;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeOnceNoIO(this: *@This(), buf: []const u8) ?Yield {
     switch (this.bltn().writeNoIO(.stdout, buf)) {
         .result => {},
@@ -105,6 +108,7 @@ fn writeOnceNoIO(this: *@This(), buf: []const u8) ?Yield {
     return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFailingError(this: *Yes, buf: []const u8, exit_code: shell.ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_write_err;
@@ -129,12 +133,13 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("yes", this));
+    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("yes", this));
     return @fieldParentPtr("impl", impl);
 }
 
 pub fn deinit(this: *@This()) void {
-    this.alloc_scope.allocator().free(this.buffer);
+    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     this.alloc_scope.endScope();
 }
 

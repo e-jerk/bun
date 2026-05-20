@@ -145,6 +145,7 @@ pub const FileCopier = struct {
 
                 if (comptime Environment.isPosix) {
                     const stat = src.stat().unwrap() catch continue;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     _ = bun.c.fchmod(dest.handle.native(), @intCast(stat.mode));
                 }
 

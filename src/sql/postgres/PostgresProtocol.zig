@@ -12,7 +12,9 @@ pub const Flush = [_]u8{'H'} ++ toBytes(Int32(4));
 pub const SSLRequest = toBytes(Int32(8)) ++ toBytes(Int32(80877103));
 pub const NoData = [_]u8{'n'} ++ toBytes(Int32(4));
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeQuery(query: []const u8, comptime Context: type, writer: NewWriter(Context)) !void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const count: u32 = @sizeOf((u32)) + @as(u32, @intCast(query.len)) + 1;
     const header = [_]u8{
         'Q',

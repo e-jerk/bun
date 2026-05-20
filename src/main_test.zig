@@ -13,21 +13,27 @@ comptime {
     bun.assert(builtin.target.cpu.arch.endian() == .little);
 }
 
-pub extern "C" var _environ: ?*anyopaque;
-pub extern "C" var environ: ?*anyopaque;
+pub extern "C" var _environ: ?*anyopaque = undefined;
+pub extern "C" var environ: ?*anyopaque = undefined;
 
 pub fn main() void {
     // This should appear before we make any calls at all to libuv.
     // So it's safest to put it very early in the main function.
     if (Environment.isWindows) {
         _ = bun.windows.libuv.uv_replace_allocator(
-            @ptrCast(&bun.mimalloc.mi_malloc),
-            @ptrCast(&bun.mimalloc.mi_realloc),
-            @ptrCast(&bun.mimalloc.mi_calloc),
-            @ptrCast(&bun.mimalloc.mi_free),
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&bun.mimalloc.mi_malloc),
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&bun.mimalloc.mi_realloc),
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&bun.mimalloc.mi_calloc),
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(&bun.mimalloc.mi_free),
         );
-        environ = @ptrCast(std.os.environ.ptr);
-        _environ = @ptrCast(std.os.environ.ptr);
+        environ = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(std.os.environ.ptr);
+        _environ = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(std.os.environ.ptr);
     }
 
     bun.initArgv() catch |err| {
@@ -77,10 +83,10 @@ fn runTests() u8 {
     var stats = Stats.init();
     const stderr = std.fs.File.stderr();
 
-    namebuf = std.heap.page_allocator.alloc(u8, namebuf_size) catch {
+    namebuf = safe.Pool.alloc(u8, namebuf_size) catch {
         Output.panic("Failed to allocate name buffer", .{});
     };
-    defer std.heap.page_allocator.free(namebuf);
+    // safe-transpile: free removed (memory owned by safe type);
 
     const tests: []const TestFn = builtin.test_functions;
     for (tests) |t| {
@@ -138,12 +144,13 @@ fn runTests() u8 {
 }
 
 // heap-allocated on start to avoid increasing binary size
-threadlocal var namebuf: []u8 = undefined;
+threadlocal var namebuf: safe.Slice(u8) = .{};
 const namebuf_size = 4096;
 comptime {
     std.debug.assert(std.math.isPowerOfTwo(namebuf_size));
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 fn extractName(t: TestFn) []const u8 {
     inline for (.{ ".test.", ".decltest." }) |test_sep| {
         if (std.mem.lastIndexOf(u8, t.name, test_sep)) |marker| {
@@ -197,8 +204,9 @@ const std = @import("std");
 const TestFn = std.builtin.TestFn;
 
 fn milliTimestamp() i64 {
-    var ts: std.posix.timespec = undefined;
+    var ts: std.posix.timespec = std.mem.zeroes(std.posix.timespec);
     _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(ts.sec * std.time.ms_per_s + @divTrunc(ts.nsec, std.time.ns_per_ms));
 }
 

@@ -17,29 +17,36 @@ pub const union_EncodedJSValue = extern union {
 };
 pub const EncodedJSValue = union_EncodedJSValue;
 pub export var ValueUndefined: EncodedJSValue = EncodedJSValue{
-    .asInt64 = @as(i64, @bitCast(@as(c_longlong, @as(c_int, 2) | @as(c_int, 8)))),
+    .asInt64 = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_int, 2) | @as(c_int, 8)))),
 };
-pub const TrueI64 = @as(i64, @bitCast(@as(c_longlong, (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1))));
+pub const TrueI64 = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1))));
 pub export var ValueTrue: EncodedJSValue = EncodedJSValue{
     .asInt64 = TrueI64,
 };
 pub const JSContext = ?*anyopaque;
 pub inline fn JSVALUE_IS_CELL(arg_val: EncodedJSValue) bool {
     const val = arg_val;
-    return !(((@as(c_ulonglong, @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) | @as(c_ulonglong, @bitCast(@as(c_longlong, @as(c_int, 2))))) != 0);
+    return !(((@as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) | @as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_int, 2))))) != 0);
 }
 pub inline fn JSVALUE_IS_INT32(arg_val: EncodedJSValue) @"bool" {
     const val = arg_val;
-    return (@as(c_ulonglong, @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) == @as(c_ulonglong, 18446181123756130304);
+    return (@as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) == @as(c_ulonglong, 18446181123756130304);
 }
 pub inline fn JSVALUE_IS_NUMBER(arg_val: EncodedJSValue) @"bool" {
     const val = arg_val;
-    return (@as(c_ulonglong, @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) != 0;
+    return (@as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(val.asInt64)) & @as(c_ulonglong, 18446181123756130304)) != 0;
 }
 pub inline fn JSVALUE_TO_UINT64(arg_value: EncodedJSValue) u64 {
     const value = arg_value;
     if (JSVALUE_IS_INT32(value)) {
-        return @as(u64, @bitCast(@as(c_longlong, JSVALUE_TO_INT32(value))));
+        return @as(u64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, JSVALUE_TO_INT32(value))));
     }
     if (JSVALUE_IS_NUMBER(value)) {
         return @as(u64, @intFromFloat(JSVALUE_TO_DOUBLE(value)));
@@ -49,7 +56,8 @@ pub inline fn JSVALUE_TO_UINT64(arg_value: EncodedJSValue) u64 {
 pub inline fn JSVALUE_TO_INT64(arg_value: EncodedJSValue) i64 {
     const value = arg_value;
     if (JSVALUE_IS_INT32(value)) {
-        return @as(i64, @bitCast(@as(c_longlong, JSVALUE_TO_INT32(value))));
+        return @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, JSVALUE_TO_INT32(value))));
     }
     if (JSVALUE_IS_NUMBER(value)) {
         return @as(i64, @intFromFloat(JSVALUE_TO_DOUBLE(value)));
@@ -63,30 +71,44 @@ pub const INT64_TO_JSVALUE_SLOW = jsc.JSValue.fromInt64NoTruncate;
 pub inline fn UINT64_TO_JSVALUE(arg_globalObject: ?*anyopaque, arg_val: u64) EncodedJSValue {
     const globalObject = arg_globalObject;
     const val = arg_val;
-    if (val < @as(c_ulonglong, @bitCast(@as(c_longlong, @as(c_long, 2147483648))))) {
-        return INT32_TO_JSVALUE(@as(i32, @bitCast(@as(c_uint, @truncate(val)))));
+    if (val < @as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_long, 2147483648))))) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        return INT32_TO_JSVALUE(@as(i32, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_uint, @truncate(val)))));
     }
-    if (val < @as(c_ulonglong, @bitCast(@as(c_longlong, @as(c_long, 9007199254740991))))) {
+    if (val < @as(c_ulonglong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_long, 9007199254740991))))) {
         return DOUBLE_TO_JSVALUE(@as(f64, @floatFromInt(val)));
     }
-    return UINT64_TO_JSVALUE_SLOW(@as(*jsc.JSGlobalObject, @ptrCast(globalObject.?)), val).asEncoded();
+    return UINT64_TO_JSVALUE_SLOW(@as(*jsc.JSGlobalObject, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(globalObject.?)), val).asEncoded();
 }
 pub inline fn INT64_TO_JSVALUE(arg_globalObject: ?*anyopaque, arg_val: i64) EncodedJSValue {
     const globalObject = arg_globalObject;
     const val = arg_val;
-    if ((val >= @as(c_longlong, @bitCast(@as(c_longlong, -@as(c_long, 2147483648))))) and (val <= @as(c_longlong, @bitCast(@as(c_longlong, @as(c_long, 2147483648)))))) {
-        return INT32_TO_JSVALUE(@as(i32, @bitCast(@as(c_int, @truncate(val)))));
+    if ((val >= @as(c_longlong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, -@as(c_long, 2147483648))))) and (val <= @as(c_longlong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_long, 2147483648)))))) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        return INT32_TO_JSVALUE(@as(i32, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_int, @truncate(val)))));
     }
-    if ((val >= @as(c_longlong, @bitCast(@as(c_longlong, -@as(c_long, 9007199254740991))))) and (val <= @as(c_longlong, @bitCast(@as(c_longlong, @as(c_long, 9007199254740991)))))) {
+    if ((val >= @as(c_longlong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, -@as(c_long, 9007199254740991))))) and (val <= @as(c_longlong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, @as(c_long, 9007199254740991)))))) {
         return DOUBLE_TO_JSVALUE(@as(f64, @floatFromInt(val)));
     }
-    return INT64_TO_JSVALUE_SLOW(@as(*jsc.JSGlobalObject, @ptrCast(globalObject.?)), val).asEncoded();
+    return INT64_TO_JSVALUE_SLOW(@as(*jsc.JSGlobalObject, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(globalObject.?)), val).asEncoded();
 }
 pub inline fn INT32_TO_JSVALUE(arg_val: i32) EncodedJSValue {
-    return .{ .asInt64 = @as(i64, @bitCast(@as(c_ulonglong, 18446181123756130304) | @as(c_ulonglong, @bitCast(@as(c_ulonglong, @as(u32, @bitCast(arg_val))))))) };
+    return .{ .asInt64 = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_ulonglong, 18446181123756130304) | @as(c_ulonglong, @bitCast(@as(c_ulonglong, @as(u32, @bitCast(arg_val))))))) };
 }
 pub inline fn DOUBLE_TO_JSVALUE(arg_val: f64) EncodedJSValue {
     var res: EncodedJSValue = .{ .asDouble = arg_val };
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     res.asInt64 += @as(c_longlong, 1) << @as(@import("std").math.Log2Int(c_longlong), @intCast(49));
     return res;
 }
@@ -97,12 +119,15 @@ pub inline fn FLOAT_TO_JSVALUE(arg_val: f32) EncodedJSValue {
 pub inline fn BOOLEAN_TO_JSVALUE(arg_val: @"bool") EncodedJSValue {
     const val = arg_val;
     var res: EncodedJSValue = undefined;
-    res.asInt64 = @as(i64, @bitCast(@as(c_longlong, if (@as(c_int, @intFromBool(val)) != 0) (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1) else (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 0))));
+    res.asInt64 = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, if (@as(c_int, @intFromBool(val)) != 0) (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1) else (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 0))));
     return res;
 }
 pub inline fn JSVALUE_TO_INT32(arg_val: EncodedJSValue) i32 {
     const val = arg_val;
-    return @as(i32, @bitCast(@as(c_int, @truncate(val.asInt64))));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    return @as(i32, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_int, @truncate(val.asInt64))));
 }
 pub inline fn JSVALUE_TO_FLOAT(arg_val: EncodedJSValue) f32 {
     const val = arg_val;
@@ -110,12 +135,14 @@ pub inline fn JSVALUE_TO_FLOAT(arg_val: EncodedJSValue) f32 {
 }
 pub inline fn JSVALUE_TO_DOUBLE(arg_val: EncodedJSValue) f64 {
     var val = arg_val;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     val.asInt64 -= comptime @as(c_longlong, 1) << @as(@import("std").math.Log2Int(c_longlong), @intCast(49));
     return val.asDouble;
 }
 pub inline fn JSVALUE_TO_BOOL(arg_val: EncodedJSValue) @"bool" {
     const val = arg_val;
-    return val.asInt64 == @as(c_longlong, @bitCast(@as(c_longlong, (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1))));
+    return val.asInt64 == @as(c_longlong, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(c_longlong, (@as(c_int, 2) | @as(c_int, 4)) | @as(c_int, 1))));
 }
 pub extern fn JSFunctionCall(globalObject: ?*anyopaque, callFrame: ?*anyopaque) ?*anyopaque;
 pub const __block = @compileError("unable to translate macro: undefined identifier `__attribute__`"); // (no file):27:9

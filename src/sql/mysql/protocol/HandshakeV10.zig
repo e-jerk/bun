@@ -31,7 +31,7 @@ pub fn decodeInternal(this: *HandshakeV10, comptime Context: type, reader: NewRe
     // Auth plugin data part 1 (8 bytes)
     var auth_data = try reader.read(8);
     defer auth_data.deinit();
-    @memcpy(&this.auth_plugin_data_part_1, auth_data.slice());
+    safe.SimdUtils.copy(&this.auth_plugin_data_part_1, auth_data.slice());
 
     // Skip filler byte
     _ = try reader.int(u8);

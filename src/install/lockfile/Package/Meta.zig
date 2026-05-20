@@ -48,6 +48,7 @@ pub const Meta = extern struct {
         return this.has_install_script == .old;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn count(this: *const Meta, buf: []const u8, comptime StringBuilderType: type, builder: StringBuilderType) void {
         builder.count(this.man_dir.slice(buf));
     }
@@ -56,6 +57,7 @@ pub const Meta = extern struct {
         return .{};
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(this: *const Meta, id: PackageID, buf: []const u8, comptime StringBuilderType: type, builder: StringBuilderType) Meta {
         return Meta{
             .id = id,

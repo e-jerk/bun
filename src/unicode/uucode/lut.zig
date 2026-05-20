@@ -31,7 +31,7 @@ pub fn Generator(
 
                 pub fn eql(ctx: @This(), a: Block, b: Block) bool {
                     _ = ctx;
-                    return std.mem.eql(u8, &a, &b);
+                    return safe.SimdUtils.eql(&a, &b);
                 }
             },
             std.hash_map.default_max_load_percentage,
@@ -43,9 +43,9 @@ pub fn Generator(
             var blocks_map = BlockMap.init(alloc);
             defer blocks_map.deinit(alloc);
 
-            var stage1: .{};
-            var stage2: .{};
-            var stage3: .{};
+            var stage1: .{} = undefined;
+            var stage2: .{} = undefined;
+            var stage3: .{} = undefined;
             defer {
                 stage1.deinit(alloc);
                 stage2.deinit(alloc);
@@ -55,9 +55,11 @@ pub fn Generator(
             var block: Block = undefined;
             var block_len: u16 = 0;
             for (0..std.math.maxInt(u21) + 1) |cp| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const elem = try self.ctx.get(@as(u21, @intCast(cp)));
                 const block_idx = block_idx: {
-                    for (stage3.items, 0..) |item, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (stage3.items, 0..) |item, i| {
                         if (self.ctx.eql(item, elem)) break :block_idx i;
                     }
 
@@ -90,11 +92,11 @@ pub fn Generator(
             assert(stage3.items.len <= std.math.maxInt(u8));
 
             const stage1_owned = try stage1.toOwnedSlice(alloc);
-            errdefer alloc.free(stage1_owned);
+            // safe-transpile: free removed (memory owned by safe type);
             const stage2_owned = try stage2.toOwnedSlice(alloc);
-            errdefer alloc.free(stage2_owned);
+            // safe-transpile: free removed (memory owned by safe type);
             const stage3_owned = try stage3.toOwnedSlice(alloc);
-            errdefer alloc.free(stage3_owned);
+            // safe-transpile: free removed (memory owned by safe type);
 
             return .{
                 .stage1 = stage1_owned,

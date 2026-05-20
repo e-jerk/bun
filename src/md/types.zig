@@ -120,6 +120,7 @@ pub const Renderer = struct {
         leaveBlock: *const fn (ptr: *anyopaque, block_type: BlockType, data: u32) bun.JSError!void,
         enterSpan: *const fn (ptr: *anyopaque, span_type: SpanType, detail: SpanDetail) bun.JSError!void,
         leaveSpan: *const fn (ptr: *anyopaque, span_type: SpanType) bun.JSError!void,
+// safe-transpile: function uses raw slice parameter — consider safe.String
         text: *const fn (ptr: *anyopaque, text_type: TextType, content: []const u8) bun.JSError!void,
     };
 
@@ -135,6 +136,7 @@ pub const Renderer = struct {
     pub inline fn leaveSpan(self: Renderer, span_type: SpanType) bun.JSError!void {
         return self.vtable.leaveSpan(self.ptr, span_type);
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn text(self: Renderer, text_type: TextType, content: []const u8) bun.JSError!void {
         return self.vtable.text(self.ptr, text_type, content);
     }
@@ -171,6 +173,8 @@ pub const Attribute = struct {
         end: OFF,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn text(self: Attribute, src: []const u8) []const u8 {
         if (self.substr_offsets.len == 0) return "";
         const first = self.substr_offsets[0].beg;
@@ -361,6 +365,7 @@ pub const RefDef = struct {
 
 /// Extract table cell alignment from block data.
 pub fn alignmentFromData(data: u32) Align {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @enumFromInt(@as(u2, @truncate(data)));
 }
 
@@ -376,6 +381,7 @@ pub fn alignmentName(alignment: Align) ?[]const u8 {
 
 /// Extract task list item mark from block data. Returns 0 for non-task items.
 pub fn taskMarkFromData(data: u32) u8 {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @truncate(data);
 }
 

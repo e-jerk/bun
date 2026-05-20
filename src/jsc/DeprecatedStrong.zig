@@ -26,7 +26,7 @@ pub fn get(this: Strong) jsc.JSValue {
 pub fn swap(this: *Strong, safety_gpa: std.mem.Allocator, next: jsc.JSValue) jsc.JSValue {
     const prev = this._raw;
     this.deinit();
-    this.* = .init(safety_gpa, next);
+    this[0] = .init(safety_gpa, next);
     return prev;
 }
 pub fn dupe(this: Strong, gpa: std.mem.Allocator) Strong {

@@ -226,6 +226,7 @@ pub const CharacterSet = enum(u8) {
 
     pub const default = CharacterSet.utf8mb4_general_ci;
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn label(this: CharacterSet) []const u8 {
         if (@intFromEnum(this) < 100 and @intFromEnum(this) > 0) {
             return @tagName(this);

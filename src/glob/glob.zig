@@ -8,6 +8,7 @@ pub const BunGlobWalkerZ = GlobWalker(null, walk.SyscallAccessor, true);
 /// excluding those escaped with backslashes
 /// TODO: this doesn't play nicely with Windows directory separator and
 /// backslashing, should we just require the user to supply posix filepaths?
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn detectGlobSyntax(potential_pattern: []const u8) bool {
     // Negation only allowed in the beginning of the pattern
     if (potential_pattern.len > 0 and potential_pattern[0] == '!') return true;

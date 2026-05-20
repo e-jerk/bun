@@ -1,3 +1,4 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(data: []const u8) void {
     debug("SocketMonitor: write {x}", .{data});
     if (comptime bun.Environment.isDebug) {
@@ -11,6 +12,7 @@ pub fn write(data: []const u8) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn read(data: []const u8) void {
     debug("SocketMonitor: read {x}", .{data});
     if (comptime bun.Environment.isDebug) {

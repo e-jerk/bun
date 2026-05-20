@@ -95,7 +95,7 @@ pub const libuv_error_map = brk: {
     }
 
     // sanity check
-    bun.assert(std.mem.eql(u8, map.get(SystemErrno.ENOENT).?, "no such file or directory"));
+    bun.assert(safe.SimdUtils.eql(map.get(SystemErrno.ENOENT).?, "no such file or directory"));
 
     break :brk map;
 };

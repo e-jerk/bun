@@ -6,7 +6,9 @@ pub const short = u16;
 pub const PostgresShort = u16;
 
 pub fn Int32(value: anytype) [4]u8 {
-    return @bitCast(@byteSwap(@as(int4, @intCast(value))));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    return // safe-transpile: @bitCast requires manual review
+    @bitCast(@byteSwap(@as(int4, @intCast(value))));
 }
 
 const safe = @import("safe");

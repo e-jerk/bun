@@ -18,18 +18,22 @@ pub fn write(
 ) Status {
     const adjusted_count_temporary = @min(@as(u64, this.remain), @as(u63, std.math.maxInt(u63)));
     // TODO we should not need this int cast; improve the return type of `@min`
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const adjusted_count = @as(u63, @intCast(adjusted_count_temporary));
 
     if (Environment.isLinux) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var signed_offset = @as(i64, @intCast(this.offset));
         const begin = this.offset;
         const val =
             // this does the syscall directly, without libc
             std.os.linux.sendfile(socket.fd().cast(), this.fd.cast(), &signed_offset, this.remain);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.offset = @as(u64, @intCast(signed_offset));
 
         const errcode = bun.sys.getErrno(val);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.remain -|= @as(u64, @intCast(this.offset -| begin));
 
         if (errcode != .SUCCESS or this.remain == 0 or val == 0) {
@@ -41,7 +45,8 @@ pub fn write(
         }
     } else if (Environment.isFreeBSD) {
         var sbytes: std.posix.off_t = 0;
-        const signed_offset = @as(i64, @bitCast(@as(u64, this.offset)));
+        const signed_offset = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(u64, this.offset)));
         // FreeBSD: sendfile(fd, s, offset, nbytes, hdtr, *sbytes, flags)
         const errcode = bun.sys.getErrno(std.c.sendfile(
             this.fd.cast(),
@@ -52,6 +57,7 @@ pub fn write(
             &sbytes,
             0,
         ));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const wrote = @as(u64, @intCast(sbytes));
         this.offset +|= wrote;
         this.remain -|= wrote;
@@ -63,7 +69,8 @@ pub fn write(
         }
     } else if (Environment.isPosix) {
         var sbytes: std.posix.off_t = adjusted_count;
-        const signed_offset = @as(i64, @bitCast(@as(u64, this.offset)));
+        const signed_offset = @as(i64, // safe-transpile: @bitCast requires manual review
+    @bitCast(@as(u64, this.offset)));
         const errcode = bun.sys.getErrno(std.c.sendfile(
             this.fd.cast(),
             socket.fd().cast(),
@@ -72,6 +79,7 @@ pub fn write(
             null,
             0,
         ));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const wrote = @as(u64, @intCast(sbytes));
         this.offset +|= wrote;
         this.remain -|= wrote;

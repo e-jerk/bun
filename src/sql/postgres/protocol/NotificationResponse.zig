@@ -13,7 +13,7 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
     const length = try reader.length();
     bun.assert(length >= 4);
 
-    this.* = .{
+    this[0] = .{
         .pid = try reader.int4(),
         .channel = (try reader.readZ()).toOwned(),
         .payload = (try reader.readZ()).toOwned(),

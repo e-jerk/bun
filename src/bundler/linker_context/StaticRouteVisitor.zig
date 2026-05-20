@@ -58,7 +58,8 @@ fn hasTransitiveUseClientImpl(
     const import_records = all_import_records[source_index.get()];
 
     const result = result: {
-        for (import_records.sliceConst()) |*import_record| {
+        for (0..import_records.sliceConst().len) |__zust_i| {
+    var import_record = &import_records.sliceConst()[__zust_i];
             if (!import_record.source_index.isValid()) continue;
 
             // check if this import is a client boundary

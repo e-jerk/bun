@@ -231,7 +231,8 @@ pub fn getErrno(rc: anytype) E {
         // raw system calls from std.os.linux.* will return usize
         // the errno is stored in this value
         usize => {
-            const signed: isize = @bitCast(rc);
+            const signed: isize = // safe-transpile: @bitCast requires manual review
+    @bitCast(rc);
             const int = if (signed > -4096 and signed < 0) -signed else 0;
             return @enumFromInt(int);
         },

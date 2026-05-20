@@ -12,6 +12,7 @@ const Entry = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeOutput(this: *Export, comptime io_kind: anytype, comptime fmt: []const u8, args: anytype) Yield {
     if (this.bltn().stdout.needsIO()) |safeguard| {
         var output: *BuiltinIO.Output = &@field(this.bltn(), @tagName(io_kind));
@@ -119,7 +120,8 @@ pub fn deinit(this: *Export) void {
 }
 
 pub inline fn bltn(this: *Export) *Builtin {
-    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("export", this));
+    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("export", this));
     return @fieldParentPtr("impl", impl);
 }
 

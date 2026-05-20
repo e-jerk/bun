@@ -7,6 +7,7 @@ pub const Entity = struct {
 
 /// Look up an HTML entity by name (including & prefix and ; suffix).
 /// Uses binary search on the sorted entity map.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lookup(name: []const u8) ?[2]u21 {
     var low: usize = 0;
     var high: usize = entity_map.len;
@@ -24,8 +25,10 @@ pub fn lookup(name: []const u8) ?[2]u21 {
     return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn orderStrings(a: []const u8, b: []const u8) std.math.Order {
     const len = @min(a.len, b.len);
+    // safe-transpile: for with index access requires manual review
     for (a[0..len], b[0..len]) |ca, cb| {
         if (ca < cb) return .lt;
         if (ca > cb) return .gt;

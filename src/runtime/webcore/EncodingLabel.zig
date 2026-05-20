@@ -28,6 +28,7 @@ pub const EncodingLabel = enum {
     GBK,
     GB18030,
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getLabel(this: EncodingLabel) []const u8 {
         return switch (this) {
             .@"UTF-8" => "utf-8",

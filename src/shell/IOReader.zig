@@ -114,7 +114,8 @@ pub fn addReader(this: *IOReader, reader_: anytype) void {
     };
 
     const slice = this.readers.slice();
-    const usize_slice: []const usize = @as([*]const usize, @ptrCast(slice.ptr))[0..slice.len];
+    const usize_slice: []const usize = @as([*]const usize, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(slice.ptr))[0..slice.len];
     const ptr_usize: usize = @intFromPtr(reader.ptr.ptr());
     // Only add if it hasn't been added yet
     if (std.mem.indexOfScalar(usize, usize_slice, ptr_usize) == null) {
@@ -128,15 +129,18 @@ pub fn removeReader(this: *IOReader, reader_: anytype) void {
         else => ChildPtr.init(reader_),
     };
     const slice = this.readers.slice();
-    const usize_slice: []const usize = @as([*]const usize, @ptrCast(slice.ptr))[0..slice.len];
+    const usize_slice: []const usize = @as([*]const usize, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(slice.ptr))[0..slice.len];
     const ptr_usize: usize = @intFromPtr(reader.ptr.ptr());
     if (std.mem.indexOfScalar(usize, usize_slice, ptr_usize)) |idx| {
         this.readers.swapRemove(idx);
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onReadChunk(ptr: *anyopaque, chunk: []const u8, has_more: bun.io.ReadState) bool {
-    var this: *IOReader = @ptrCast(@alignCast(ptr));
+    var this: *IOReader = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @ptrCast(@alignCast(ptr));
     log("IOReader(0x{x}, fd={f}) onReadChunk(chunk_len={d}, has_more={s})", .{ @intFromPtr(this), this.fd, chunk.len, @tagName(has_more) });
     this.setReading(false);
 
@@ -210,6 +214,7 @@ fn asyncDeinitCallback(this: *@This()) void {
     if (this.fd != bun.invalid_fd) {
         // windows reader closes the file descriptor
         if (bun.Environment.isWindows) {
+// safe-transpile: optional unwrap requires manual review
             if (this.reader.source != null and !this.reader.source.?.isClosed()) {
                 this.reader.closeImpl(false);
             }
@@ -261,6 +266,7 @@ pub const IOReaderChildPtr = struct {
     }
 
     /// Return true if the child should be deleted
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onReadChunk(this: IOReaderChildPtr, chunk: []const u8, remove: *bool) Yield {
         return this.ptr.call("onIOReaderChunk", .{ chunk, remove }, Yield);
     }
@@ -286,11 +292,13 @@ pub const AsyncDeinitReader = struct {
     }
 
     pub fn reader(this: *AsyncDeinitReader) *IOReader {
-        return @alignCast(@fieldParentPtr("async_deinit", this));
+        return // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("async_deinit", this));
     }
 
     pub fn runFromMainThread(this: *AsyncDeinitReader) void {
-        const ioreader: *IOReader = @alignCast(@fieldParentPtr("async_deinit", this));
+        const ioreader: *IOReader = // safe-transpile: @alignCast requires manual review
+    @alignCast(@fieldParentPtr("async_deinit", this));
         ioreader.asyncDeinitCallback();
     }
 

@@ -39,6 +39,7 @@ pub const LexerUnicode = @import("../../shell/shell.zig").LexerUnicode;
 
 pub const shellCmdFromJS = @import("../../shell/shell.zig").shellCmdFromJS;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn needsEscapeUtf8AsciiLatin1(str: []const u8) bool {
     for (str) |c| {
         if (c == ' ' or c == '\'' or c == '"' or c == '\\' or c == '$' or c == '`' or c == '|' or c == '&' or c == ';' or c == '(' or c == ')' or c == '<' or c == '>' or c == '*' or c == '?' or c == '[' or c == ']' or c == '{' or c == '}' or c == '~' or c == '#' or c == '!') return true;
@@ -51,6 +52,7 @@ pub fn needsEscapeBunstr(str: bun.String) bool {
     return false;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn escape8Bit(str: []const u8, outbuf: anytype, comptime _: bool) !void {
     try outbuf.appendSlice(str);
 }
