@@ -318,7 +318,7 @@ pub var configureEnvForScriptsOnce = bun.once(struct {
         // to do that, we re-use the code from bun run
         // this is expensive, it traverses the entire directory tree going up to the root
         // so we really only want to do it when strictly necessary
-        var this_transpiler: transpiler.Transpiler = std.mem.zeroes(transpiler.Transpiler);
+        var this_transpiler: transpiler.Transpiler = undefined;
         _ = try RunCommand.configureEnvForRun(
             ctx,
             &this_transpiler,
@@ -781,10 +781,10 @@ pub fn init(
     }
 
     var env: *DotEnv.Loader = brk: {
-        const map = try safe.Box(DotEnv.Map).init(ctx.allocator, undefined);
+        const map = try ctx.allocator.create(DotEnv.Map);
         map.* = DotEnv.Map.init(ctx.allocator);
 
-        const loader = try safe.Box(DotEnv.Loader).init(ctx.allocator, undefined);
+        const loader = try ctx.allocator.create(DotEnv.Loader);
         loader.* = DotEnv.Loader.init(map, ctx.allocator);
         break :brk loader;
     };
