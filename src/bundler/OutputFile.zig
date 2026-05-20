@@ -158,7 +158,7 @@ pub const SavedFile = @import("../bundler_jsc/output_file_jsc.zig").SavedFile;
 pub fn initPending(loader: Loader, pending: resolver.Result) OutputFile {
     return .{
         .loader = loader,
-        .src_path = pending.pathConst().?.*,
+        .src_path = if (pending.pathConst()) |p| p.* else Fs.Path.init(""),
         .size = 0,
         .value = .{ .pending = pending },
     };
@@ -265,7 +265,7 @@ pub fn writeToDisk(f: OutputFile, root_dir: @import("std-fs-compat").FsDir, root
                 }
             }
 
-            var path_buf: bun.PathBuffer = undefined;
+            var path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
             _ = try jsc.Node.fs.NodeFS.writeFileWithPathBuffer(&path_buf, .{
                 .data = .{ .buffer = .{
                     .buffer = .{
@@ -297,7 +297,7 @@ pub fn moveTo(file: *const OutputFile, _: string, rel_path: []const u8, _dir: Fi
 }
 
 pub fn copyTo(file: *const OutputFile, _: string, rel_path: []const u8, dir: FileDescriptorType) !void {
-    var path_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
+    var path_buf: [bun.MAX_PATH_BYTES]u8 = .{};
     const rel_path_z = std.fmt.bufPrintZ(&path_buf, "{s}", .{rel_path}) catch unreachable;
     const fd_out = switch (bun.sys.openatA(dir, rel_path_z, bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, if (file.is_executable) 0o755 else 0o644)) {
         .result => |f| f,

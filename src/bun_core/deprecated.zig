@@ -15,7 +15,7 @@ pub fn BufferedReader(comptime buffer_size: usize, comptime ReaderType: type) ty
             const current = self.buf[self.start..self.end];
             if (current.len != 0) {
                 const to_transfer = @min(current.len, dest.len);
-                @memcpy(dest[0..to_transfer], current[0..to_transfer]);
+                safe.SimdUtils.copy(dest[0..to_transfer], current[0..to_transfer]);
                 self.start += to_transfer;
                 return to_transfer;
             }
@@ -29,7 +29,7 @@ pub fn BufferedReader(comptime buffer_size: usize, comptime ReaderType: type) ty
             // and then transfer to destination.
             self.end = try self.unbuffered_reader.read(&self.buf);
             const to_transfer = @min(self.end, dest.len);
-            @memcpy(dest[0..to_transfer], self.buf[0..to_transfer]);
+            safe.SimdUtils.copy(dest[0..to_transfer], self.buf[0..to_transfer]);
             self.start = to_transfer;
             return to_transfer;
         }

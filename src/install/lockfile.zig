@@ -1105,7 +1105,7 @@ pub const Printer = struct {
             lockfile_path_buf2[lockfile_path__.len] = 0;
             lockfile_path = lockfile_path_buf2[0..lockfile_path__.len :0];
         } else if (path.len > 0) {
-            @memcpy(lockfile_path_buf1[0..path.len], path);
+            safe.SimdUtils.copy(lockfile_path_buf1[0..path.len], path);
             lockfile_path_buf1[path.len] = 0;
             lockfile_path = lockfile_path_buf1[0..path.len :0];
         }
@@ -1272,8 +1272,8 @@ pub fn saveToDisk(this: *Lockfile, load_result: *const LoadResult, options: *con
     };
     defer bun.default_allocator.free(bytes);
 
-    var tmpname_buf: [512]u8 = undefined;
-    var base64_bytes: [8]u8 = undefined;
+    var tmpname_buf = std.mem.zeroes([512]u8);
+    var base64_bytes = std.mem.zeroes([8]u8);
     bun.csprng(&base64_bytes);
     const tmpname = if (save_format == .text)
         std.fmt.bufPrintZ(&tmpname_buf, ".lock-{x}.tmp", .{&base64_bytes}) catch unreachable

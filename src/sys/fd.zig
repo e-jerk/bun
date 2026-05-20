@@ -645,7 +645,8 @@ pub const MovableIfWindowsFd = union(enum) {
 
     pub fn isValid(self: *const Self) bool {
         if (comptime bun.Environment.isPosix) return self._inner.isValid();
-        return self._inner != null and self._inner.?.isValid();
+        if (self._inner) |fd| return fd.isValid();
+        return false;
     }
 
     pub fn isOwned(self: *const Self) bool {
@@ -665,8 +666,11 @@ pub const MovableIfWindowsFd = union(enum) {
 
     pub fn format(self: *const Self, writer: *std.Io.Writer) !void {
         if (comptime bun.Environment.isPosix) {
-            try writer.print("{f}", .{self.get().?});
-            return;
+            if (self.get()) |fd| {
+                try writer.print("{f}", .{fd});
+                return;
+            }
+            unreachable;
         }
         if (self._inner) |fd| {
             try writer.print("{f}", .{fd});

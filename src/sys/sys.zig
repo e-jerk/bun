@@ -359,10 +359,10 @@ pub fn getcwdZ(buf: *bun.PathBuffer) Maybe([:0]const u8) {
     }
 
     const rc: ?[*:0]u8 = @ptrCast(std.c.getcwd(buf, bun.MAX_PATH_BYTES));
-    return if (rc != null)
-        Result{ .result = rc.?[0..std.mem.len(rc.?) :0] }
+    return if (rc) |p|
+        Result{ .result = p[0..std.mem.len(p) :0] }
     else
-        Result.errnoSysP(@as(c_int, 0), .getcwd, buf).?;
+        if (Result.errnoSysP(@as(c_int, 0), .getcwd, buf)) |err| err else unreachable;
 }
 
 const syscall_or_c = if (Environment.isLinux) syscall else bun.c;
@@ -372,7 +372,10 @@ pub fn fchown(fd: bun.FD, uid: jsc.Node.uid_t, gid: jsc.Node.gid_t) Maybe(void) 
         return sys_uv.fchown(fd, uid, gid);
     }
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall_or_c.fchown(fd.cast(), uid, gid);
         if (Maybe(void).errnoSysFd(rc, .fchown, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -390,7 +393,10 @@ pub fn fchmod(fd: bun.FD, mode: bun.Mode) Maybe(void) {
         return sys_uv.fchmod(fd, mode);
     }
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall_or_c.fchmod(fd.cast(), mode);
         if (Maybe(void).errnoSysFd(rc, .fchmod, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -406,7 +412,10 @@ pub fn fchmod(fd: bun.FD, mode: bun.Mode) Maybe(void) {
 pub fn fchmodat(fd: bun.FD, path: [:0]const u8, mode: bun.Mode, flags: if (Environment.isLinux) u32 else i32) Maybe(void) {
     if (comptime Environment.isWindows) @compileError("Use fchmod instead");
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall_or_c.fchmodat(fd.cast(), path.ptr, mode, flags);
         if (Maybe(void).errnoSysFd(rc, .fchmodat, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -424,7 +433,10 @@ pub fn chmod(path: [:0]const u8, mode: bun.Mode) Maybe(void) {
         return sys_uv.chmod(path, mode);
     }
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall_or_c.chmod(path.ptr, mode);
         if (Maybe(void).errnoSysP(rc, .chmod, path)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -502,7 +514,10 @@ pub fn chdir(path: anytype, destination: anytype) Maybe(void) {
 }
 
 pub fn sendfile(src: bun.FD, dest: bun.FD, len: usize) Maybe(usize) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = std.os.linux.sendfile(
             dest.cast(),
             src.cast(),
@@ -523,7 +538,10 @@ pub fn stat(path: [:0]const u8) Maybe(bun.Stat) {
     if (Environment.isWindows) {
         return sys_uv.stat(path);
     } else {
+        var loop_limit: usize = 0;
         while (true) {
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             var stat_ = mem.zeroes(bun.Stat);
             const rc = if (Environment.isLinux)
                 // aarch64 linux doesn't implement a "stat" syscall. It's all fstatat.
@@ -548,7 +566,10 @@ pub fn statfs(path: [:0]const u8) Maybe(bun.StatFS) {
     if (Environment.isWindows) {
         return .{ .err = Error.fromCode(.ENOSYS, .statfs) };
     } else {
+        var loop_limit: usize = 0;
         while (true) {
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             var statfs_ = mem.zeroes(bun.StatFS);
             const rc = if (Environment.isLinux)
                 c.statfs(path, &statfs_)
@@ -575,7 +596,10 @@ pub fn lstat(path: [:0]const u8) Maybe(bun.Stat) {
     if (Environment.isWindows) {
         return sys_uv.lstat(path);
     } else {
+        var loop_limit: usize = 0;
         while (true) {
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             var stat_buf = mem.zeroes(bun.Stat);
             if (Maybe(bun.Stat).errnoSysP(workaround_symbols.lstat(path, &stat_buf), .lstat, path)) |err| {
                 if (err.getErrno() == .INTR) continue;
@@ -594,7 +618,10 @@ pub fn fstat(fd: bun.FD) Maybe(bun.Stat) {
         return sys_uv.fstat(uvfd);
     }
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         var stat_ = mem.zeroes(bun.Stat);
 
         const rc = workaround_symbols.fstat(fd.cast(), &stat_);
@@ -846,7 +873,10 @@ pub fn fstatat(fd: bun.FD, path: [:0]const u8) Maybe(bun.Stat) {
         };
     }
     const fd_valid = if (fd == bun.invalid_fd) std.posix.AT.FDCWD else fd.native();
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         var stat_buf = mem.zeroes(bun.Stat);
         if (Maybe(bun.Stat).errnoSysFP(syscall.fstatat(fd_valid, path, &stat_buf, 0), .fstatat, fd, path)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -872,7 +902,10 @@ pub fn lstatat(fd: bun.FD, path: [:0]const u8) Maybe(bun.Stat) {
         };
     }
     const fd_valid = if (fd == bun.invalid_fd) std.posix.AT.FDCWD else fd.native();
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         var stat_buf = mem.zeroes(bun.Stat);
         if (Maybe(bun.Stat).errnoSysFP(syscall.fstatat(fd_valid, path, &stat_buf, std.posix.AT.SYMLINK_NOFOLLOW), .fstatat, fd, path)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -957,7 +990,10 @@ pub fn mkdirOSPath(file_path: bun.OSPathSliceZ, flags: mode_t) Maybe(void) {
 
 const fnctl_int = if (Environment.isLinux) usize else c_int;
 pub fn fcntl(fd: bun.FD, cmd: i32, arg: anytype) Maybe(fnctl_int) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const result = switch (@TypeOf(arg)) {
             i32, comptime_int, c_int => fcntl_symbol(fd.native(), cmd, @as(c_int, arg)),
             i64 => fcntl_symbol(fd.cast(), cmd, @as(c_long, @bitCast(arg))),
@@ -1713,7 +1749,10 @@ pub fn openatOSPath(dirfd: bun.FD, file_path: bun.OSPathSliceZ, flags: i32, perm
     } else if (comptime Environment.isWindows) {
         return openatWindowsT(bun.OSPathChar, dirfd, file_path, flags, perm);
     } else if (comptime Environment.isFreeBSD) {
+        var loop_limit: usize = 0;
         while (true) {
+            loop_limit += 1;
+            std.debug.assert(loop_limit <= 1_000_000);
             const rc = std.c.openat(dirfd.cast(), file_path, @bitCast(bun.O.toPacked(flags)), perm);
             if (comptime Environment.allow_assert)
                 log("openat({f}, {s}, {d}) = {d}", .{ dirfd, bun.sliceTo(file_path, 0), flags, rc });
@@ -1725,7 +1764,10 @@ pub fn openatOSPath(dirfd: bun.FD, file_path: bun.OSPathSliceZ, flags: i32, perm
         }
     }
 
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall.openat(dirfd.cast(), file_path, bun.O.toPacked(flags), perm);
         if (comptime Environment.allow_assert)
             log("openat({f}, {s}, {d}) = {d}", .{ dirfd, bun.sliceTo(file_path, 0), flags, rc });
@@ -2090,7 +2132,10 @@ pub fn pread(fd: bun.FD, buf: []u8, offset: i64) Maybe(usize) {
     }
 
     const ioffset = @as(i64, @bitCast(offset)); // the OS treats this as unsigned
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = pread_sym(fd.cast(), buf.ptr, adjusted_len, ioffset);
         if (Maybe(usize).errnoSysFd(rc, .pread, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -2115,7 +2160,10 @@ pub fn pwrite(fd: bun.FD, bytes: []const u8, offset: i64) Maybe(usize) {
     const adjusted_len = @min(bytes.len, max_count);
 
     const ioffset = @as(i64, @bitCast(offset)); // the OS treats this as unsigned
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = pwrite_sym(fd.cast(), bytes.ptr, adjusted_len, ioffset);
         return if (Maybe(usize).errnoSysFd(rc, .pwrite, fd)) |err| {
             switch (err.getErrno()) {
@@ -2209,7 +2257,10 @@ pub fn recvNonBlock(fd: bun.FD, buf: []u8) Maybe(usize) {
 }
 
 pub fn poll(fds: []std.posix.pollfd, timeout: i32) Maybe(usize) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = switch (Environment.os) {
             .mac => darwin_nocancel.@"poll$NOCANCEL"(fds.ptr, fds.len, timeout),
             .linux => linux.poll(fds.ptr, fds.len, timeout),
@@ -2222,6 +2273,7 @@ pub fn poll(fds: []std.posix.pollfd, timeout: i32) Maybe(usize) {
         }
         return .{ .result = @as(usize, @intCast(rc)) };
     }
+    unreachable;
 }
 
 /// bionic's `struct sigaction` and `sigset_t` do not match the glibc/musl
@@ -2293,7 +2345,10 @@ pub fn sigaction(sig: u8, noalias act: ?*const Sigaction, noalias oact: ?*Sigact
 }
 
 pub fn ppoll(fds: []std.posix.pollfd, timeout: ?*std.posix.timespec, sigmask: ?*const std.posix.sigset_t) Maybe(usize) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = switch (Environment.os) {
             .mac => darwin_nocancel.@"ppoll$NOCANCEL"(fds.ptr, fds.len, timeout, sigmask),
             .linux => linux.ppoll(fds.ptr, fds.len, timeout, sigmask),
@@ -2306,6 +2361,7 @@ pub fn ppoll(fds: []std.posix.pollfd, timeout: ?*std.posix.timespec, sigmask: ?*
         }
         return .{ .result = @as(usize, @intCast(rc)) };
     }
+    unreachable;
 }
 
 pub fn recv(fd: bun.FD, buf: []u8, flag: u32) Maybe(usize) {
@@ -2344,7 +2400,10 @@ pub fn recv(fd: bun.FD, buf: []u8, flag: u32) Maybe(usize) {
 }
 
 pub fn kevent(fd: bun.FD, changelist: []const std.c.Kevent, eventlist: []std.c.Kevent, timeout: ?*std.posix.timespec) Maybe(usize) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = std.c.kevent(fd.cast(), changelist.ptr, @intCast(changelist.len), eventlist.ptr, @intCast(eventlist.len), timeout);
         if (Maybe(usize).errnoSysFd(rc, .kevent, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -2405,7 +2464,10 @@ pub fn pidfd_open(pid: std.os.linux.pid_t, flags: u32) Maybe(i32) {
 }
 
 pub fn lseek(fd: bun.FD, offset: i64, whence: usize) Maybe(usize) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall.lseek(fd.cast(), offset, @intCast(whence));
         if (Maybe(usize).errnoSysFd(rc, .lseek, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -2446,7 +2508,10 @@ pub fn readlink(in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
 }
 
 pub fn readlinkat(fd: bun.FD, in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         const rc = syscall.readlinkat(fd.cast(), in, buf.ptr, buf.len);
 
         if (Maybe([:0]u8).errnoSysFP(rc, .readlink, fd, in)) |err| {
@@ -2486,7 +2551,10 @@ pub fn ftruncate(fd: bun.FD, size: isize) Maybe(void) {
         return Maybe(void).errnoSysFd(rc, .ftruncate, fd) orelse .success;
     }
 
+    var loop_limit: usize = 0;
     return while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         if (Maybe(void).errnoSysFd(syscall.ftruncate(fd.cast(), size), .ftruncate, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
             return err;
@@ -2496,7 +2564,10 @@ pub fn ftruncate(fd: bun.FD, size: isize) Maybe(void) {
 }
 
 pub fn rename(from: [:0]const u8, to: [:0]const u8) Maybe(void) {
+    var loop_limit: usize = 0;
     while (true) {
+        loop_limit += 1;
+        std.debug.assert(loop_limit <= 1_000_000);
         if (Maybe(void).errnoSys(syscall.rename(from, to), .rename)) |err| {
             if (err.getErrno() == .INTR) continue;
             return err;
@@ -3629,7 +3700,7 @@ pub fn futimens(fd: bun.FD, atime: jsc.Node.TimeLike, mtime: jsc.Node.TimeLike) 
 
         switch (getErrno(rc)) {
             .INTR => continue,
-            else => return Maybe(void).errnoSysFd(rc, .futimens, fd).?,
+            else => return if (Maybe(void).errnoSysFd(rc, .futimens, fd)) |err| err else unreachable,
         }
     }
 
@@ -3660,7 +3731,7 @@ fn utimensWithFlags(path: bun.OSPathSliceZ, atime: jsc.Node.TimeLike, mtime: jsc
 
         switch (getErrno(rc)) {
             .INTR => continue,
-            else => return Maybe(void).errnoSysP(rc, .utimensat, path).?,
+            else => return if (Maybe(void).errnoSysP(rc, .utimensat, path)) |err| err else unreachable,
         }
     }
 

@@ -4367,14 +4367,14 @@ pub const DevServerOutput = struct {
 };
 
 pub fn generateUniqueKey() u64 {
-    var key_buf: [8]u8 = undefined;
+    var key_buf = std.mem.zeroes([8]u8);
     std.c.arc4random_buf(&key_buf, 8);
     const key = std.mem.readInt(u64, &key_buf, .little) & @as(u64, 0x0FFFFFFF_FFFFFFFF);
     // without this check, putting unique_key in an object key would
     // sometimes get converted to an identifier. ensuring it starts
     // with a number forces that optimization off.
     if (Environment.isDebug) {
-        var buf: [16]u8 = undefined;
+        var buf = std.mem.zeroes([16]u8);
         const hex = std.fmt.bufPrint(&buf, "{f}", .{bun.fmt.hexIntLower(key)}) catch
             unreachable;
         switch (hex[0]) {

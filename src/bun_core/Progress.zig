@@ -243,7 +243,7 @@ fn clearWithHeldLock(p: *Progress, end_ptr: *usize) void {
         } else if (builtin.os.tag == .windows) winapi: {
             assert(p.is_windows_terminal);
 
-            var info: windows.CONSOLE_SCREEN_BUFFER_INFO = undefined;
+            var info: windows.CONSOLE_SCREEN_BUFFER_INFO = std.mem.zeroes(windows.CONSOLE_SCREEN_BUFFER_INFO);
             if (windows.kernel32.GetConsoleScreenBufferInfo(file.handle, &info) != windows.TRUE) {
                 // stop trying to write to this file
                 p.terminal = null;
@@ -260,7 +260,7 @@ fn clearWithHeldLock(p: *Progress, end_ptr: *usize) void {
 
             const fill_chars = @as(windows.DWORD, @intCast(info.dwSize.X - cursor_pos.X));
 
-            var written: windows.DWORD = undefined;
+            var written: windows.DWORD = std.mem.zeroes(windows.DWORD);
             if (windows.kernel32.FillConsoleOutputAttribute(
                 file.handle,
                 info.wAttributes,
@@ -402,7 +402,7 @@ fn bufWrite(self: *Progress, end: *usize, comptime format: []const u8, args: any
             self.columns_written += self.output_buffer.len - end.*;
             end.* = self.output_buffer.len;
             const suffix = "... ";
-            @memcpy(self.output_buffer[self.output_buffer.len - suffix.len ..], suffix);
+            safe.SimdUtils.copy(self.output_buffer[self.output_buffer.len - suffix.len ..], suffix);
         },
     }
 }

@@ -194,7 +194,7 @@ pub fn IntegrityFormatter(comptime style: IntegrityFormatStyle) type {
         bytes: [sha.SHA512.digest]u8,
 
         pub fn format(this: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void {
-            var buf: [std.base64.standard.Encoder.calcSize(sha.SHA512.digest)]u8 = undefined;
+            var buf: [std.base64.standard.Encoder.calcSize(sha.SHA512.digest)]u8 = std.mem.zeroes([std.base64.standard.Encoder.calcSize(sha.SHA512.digest)]u8);
             const count = bun.simdutf.base64.encode(this.bytes[0..sha.SHA512.digest], &buf, false);
 
             const encoded = buf[0..count];
@@ -1526,7 +1526,7 @@ pub fn HexIntFormatter(comptime Int: type, comptime lower: bool) type {
         const BufType = [@bitSizeOf(Int) / 4]u8;
 
         fn getOutBuf(value: Int) BufType {
-            var buf: BufType = undefined;
+            var buf: BufType = std.mem.zeroes(BufType);
             inline for (&buf, 0..) |*c, i| {
                 // value relative to the current nibble
                 c.* = table[@as(u8, @as(u4, @truncate(value >> comptime ((buf.len - i - 1) * 4)))) & 0xF];
@@ -1568,7 +1568,7 @@ fn TrimmedPrecisionFormatter(comptime precision: usize) type {
             try writer.print("{d}", .{whole});
             const rem = self.num - whole;
             if (rem != 0) {
-                var buf: [2 + precision]u8 = undefined;
+                var buf: [2 + precision]u8 = std.mem.zeroes([2 + precision]u8);
                 var formatted = std.fmt.bufPrint(&buf, "{d:." ++ std.fmt.comptimePrint("{d}", .{precision}) ++ "}", .{rem}) catch unreachable;
                 formatted = formatted[2..];
                 const trimmed = std.mem.trimEnd(u8, formatted, "0");
@@ -1591,7 +1591,7 @@ const FormatDurationData = struct {
 /// This is copied from std.fmt.formatDuration, except it will only print one decimal instead of three
 fn formatDurationOneDecimal(data: FormatDurationData, writer: *std.Io.Writer) !void {
     // worst case: "-XXXyXXwXXdXXhXXmXX.XXXs".len = 24
-    var buf: [24]u8 = undefined;
+    var buf: [24]u8 = std.mem.zeroes([24]u8);
     var fbs = @import("std-io-compat").fixedBufferStream(&buf);
     var buf_writer = fbs.writer();
     if (data.negative) {
@@ -1689,7 +1689,7 @@ pub const FormatDouble = struct {
     }
 
     pub fn format(self: @This(), writer: *std.Io.Writer) !void {
-        var buf: [124]u8 = undefined;
+        var buf: [124]u8 = std.mem.zeroes([124]u8);
         const slice = dtoa(&buf, self.number);
         try writer.writeAll(slice);
     }

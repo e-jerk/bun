@@ -313,7 +313,7 @@ pub fn toSystemError(this: Error) SystemError {
 
 fn appendStr(buf: []u8, pos: usize, str: []const u8) usize {
     const end = @min(pos + str.len, buf.len);
-    @memcpy(buf[pos..end], str[0..(end - pos)]);
+    safe.SimdUtils.copy(buf[pos..end], str[0..(end - pos)]);
     return end;
 }
 

@@ -39,7 +39,7 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
             data: []const u8,
             index: usize,
         ) usize {
-            @memcpy(s.bytes.items[index..][0..data.len], data);
+            safe.SimdUtils.copy(s.bytes.items[index..][0..data.len], data);
             return data.len;
         }
     };

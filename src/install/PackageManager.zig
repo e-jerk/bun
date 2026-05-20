@@ -235,7 +235,7 @@ pub const WorkspaceFilter = union(enum) {
         const copy_end = copy_start + filter.len;
 
         const buf = try allocator.alloc(u8, copy_end);
-        @memcpy(buf[copy_start..copy_end], filter);
+        safe.SimdUtils.copy(buf[copy_start..copy_end], filter);
 
         if (prepend_negate) {
             buf[0] = '!';
@@ -318,7 +318,7 @@ pub var configureEnvForScriptsOnce = bun.once(struct {
         // to do that, we re-use the code from bun run
         // this is expensive, it traverses the entire directory tree going up to the root
         // so we really only want to do it when strictly necessary
-        var this_transpiler: transpiler.Transpiler = undefined;
+        var this_transpiler: transpiler.Transpiler = std.mem.zeroes(transpiler.Transpiler);
         _ = try RunCommand.configureEnvForRun(
             ctx,
             &this_transpiler,
@@ -352,7 +352,7 @@ pub var configureEnvForScriptsOnce = bun.once(struct {
         }
 
         {
-            var node_path: bun.PathBuffer = undefined;
+            var node_path: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
             if (this.env.getNodePath(this_transpiler.fs, &node_path)) |node_pathZ| {
                 _ = try this.env.loadNodeJSConfig(this_transpiler.fs, bun.handleOom(bun.default_allocator.dupe(u8, node_pathZ)));
             } else brk: {
@@ -457,7 +457,7 @@ var ensureTempNodeGypScriptOnce = bun.once(struct {
         if (manager.node_gyp_tempdir_name.len > 0) return;
 
         const tempdir = manager.getTemporaryDirectory();
-        var path_buf: bun.PathBuffer = undefined;
+        var path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
         const node_gyp_tempdir_name = try Fs.FileSystem.tmpname("node-gyp", &path_buf, 12345);
 
         // used later for adding to path for scripts
@@ -620,8 +620,8 @@ pub fn init(
             const need_write = subcommand != .install or cli.positionals.len > 1;
 
             while (true) {
-                var package_json_path_buf: bun.PathBuffer = undefined;
-                @memcpy(package_json_path_buf[0..this_cwd.len], this_cwd);
+                var package_json_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+                safe.SimdUtils.copy(package_json_path_buf[0..this_cwd.len], this_cwd);
                 package_json_path_buf[this_cwd.len..package_json_path_buf.len][0.."/package.json".len].* = "/package.json".*;
                 package_json_path_buf[this_cwd.len + "/package.json".len] = 0;
                 const package_json_path = package_json_path_buf[0 .. this_cwd.len + "/package.json".len :0];
@@ -689,8 +689,8 @@ pub fn init(
             if (!created_package_json) {
                 while (std.fs.path.dirname(this_cwd)) |parent| : (this_cwd = parent) {
                     const parent_without_trailing_slash = strings.withoutTrailingSlash(parent);
-                    var parent_path_buf: bun.PathBuffer = undefined;
-                    @memcpy(parent_path_buf[0..parent_without_trailing_slash.len], parent_without_trailing_slash);
+                    var parent_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+                    safe.SimdUtils.copy(parent_path_buf[0..parent_without_trailing_slash.len], parent_without_trailing_slash);
                     parent_path_buf[parent_without_trailing_slash.len..parent_path_buf.len][0.."/package.json".len].* = "/package.json".*;
                     parent_path_buf[parent_without_trailing_slash.len + "/package.json".len] = 0;
 
@@ -741,7 +741,7 @@ pub fn init(
                                 bun.path.relativeNormalized(json_source.path.name.dir, child_cwd, .auto, true);
 
                             const maybe_workspace_path = if (comptime Environment.isWindows) brk: {
-                                @memcpy(parent_path_buf[0..child_path.len], child_path);
+                                safe.SimdUtils.copy(parent_path_buf[0..child_path.len], child_path);
                                 bun.path.dangerouslyConvertPathToPosixInPlace(u8, parent_path_buf[0..child_path.len]);
                                 break :brk parent_path_buf[0..child_path.len];
                             } else child_path;
@@ -781,10 +781,10 @@ pub fn init(
     }
 
     var env: *DotEnv.Loader = brk: {
-        const map = try ctx.allocator.create(DotEnv.Map);
+        const map = try safe.Box(DotEnv.Map).init(ctx.allocator, undefined);
         map.* = DotEnv.Map.init(ctx.allocator);
 
-        const loader = try ctx.allocator.create(DotEnv.Loader);
+        const loader = try safe.Box(DotEnv.Loader).init(ctx.allocator, undefined);
         loader.* = DotEnv.Loader.init(map, ctx.allocator);
         break :brk loader;
     };
@@ -795,7 +795,7 @@ pub fn init(
     initializeStore();
 
     if (bun.env_var.XDG_CONFIG_HOME.get() orelse bun.env_var.HOME.get()) |data_dir| {
-        var buf: bun.PathBuffer = undefined;
+        var buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
         var parts = [_]string{
             "./.npmrc",
         };
@@ -931,7 +931,7 @@ pub fn init(
         if (std.fs.path.isAbsolute(manager.options.ca_file_name)) {
             abs_ca_file_name = try manager.allocator.dupeZ(u8, manager.options.ca_file_name);
         } else {
-            var path_buf: bun.PathBuffer = undefined;
+        var path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
             abs_ca_file_name = try manager.allocator.dupeZ(u8, bun.path.joinAbsStringBuf(
                 original_cwd_clone,
                 &path_buf,
@@ -1024,8 +1024,8 @@ pub fn initWithRuntimeOnce(
     // var node = progress.start(name: []const u8, estimated_total_items: usize)
     const top_level_dir_no_trailing_slash = strings.withoutTrailingSlash(Fs.FileSystem.instance.top_level_dir);
     var original_package_json_path = bun.handleOom(allocator.allocSentinel(u8, top_level_dir_no_trailing_slash.len + "/package.json".len, 0));
-    @memcpy(original_package_json_path[0..top_level_dir_no_trailing_slash.len], top_level_dir_no_trailing_slash);
-    @memcpy(original_package_json_path[top_level_dir_no_trailing_slash.len..][0.."/package.json".len], "/package.json");
+    safe.SimdUtils.copy(original_package_json_path[0..top_level_dir_no_trailing_slash.len], top_level_dir_no_trailing_slash);
+    safe.SimdUtils.copy(original_package_json_path[top_level_dir_no_trailing_slash.len..][0.."/package.json".len], "/package.json");
 
     manager.* = PackageManager{
         .preallocated_network_tasks = .init(bun.default_allocator),
@@ -1121,8 +1121,8 @@ pub fn initWithRuntimeOnce(
         manager.lockfile.initEmpty(allocator);
     }
 }
-var cwd_buf: bun.PathBuffer = undefined;
-var root_package_json_path_buf: bun.PathBuffer = undefined;
+    var cwd_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+    var root_package_json_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
 pub var root_package_json_path: [:0]const u8 = "";
 
 // Default to a maximum of 64 simultaneous HTTP requests for bun install if no proxy is specified

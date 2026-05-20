@@ -193,7 +193,7 @@ pub const Source = struct {
             console_codepage = c.GetConsoleCP();
             _ = c.SetConsoleCP(CP_UTF8);
 
-            var mode: w.DWORD = undefined;
+            var mode: w.DWORD = std.mem.zeroes(w.DWORD);
             if (c.GetConsoleMode(stdin, &mode) != 0) {
                 console_mode[0] = mode;
                 bun_stdio_tty[0] = 1;

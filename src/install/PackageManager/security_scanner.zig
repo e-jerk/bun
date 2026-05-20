@@ -287,7 +287,7 @@ pub fn promptForWarnings() bool {
     Output.flush();
 
     var stdin = @import("std-fs-compat").File.stdin();
-    var reader_buffer: [1024]u8 = undefined;
+    var reader_buffer = std.mem.zeroes([1024]u8);
     var buffered = stdin.readerStreaming(&reader_buffer);
     const reader = &buffered.interface;
 
@@ -827,12 +827,12 @@ pub const SecurityScanSubprocess = struct {
         const pipe = bun.new(uv.Pipe, std.mem.zeroes(uv.Pipe));
         errdefer pipe.closeAndDestroy();
         try pipe.init(this.loop(), false).unwrap();
-        try pipe.open(parent_write_fd.?).unwrap();
+        try pipe.open(if (parent_write_fd) |fd| fd else return error.NullPointer).unwrap();
         parent_write_fd = null; // pipe owns it now
 
         const extra_fds = [_]bun.spawn.SpawnOptions.Stdio{
             .{ .pipe = ipc_output_fds[1] }, // fd 3: child inherits write end
-            .{ .pipe = child_read_fd.? }, // fd 4: child inherits non-overlapped read end
+            .{ .pipe = if (child_read_fd) |fd| fd else return error.NullPointer }, // fd 4: child inherits non-overlapped read end
         };
 
         const spawn_options = bun.spawn.SpawnOptions{
@@ -850,8 +850,10 @@ pub const SecurityScanSubprocess = struct {
         defer spawned.extra_pipes.deinit();
 
         ipc_output_fds[1].close();
-        child_read_fd.?.close();
-        child_read_fd = null;
+        if (child_read_fd) |fd| {
+            fd.close();
+            child_read_fd = null;
+        }
 
         this.ipc_reader.flags.nonblocking = true;
 
@@ -891,12 +893,16 @@ pub const SecurityScanSubprocess = struct {
             this.json_writer = null;
         };
 
-        switch (this.json_writer.?.start()) {
-            .err => |err| {
-                Output.errGeneric("Failed to start security scanner JSON pipe writer: {f}", .{err});
-                return error.JSONPipeWriterFailed;
-            },
-            .result => {},
+        if (this.json_writer) |writer| {
+            switch (writer.start()) {
+                .err => |err| {
+                    Output.errGeneric("Failed to start security scanner JSON pipe writer: {f}", .{err});
+                    return error.JSONPipeWriterFailed;
+                },
+                .result => {},
+            }
+        } else {
+            return error.JSONPipeWriterFailed;
         }
 
         switch (process.watchOrReap()) {
@@ -977,12 +983,10 @@ pub const SecurityScanSubprocess = struct {
             this.stderr_data.deinit(this.manager.allocator);
         }
 
-        if (this.exit_status == null) {
+        const status = this.exit_status orelse {
             Output.errGeneric("Security scanner terminated without an exit status. This is a bug in Bun.", .{});
             return error.SecurityScannerProcessFailedWithoutExitStatus;
-        }
-
-        const status = this.exit_status.?;
+        };
 
         if (this.ipc_data.items.len == 0) {
             switch (status) {
