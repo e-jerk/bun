@@ -368,3 +368,5 @@ const DevServerSourceProvider = bun.SourceMap.DevServerSourceProvider;
 const InternalSourceMap = SourceMap.InternalSourceMap;
 const ParsedSourceMap = SourceMap.ParsedSourceMap;
 const SourceProviderMap = SourceMap.SourceProviderMap;
+
+const safe = @import("safe");

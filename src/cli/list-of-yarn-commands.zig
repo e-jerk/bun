@@ -74,3 +74,5 @@ pub const all_yarn_commands = bun.ComptimeStringMap(void, .{
 });
 
 const bun = @import("bun");
+
+const safe = @import("safe");

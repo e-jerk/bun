@@ -181,3 +181,5 @@ const JSRuntimeType = jsc.JSRuntimeType;
 const JSValue = jsc.JSValue;
 const ZigStackFrame = jsc.ZigStackFrame;
 const ZigStackTrace = jsc.ZigStackTrace;
+
+const safe = @import("safe");

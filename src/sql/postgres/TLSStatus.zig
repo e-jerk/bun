@@ -9,3 +9,5 @@ pub const TLSStatus = union(enum) {
     ssl_not_available,
     ssl_ok,
 };
+
+const safe = @import("safe");

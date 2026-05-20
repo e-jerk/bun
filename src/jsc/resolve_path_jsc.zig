@@ -31,3 +31,5 @@ export fn ResolvePath__joinAbsStringBufCurrentPlatformBunString(
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

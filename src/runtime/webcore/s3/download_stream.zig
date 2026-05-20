@@ -242,3 +242,5 @@ const SignResult = S3Credentials.SignResult;
 const bun = @import("bun");
 const jsc = bun.jsc;
 const strings = bun.strings;
+
+const safe = @import("safe");

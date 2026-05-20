@@ -2049,3 +2049,5 @@ const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = bun.jsc.JSValue;
 const ZigString = jsc.ZigString;
 const Blob = jsc.WebCore.Blob;
+
+const safe = @import("safe");

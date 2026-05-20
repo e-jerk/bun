@@ -29,3 +29,5 @@ const Data = @import("../../shared/Data.zig").Data;
 const AnyPostgresError = @import("../AnyPostgresError.zig").AnyPostgresError;
 
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

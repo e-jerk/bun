@@ -196,3 +196,5 @@ const Npm = install.Npm;
 const PackageID = install.PackageID;
 const PackageNameHash = install.PackageNameHash;
 const Meta = Lockfile.Package.Meta;
+
+const safe = @import("safe");

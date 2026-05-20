@@ -86,3 +86,5 @@ const jsc = bun.jsc;
 const ConcurrentTask = jsc.ConcurrentTask;
 const WorkPool = jsc.WorkPool;
 const WorkPoolTask = jsc.WorkPoolTask;
+
+const safe = @import("safe");

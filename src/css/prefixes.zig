@@ -2201,3 +2201,5 @@ pub const Feature = enum {
 const css = @import("./css_parser.zig");
 const VendorPrefix = css.VendorPrefix;
 const Browsers = css.targets.Browsers;
+
+const safe = @import("safe");

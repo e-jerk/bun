@@ -330,3 +330,5 @@ const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const Blob = jsc.WebCore.Blob;
 const PathOrBlob = jsc.Node.PathOrBlob;
+
+const safe = @import("safe");

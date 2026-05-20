@@ -17,3 +17,5 @@ const bun = @import("bun");
 const DecoderWrap = @import("./DecoderWrap.zig").DecoderWrap;
 const NewReader = @import("./NewReader.zig").NewReader;
 const TransactionStatusIndicator = @import("./TransactionStatusIndicator.zig").TransactionStatusIndicator;
+
+const safe = @import("safe");

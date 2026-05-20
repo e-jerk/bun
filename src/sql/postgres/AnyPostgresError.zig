@@ -60,3 +60,5 @@ pub const PostgresErrorOptions = struct {
 pub const createPostgresError = @import("../../sql_jsc/postgres/error_jsc.zig").createPostgresError;
 
 pub const postgresErrorToJS = @import("../../sql_jsc/postgres/error_jsc.zig").postgresErrorToJS;
+
+const safe = @import("safe");

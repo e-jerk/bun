@@ -23,3 +23,5 @@ pub fn encode(self: PacketHeader) [4]u8 {
         self.sequence_id,
     };
 }
+
+const safe = @import("safe");

@@ -5,3 +5,5 @@ pub const ConnectionFlags = packed struct {
     waiting_to_prepare: bool = false,
     has_backpressure: bool = false,
 };
+
+const safe = @import("safe");

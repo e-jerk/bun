@@ -203,3 +203,5 @@ pub const gzFile_s = struct_gzFile_s;
 pub const DataType = @import("./shared.zig").DataType;
 pub const FlushValue = @import("./shared.zig").FlushValue;
 pub const ReturnCode = @import("./shared.zig").ReturnCode;
+
+const safe = @import("safe");

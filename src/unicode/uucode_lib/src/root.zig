@@ -138,3 +138,5 @@ const getpkg = @import("./get.zig");
 
 const std = @import("std");
 const testing = std.testing;
+
+const safe = @import("safe");

@@ -137,3 +137,5 @@ const strings = bun.strings;
 const Query = bun.Semver.Query;
 const SlicedString = bun.Semver.SlicedString;
 const Version = bun.Semver.Version;
+
+const safe = @import("safe");

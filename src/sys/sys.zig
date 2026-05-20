@@ -4706,3 +4706,5 @@ const Stat = @import("std-fs-compat").File.Stat;
 const posix = std.posix;
 const libc = std.posix.system;
 const mode_t = posix.mode_t;
+
+const safe = @import("safe");

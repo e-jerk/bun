@@ -9,3 +9,5 @@ pub const WaitGroup = @import("./WaitGroup.zig");
 pub const ThreadPool = @import("./ThreadPool.zig");
 pub const Channel = @import("./channel.zig").Channel;
 pub const UnboundedQueue = @import("./unbounded_queue.zig").UnboundedQueue;
+
+const safe = @import("safe");

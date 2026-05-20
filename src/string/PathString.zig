@@ -62,3 +62,5 @@ pub const PathString = packed struct(PathStringBackingIntType) {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

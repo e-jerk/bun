@@ -1259,3 +1259,5 @@ const debug = LinkerContext.debug;
 const js_ast = bun.bundle_v2.js_ast;
 const Dependency = js_ast.Dependency;
 const Ref = bun.bundle_v2.js_ast.Ref;
+
+const safe = @import("safe");

@@ -680,3 +680,5 @@ const webcore = bun.webcore;
 const Blob = webcore.Blob;
 const ReadableStream = webcore.ReadableStream;
 const streams = webcore.streams;
+
+const safe = @import("safe");

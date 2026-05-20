@@ -322,3 +322,5 @@ const bun = @import("bun");
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const Symbol = bun.ast.Symbol;
+
+const safe = @import("safe");

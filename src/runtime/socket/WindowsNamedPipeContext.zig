@@ -305,3 +305,5 @@ const uv = bun.windows.libuv;
 
 const TCPSocket = jsc.API.TCPSocket;
 const TLSSocket = jsc.API.TLSSocket;
+
+const safe = @import("safe");

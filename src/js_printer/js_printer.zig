@@ -6424,3 +6424,5 @@ const Level = js_ast.Op.Level;
 
 const strings = bun.strings;
 const CodepointIterator = bun.strings.UnsignedCodepointIterator;
+
+const safe = @import("safe");

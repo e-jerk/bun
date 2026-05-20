@@ -660,3 +660,5 @@ const Lockfile = bun.install.Lockfile;
 
 const ExternalString = bun.Semver.ExternalString;
 const SlicedString = bun.Semver.SlicedString;
+
+const safe = @import("safe");

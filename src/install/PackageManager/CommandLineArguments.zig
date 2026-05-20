@@ -1157,3 +1157,5 @@ const clap = bun.clap;
 const strings = bun.strings;
 const PackageInstall = bun.install.PackageInstall;
 const Subcommand = bun.install.PackageManager.Subcommand;
+
+const safe = @import("safe");

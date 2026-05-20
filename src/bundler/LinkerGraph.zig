@@ -561,3 +561,5 @@ const Ref = bun.bundle_v2.Ref;
 const ResolvedExports = bun.bundle_v2.ResolvedExports;
 const ServerComponentBoundary = bun.bundle_v2.ServerComponentBoundary;
 const TopLevelSymbolToParts = bun.bundle_v2.TopLevelSymbolToParts;
+
+const safe = @import("safe");

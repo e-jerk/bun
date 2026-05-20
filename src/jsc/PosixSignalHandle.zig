@@ -122,3 +122,5 @@ const Environment = bun.Environment;
 
 const jsc = bun.jsc;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

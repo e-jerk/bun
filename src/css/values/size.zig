@@ -74,3 +74,5 @@ pub fn Size2D(comptime T: type) type {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

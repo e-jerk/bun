@@ -533,3 +533,5 @@ const Debugger = jsc.Debugger;
 const JSGlobalObject = jsc.JSGlobalObject;
 const VirtualMachine = jsc.VirtualMachine;
 const ZigException = jsc.ZigException;
+
+const safe = @import("safe");

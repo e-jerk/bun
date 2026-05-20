@@ -270,3 +270,5 @@ const std = @import("std");
 
 const jsc = bun.jsc;
 const ZigString = bun.jsc.ZigString;
+
+const safe = @import("safe");

@@ -517,3 +517,5 @@ const JSValue = jsc.JSValue;
 const RegularExpression = jsc.RegularExpression;
 const VirtualMachine = jsc.VirtualMachine;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

@@ -1377,3 +1377,5 @@ const c = bun.c;
 const strings = bun.strings;
 const use_mimalloc = bun.use_mimalloc;
 const File = bun.sys.File;
+
+const safe = @import("safe");

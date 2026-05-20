@@ -44,3 +44,5 @@ comptime {
 
 const bun = @import("bun");
 const libuv = bun.windows.libuv;
+
+const safe = @import("safe");

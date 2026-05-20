@@ -640,3 +640,5 @@ const ascii_u16_vector_size = strings.ascii_u16_vector_size;
 const ascii_vector_size = strings.ascii_vector_size;
 const toUTF16Literal = strings.toUTF16Literal;
 const utf16Codepoint = strings.utf16Codepoint;
+
+const safe = @import("safe");

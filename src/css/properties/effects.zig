@@ -54,3 +54,5 @@ pub const DropShadow = struct {
     /// The blur radius of the drop shadow.
     blur: Length,
 };
+
+const safe = @import("safe");

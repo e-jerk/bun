@@ -157,3 +157,5 @@ pub const Linux = struct {
 const bun = @import("bun");
 const std = @import("std");
 const PerfEvent = @import("./generated_perf_trace_events.zig").PerfEvent;
+
+const safe = @import("safe");

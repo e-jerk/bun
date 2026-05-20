@@ -40,3 +40,5 @@ const std = @import("std");
 const bun = @import("bun");
 const SignalCode = bun.SignalCode;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

@@ -464,3 +464,5 @@ const windows = std.os.windows;
 
 const bun = @import("bun");
 const assert = bun.assert;
+
+const safe = @import("safe");

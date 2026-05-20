@@ -117,3 +117,5 @@ const bun = @import("bun");
 
 const interpreter = @import("./interpreter.zig");
 const RefCountedStr = interpreter.RefCountedStr;
+
+const safe = @import("safe");

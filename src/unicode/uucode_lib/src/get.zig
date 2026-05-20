@@ -167,3 +167,5 @@ pub fn TypeOf(comptime field: FieldEnum) type {
 const std = @import("std");
 const types = @import("./types.zig");
 const tables = @import("tables").tables;
+
+const safe = @import("safe");

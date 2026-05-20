@@ -134,3 +134,5 @@ const jsc = bun.jsc;
 const logger = bun.logger;
 const Dependency = bun.install.Dependency;
 const SlicedString = bun.Semver.SlicedString;
+
+const safe = @import("safe");

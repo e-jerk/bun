@@ -169,3 +169,5 @@ const Expr = js_ast.Expr;
 const ExprNodeList = js_ast.ExprNodeList;
 const G = js_ast.G;
 const Ref = js_ast.Ref;
+
+const safe = @import("safe");

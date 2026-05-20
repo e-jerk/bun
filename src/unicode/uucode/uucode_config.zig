@@ -14,3 +14,5 @@ const config = @import("./config.zig");
 
 const config_x = @import("../uucode_lib/src/x/config.x.zig");
 const grapheme_break_no_control = config_x.grapheme_break_no_control;
+
+const safe = @import("safe");

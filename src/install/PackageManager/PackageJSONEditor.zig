@@ -797,3 +797,5 @@ const invalid_package_id = bun.install.invalid_package_id;
 
 const PackageManager = bun.install.PackageManager;
 const UpdateRequest = bun.install.PackageManager.UpdateRequest;
+
+const safe = @import("safe");

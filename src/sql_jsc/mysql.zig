@@ -26,3 +26,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

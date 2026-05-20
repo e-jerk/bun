@@ -791,3 +791,5 @@ const strings = bun.strings;
 const Range = bun.Semver.Range;
 const SlicedString = bun.Semver.SlicedString;
 const Version = bun.Semver.Version;
+
+const safe = @import("safe");

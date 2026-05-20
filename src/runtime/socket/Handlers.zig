@@ -346,3 +346,5 @@ const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const ZigString = jsc.ZigString;
 const BinaryType = jsc.ArrayBuffer.BinaryType;
+
+const safe = @import("safe");

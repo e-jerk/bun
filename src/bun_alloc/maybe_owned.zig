@@ -110,3 +110,5 @@ const null_vtable: std.mem.Allocator.VTable = .{
 const bun = @import("bun");
 const std = @import("std");
 const Alignment = std.mem.Alignment;
+
+const safe = @import("safe");

@@ -42,3 +42,5 @@ const bun = @import("bun");
 
 const Semver = bun.Semver;
 const String = Semver.String;
+
+const safe = @import("safe");

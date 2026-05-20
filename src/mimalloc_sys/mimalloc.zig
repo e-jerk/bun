@@ -224,3 +224,5 @@ pub const mi_arena_id_t = ?*anyopaque;
 pub extern fn mi_heap_new_ex(heap_tag: c_int, allow_destroy: bool, arena_id: mi_arena_id_t) ?*Heap;
 
 const std = @import("std");
+
+const safe = @import("safe");

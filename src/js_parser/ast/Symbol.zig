@@ -485,3 +485,5 @@ const G = js_ast.G;
 const ImportItemStatus = js_ast.ImportItemStatus;
 const Ref = js_ast.Ref;
 const Symbol = js_ast.Symbol;
+
+const safe = @import("safe");

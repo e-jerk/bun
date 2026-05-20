@@ -347,3 +347,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const bits = bun.bits;
+
+const safe = @import("safe");

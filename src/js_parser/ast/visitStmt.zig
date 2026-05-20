@@ -1601,3 +1601,5 @@ const statementCaresAboutScope = js_parser.statementCaresAboutScope;
 const std = @import("std");
 const List = std.ArrayListUnmanaged;
 const ListManaged = std.array_list.Managed;
+
+const safe = @import("safe");

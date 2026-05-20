@@ -50,3 +50,5 @@ pub const FlushValue = enum(c_int) {
     /// The Z_TREES option behaves as Z_BLOCK does, but it also returns when the end of each deflate block header is reached, before any actual data in that block is decoded. This allows the caller to determine the length of the deflate block header for later use in random access within a deflate block. 256 is added to the value of strm->data_type when inflate() returns immediately after reaching the end of the deflate block header.
     Trees = 6,
 };
+
+const safe = @import("safe");

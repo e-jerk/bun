@@ -185,3 +185,5 @@ const assert = bun.assert;
 const std = @import("std");
 const mem = std.mem;
 const testing = std.testing;
+
+const safe = @import("safe");

@@ -332,3 +332,5 @@ pub const BROTLI_DEFAULT_MODE = BROTLI_MODE_GENERIC;
 
 const std = @import("std");
 const bun = @import("root").bun;
+
+const safe = @import("safe");

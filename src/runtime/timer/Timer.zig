@@ -701,3 +701,5 @@ const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
 const VirtualMachine = jsc.VirtualMachine;
 const FakeTimers = bun.jsc.Jest.bun_test.FakeTimers;
+
+const safe = @import("safe");

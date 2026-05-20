@@ -43,3 +43,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const FetchHeaders = bun.webcore.FetchHeaders;
 const Headers = bun.http.Headers;
+
+const safe = @import("safe");

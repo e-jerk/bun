@@ -285,3 +285,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const mimalloc = bun.mimalloc;
+
+const safe = @import("safe");

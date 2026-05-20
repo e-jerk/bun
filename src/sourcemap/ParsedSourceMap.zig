@@ -190,3 +190,5 @@ const VLQ = SourceMap.VLQ;
 
 const bun = @import("bun");
 const assert = bun.assert;
+
+const safe = @import("safe");

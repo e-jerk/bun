@@ -202,3 +202,5 @@ const collections = bun.collections;
 const jsc = bun.jsc;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

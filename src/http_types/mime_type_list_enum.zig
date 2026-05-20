@@ -4662,3 +4662,5 @@ pub const MimeTypeList = enum(u14) {
         .@"x-shader/x-vertex",
     };
 };
+
+const safe = @import("safe");

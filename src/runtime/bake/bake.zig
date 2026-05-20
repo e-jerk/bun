@@ -188,3 +188,5 @@ pub const Framework = struct {
     react_fast_refresh: ?struct { import_source: []const u8 = "react-refresh/runtime" } = null,
     built_in_modules: bun.StringArrayHashMapUnmanaged(BuiltInModule) = .{},
 };
+
+const safe = @import("safe");

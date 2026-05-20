@@ -15,3 +15,5 @@ const bun = @import("bun");
 
 const std = @import("std");
 const t = std.testing;
+
+const safe = @import("safe");

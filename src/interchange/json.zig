@@ -1015,3 +1015,5 @@ const Stmt = js_ast.Stmt;
 
 const js_lexer = bun.js_lexer;
 const T = js_lexer.T;
+
+const safe = @import("safe");

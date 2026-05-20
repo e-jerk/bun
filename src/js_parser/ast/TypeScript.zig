@@ -470,3 +470,5 @@ const TypeScript = js_parser.TypeScript;
 
 const std = @import("std");
 const List = std.ArrayListUnmanaged;
+
+const safe = @import("safe");

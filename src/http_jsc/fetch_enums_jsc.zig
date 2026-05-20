@@ -19,3 +19,5 @@ pub fn fetchCacheModeToJS(this: bun.http.FetchCacheMode, global: *jsc.JSGlobalOb
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

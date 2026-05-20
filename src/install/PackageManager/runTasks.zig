@@ -1305,3 +1305,5 @@ const PackageManager = bun.install.PackageManager;
 const Options = PackageManager.Options;
 const PackageInstaller = PackageManager.PackageInstaller;
 const ProgressStrings = PackageManager.ProgressStrings;
+
+const safe = @import("safe");

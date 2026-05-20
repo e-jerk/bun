@@ -10,3 +10,5 @@ pub fn DecoderWrap(comptime Container: type, comptime decodeFn: anytype) type {
 const AnyPostgresError = @import("../AnyPostgresError.zig").AnyPostgresError;
 
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

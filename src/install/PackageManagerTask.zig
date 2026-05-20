@@ -383,3 +383,5 @@ const ThreadPool = bun.ThreadPool;
 const logger = bun.logger;
 const strings = bun.strings;
 const File = bun.sys.File;
+
+const safe = @import("safe");

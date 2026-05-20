@@ -161,3 +161,5 @@ const PackageManager = bun.install.PackageManager;
 const Resolution = bun.install.Resolution;
 const Task = bun.install.Task;
 const invalid_package_id = bun.install.invalid_package_id;
+
+const safe = @import("safe");

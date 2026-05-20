@@ -1,0 +1,2 @@
+
+const safe = @import("safe");

@@ -439,3 +439,5 @@ const SRGB = color.SRGB;
 const bun = @import("bun");
 const css = bun.css;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

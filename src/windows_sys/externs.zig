@@ -192,3 +192,5 @@ const LPVOID = windows.LPVOID;
 const LPWSTR = windows.LPWSTR;
 const PWSTR = windows.PWSTR;
 const UINT = windows.UINT;
+
+const safe = @import("safe");

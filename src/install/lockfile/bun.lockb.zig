@@ -638,3 +638,5 @@ const PackageIndex = Lockfile.PackageIndex;
 const Stream = Lockfile.Stream;
 const StringPool = Lockfile.StringPool;
 const VersionHashMap = Lockfile.VersionHashMap;
+
+const safe = @import("safe");

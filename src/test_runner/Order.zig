@@ -184,3 +184,5 @@ const TestScheduleEntry = bun_test.TestScheduleEntry;
 const Execution = bun_test.Execution;
 const ConcurrentGroup = bun_test.Execution.ConcurrentGroup;
 const ExecutionSequence = bun_test.Execution.ExecutionSequence;
+
+const safe = @import("safe");

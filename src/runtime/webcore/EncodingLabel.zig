@@ -237,3 +237,5 @@ const encoding = @import("./encoding.zig");
 
 const bun = @import("bun");
 const strings = bun.strings;
+
+const safe = @import("safe");

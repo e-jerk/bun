@@ -374,3 +374,5 @@ const JSUint8Array = jsc.JSUint8Array;
 const JSValue = jsc.JSValue;
 const ZigString = jsc.ZigString;
 const EncodingLabel = jsc.WebCore.EncodingLabel;
+
+const safe = @import("safe");

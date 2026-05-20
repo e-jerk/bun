@@ -309,3 +309,5 @@ const Interpreter = bun.shell.Interpreter;
 const SmolList = bun.shell.SmolList;
 const Yield = shell.Yield;
 const log = bun.shell.interpret.log;
+
+const safe = @import("safe");

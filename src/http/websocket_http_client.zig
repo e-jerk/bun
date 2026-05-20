@@ -8,3 +8,5 @@ pub const WebSocketClientTLS = websocket_client.NewWebSocketClient(true);
 
 const upgrade_client = @import("../http_jsc/websocket_client/WebSocketUpgradeClient.zig");
 const websocket_client = @import("../http_jsc/websocket_client.zig");
+
+const safe = @import("safe");

@@ -1178,3 +1178,5 @@ const std = @import("std");
 
 const Win32Error = bun.windows.Win32Error;
 const uv = bun.windows.libuv;
+
+const safe = @import("safe");

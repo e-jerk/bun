@@ -422,3 +422,5 @@ const _transpiler = bun.transpiler;
 const PluginRunner = bun.transpiler.PluginRunner;
 const ResolveQueue = _transpiler.ResolveQueue;
 const Transpiler = _transpiler.Transpiler;
+
+const safe = @import("safe");

@@ -15,3 +15,5 @@ pub const ArrayListIn = array_list.ArrayListIn; // specific type of generic allo
 pub const ArrayListAligned = array_list.ArrayListAligned;
 pub const ArrayListAlignedDefault = array_list.ArrayListAlignedDefault;
 pub const ArrayListAlignedIn = array_list.ArrayListAlignedIn;
+
+const safe = @import("safe");

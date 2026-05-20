@@ -1468,3 +1468,5 @@ const G = js_ast.G;
 const Op = js_ast.Op;
 const OptionalChain = js_ast.OptionalChain;
 const Ref = js_ast.Ref;
+
+const safe = @import("safe");

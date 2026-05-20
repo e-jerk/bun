@@ -174,3 +174,5 @@ const std = @import("std");
 const bun = @import("bun");
 const jsc = bun.jsc;
 const boring = bun.BoringSSL.c;
+
+const safe = @import("safe");

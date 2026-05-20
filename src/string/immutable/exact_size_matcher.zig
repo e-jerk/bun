@@ -70,3 +70,5 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

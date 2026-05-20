@@ -1123,3 +1123,5 @@ const Ref = bun.bundle_v2.js_ast.Ref;
 const S = js_ast.S;
 const Scope = js_ast.Scope;
 const Stmt = js_ast.Stmt;
+
+const safe = @import("safe");

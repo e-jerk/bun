@@ -50,3 +50,5 @@ const JSObject = @import("./JSObject.zig").JSObject;
 const jsc = bun.jsc;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

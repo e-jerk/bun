@@ -83,3 +83,5 @@ const debug = bun.Output.scoped(.Postgres, .visible);
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

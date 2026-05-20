@@ -667,3 +667,5 @@ const Arena = bun.allocators.MimallocArena;
 const ApiReader = bun.schema.Reader;
 const ApiWriter = bun.schema.Writer;
 const api = bun.schema.api;
+
+const safe = @import("safe");

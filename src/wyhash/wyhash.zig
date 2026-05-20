@@ -178,3 +178,5 @@ pub const Wyhash11 = struct {
 
 const std = @import("std");
 const mem = std.mem;
+
+const safe = @import("safe");

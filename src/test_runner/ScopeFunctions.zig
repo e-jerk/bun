@@ -495,3 +495,5 @@ const BunTest = bun_test.BunTest;
 const ScopeFunctions = bun_test.ScopeFunctions;
 const Signature = bun_test.js_fns.Signature;
 const groupLog = bun_test.debug.group;
+
+const safe = @import("safe");

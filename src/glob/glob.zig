@@ -38,3 +38,5 @@ pub fn detectGlobSyntax(potential_pattern: []const u8) bool {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

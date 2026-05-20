@@ -746,3 +746,5 @@ const Waker = bun.Async.Waker;
 
 const jsc = bun.jsc;
 const VirtualMachine = bun.jsc.VirtualMachine;
+
+const safe = @import("safe");

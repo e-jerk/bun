@@ -258,3 +258,5 @@ const assert = bun.assert;
 
 const Query = bun.Semver.Query;
 const Version = bun.Semver.Version;
+
+const safe = @import("safe");

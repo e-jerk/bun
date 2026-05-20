@@ -532,3 +532,5 @@ const Ref = bun.ast.Ref;
 
 const schema = bun.schema;
 const api = schema.api;
+
+const safe = @import("safe");

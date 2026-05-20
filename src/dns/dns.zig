@@ -294,3 +294,5 @@ const bun = @import("bun");
 const JSError = bun.JSError;
 const String = bun.String;
 const default_allocator = bun.default_allocator;
+
+const safe = @import("safe");

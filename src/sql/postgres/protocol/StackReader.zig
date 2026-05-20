@@ -63,3 +63,5 @@ const bun = @import("bun");
 const AnyPostgresError = @import("../AnyPostgresError.zig").AnyPostgresError;
 const Data = @import("../../shared/Data.zig").Data;
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

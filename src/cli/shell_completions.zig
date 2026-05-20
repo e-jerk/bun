@@ -73,3 +73,5 @@ const std = @import("std");
 const bun = @import("bun");
 const Output = bun.Output;
 const strings = bun.strings;
+
+const safe = @import("safe");

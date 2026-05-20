@@ -787,3 +787,5 @@ test "GraphemeBreakTest.txt - x.isBreakNoControl" {
 const std = @import("std");
 const types_x = @import("./types.x.zig");
 const uucode = @import("../root.zig");
+
+const safe = @import("safe");

@@ -27,3 +27,5 @@ pub const OriginalLocation = struct {
 
 const std = @import("std");
 const ArrayList = std.ArrayListUnmanaged;
+
+const safe = @import("safe");

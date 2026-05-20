@@ -71,3 +71,5 @@ fn assert(cond: bool) void {
 
 const std = @import("std");
 const mem = std.mem;
+
+const safe = @import("safe");

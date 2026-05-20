@@ -379,3 +379,5 @@ const WorkspaceFilter = PackageManager.WorkspaceFilter;
 
 const PackageInstaller = PackageManager.PackageInstaller;
 const TreeContext = PackageInstaller.TreeContext;
+
+const safe = @import("safe");

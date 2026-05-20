@@ -137,3 +137,5 @@ const js_ast = bun.ast;
 const E = js_ast.E;
 const G = js_ast.G;
 const Ref = js_ast.Ref;
+
+const safe = @import("safe");

@@ -838,3 +838,5 @@ pub const JSType = enum(u8) {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

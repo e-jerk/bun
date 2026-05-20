@@ -17,3 +17,5 @@ pub const workerEmitTestDone = runner.workerEmitTestDone;
 pub const Worker = @import("./parallel/Worker.zig");
 
 const runner = @import("./parallel/runner.zig");
+
+const safe = @import("safe");

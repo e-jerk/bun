@@ -573,3 +573,5 @@ const Environment = bun.Environment;
 const FD = bun.FD;
 const Maybe = bun.sys.Maybe;
 const uv = bun.windows.libuv;
+
+const safe = @import("safe");

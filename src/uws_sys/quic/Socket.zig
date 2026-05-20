@@ -25,3 +25,5 @@ pub const Socket = opaque {
         return @ptrCast(@alignCast(us_quic_socket_ext(s)));
     }
 };
+
+const safe = @import("safe");

@@ -729,3 +729,5 @@ test "complex build config with all fields_0 through fields_9 and extensions_0 t
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

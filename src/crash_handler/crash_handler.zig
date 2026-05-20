@@ -2251,3 +2251,5 @@ const Features = bun.analytics.Features;
 
 const debug = std.debug;
 const SourceLocation = debug.SourceLocation;
+
+const safe = @import("safe");

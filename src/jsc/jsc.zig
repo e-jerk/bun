@@ -284,3 +284,5 @@ pub const generated = @import("bindgen_generated");
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

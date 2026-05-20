@@ -35619,3 +35619,5 @@ const stage3: [17]GraphemeBreakNoControl = .{
 
 const grapheme = @import("./grapheme.zig");
 const GraphemeBreakNoControl = grapheme.GraphemeBreakNoControl;
+
+const safe = @import("safe");

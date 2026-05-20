@@ -560,3 +560,5 @@ const Output = bun.Output;
 
 const Index = bun.ast.Index;
 const JSAst = bun.ast.BundledAst;
+
+const safe = @import("safe");

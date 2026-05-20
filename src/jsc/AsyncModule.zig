@@ -780,3 +780,5 @@ const JSValue = bun.jsc.JSValue;
 const ResolvedSource = bun.jsc.ResolvedSource;
 const VirtualMachine = bun.jsc.VirtualMachine;
 const ZigString = bun.jsc.ZigString;
+
+const safe = @import("safe");

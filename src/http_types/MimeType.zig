@@ -1633,3 +1633,5 @@ const Loader = @import("../bundler/options.zig").Loader;
 const bun = @import("bun");
 const ComptimeStringMap = bun.ComptimeStringMap;
 const strings = bun.strings;
+
+const safe = @import("safe");

@@ -304,3 +304,5 @@ pub const AnglePercentage = css.css_values.percentage.DimensionPercentage(Angle)
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

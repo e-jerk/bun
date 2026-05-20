@@ -388,3 +388,5 @@ const writeStatus = bun.api.server.writeStatus;
 
 const uws = bun.uws;
 const AnyResponse = uws.AnyResponse;
+
+const safe = @import("safe");

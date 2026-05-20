@@ -224,3 +224,5 @@ const assert = bun.assert;
 
 const std = @import("std");
 const Thread = std.Thread;
+
+const safe = @import("safe");

@@ -8,3 +8,5 @@ const Method = @import("../http_types/Method.zig").Method;
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

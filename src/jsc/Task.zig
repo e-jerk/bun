@@ -677,3 +677,5 @@ const ShellMvCheckTargetTask = shell.Interpreter.Builtin.Mv.ShellMvCheckTargetTa
 
 const ShellRmTask = shell.Interpreter.Builtin.Rm.ShellRmTask;
 const ShellRmDirTask = shell.Interpreter.Builtin.Rm.ShellRmTask.DirTask;
+
+const safe = @import("safe");

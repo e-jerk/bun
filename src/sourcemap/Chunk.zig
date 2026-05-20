@@ -398,3 +398,5 @@ const Logger = bun.logger;
 const MutableString = bun.MutableString;
 const strings = bun.strings;
 const FileSystem = bun.fs.FileSystem;
+
+const safe = @import("safe");

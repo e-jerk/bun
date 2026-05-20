@@ -233,3 +233,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const ast = bun.ast;
+
+const safe = @import("safe");

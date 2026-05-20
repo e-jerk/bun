@@ -66,3 +66,5 @@ pub fn get(code: u16) ?[]const u8 {
         else => null,
     };
 }
+
+const safe = @import("safe");

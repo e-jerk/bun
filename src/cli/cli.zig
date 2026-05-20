@@ -1493,3 +1493,5 @@ const logger = bun.logger;
 const strings = bun.strings;
 const File = bun.sys.File;
 const api = bun.schema.api;
+
+const safe = @import("safe");

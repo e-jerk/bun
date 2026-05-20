@@ -141,3 +141,5 @@ const Environment = bun.Environment;
 const FD = bun.FD;
 const strings = bun.strings;
 const sys = bun.sys;
+
+const safe = @import("safe");

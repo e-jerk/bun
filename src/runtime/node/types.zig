@@ -1249,3 +1249,5 @@ const ArgumentsSlice = jsc.CallFrame.ArgumentsSlice;
 
 const node = bun.api.node;
 const Buffer = node.Buffer;
+
+const safe = @import("safe");

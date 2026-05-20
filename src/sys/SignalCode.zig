@@ -130,3 +130,5 @@ const bun = @import("bun");
 const ComptimeEnumMap = bun.ComptimeEnumMap;
 const Output = bun.Output;
 const asByteSlice = bun.asByteSlice;
+
+const safe = @import("safe");

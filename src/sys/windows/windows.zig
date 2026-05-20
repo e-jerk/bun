@@ -4106,3 +4106,5 @@ const log = bun.sys.syslog;
 const w = std.os.windows;
 const win32 = windows;
 const windows = std.os.windows;
+
+const safe = @import("safe");

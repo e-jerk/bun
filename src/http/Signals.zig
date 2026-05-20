@@ -32,3 +32,5 @@ pub fn get(this: Signals, comptime field: std.meta.FieldEnum(Signals)) bool {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

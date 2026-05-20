@@ -556,3 +556,5 @@ const bun = @import("bun");
 
 const build_options = @import("build_options");
 const callstack_depth = build_options.tracy_callstack_depth;
+
+const safe = @import("safe");

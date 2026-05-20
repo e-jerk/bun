@@ -818,3 +818,5 @@ const Loc = Logger.Loc;
 
 const options = bun.options;
 const OutputFile = bun.options.OutputFile;
+
+const safe = @import("safe");

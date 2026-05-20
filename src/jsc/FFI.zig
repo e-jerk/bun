@@ -528,3 +528,5 @@ pub const NumberTag = @as(c_ulonglong, 0xfffe000000000000);
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

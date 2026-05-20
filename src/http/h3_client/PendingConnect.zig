@@ -93,3 +93,5 @@ const ClientSession = H3.ClientSession;
 
 const uws = bun.uws;
 const quic = uws.quic;
+
+const safe = @import("safe");

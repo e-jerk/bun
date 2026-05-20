@@ -71,3 +71,5 @@ const SocketGroup = uws.SocketGroup;
 const Timer = uws.Timer;
 const udp = uws.udp;
 const us_socket_t = uws.us_socket_t;
+
+const safe = @import("safe");

@@ -31,3 +31,5 @@ pub fn CallbackWrapper(comptime Getter: *const CallbackGetterFn, comptime Setter
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

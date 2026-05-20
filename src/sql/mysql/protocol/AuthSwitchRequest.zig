@@ -40,3 +40,5 @@ const Data = @import("../../shared/Data.zig").Data;
 
 const NewReader = @import("./NewReader.zig").NewReader;
 const decoderWrap = @import("./NewReader.zig").decoderWrap;
+
+const safe = @import("safe");

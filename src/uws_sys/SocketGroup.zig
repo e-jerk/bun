@@ -206,3 +206,5 @@ const Loop = uws.Loop;
 const SocketKind = uws.SocketKind;
 const SslCtx = uws.SslCtx;
 const us_socket_t = uws.us_socket_t;
+
+const safe = @import("safe");

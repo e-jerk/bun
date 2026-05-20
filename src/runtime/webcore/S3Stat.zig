@@ -60,3 +60,5 @@ pub const S3Stat = struct {
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

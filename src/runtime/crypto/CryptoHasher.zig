@@ -892,3 +892,5 @@ const Crypto = jsc.API.Bun.Crypto;
 const EVP = Crypto.EVP;
 const HMAC = Crypto.HMAC;
 const createCryptoError = Crypto.createCryptoError;
+
+const safe = @import("safe");

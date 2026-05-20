@@ -503,3 +503,5 @@ const FileSystem = Fs.FileSystem;
 const HTTP = bun.http;
 const AsyncHTTP = HTTP.AsyncHTTP;
 const HeaderBuilder = HTTP.HeaderBuilder;
+
+const safe = @import("safe");

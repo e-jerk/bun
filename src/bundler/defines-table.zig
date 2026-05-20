@@ -929,3 +929,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const js_ast = bun.ast;
+
+const safe = @import("safe");

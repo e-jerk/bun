@@ -365,3 +365,5 @@ const windows = bun.windows;
 
 const std = @import("std");
 const posix = std.posix;
+
+const safe = @import("safe");

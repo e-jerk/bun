@@ -741,3 +741,5 @@ const WriteFile = bun.webcore.Blob.write_file.WriteFile;
 const std = @import("std");
 const posix = std.posix;
 const linux = std.os.linux;
+
+const safe = @import("safe");

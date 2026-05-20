@@ -843,3 +843,5 @@ const transpiler = bun.transpiler;
 
 const CLI = bun.cli;
 const Command = CLI.Command;
+
+const safe = @import("safe");

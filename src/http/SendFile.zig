@@ -99,3 +99,5 @@ const bun = @import("bun");
 const Environment = bun.Environment;
 const FeatureFlags = bun.FeatureFlags;
 const NewHTTPContext = bun.http.NewHTTPContext;
+
+const safe = @import("safe");

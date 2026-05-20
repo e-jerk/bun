@@ -912,3 +912,5 @@ const shell = bun.shell;
 const Interpreter = shell.Interpreter;
 const SmolList = shell.SmolList;
 const Yield = bun.shell.Yield;
+
+const safe = @import("safe");

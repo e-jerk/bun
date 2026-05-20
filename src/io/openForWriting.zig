@@ -137,3 +137,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const Environment = bun.Environment;
+
+const safe = @import("safe");

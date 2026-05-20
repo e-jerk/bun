@@ -44,3 +44,5 @@ const bun_test = jsc.Jest.bun_test;
 const BunTest = bun_test.BunTest;
 const DoneCallback = bun_test.DoneCallback;
 const groupLog = bun_test.debug.group;
+
+const safe = @import("safe");

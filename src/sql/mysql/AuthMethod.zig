@@ -35,3 +35,5 @@ pub const AuthMethod = enum {
 
 const Auth = @import("./protocol/Auth.zig");
 const bun = @import("bun");
+
+const safe = @import("safe");

@@ -677,3 +677,5 @@ const LinkerGraph = bundler.LinkerGraph;
 
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const debug = LinkerContext.debug;
+
+const safe = @import("safe");

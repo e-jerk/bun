@@ -506,3 +506,5 @@ const options = js_parser.options;
 
 const std = @import("std");
 const List = std.ArrayListUnmanaged;
+
+const safe = @import("safe");

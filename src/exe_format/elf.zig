@@ -532,3 +532,5 @@ const elf = std.elf;
 const Elf64_Ehdr = elf.Elf64_Ehdr;
 const Elf64_Phdr = elf.Elf64_Phdr;
 const Elf64_Shdr = elf.Elf64_Shdr;
+
+const safe = @import("safe");

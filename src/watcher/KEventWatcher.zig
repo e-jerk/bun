@@ -106,3 +106,5 @@ const KEvent = std.c.Kevent;
 const bun = @import("bun");
 const Output = bun.Output;
 const Watcher = bun.Watcher;
+
+const safe = @import("safe");

@@ -41,3 +41,5 @@ const c_allocator = std.heap.c_allocator;
 
 const Alignment = std.mem.Alignment;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

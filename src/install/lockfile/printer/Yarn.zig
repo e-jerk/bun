@@ -233,3 +233,5 @@ const Behavior = Dependency.Behavior;
 
 const Lockfile = bun.install.Lockfile;
 const Printer = bun.install.Lockfile.Printer;
+
+const safe = @import("safe");

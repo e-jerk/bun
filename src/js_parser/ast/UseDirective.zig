@@ -62,3 +62,5 @@ const strings = bun.strings;
 
 const js_ast = bun.ast;
 const Flags = js_ast.Flags;
+
+const safe = @import("safe");

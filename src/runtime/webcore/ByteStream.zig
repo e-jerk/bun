@@ -458,3 +458,5 @@ const Pipe = webcore.Pipe;
 
 const streams = webcore.streams;
 const BufferAction = streams.BufferAction;
+
+const safe = @import("safe");

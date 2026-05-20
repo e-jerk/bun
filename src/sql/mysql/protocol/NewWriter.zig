@@ -130,3 +130,5 @@ const encodeLengthInt = @import("./EncodeInt.zig").encodeLengthInt;
 const types = @import("../MySQLTypes.zig");
 const MySQLInt32 = types.MySQLInt32;
 const MySQLInt64 = types.MySQLInt64;
+
+const safe = @import("safe");

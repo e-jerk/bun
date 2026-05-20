@@ -19,3 +19,5 @@ pub fn ERR_toJS(globalThis: *jsc.JSGlobalObject, err_code: u32) jsc.JSValue {
 const bun = @import("bun");
 const jsc = bun.jsc;
 const boring = bun.BoringSSL.c;
+
+const safe = @import("safe");

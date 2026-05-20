@@ -152,3 +152,5 @@ const mimalloc = bun.mimalloc;
 
 const Alignment = std.mem.Alignment;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

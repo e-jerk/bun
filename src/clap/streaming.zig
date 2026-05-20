@@ -447,3 +447,5 @@ const std = @import("std");
 const io = std.io;
 const mem = std.mem;
 const testing = std.testing;
+
+const safe = @import("safe");

@@ -91,3 +91,5 @@ const jsc = bun.jsc;
 const logger = bun.logger;
 const Log = logger.Log;
 const Msg = logger.Msg;
+
+const safe = @import("safe");

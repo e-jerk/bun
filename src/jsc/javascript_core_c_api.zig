@@ -145,3 +145,5 @@ pub extern fn JSRemoteInspectorGetInspectionEnabledByDefault(void) bool;
 pub extern fn JSRemoteInspectorSetInspectionEnabledByDefault(enabled: bool) void;
 
 pub extern "c" fn JSObjectGetProxyTarget(JSObjectRef) JSObjectRef;
+
+const safe = @import("safe");

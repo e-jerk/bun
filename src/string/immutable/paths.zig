@@ -487,3 +487,5 @@ const hasPrefixComptime = strings.hasPrefixComptime;
 const hasPrefixComptimeType = strings.hasPrefixComptimeType;
 const hasPrefixComptimeUTF16 = strings.hasPrefixComptimeUTF16;
 const trimPrefixComptime = strings.trimPrefixComptime;
+
+const safe = @import("safe");

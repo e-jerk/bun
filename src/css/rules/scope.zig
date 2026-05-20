@@ -74,3 +74,5 @@ pub fn ScopeRule(comptime R: type) type {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

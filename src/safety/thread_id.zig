@@ -3,3 +3,5 @@
 pub const invalid = std.math.maxInt(std.Thread.Id);
 
 const std = @import("std");
+
+const safe = @import("safe");

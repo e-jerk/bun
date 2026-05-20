@@ -6,3 +6,5 @@
 //! memory layout is not guaranteed by the compiler.
 pub const Bun_FFI_PointerOffsetToArgumentsList = 6;
 pub const Bun_FFI_PointerOffsetToTypedArrayVector = 16;
+
+const safe = @import("safe");

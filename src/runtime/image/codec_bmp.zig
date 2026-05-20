@@ -152,3 +152,5 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
 const bun = @import("bun");
 const codecs = @import("./codecs.zig");
 const std = @import("std");
+
+const safe = @import("safe");

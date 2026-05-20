@@ -10,3 +10,5 @@ pub const TLSStatus = union(enum) {
     ssl_failed,
     ssl_ok,
 };
+
+const safe = @import("safe");

@@ -1076,3 +1076,5 @@ const OpaqueFileId = FrameworkRouter.OpaqueFileId;
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

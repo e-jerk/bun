@@ -70,3 +70,5 @@ const Path = bun.path;
 const jsc = bun.jsc;
 const logger = bun.logger;
 const Lockfile = bun.install.Lockfile;
+
+const safe = @import("safe");

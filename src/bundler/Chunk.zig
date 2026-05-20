@@ -851,3 +851,5 @@ const LinkerGraph = bundler.LinkerGraph;
 const PartRange = bundler.PartRange;
 const PathTemplate = bundler.PathTemplate;
 const cheapPrefixNormalizer = bundler.cheapPrefixNormalizer;
+
+const safe = @import("safe");

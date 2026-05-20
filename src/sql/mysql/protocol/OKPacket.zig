@@ -47,3 +47,5 @@ const StatusFlags = @import("../StatusFlags.zig").StatusFlags;
 
 const NewReader = @import("./NewReader.zig").NewReader;
 const decoderWrap = @import("./NewReader.zig").decoderWrap;
+
+const safe = @import("safe");

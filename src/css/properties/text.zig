@@ -270,3 +270,5 @@ pub const BoxDecorationBreak = css.DefineEnumProperty(@compileError(css.todo_stu
 
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

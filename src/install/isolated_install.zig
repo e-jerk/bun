@@ -1955,3 +1955,5 @@ const Tree = Lockfile.Tree;
 const PackageManager = install.PackageManager;
 const ProgressStrings = PackageManager.ProgressStrings;
 const WorkspaceFilter = PackageManager.WorkspaceFilter;
+
+const safe = @import("safe");

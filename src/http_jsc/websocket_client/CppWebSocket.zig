@@ -94,3 +94,5 @@ const ErrorCode = @import("../websocket_client.zig").ErrorCode;
 const bun = @import("bun");
 const jsc = bun.jsc;
 const uws = bun.uws;
+
+const safe = @import("safe");

@@ -358,3 +358,5 @@ const Dependency = bun.install.Dependency;
 const Lockfile = bun.install.Lockfile;
 const PackageManager = bun.install.PackageManager;
 const PackageNameHash = bun.install.PackageNameHash;
+
+const safe = @import("safe");

@@ -6,3 +6,5 @@ pub const std_options = std.Options{
 };
 
 const std = @import("std");
+
+const safe = @import("safe");

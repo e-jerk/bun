@@ -8,3 +8,5 @@ pub fn toErrorInstance(this: anytype, globalThis: *bun.jsc.JSGlobalObject) !bun.
 }
 
 const bun = @import("bun");
+
+const safe = @import("safe");

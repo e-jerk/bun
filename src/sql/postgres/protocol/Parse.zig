@@ -43,3 +43,5 @@ const int4 = types.int4;
 
 const zHelpers = @import("./zHelpers.zig");
 const zCount = zHelpers.zCount;
+
+const safe = @import("safe");

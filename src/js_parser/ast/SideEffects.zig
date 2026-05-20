@@ -913,3 +913,5 @@ const Property = G.Property;
 const std = @import("std");
 const List = std.ArrayListUnmanaged;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

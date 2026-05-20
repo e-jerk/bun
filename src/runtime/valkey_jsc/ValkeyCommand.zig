@@ -168,3 +168,5 @@ const JSError = bun.JSError;
 const jsc = bun.jsc;
 const node = bun.api.node;
 const Slice = jsc.ZigString.Slice;
+
+const safe = @import("safe");

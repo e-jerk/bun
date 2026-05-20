@@ -1979,3 +1979,5 @@ const AutoFlusher = jsc.WebCore.AutoFlusher;
 
 const uws = bun.uws;
 const Socket = uws.AnySocket;
+
+const safe = @import("safe");

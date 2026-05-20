@@ -575,3 +575,5 @@ const ArgumentsSlice = jsc.CallFrame.ArgumentsSlice;
 const PathLike = jsc.Node.PathLike;
 const StatsBig = bun.jsc.Node.StatsBig;
 const StatsSmall = bun.jsc.Node.StatsSmall;
+
+const safe = @import("safe");

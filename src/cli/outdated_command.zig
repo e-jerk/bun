@@ -712,3 +712,5 @@ const Behavior = Install.Dependency.Behavior;
 
 const PackageManager = Install.PackageManager;
 const WorkspaceFilter = PackageManager.WorkspaceFilter;
+
+const safe = @import("safe");

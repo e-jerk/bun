@@ -618,3 +618,5 @@ const DependencyID = install.DependencyID;
 const Npm = install.Npm;
 const PackageID = install.PackageID;
 const PackageManager = install.PackageManager;
+
+const safe = @import("safe");

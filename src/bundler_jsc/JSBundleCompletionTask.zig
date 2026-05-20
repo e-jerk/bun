@@ -619,3 +619,5 @@ const sourcemap = bun.sourcemap;
 const strings = bun.strings;
 const Transpiler = bun.transpiler.Transpiler;
 const api = bun.schema.api;
+
+const safe = @import("safe");

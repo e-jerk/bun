@@ -39,3 +39,5 @@ pub const js_bindings = struct {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

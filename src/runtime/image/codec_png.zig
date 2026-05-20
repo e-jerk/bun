@@ -195,3 +195,5 @@ const bun = @import("bun");
 const codecs = @import("./codecs.zig");
 const quantize = @import("./quantize.zig");
 const std = @import("std");
+
+const safe = @import("safe");

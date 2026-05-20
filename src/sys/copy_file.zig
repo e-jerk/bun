@@ -322,3 +322,5 @@ const math = std.math;
 
 const posix = std.posix;
 const fd_t = std.posix.fd_t;
+
+const safe = @import("safe");

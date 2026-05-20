@@ -2215,3 +2215,5 @@ const invalid_package_id = Install.invalid_package_id;
 
 const PackageManager = Install.PackageManager;
 const WorkspaceFilter = PackageManager.WorkspaceFilter;
+
+const safe = @import("safe");

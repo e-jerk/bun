@@ -128,3 +128,5 @@ const ini = bun.ini;
 const ConfigIterator = ini.ConfigIterator;
 const Parser = ini.Parser;
 const loadNpmrc = ini.loadNpmrc;
+
+const safe = @import("safe");

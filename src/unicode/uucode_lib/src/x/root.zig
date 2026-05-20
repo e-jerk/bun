@@ -145,3 +145,5 @@ test "wcwidth_zero_in_grapheme emoji_modifier is true" {
 
 const std = @import("std");
 const testing = std.testing;
+
+const safe = @import("safe");

@@ -650,3 +650,5 @@ const testing = std.testing;
 
 const debug = std.debug;
 const assert = debug.assert;
+
+const safe = @import("safe");

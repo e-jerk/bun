@@ -450,3 +450,5 @@ const BoringSSL = bun.BoringSSL.c;
 
 const HTTPClient = bun.http;
 const NewHTTPContext = bun.http.NewHTTPContext;
+
+const safe = @import("safe");

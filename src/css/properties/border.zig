@@ -1483,3 +1483,5 @@ const std = @import("std");
 const BorderImageHandler = @import("./border_image.zig").BorderImageHandler;
 const BorderRadiusHandler = @import("./border_radius.zig").BorderRadiusHandler;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

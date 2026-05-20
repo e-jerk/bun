@@ -161,3 +161,5 @@ const jsc = bun.jsc;
 
 const server = bun.api.server;
 const HTMLRewriter = bun.api.HTMLRewriter.HTMLRewriter;
+
+const safe = @import("safe");

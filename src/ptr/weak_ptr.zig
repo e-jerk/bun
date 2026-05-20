@@ -67,3 +67,5 @@ pub fn WeakPtr(comptime T: type, data_field: []const u8) type {
 }
 
 pub const bun = @import("bun");
+
+const safe = @import("safe");

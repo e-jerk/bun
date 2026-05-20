@@ -118,3 +118,5 @@ const Data = @import("../../shared/Data.zig").Data;
 const int_types = @import("../types/int_types.zig");
 const PostgresInt32 = int_types.PostgresInt32;
 const PostgresShort = int_types.PostgresShort;
+
+const safe = @import("safe");

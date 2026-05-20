@@ -7,3 +7,5 @@ pub fn toJS(this: *const String, buffer: []const u8, globalThis: *jsc.JSGlobalOb
 const bun = @import("bun");
 const jsc = bun.jsc;
 const String = bun.Semver.String;
+
+const safe = @import("safe");

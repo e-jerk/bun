@@ -41,3 +41,5 @@ const FieldDescription = @import("./FieldDescription.zig");
 const bun = @import("bun");
 const DecoderWrap = @import("./DecoderWrap.zig").DecoderWrap;
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

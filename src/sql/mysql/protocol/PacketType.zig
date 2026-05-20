@@ -12,3 +12,5 @@ pub const PacketType = enum(u8) {
     _,
     pub const AUTH_SWITCH = 0xfe;
 };
+
+const safe = @import("safe");

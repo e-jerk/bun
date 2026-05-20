@@ -168,3 +168,5 @@ const BunTest = bun_test.BunTest;
 const Collection = bun_test.Collection;
 const DescribeScope = bun_test.DescribeScope;
 const group = bun_test.debug.group;
+
+const safe = @import("safe");

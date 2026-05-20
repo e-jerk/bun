@@ -233,3 +233,5 @@ const Scope = js_ast.Scope;
 const SlotCounts = js_ast.SlotCounts;
 const Symbol = js_ast.Symbol;
 const TlaCheck = js_ast.TlaCheck;
+
+const safe = @import("safe");

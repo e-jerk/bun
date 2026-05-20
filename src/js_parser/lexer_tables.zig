@@ -807,3 +807,5 @@ const std = @import("std");
 const bun = @import("bun");
 const ComptimeStringMap = bun.ComptimeStringMap;
 const CodePoint = bun.strings.CodePoint;
+
+const safe = @import("safe");

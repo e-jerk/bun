@@ -135,3 +135,5 @@ const js_ast = bun.ast;
 const CharFreq = js_ast.CharFreq;
 const G = js_ast.G;
 const NameMinifier = js_ast.NameMinifier;
+
+const safe = @import("safe");

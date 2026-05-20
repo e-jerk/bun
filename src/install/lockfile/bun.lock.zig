@@ -2293,3 +2293,5 @@ const Meta = BinaryLockfile.Package.Meta;
 
 const Npm = Install.Npm;
 const Negatable = Npm.Negatable;
+
+const safe = @import("safe");

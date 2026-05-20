@@ -524,3 +524,5 @@ pub const analytics = struct {
 };
 
 const std = @import("std");
+
+const safe = @import("safe");

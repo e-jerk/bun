@@ -117,3 +117,5 @@ const bun = @import("bun");
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const EnvStr = bun.shell.EnvStr;
+
+const safe = @import("safe");

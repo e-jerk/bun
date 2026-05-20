@@ -19304,3 +19304,5 @@ const struct_tm = C.struct_tm;
 const time_t = C.time_t;
 const timercmp = C.timercmp;
 const va_list = C.va_list;
+
+const safe = @import("safe");

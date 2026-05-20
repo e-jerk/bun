@@ -29,3 +29,5 @@ const debug = bun.Output.scoped(.MySQLRequest, .visible);
 const bun = @import("bun");
 const CommandType = @import("./protocol/CommandType.zig").CommandType;
 const NewWriter = @import("./protocol/NewWriter.zig").NewWriter;
+
+const safe = @import("safe");

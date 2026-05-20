@@ -339,3 +339,5 @@ const E = sys.E;
 const SystemErrno = sys.SystemErrno;
 const coreutils_error_map = sys.coreutils_error_map;
 const libuv_error_map = sys.libuv_error_map;
+
+const safe = @import("safe");

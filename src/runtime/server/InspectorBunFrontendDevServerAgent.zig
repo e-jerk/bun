@@ -115,3 +115,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const DevServer = bun.bake.DevServer;
 const DebuggerId = jsc.Debugger.DebuggerId;
+
+const safe = @import("safe");

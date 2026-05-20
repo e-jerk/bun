@@ -263,3 +263,5 @@ const strings = bun.strings;
 
 const jsc = bun.jsc;
 const ZigString = bun.jsc.ZigString;
+
+const safe = @import("safe");

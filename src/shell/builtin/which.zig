@@ -154,3 +154,5 @@ const which = bun.which;
 
 const shell = bun.shell;
 const Yield = bun.shell.Yield;
+
+const safe = @import("safe");

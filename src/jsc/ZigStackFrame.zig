@@ -250,3 +250,5 @@ const api = bun.schema.api;
 const jsc = bun.jsc;
 const ZigStackFrameCode = jsc.ZigStackFrameCode;
 const ZigStackFramePosition = jsc.ZigStackFramePosition;
+
+const safe = @import("safe");

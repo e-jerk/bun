@@ -391,3 +391,5 @@ const invalid_package_id = bun.install.invalid_package_id;
 
 const Lockfile = bun.install.Lockfile;
 const Package = Lockfile.Package;
+
+const safe = @import("safe");

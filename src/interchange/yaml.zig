@@ -5741,3 +5741,5 @@ const ast = bun.ast;
 const E = ast.E;
 const Expr = ast.Expr;
 const G = ast.G;
+
+const safe = @import("safe");

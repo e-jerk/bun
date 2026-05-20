@@ -18,3 +18,5 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
 const DecoderWrap = @import("./DecoderWrap.zig").DecoderWrap;
 
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

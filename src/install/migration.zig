@@ -1135,3 +1135,5 @@ const stringHash = String.Builder.stringHash;
 
 const JSAst = bun.ast;
 const E = JSAst.E;
+
+const safe = @import("safe");

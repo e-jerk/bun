@@ -839,3 +839,5 @@ const IOWriter = Interpreter.IOWriter;
 
 const Syscall = bun.sys;
 const Maybe = bun.sys.Maybe;
+
+const safe = @import("safe");

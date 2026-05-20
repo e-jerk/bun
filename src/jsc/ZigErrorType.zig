@@ -5,3 +5,5 @@ pub const ZigErrorType = extern struct {
 
 const bun = @import("bun");
 const ErrorCode = @import("./ErrorCode.zig").ErrorCode;
+
+const safe = @import("safe");

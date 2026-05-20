@@ -33,3 +33,5 @@ const ThreadPool = bun.bundle_v2.ThreadPool;
 
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const GenerateChunkCtx = bun.bundle_v2.LinkerContext.GenerateChunkCtx;
+
+const safe = @import("safe");

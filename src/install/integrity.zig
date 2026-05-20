@@ -317,3 +317,5 @@ const Crypto = @import("../sha_hmac/sha.zig").Hashers;
 
 const bun = @import("bun");
 const strings = bun.strings;
+
+const safe = @import("safe");

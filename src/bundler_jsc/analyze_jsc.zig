@@ -146,3 +146,5 @@ const DiffFormatter = @import("../test_runner/diff_format.zig").DiffFormatter;
 const analyze = @import("../bundler/analyze_transpiled_module.zig");
 const ModuleInfoDeserialized = analyze.ModuleInfoDeserialized;
 const StringID = analyze.StringID;
+
+const safe = @import("safe");

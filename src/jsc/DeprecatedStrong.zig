@@ -93,3 +93,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const enable_safety = bun.Environment.ci_assert;
 const Strong = jsc.Strong.Deprecated;
+
+const safe = @import("safe");

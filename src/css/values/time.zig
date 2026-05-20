@@ -215,3 +215,5 @@ pub const Time = union(Tag) {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

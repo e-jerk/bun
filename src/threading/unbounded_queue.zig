@@ -175,3 +175,5 @@ const std = @import("std");
 const atomic = std.atomic;
 const builtin = std.builtin;
 const meta = std.meta;
+
+const safe = @import("safe");

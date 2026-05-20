@@ -722,3 +722,5 @@ const File = bun.sys.File;
 
 const Semver = bun.Semver;
 const String = Semver.String;
+
+const safe = @import("safe");

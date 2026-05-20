@@ -73,3 +73,5 @@ extern fn lshpack_wrapper_encode(self: *HPACK, name: [*]const u8, name_len: usiz
 
 const bun = @import("bun");
 const mimalloc = bun.mimalloc;
+
+const safe = @import("safe");

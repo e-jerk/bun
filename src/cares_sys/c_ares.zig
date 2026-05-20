@@ -1551,3 +1551,5 @@ const fd_set = c.fd_set;
 
 const struct_sockaddr = std.posix.sockaddr;
 const struct_in_addr = std.posix.sockaddr.in;
+
+const safe = @import("safe");

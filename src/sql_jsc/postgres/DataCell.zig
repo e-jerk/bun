@@ -1034,3 +1034,5 @@ const String = bun.String;
 
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

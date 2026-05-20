@@ -2184,3 +2184,5 @@ const api = bun.schema.api;
 const Semver = bun.Semver;
 const String = Semver.String;
 const Version = Semver.Version;
+
+const safe = @import("safe");

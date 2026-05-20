@@ -53,3 +53,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const JSGlobalObject = jsc.JSGlobalObject;
+
+const safe = @import("safe");

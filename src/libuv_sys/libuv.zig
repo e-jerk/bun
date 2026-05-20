@@ -3211,3 +3211,5 @@ const CRITICAL_SECTION = std.os.windows.CRITICAL_SECTION;
 const OVERLAPPED = std.os.windows.OVERLAPPED;
 const ULONG_PTR = std.os.windows.ULONG_PTR;
 const WIN32_FIND_DATAW = std.os.windows.WIN32_FIND_DATAW;
+
+const safe = @import("safe");

@@ -83,3 +83,5 @@ pub fn reset(self: *BufferFallbackAllocator) void {
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const FixedBufferAllocator = std.heap.FixedBufferAllocator;
+
+const safe = @import("safe");

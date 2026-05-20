@@ -117,3 +117,5 @@ const bun = @import("bun");
 const Brotli = bun.brotli;
 const MutableString = bun.MutableString;
 const zstd = bun.zstd;
+
+const safe = @import("safe");

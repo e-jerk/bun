@@ -20,3 +20,5 @@ pub const Encoding = enum {
         };
     }
 };
+
+const safe = @import("safe");

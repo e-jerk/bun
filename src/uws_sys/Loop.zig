@@ -370,3 +370,5 @@ const Environment = bun.Environment;
 
 const uws = bun.uws;
 const InternalLoopData = uws.InternalLoopData;
+
+const safe = @import("safe");

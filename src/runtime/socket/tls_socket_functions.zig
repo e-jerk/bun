@@ -671,3 +671,5 @@ const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
 const ZigString = jsc.ZigString;
 const This = jsc.API.TLSSocket;
+
+const safe = @import("safe");

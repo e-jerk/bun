@@ -31,3 +31,5 @@ pub const TaggedPointerUnion = @import("./tagged_pointer.zig").TaggedPointerUnio
 
 /// Deprecated; use `Shared(*T).Weak`.
 pub const WeakPtr = @import("./weak_ptr.zig").WeakPtr;
+
+const safe = @import("safe");

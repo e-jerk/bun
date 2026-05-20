@@ -70,3 +70,5 @@ pub const DOMExceptionCode = enum(u8) {
     InvalidURLError,
     CryptoOperationFailedError,
 };
+
+const safe = @import("safe");

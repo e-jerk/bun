@@ -1165,3 +1165,5 @@ const strings = bun.strings;
 const Semver = bun.Semver;
 const ExternalString = Semver.ExternalString;
 const String = Semver.String;
+
+const safe = @import("safe");

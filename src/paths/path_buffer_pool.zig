@@ -32,3 +32,5 @@ const Environment = bun.Environment;
 const ObjectPool = bun.ObjectPool;
 const PathBuffer = bun.PathBuffer;
 const WPathBuffer = bun.WPathBuffer;
+
+const safe = @import("safe");

@@ -798,3 +798,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const strings = bun.strings;
 const ResumableSinkBackpressure = jsc.WebCore.ResumableSinkBackpressure;
+
+const safe = @import("safe");

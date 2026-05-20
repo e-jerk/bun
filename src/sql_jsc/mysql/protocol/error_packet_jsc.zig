@@ -38,3 +38,5 @@ const MySQLErrorOptions = ErrorPacket.MySQLErrorOptions;
 const JSC = bun.jsc;
 const jsc = bun.jsc;
 const JSValue = JSC.JSValue;
+
+const safe = @import("safe");

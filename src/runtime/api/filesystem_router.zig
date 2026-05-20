@@ -707,3 +707,5 @@ const ZigString = jsc.ZigString;
 
 const WebCore = jsc.WebCore;
 const Request = WebCore.Request;
+
+const safe = @import("safe");

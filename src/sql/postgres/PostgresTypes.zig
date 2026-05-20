@@ -16,3 +16,5 @@ pub const int8 = int_types.int8;
 pub const short = int_types.short;
 
 const int_types = @import("./types/int_types.zig");
+
+const safe = @import("safe");

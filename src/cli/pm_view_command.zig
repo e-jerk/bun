@@ -408,3 +408,5 @@ const Semver = bun.Semver;
 const http = bun.http;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

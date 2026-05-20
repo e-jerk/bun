@@ -816,3 +816,5 @@ const Output = bun.Output;
 const default_allocator = bun.default_allocator;
 const strings = bun.strings;
 const transpiler = bun.transpiler;
+
+const safe = @import("safe");

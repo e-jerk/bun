@@ -1520,3 +1520,5 @@ const assert = bun.assert;
 const strings = bun.strings;
 const Index = bun.ast.Index;
 const api = bun.schema.api;
+
+const safe = @import("safe");

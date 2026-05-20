@@ -18,3 +18,5 @@ pub fn fromJSCaseInsensitive(comptime Map: type, globalThis: *jsc.JSGlobalObject
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

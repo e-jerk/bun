@@ -520,3 +520,5 @@ const Environment = bun.Environment;
 const Output = bun.Output;
 const PathString = bun.PathString;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

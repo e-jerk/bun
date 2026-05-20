@@ -60,3 +60,5 @@ pub const CSSIntegerFns = struct {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

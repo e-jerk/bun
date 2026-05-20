@@ -382,3 +382,5 @@ const initializeStore = install.initializeStore;
 const Lockfile = install.Lockfile;
 const Package = Lockfile.Package;
 const StringBuilder = Lockfile.StringBuilder;
+
+const safe = @import("safe");

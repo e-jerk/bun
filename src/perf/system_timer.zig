@@ -25,3 +25,5 @@ pub const Timer = NewTimer();
 
 const Environment = @import("../bun_core/env.zig");
 const std = @import("std");
+
+const safe = @import("safe");

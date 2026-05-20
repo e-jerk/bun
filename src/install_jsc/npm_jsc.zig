@@ -123,3 +123,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const strings = bun.strings;
 const npm = bun.install.Npm;
+
+const safe = @import("safe");

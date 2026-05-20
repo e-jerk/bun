@@ -715,3 +715,5 @@ const Renderer = types.Renderer;
 const SpanDetail = types.SpanDetail;
 const SpanType = types.SpanType;
 const TextType = types.TextType;
+
+const safe = @import("safe");

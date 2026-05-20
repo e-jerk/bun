@@ -289,3 +289,5 @@ const std = @import("std");
 const js_ast = bun.ast;
 const AssignTarget = js_ast.AssignTarget;
 const Op = js_ast.Op;
+
+const safe = @import("safe");

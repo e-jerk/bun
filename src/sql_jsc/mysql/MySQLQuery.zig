@@ -332,3 +332,5 @@ const Value = @import("../../sql/mysql/MySQLTypes.zig").Value;
 
 const JSGlobalObject = bun.jsc.JSGlobalObject;
 const JSValue = bun.jsc.JSValue;
+
+const safe = @import("safe");

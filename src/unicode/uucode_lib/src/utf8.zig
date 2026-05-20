@@ -120,3 +120,5 @@ test "Iterator overlong utf8" {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

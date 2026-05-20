@@ -274,3 +274,5 @@ const BundleV2 = bundler.BundleV2;
 const Chunk = bundler.Chunk;
 const Graph = bundler.Graph;
 const LinkerGraph = bundler.LinkerGraph;
+
+const safe = @import("safe");

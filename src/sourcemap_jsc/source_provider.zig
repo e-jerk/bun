@@ -46,3 +46,5 @@ pub const BakeSourceProvider = opaque {
 
 const bun = @import("bun");
 const SourceMap = bun.SourceMap;
+
+const safe = @import("safe");

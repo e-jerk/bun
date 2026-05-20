@@ -3,3 +3,5 @@ pub const ScriptExecutionStatus = enum(i32) {
     suspended = 1,
     stopped = 2,
 };
+
+const safe = @import("safe");

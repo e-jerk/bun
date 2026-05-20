@@ -339,3 +339,5 @@ const Allocator = std.mem.Allocator;
 const jsc = bun.jsc;
 const JSGlobalObject = bun.jsc.JSGlobalObject;
 const JSValue = bun.jsc.JSValue;
+
+const safe = @import("safe");

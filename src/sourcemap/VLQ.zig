@@ -166,3 +166,5 @@ pub fn decodeAssumeValid(encoded: []const u8, start: usize) VLQResult {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

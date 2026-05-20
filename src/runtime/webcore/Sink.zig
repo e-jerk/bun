@@ -661,3 +661,5 @@ const JSValue = jsc.JSValue;
 const webcore = bun.webcore;
 const Blob = webcore.Blob;
 const streams = webcore.streams;
+
+const safe = @import("safe");

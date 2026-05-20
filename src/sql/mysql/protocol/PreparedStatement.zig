@@ -116,3 +116,5 @@ const decoderWrap = @import("./NewReader.zig").decoderWrap;
 
 const NewWriter = @import("./NewWriter.zig").NewWriter;
 const writeWrap = @import("./NewWriter.zig").writeWrap;
+
+const safe = @import("safe");

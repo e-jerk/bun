@@ -49,3 +49,5 @@ const string = []const u8;
 const bun = @import("bun");
 const std = @import("std");
 const String = bun.Semver.String;
+
+const safe = @import("safe");

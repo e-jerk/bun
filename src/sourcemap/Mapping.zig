@@ -603,3 +603,5 @@ const decodeVLQ = SourceMap.VLQ.decode;
 const bun = @import("bun");
 const assert = bun.assert;
 const strings = bun.strings;
+
+const safe = @import("safe");

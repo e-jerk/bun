@@ -1083,3 +1083,5 @@ const StringJoiner = bun.StringJoiner;
 const Chunk = bun.bundle_v2.Chunk;
 const Index = bun.bundle_v2.Index;
 const LinkerContext = bun.bundle_v2.LinkerContext;
+
+const safe = @import("safe");

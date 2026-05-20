@@ -648,3 +648,5 @@ const JSGlobalObject = bun.jsc.JSGlobalObject;
 const JSValue = bun.jsc.JSValue;
 const ResolvedSource = bun.jsc.ResolvedSource;
 const VirtualMachine = bun.jsc.VirtualMachine;
+
+const safe = @import("safe");

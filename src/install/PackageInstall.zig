@@ -1525,3 +1525,5 @@ const Resolution = install.Resolution;
 const TruncatedPackageNameHash = install.TruncatedPackageNameHash;
 const buntaghashbuf_make = install.buntaghashbuf_make;
 const initializeStore = install.initializeStore;
+
+const safe = @import("safe");

@@ -21,3 +21,5 @@ comptime {
     @export(&ErrorCode.ParserError, .{ .name = "Zig_ErrorCodeParserError" });
     @export(&ErrorCode.JSErrorObject, .{ .name = "Zig_ErrorCodeJSErrorObject" });
 }
+
+const safe = @import("safe");

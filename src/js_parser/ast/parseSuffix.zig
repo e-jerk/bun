@@ -955,3 +955,5 @@ const JSXTransformType = js_parser.JSXTransformType;
 const SideEffects = js_parser.SideEffects;
 const TypeScript = js_parser.TypeScript;
 const options = js_parser.options;
+
+const safe = @import("safe");

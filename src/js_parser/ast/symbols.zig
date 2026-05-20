@@ -131,3 +131,5 @@ const FindSymbolResult = js_parser.FindSymbolResult;
 const JSXTransformType = js_parser.JSXTransformType;
 const Ref = js_parser.Ref;
 const TypeScript = js_parser.TypeScript;
+
+const safe = @import("safe");

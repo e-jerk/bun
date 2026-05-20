@@ -2653,3 +2653,5 @@ const jsc = bun.jsc;
 const logger = bun.logger;
 const strings = bun.strings;
 const api = bun.schema.api;
+
+const safe = @import("safe");

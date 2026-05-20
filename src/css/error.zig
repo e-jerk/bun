@@ -415,3 +415,5 @@ const Allocator = std.mem.Allocator;
 
 const logger = bun.logger;
 const Log = logger.Log;
+
+const safe = @import("safe");

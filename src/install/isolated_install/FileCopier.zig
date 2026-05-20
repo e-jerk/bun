@@ -170,3 +170,5 @@ const Global = bun.Global;
 const OOM = bun.OOM;
 const Output = bun.Output;
 const sys = bun.sys;
+
+const safe = @import("safe");

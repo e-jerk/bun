@@ -30,3 +30,5 @@ pub const EventType = enum(u8) {
 const string = []const u8;
 
 const bun = @import("bun");
+
+const safe = @import("safe");

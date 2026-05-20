@@ -551,3 +551,5 @@ const strings = bun.strings;
 
 const std = @import("std");
 const mem = std.mem;
+
+const safe = @import("safe");

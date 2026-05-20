@@ -36,3 +36,5 @@ pub const ColumnIdentifier = union(enum) {
 
 const std = @import("std");
 const Data = @import("./Data.zig").Data;
+
+const safe = @import("safe");

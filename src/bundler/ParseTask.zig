@@ -1502,3 +1502,5 @@ pub fn deinit(this: *ParseTask) void {
 
 const jsc = bun.jsc;
 const EventLoop = bun.jsc.AnyEventLoop;
+
+const safe = @import("safe");

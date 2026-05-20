@@ -1,0 +1,27 @@
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/b9661706d95fa51c5df31a56053e2b26/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/c3e880edd4293a69aef09482429c56d2/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/85d3fa3838c26bcd04782bb597c18d4e/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/10325e6373087763da4c9e1360d0d73e/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/9bb35eaf17e39eb1bfb7c17d37bab93f/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/.zig-cache/o/95af9a1af896dfe24b5a073ab9eb02ce/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/build/debug/cache/zig/local/o/97dde82049c1383798641c1d6d85c348/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/build/debug/cache/zig/local/o/9bb35eaf17e39eb1bfb7c17d37bab93f/c-headers-for-zig.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/build/debug/codegen/ZigGeneratedClasses.zig: StreamTooLong
+Warning: Failed to read /Users/barrett/github.com/e-jerk/bun-zust-port/vendor/zig/lib/compiler/aro/aro/Builtins/Builtin.zig: StreamTooLong
+thread 7268048 panic: index out of bounds: index 6, len 6
+/Users/barrett/github.com/e-jerk/zust/analyzer/src/Analysis.zig:431:36: 0x10453f6db in buildFunctionRegistry (zust-analyze)
+                    param_raw_flags[param_idx] = is_raw;
+                                   ^
+/Users/barrett/github.com/e-jerk/zust/analyzer/src/Analysis.zig:288:51: 0x104551db7 in analyzeWorkspaceCached__anon_30237 (zust-analyze)
+                    try self.buildFunctionRegistry(file.path, ast, @intFromEnum(decl));
+                                                  ^
+/Users/barrett/github.com/e-jerk/zust/analyzer/src/main.zig:270:40: 0x10455413f in analyzeDirectory (zust-analyze)
+    try analyzer.analyzeWorkspaceCached(workspace_files, strictness, &cache);
+                                       ^
+/Users/barrett/github.com/e-jerk/zust/analyzer/src/main.zig:143:29: 0x104555d2b in main (zust-analyze)
+        try analyzeDirectory(allocator, io, target_path.?, output_format, strictness);
+                            ^
+/opt/homebrew/Cellar/zig/0.16.0_1/lib/zig/std/start.zig:737:30: 0x104556acf in callMain (zust-analyze)
+    return wrapMain(root.main(.{
+                             ^
+???:?:?: 0x18fea3dff in start (/usr/lib/dyld)

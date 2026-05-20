@@ -35,3 +35,5 @@ const std = @import("std");
 const bun = @import("bun");
 const jsc = bun.jsc;
 const gen = bun.gen.bindgen_test;
+
+const safe = @import("safe");

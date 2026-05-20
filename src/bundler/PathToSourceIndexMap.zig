@@ -44,3 +44,5 @@ const std = @import("std");
 const bun = @import("bun");
 const Fs = bun.fs;
 const Index = bun.ast.Index;
+
+const safe = @import("safe");

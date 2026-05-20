@@ -266,3 +266,5 @@ const HTTPClient = bun.http;
 const picohttp = bun.picohttp;
 const strings = bun.strings;
 const quic = bun.uws.quic;
+
+const safe = @import("safe");

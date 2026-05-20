@@ -9,3 +9,5 @@ pub fn zFieldCount(prefix: []const u8, slice: []const u8) usize {
 
     return zCount(prefix);
 }
+
+const safe = @import("safe");

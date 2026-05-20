@@ -502,3 +502,5 @@ const EventLoopTimer = bun.api.Timer.EventLoopTimer;
 
 const uws = bun.uws;
 const us_bun_verify_error_t = uws.us_bun_verify_error_t;
+
+const safe = @import("safe");

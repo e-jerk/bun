@@ -996,3 +996,5 @@ const ExternalString = bun.Semver.ExternalString;
 const Query = bun.Semver.Query;
 const SlicedString = bun.Semver.SlicedString;
 const String = bun.Semver.String;
+
+const safe = @import("safe");

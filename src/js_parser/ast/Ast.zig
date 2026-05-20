@@ -141,3 +141,5 @@ const RefHashCtx = js_ast.RefHashCtx;
 const Scope = js_ast.Scope;
 const SlotCounts = js_ast.SlotCounts;
 const Symbol = js_ast.Symbol;
+
+const safe = @import("safe");

@@ -87,3 +87,5 @@ pub fn isIndexable(comptime T: type) bool {
         else => false,
     };
 }
+
+const safe = @import("safe");

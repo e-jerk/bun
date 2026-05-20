@@ -404,3 +404,5 @@ const Stream = Lockfile.Stream;
 const StringBuffer = Lockfile.StringBuffer;
 const Tree = Lockfile.Tree;
 const assertNoUninitializedPadding = Lockfile.assertNoUninitializedPadding;
+
+const safe = @import("safe");

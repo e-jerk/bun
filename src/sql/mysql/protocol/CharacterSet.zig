@@ -234,3 +234,5 @@ pub const CharacterSet = enum(u8) {
         return "(unknown)";
     }
 };
+
+const safe = @import("safe");

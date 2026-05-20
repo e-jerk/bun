@@ -501,3 +501,5 @@ const Index = bun.bundle_v2.Index;
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const PathTemplate = bundler.PathTemplate;
 const resolve_path = bun.bundle_v2.resolve_path;
+
+const safe = @import("safe");

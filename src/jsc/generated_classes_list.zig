@@ -102,3 +102,5 @@ const webcore = bun.webcore;
 
 const api = bun.api;
 const node = api.node;
+
+const safe = @import("safe");

@@ -389,3 +389,5 @@ pub fn hasField(comptime T: type, comptime name: []const u8) bool {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

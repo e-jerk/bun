@@ -17,3 +17,5 @@ pub const PendingConnect = opaque {
 const bun = @import("bun");
 const uws = bun.uws;
 const Socket = uws.quic.Socket;
+
+const safe = @import("safe");

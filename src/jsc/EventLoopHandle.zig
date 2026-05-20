@@ -178,3 +178,5 @@ const AnyEventLoop = jsc.AnyEventLoop;
 const EventLoopKind = jsc.EventLoopKind;
 const MiniEventLoop = jsc.MiniEventLoop;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

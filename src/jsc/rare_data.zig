@@ -953,3 +953,5 @@ const jsc = bun.jsc;
 const uws = bun.uws;
 const BoringSSL = bun.BoringSSL.c;
 const Blob = jsc.WebCore.Blob;
+
+const safe = @import("safe");

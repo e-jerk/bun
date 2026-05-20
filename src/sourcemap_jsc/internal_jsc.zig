@@ -57,3 +57,5 @@ const bun = @import("bun");
 const MutableString = bun.MutableString;
 const jsc = bun.jsc;
 const InternalSourceMap = bun.SourceMap.InternalSourceMap;
+
+const safe = @import("safe");

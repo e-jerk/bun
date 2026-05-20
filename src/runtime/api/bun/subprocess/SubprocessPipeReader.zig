@@ -249,3 +249,5 @@ const Subprocess = jsc.API.Subprocess;
 const MaxBuf = Subprocess.MaxBuf;
 const StdioKind = Subprocess.StdioKind;
 const StdioResult = Subprocess.StdioResult;
+
+const safe = @import("safe");

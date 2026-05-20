@@ -1790,3 +1790,5 @@ const default_allocator = bun.default_allocator;
 const jsc = bun.jsc;
 const strings = bun.strings;
 const uws = bun.uws;
+
+const safe = @import("safe");

@@ -289,3 +289,5 @@ const assert = bun.assert;
 const mimalloc = bun.mimalloc;
 const Owned = bun.ptr.Owned;
 const safety_checks = bun.Environment.ci_assert;
+
+const safe = @import("safe");

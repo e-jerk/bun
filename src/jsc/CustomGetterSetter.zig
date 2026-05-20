@@ -9,3 +9,5 @@ pub const CustomGetterSetter = opaque {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

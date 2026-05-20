@@ -658,3 +658,5 @@ const StoredTrace = bun.crash_handler.StoredTrace;
 
 const Environment = bun.Environment;
 const traces_enabled = Environment.isDebug;
+
+const safe = @import("safe");

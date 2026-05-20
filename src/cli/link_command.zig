@@ -222,3 +222,5 @@ const PackageManager = bun.install.PackageManager;
 const CommandLineArguments = PackageManager.CommandLineArguments;
 const Options = PackageManager.Options;
 const attemptToCreatePackageJSON = PackageManager.attemptToCreatePackageJSON;
+
+const safe = @import("safe");

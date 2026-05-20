@@ -509,3 +509,5 @@ const HTTP = bun.http;
 const MutableString = bun.MutableString;
 const Output = bun.Output;
 const strings = bun.strings;
+
+const safe = @import("safe");

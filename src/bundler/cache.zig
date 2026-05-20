@@ -332,3 +332,5 @@ const js_parser = bun.js_parser;
 const json_parser = bun.json;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

@@ -8,3 +8,5 @@ pub fn htmlStringToJS(this: HTMLString, globalThis: *bun.jsc.JSGlobalObject) bun
 
 const bun = @import("bun");
 const HTMLString = bun.LOLHTML.HTMLString;
+
+const safe = @import("safe");

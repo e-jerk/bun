@@ -127,3 +127,5 @@ const AnyMySQLError = @import("./AnyMySQLError.zig");
 const std = @import("std");
 const Data = @import("../../shared/Data.zig").Data;
 const decodeLengthInt = @import("./EncodeInt.zig").decodeLengthInt;
+
+const safe = @import("safe");

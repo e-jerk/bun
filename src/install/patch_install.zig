@@ -591,3 +591,5 @@ const Task = bun.install.Task;
 
 const logger = bun.logger;
 const Loc = logger.Loc;
+
+const safe = @import("safe");

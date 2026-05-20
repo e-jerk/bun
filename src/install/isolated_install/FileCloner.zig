@@ -45,3 +45,5 @@ pub fn clone(this: *FileCloner) sys.Maybe(void) {
 const bun = @import("bun");
 const FD = bun.FD;
 const sys = bun.sys;
+
+const safe = @import("safe");

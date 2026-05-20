@@ -385,3 +385,5 @@ pub fn isTaskChecked(task_mark: u8) bool {
 }
 
 const bun = @import("bun");
+
+const safe = @import("safe");

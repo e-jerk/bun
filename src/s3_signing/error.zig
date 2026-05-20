@@ -34,3 +34,5 @@ pub const S3Error = struct {
     pub const toJS = @import("../runtime/webcore/s3/error_jsc.zig").s3ErrorToJS;
     pub const toJSWithAsyncStack = @import("../runtime/webcore/s3/error_jsc.zig").s3ErrorToJSWithAsyncStack;
 };
+
+const safe = @import("safe");

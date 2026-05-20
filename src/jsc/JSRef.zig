@@ -223,3 +223,5 @@ const bun = @import("bun");
 
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

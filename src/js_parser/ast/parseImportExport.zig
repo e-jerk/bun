@@ -435,3 +435,5 @@ const ImportClause = js_parser.ImportClause;
 const JSXTransformType = js_parser.JSXTransformType;
 const isEvalOrArguments = js_parser.isEvalOrArguments;
 const options = js_parser.options;
+
+const safe = @import("safe");

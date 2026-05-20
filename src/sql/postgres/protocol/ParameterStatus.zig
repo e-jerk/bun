@@ -24,3 +24,5 @@ const bun = @import("bun");
 const Data = @import("../../shared/Data.zig").Data;
 const DecoderWrap = @import("./DecoderWrap.zig").DecoderWrap;
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

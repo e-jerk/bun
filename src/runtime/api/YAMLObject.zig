@@ -1072,3 +1072,5 @@ const JSValue = jsc.JSValue;
 const MarkedArgumentBuffer = jsc.MarkedArgumentBuffer;
 const ZigString = jsc.ZigString;
 const wtf = bun.jsc.wtf;
+
+const safe = @import("safe");

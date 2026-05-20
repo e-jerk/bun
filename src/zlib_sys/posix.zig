@@ -78,3 +78,5 @@ pub inline fn inflateInit2(strm: anytype, windowBits: anytype) ReturnCode {
 pub inline fn inflateBackInit(strm: anytype, windowBits: anytype, window: anytype) ReturnCode {
     return inflateBackInit_(strm, windowBits, window, zlibVersion(), @import("std").zig.c_translation.cast(c_int, @import("std").zig.c_translation.sizeof(z_stream)));
 }
+
+const safe = @import("safe");

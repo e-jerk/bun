@@ -790,3 +790,5 @@ const Resolution = bun.install.Resolution;
 const PackageManager = bun.install.PackageManager;
 const Options = PackageManager.Options;
 const ProgressStrings = PackageManager.ProgressStrings;
+
+const safe = @import("safe");

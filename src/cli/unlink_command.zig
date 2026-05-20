@@ -156,3 +156,5 @@ const attemptToCreatePackageJSON = PackageManager.attemptToCreatePackageJSON;
 
 const Syscall = bun.sys;
 const File = bun.sys.File;
+
+const safe = @import("safe");

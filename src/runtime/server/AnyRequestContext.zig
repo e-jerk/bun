@@ -169,3 +169,5 @@ const DebugHTTPSServer = bun.api.DebugHTTPSServer;
 const DebugHTTPServer = bun.api.DebugHTTPServer;
 const HTTPSServer = bun.api.HTTPSServer;
 const HTTPServer = bun.api.HTTPServer;
+
+const safe = @import("safe");

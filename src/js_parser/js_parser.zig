@@ -709,3 +709,5 @@ const Environment = bun.Environment;
 const Output = bun.Output;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

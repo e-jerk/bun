@@ -1514,3 +1514,5 @@ fn isAlignProperty(property_id: css.PropertyId) bool {
 const bun = @import("bun");
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

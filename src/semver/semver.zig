@@ -8,3 +8,5 @@ pub const SlicedString = @import("../install_types/SlicedString.zig");
 pub const Range = @import("./SemverRange.zig");
 pub const Query = @import("./SemverQuery.zig");
 pub const SemverObject = @import("../semver_jsc/SemverObject.zig");
+
+const safe = @import("safe");

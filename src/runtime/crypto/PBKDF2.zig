@@ -260,3 +260,5 @@ const createCryptoError = jsc.API.Bun.Crypto.createCryptoError;
 
 const EVP = jsc.API.Bun.Crypto.EVP;
 const Algorithm = EVP.Algorithm;
+
+const safe = @import("safe");

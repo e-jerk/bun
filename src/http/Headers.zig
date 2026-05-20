@@ -180,3 +180,5 @@ const api = bun.schema.api;
 
 const Blob = bun.webcore.Blob;
 const FetchHeaders = bun.webcore.FetchHeaders;
+
+const safe = @import("safe");

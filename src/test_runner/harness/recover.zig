@@ -137,3 +137,5 @@ const std = @import("std");
 
 const CONTEXT = std.os.windows.CONTEXT;
 const EXCEPTION_RECORD = std.os.windows.EXCEPTION_RECORD;
+
+const safe = @import("safe");

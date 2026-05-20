@@ -254,3 +254,5 @@ const js = jsc.Codegen.JSBlockList;
 
 const SocketAddress = bun.jsc.GeneratedClassesList.SocketAddress;
 const sockaddr = SocketAddress.sockaddr;
+
+const safe = @import("safe");

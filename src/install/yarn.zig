@@ -1717,3 +1717,5 @@ const Environment = bun.Environment;
 const JSON = bun.json;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

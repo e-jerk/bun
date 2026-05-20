@@ -803,3 +803,5 @@ const std = @import("std");
 const math = std.math;
 const mem = std.mem;
 const testing = std.testing;
+
+const safe = @import("safe");

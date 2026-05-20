@@ -569,3 +569,5 @@ const AllocError = std.mem.Allocator.Error;
 
 const meta = @import("./meta.zig");
 const PointerInfo = meta.PointerInfo;
+
+const safe = @import("safe");

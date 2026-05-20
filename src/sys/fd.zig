@@ -718,3 +718,5 @@ const uv_file = bun.windows.libuv.uv_file;
 
 const E = std.posix.E;
 const fd_t = std.posix.fd_t;
+
+const safe = @import("safe");

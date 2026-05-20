@@ -690,3 +690,5 @@ const bun = @import("bun");
 const JSError = bun.JSError;
 const Output = bun.Output;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

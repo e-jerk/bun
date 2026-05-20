@@ -9,3 +9,5 @@ pub fn Result(comptime T: type, comptime E: type) type {
         }
     };
 }
+
+const safe = @import("safe");

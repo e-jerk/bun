@@ -471,3 +471,5 @@ const strings = bun.strings;
 
 const DynamicOwned = bun.ptr.DynamicOwned;
 const Owned = bun.ptr.Owned;
+
+const safe = @import("safe");

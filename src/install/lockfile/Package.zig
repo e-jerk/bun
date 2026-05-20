@@ -2298,3 +2298,5 @@ const StringBuilder = Lockfile.StringBuilder;
 const TrustedDependenciesSet = Lockfile.TrustedDependenciesSet;
 const assertNoUninitializedPadding = Lockfile.assertNoUninitializedPadding;
 const default_trusted_dependencies = Lockfile.default_trusted_dependencies;
+
+const safe = @import("safe");

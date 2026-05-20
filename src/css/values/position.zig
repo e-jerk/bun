@@ -427,3 +427,5 @@ pub const HorizontalPosition = PositionComponent(HorizontalPositionKeyword);
 pub const VerticalPosition = PositionComponent(VerticalPositionKeyword);
 
 const std = @import("std");
+
+const safe = @import("safe");

@@ -2516,3 +2516,5 @@ const ZigException = jsc.ZigException;
 const ZigString = jsc.ZigString;
 const fromJSHostCall = jsc.fromJSHostCall;
 const toJSHostFunction = jsc.toJSHostFn;
+
+const safe = @import("safe");

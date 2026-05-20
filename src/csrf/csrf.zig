@@ -218,3 +218,5 @@ const string = @import("../string/string.zig");
 const bun = @import("bun");
 const jsc = bun.jsc;
 const boring = bun.BoringSSL.c;
+
+const safe = @import("safe");

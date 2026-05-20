@@ -1672,3 +1672,5 @@ const JSValue = jsc.JSValue;
 
 const uws = bun.uws;
 const Socket = uws.AnySocket;
+
+const safe = @import("safe");

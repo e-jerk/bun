@@ -508,3 +508,5 @@ const Stmt = js_ast.Stmt;
 
 const G = js_ast.G;
 const Decl = G.Decl;
+
+const safe = @import("safe");

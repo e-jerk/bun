@@ -760,3 +760,5 @@ const PatchCommitResult = PackageManager.PatchCommitResult;
 const Subcommand = PackageManager.Subcommand;
 const UpdateRequest = PackageManager.UpdateRequest;
 const attemptToCreatePackageJSON = PackageManager.attemptToCreatePackageJSON;
+
+const safe = @import("safe");

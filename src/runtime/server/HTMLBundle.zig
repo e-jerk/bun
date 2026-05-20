@@ -537,3 +537,5 @@ const JSBundler = jsc.API.JSBundler;
 
 const uws = bun.uws;
 const HTTPResponse = bun.uws.AnyResponse;
+
+const safe = @import("safe");

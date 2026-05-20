@@ -89,3 +89,5 @@ const JSValue = bun.jsc.JSValue;
 
 const Expect = bun.jsc.Expect.Expect;
 const getSignature = Expect.getSignature;
+
+const safe = @import("safe");

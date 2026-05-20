@@ -358,3 +358,5 @@ const Options = PackageManager.Options;
 const TaskCallbackList = PackageManager.TaskCallbackList;
 const assignRootResolution = PackageManager.assignRootResolution;
 const failRootResolution = PackageManager.failRootResolution;
+
+const safe = @import("safe");

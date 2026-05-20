@@ -748,3 +748,5 @@ const utf8 = @import("./utf8.zig");
 const getpkg = @import("./get.zig");
 const FieldEnum = getpkg.FieldEnum;
 const get = getpkg.get;
+
+const safe = @import("safe");

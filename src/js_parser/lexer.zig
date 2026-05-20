@@ -3399,3 +3399,5 @@ const Source = logger.Source;
 
 const std = @import("std");
 const unicode = std.unicode;
+
+const safe = @import("safe");

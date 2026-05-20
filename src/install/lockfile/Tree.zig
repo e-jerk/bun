@@ -811,3 +811,5 @@ const ExternalSlice = Lockfile.ExternalSlice;
 
 const PackageManager = bun.install.PackageManager;
 const WorkspaceFilter = install.PackageManager.WorkspaceFilter;
+
+const safe = @import("safe");

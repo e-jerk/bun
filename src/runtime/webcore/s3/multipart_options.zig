@@ -20,3 +20,5 @@ pub const MultiPartUploadOptions = struct {
     /// default is 3 max 255
     retry: u8 = 3,
 };
+
+const safe = @import("safe");

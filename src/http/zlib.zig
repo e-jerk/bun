@@ -32,3 +32,5 @@ const std = @import("std");
 
 const bun = @import("bun");
 const MutableString = bun.MutableString;
+
+const safe = @import("safe");

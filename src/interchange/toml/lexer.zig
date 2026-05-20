@@ -1246,3 +1246,5 @@ const CodePoint = bun.CodePoint;
 const js_ast = bun.ast;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

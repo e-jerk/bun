@@ -30,3 +30,5 @@ pub fn deinit(this: *@This()) void {
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

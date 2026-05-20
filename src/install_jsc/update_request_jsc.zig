@@ -59,3 +59,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const logger = bun.logger;
 const UpdateRequest = bun.install.PackageManager.UpdateRequest;
+
+const safe = @import("safe");

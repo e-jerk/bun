@@ -58,3 +58,5 @@ pub inline fn asInt(comptime T: type, value: T) @typeInfo(T).@"struct".backing_i
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

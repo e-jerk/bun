@@ -42,3 +42,5 @@ pub fn str(this: HashedString) []const u8 {
 }
 
 const bun = @import("bun");
+
+const safe = @import("safe");

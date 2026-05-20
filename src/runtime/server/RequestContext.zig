@@ -2734,3 +2734,5 @@ const Body = jsc.WebCore.Body;
 const FetchHeaders = jsc.WebCore.FetchHeaders;
 const Request = jsc.WebCore.Request;
 const Response = jsc.WebCore.Response;
+
+const safe = @import("safe");

@@ -80,3 +80,5 @@ const uws = bun.uws;
 
 const jsc = bun.jsc;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

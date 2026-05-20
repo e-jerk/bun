@@ -1597,3 +1597,5 @@ const Slice = jsc.ZigString.Slice;
 const valkey = bun.valkey;
 const Command = valkey.Command;
 const protocol = valkey.protocol;
+
+const safe = @import("safe");

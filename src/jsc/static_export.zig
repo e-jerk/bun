@@ -13,3 +13,5 @@ pub fn wrappedName(comptime this: *const @This()) []const u8 {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

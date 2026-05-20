@@ -303,3 +303,5 @@ pub const int2 = u16;
 pub const int3 = u24;
 pub const int4 = u32;
 pub const int8 = u64;
+
+const safe = @import("safe");

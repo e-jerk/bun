@@ -206,3 +206,5 @@ const Interpreter = bun.shell.Interpreter;
 const OutputNeedsIOSafeGuard = bun.shell.interpret.OutputNeedsIOSafeGuard;
 const stderr_no = bun.shell.interpret.stderr_no;
 const stdout_no = bun.shell.interpret.stdout_no;
+
+const safe = @import("safe");

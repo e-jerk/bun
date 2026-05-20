@@ -76,3 +76,5 @@ const idContinueESNext = struct {
 };
 
 const std = @import("std");
+
+const safe = @import("safe");

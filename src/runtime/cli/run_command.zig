@@ -28,3 +28,5 @@ pub const RunCommand = struct {
         return error.Unimplemented;
     }
 };
+
+const safe = @import("safe");

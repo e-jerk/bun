@@ -96,3 +96,5 @@ const Command = bun.cli.Command;
 const PackageManager = bun.install.PackageManager;
 const CommandLineArguments = PackageManager.CommandLineArguments;
 const Subcommand = PackageManager.Subcommand;
+
+const safe = @import("safe");

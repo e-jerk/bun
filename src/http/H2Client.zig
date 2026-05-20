@@ -43,3 +43,5 @@ pub const PendingConnect = @import("./h2_client/PendingConnect.zig");
 pub const TestingAPIs = @import("../http_jsc/headers_jsc.zig").H2TestingAPIs;
 
 const std = @import("std");
+
+const safe = @import("safe");

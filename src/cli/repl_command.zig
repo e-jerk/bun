@@ -189,3 +189,5 @@ const jsc = bun.jsc;
 const Arena = bun.allocators.MimallocArena;
 const Command = bun.cli.Command;
 const DNSResolver = bun.api.dns.Resolver;
+
+const safe = @import("safe");

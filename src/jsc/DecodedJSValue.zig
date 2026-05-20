@@ -47,3 +47,5 @@ comptime {
 const bun = @import("bun");
 const ffi = @import("./FFI.zig");
 const jsc = bun.bun_js.jsc;
+
+const safe = @import("safe");

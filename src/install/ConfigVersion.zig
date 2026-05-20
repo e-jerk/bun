@@ -43,3 +43,5 @@ pub const ConfigVersion = enum {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

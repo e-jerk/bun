@@ -640,3 +640,5 @@ const ToJSError = js_ast.ToJSError;
 const JavaScript = bun.jsc;
 const jsc = bun.jsc;
 const js = bun.jsc.C;
+
+const safe = @import("safe");

@@ -148,3 +148,5 @@ const std = @import("std");
 
 const options = bun.options;
 const OutputFile = options.OutputFile;
+
+const safe = @import("safe");

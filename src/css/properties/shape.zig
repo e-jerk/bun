@@ -13,3 +13,5 @@ pub const FillRule = css.DefineEnumProperty(@compileError(css.todo_stuff.depth))
 pub const AlphaValue = struct {
     v: f32,
 };
+
+const safe = @import("safe");

@@ -38,3 +38,5 @@ const std = @import("std");
 const bun = @import("bun");
 const strings = bun.strings;
 const File = bun.StandaloneModuleGraph.File;
+
+const safe = @import("safe");

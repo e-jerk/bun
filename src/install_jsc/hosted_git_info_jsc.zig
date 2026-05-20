@@ -107,3 +107,5 @@ const hgi = @import("../install/hosted_git_info.zig");
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

@@ -172,3 +172,5 @@ const Subshell = bun.shell.Interpreter.Subshell;
 
 const StatePtrUnion = bun.shell.interpret.StatePtrUnion;
 const log = bun.shell.interpret.log;
+
+const safe = @import("safe");

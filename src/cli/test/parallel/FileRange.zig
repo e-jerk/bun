@@ -30,3 +30,5 @@ pub fn stealBackHalf(self: *@This()) ?FileRange {
     self.hi = mid;
     return stolen;
 }
+
+const safe = @import("safe");

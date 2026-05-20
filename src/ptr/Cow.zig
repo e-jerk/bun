@@ -79,3 +79,5 @@ pub fn Cow(comptime T: type, comptime VTable: type) type {
 
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

@@ -194,3 +194,5 @@ const jsc = bun.jsc;
 const ErrorableString = jsc.ErrorableString;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

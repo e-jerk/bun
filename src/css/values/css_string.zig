@@ -14,3 +14,5 @@ pub const CSSStringFns = struct {
         return css.serializer.serializeString(this.*, dest) catch return dest.addFmtError();
     }
 };
+
+const safe = @import("safe");

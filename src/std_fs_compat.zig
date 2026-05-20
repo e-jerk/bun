@@ -723,3 +723,5 @@ pub const Semaphore = struct {
         _ = self.count.fetchAdd(1, .release);
     }
 };
+
+const safe = @import("safe");

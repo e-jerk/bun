@@ -220,3 +220,5 @@ pub const wcwidth = config.Extension{
 
 const config = @import("./config.zig");
 const std = @import("std");
+
+const safe = @import("safe");

@@ -293,3 +293,5 @@ const SourceMapStore = DevServer.SourceMapStore;
 
 const uws = bun.uws;
 const AnyWebSocket = uws.AnyWebSocket;
+
+const safe = @import("safe");

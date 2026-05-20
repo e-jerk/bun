@@ -373,3 +373,5 @@ const S = js_ast.S;
 const Scope = js_ast.Scope;
 const Stmt = js_ast.Stmt;
 const Symbol = js_ast.Symbol;
+
+const safe = @import("safe");

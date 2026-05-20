@@ -738,3 +738,5 @@ const ArrayList = std.array_list.Managed;
 
 const Allocator = std.mem.Allocator;
 const BraceLexerError = Allocator.Error;
+
+const safe = @import("safe");

@@ -60,3 +60,5 @@ const toBytes = std.mem.toBytes;
 
 const int_types = @import("./types/int_types.zig");
 const Int32 = int_types.Int32;
+
+const safe = @import("safe");

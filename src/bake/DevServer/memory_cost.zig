@@ -214,3 +214,5 @@ const DevServer = bun.bake.DevServer;
 const DeferredRequest = DevServer.DeferredRequest;
 const HmrSocket = DevServer.HmrSocket;
 const IncrementalResult = DevServer.IncrementalResult;
+
+const safe = @import("safe");

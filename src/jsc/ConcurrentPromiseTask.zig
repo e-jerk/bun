@@ -74,3 +74,5 @@ const JSPromise = jsc.JSPromise;
 const VirtualMachine = jsc.VirtualMachine;
 const WorkPool = jsc.WorkPool;
 const WorkPoolTask = jsc.WorkPoolTask;
+
+const safe = @import("safe");

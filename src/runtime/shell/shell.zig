@@ -64,3 +64,5 @@ pub fn escapeBunStr(str: bun.String, outbuf: anytype, comptime _: bool) !bool {
 pub const STDIN_FD: bun.FD = .fromUV(0);
 pub const STDOUT_FD: bun.FD = .fromUV(1);
 pub const STDERR_FD: bun.FD = .fromUV(2);
+
+const safe = @import("safe");

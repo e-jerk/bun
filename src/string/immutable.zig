@@ -2224,7 +2224,7 @@ pub fn percentEncodeWrite(
 ) error{ OutOfMemory, IncompleteUTF8 }!void {
     var remaining = utf8_input;
     while (indexOfNeedsURLEncode(remaining)) |j| {
-        const safe = remaining[0..j];
+        const safe_slice = remaining[0..j];
         remaining = remaining[j..];
         const code_point_len: usize = wtf8ByteSequenceLengthWithInvalid(remaining[0]);
         if (remaining.len < code_point_len) {
@@ -2235,10 +2235,10 @@ pub fn percentEncodeWrite(
         const to_encode = remaining[0..code_point_len];
         remaining = remaining[code_point_len..];
 
-        try writer.ensureUnusedCapacity(safe.len + ("%FF".len) * code_point_len);
+        try writer.ensureUnusedCapacity(safe_slice.len + ("%FF".len) * code_point_len);
 
         // Write the safe bytes
-        writer.appendSliceAssumeCapacity(safe);
+        writer.appendSliceAssumeCapacity(safe_slice);
 
         // URL encode the code point
         for (to_encode) |byte| {
@@ -2426,3 +2426,5 @@ const Environment = bun.Environment;
 const OOM = bun.OOM;
 const assert = bun.assert;
 const js_lexer = bun.js_lexer;
+
+const safe = @import("safe");

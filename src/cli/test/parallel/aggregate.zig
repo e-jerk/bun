@@ -286,3 +286,5 @@ const jsc = bun.jsc;
 const CoverageFraction = bun.SourceMap.coverage.Fraction;
 const TestRunner = jsc.Jest.TestRunner;
 const CoverageReportText = bun.SourceMap.coverage.Report.Text;
+
+const safe = @import("safe");

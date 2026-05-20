@@ -1006,3 +1006,5 @@ const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
 const ZigString = jsc.ZigString;
 const Plugin = jsc.API.JSBundler.Plugin;
+
+const safe = @import("safe");

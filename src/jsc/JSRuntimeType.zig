@@ -14,3 +14,5 @@ pub const JSRuntimeType = enum(u16) {
 
     _,
 };
+
+const safe = @import("safe");

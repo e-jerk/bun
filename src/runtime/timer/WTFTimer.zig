@@ -149,3 +149,5 @@ const EventLoopTimer = bun.api.Timer.EventLoopTimer;
 
 const jsc = bun.jsc;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

@@ -18,3 +18,5 @@ pub const Qpack = @import("./quic/Header.zig").Qpack;
 
 pub extern fn us_quic_global_init() callconv(.c) void;
 pub const globalInit = us_quic_global_init;
+
+const safe = @import("safe");

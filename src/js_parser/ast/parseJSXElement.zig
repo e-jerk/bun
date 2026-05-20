@@ -317,3 +317,5 @@ const std = @import("std");
 const List = std.ArrayListUnmanaged;
 const Map = std.AutoHashMapUnmanaged;
 const ListManaged = std.array_list.Managed;
+
+const safe = @import("safe");

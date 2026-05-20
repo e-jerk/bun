@@ -25,3 +25,5 @@ pub fn sourceMapModeFromJS(global: *bun.jsc.JSGlobalObject, value: bun.jsc.JSVal
 
 const bun = @import("bun");
 const SourceMapMode = bun.schema.api.SourceMapMode;
+
+const safe = @import("safe");

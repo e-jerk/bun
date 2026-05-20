@@ -90,3 +90,5 @@ pub fn findOptionByShortName(short_name: String, options: []const OptionDefiniti
 const bun = @import("bun");
 const String = bun.String;
 const JSValue = bun.jsc.JSValue;
+
+const safe = @import("safe");

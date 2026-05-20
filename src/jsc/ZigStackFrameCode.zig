@@ -38,3 +38,5 @@ pub const ZigStackFrameCode = enum(u8) {
         };
     }
 };
+
+const safe = @import("safe");

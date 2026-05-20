@@ -445,3 +445,5 @@ const Global = bun.Global;
 const Output = bun.Output;
 const default_allocator = bun.default_allocator;
 const strings = bun.strings;
+
+const safe = @import("safe");

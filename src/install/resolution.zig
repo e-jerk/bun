@@ -550,3 +550,5 @@ const Dependency = bun.install.Dependency;
 
 const Semver = bun.Semver;
 const String = Semver.String;
+
+const safe = @import("safe");

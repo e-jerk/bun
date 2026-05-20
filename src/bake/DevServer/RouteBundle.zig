@@ -169,3 +169,5 @@ const SourceMapStore = DevServer.SourceMapStore;
 
 const FrameworkRouter = bake.FrameworkRouter;
 const Route = FrameworkRouter.Route;
+
+const safe = @import("safe");

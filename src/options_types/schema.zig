@@ -3287,3 +3287,5 @@ const bun = @import("bun");
 const OOM = bun.OOM;
 const install = bun.install;
 const js_ast = bun.ast;
+
+const safe = @import("safe");

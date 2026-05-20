@@ -2024,3 +2024,5 @@ const assignResolution = PackageManager.assignResolution;
 const assignRootResolution = PackageManager.assignRootResolution;
 const debug = PackageManager.debug;
 const failRootResolution = PackageManager.failRootResolution;
+
+const safe = @import("safe");

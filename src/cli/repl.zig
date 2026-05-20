@@ -2056,3 +2056,5 @@ const MimallocArena = bun.allocators.MimallocArena;
 
 const Environment = bun.Environment;
 const VERSION = Environment.version_string;
+
+const safe = @import("safe");

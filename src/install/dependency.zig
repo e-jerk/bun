@@ -1338,3 +1338,5 @@ const strings = bun.strings;
 const Semver = bun.Semver;
 const SlicedString = Semver.SlicedString;
 const String = Semver.String;
+
+const safe = @import("safe");

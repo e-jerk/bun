@@ -62,3 +62,5 @@ const bun = @import("bun");
 const StringBuilder = bun.StringBuilder;
 const Headers = bun.http.Headers;
 const api = bun.schema.api;
+
+const safe = @import("safe");

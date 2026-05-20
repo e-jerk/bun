@@ -35,3 +35,5 @@ pub const ArrayIdentityContext = struct {
         }
     };
 };
+
+const safe = @import("safe");

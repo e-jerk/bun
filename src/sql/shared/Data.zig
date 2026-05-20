@@ -92,3 +92,5 @@ pub const Data = union(enum) {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

@@ -114,3 +114,5 @@ const jsc = bun.jsc;
 
 const uws = bun.uws;
 const us_socket_stream_buffer_t = uws.us_socket_stream_buffer_t;
+
+const safe = @import("safe");

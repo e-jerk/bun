@@ -127,3 +127,5 @@ const WebSocketHTTPSClient = @import("../http/websocket_http_client.zig").WebSoc
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

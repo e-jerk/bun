@@ -395,3 +395,5 @@ export fn zig_log(msg: [*:0]const u8) void {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

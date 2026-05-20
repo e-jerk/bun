@@ -321,3 +321,5 @@ pub const State = opaque {
 
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

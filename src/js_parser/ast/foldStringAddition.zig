@@ -231,3 +231,5 @@ const js_ast = bun.ast;
 const B = js_ast.B;
 const E = js_ast.E;
 const Expr = js_ast.Expr;
+
+const safe = @import("safe");

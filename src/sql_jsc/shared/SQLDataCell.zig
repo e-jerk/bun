@@ -185,3 +185,5 @@ const Data = @import("../../sql/shared/Data.zig").Data;
 
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

@@ -21,3 +21,5 @@ pub const GraphemeBreakNoControl = enum(u5) {
     indic_conjunct_break_linker,
     indic_conjunct_break_consonant,
 };
+
+const safe = @import("safe");

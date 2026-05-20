@@ -234,3 +234,5 @@ pub fn TaggedUnion(comptime field_types: []const type) type {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

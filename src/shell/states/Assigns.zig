@@ -234,3 +234,5 @@ const Stmt = bun.shell.Interpreter.Stmt;
 const EnvStr = bun.shell.interpret.EnvStr;
 const StatePtrUnion = bun.shell.interpret.StatePtrUnion;
 const log = bun.shell.interpret.log;
+
+const safe = @import("safe");

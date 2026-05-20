@@ -122,3 +122,5 @@ inline fn rd32(b: []const u8, off: usize, big: bool) ?u32 {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

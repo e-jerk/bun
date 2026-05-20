@@ -1583,3 +1583,5 @@ const Negatable = bun.install.Npm.Negatable;
 const std = @import("std");
 const os = std.os;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

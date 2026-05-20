@@ -302,3 +302,5 @@ const Output = bun.Output;
 
 const jsc = bun.jsc;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

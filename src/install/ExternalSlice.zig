@@ -71,3 +71,5 @@ const PackageNameHash = bun.install.PackageNameHash;
 
 const Semver = bun.Semver;
 const ExternalString = Semver.ExternalString;
+
+const safe = @import("safe");

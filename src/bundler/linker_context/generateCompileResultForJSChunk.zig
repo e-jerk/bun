@@ -108,3 +108,5 @@ const ThreadPool = bun.bundle_v2.ThreadPool;
 
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const PendingPartRange = LinkerContext.PendingPartRange;
+
+const safe = @import("safe");

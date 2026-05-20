@@ -614,3 +614,5 @@ const strings = bun.strings;
 const jsc = bun.jsc;
 const MarkedArrayBuffer = bun.jsc.MarkedArrayBuffer;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

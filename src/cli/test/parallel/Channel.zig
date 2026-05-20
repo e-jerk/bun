@@ -341,3 +341,5 @@ const bun = @import("bun");
 const Environment = bun.Environment;
 const jsc = bun.jsc;
 const uws = bun.uws;
+
+const safe = @import("safe");

@@ -35,3 +35,5 @@ const NewWriter = @import("./NewWriter.zig").NewWriter;
 const PortalOrPreparedStatement = @import("./PortalOrPreparedStatement.zig").PortalOrPreparedStatement;
 
 const WriteWrap = @import("./WriteWrap.zig").WriteWrap;
+
+const safe = @import("safe");

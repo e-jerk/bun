@@ -107,3 +107,5 @@ pub const property_mixin = struct {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

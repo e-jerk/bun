@@ -929,3 +929,5 @@ const StringJoiner = bun.StringJoiner;
 const URL = bun.URL;
 const assert = bun.assert;
 const strings = bun.strings;
+
+const safe = @import("safe");

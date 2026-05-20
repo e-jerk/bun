@@ -556,3 +556,5 @@ const StmtList = LinkerContext.StmtList;
 
 const Logger = bun.logger;
 const Loc = Logger.Loc;
+
+const safe = @import("safe");

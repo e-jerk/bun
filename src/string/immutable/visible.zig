@@ -1435,3 +1435,5 @@ const grapheme = strings.grapheme;
 const u3_fast = strings.u3_fast;
 const unicode_replacement = strings.unicode_replacement;
 const utf16CodepointWithFFFD = strings.utf16CodepointWithFFFD;
+
+const safe = @import("safe");

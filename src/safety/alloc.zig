@@ -190,3 +190,5 @@ const traces_enabled = bun.Environment.isDebug;
 const LinuxMemFdAllocator = bun.allocators.LinuxMemFdAllocator;
 const MimallocArena = bun.allocators.MimallocArena;
 const NullableAllocator = bun.allocators.NullableAllocator;
+
+const safe = @import("safe");

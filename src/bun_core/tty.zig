@@ -9,3 +9,5 @@ pub fn setMode(fd: c_int, mode: Mode) c_int {
 }
 
 extern fn Bun__ttySetMode(fd: c_int, mode: c_int) c_int;
+
+const safe = @import("safe");

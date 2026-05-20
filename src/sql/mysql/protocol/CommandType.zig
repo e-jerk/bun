@@ -32,3 +32,5 @@ pub const CommandType = enum(u8) {
     COM_BINLOG_DUMP_GTID = 0x1e,
     COM_RESET_CONNECTION = 0x1f,
 };
+
+const safe = @import("safe");

@@ -274,3 +274,5 @@ const StableRef = bundler.StableRef;
 const renamer = bun.renamer;
 const MinifyRenamer = renamer.MinifyRenamer;
 const StableSymbolCount = renamer.StableSymbolCount;
+
+const safe = @import("safe");

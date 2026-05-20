@@ -328,3 +328,5 @@ const api = bun.jsc.API;
 const uws = bun.uws;
 const ConnectingSocket = uws.ConnectingSocket;
 const us_socket_t = uws.us_socket_t;
+
+const safe = @import("safe");

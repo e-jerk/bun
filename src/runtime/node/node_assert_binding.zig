@@ -83,3 +83,5 @@ const DiffList = @import("./assert/myers_diff.zig").DiffList;
 
 const jsc = bun.jsc;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

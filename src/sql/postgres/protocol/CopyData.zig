@@ -37,3 +37,5 @@ const NewReader = @import("./NewReader.zig").NewReader;
 const NewWriter = @import("./NewWriter.zig").NewWriter;
 const WriteWrap = @import("./WriteWrap.zig").WriteWrap;
 const toBytes = std.mem.toBytes;
+
+const safe = @import("safe");

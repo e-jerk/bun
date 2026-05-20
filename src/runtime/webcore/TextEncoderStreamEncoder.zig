@@ -209,3 +209,5 @@ const jsc = bun.jsc;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSUint8Array = jsc.JSUint8Array;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

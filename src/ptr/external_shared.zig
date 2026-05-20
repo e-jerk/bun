@@ -112,3 +112,5 @@ pub fn ExternalShared(comptime T: type) type {
         }
     };
 }
+
+const safe = @import("safe");

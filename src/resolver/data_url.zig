@@ -234,3 +234,5 @@ const Allocator = std.mem.Allocator;
 const bun = @import("bun");
 const Environment = bun.Environment;
 const strings = bun.strings;
+
+const safe = @import("safe");

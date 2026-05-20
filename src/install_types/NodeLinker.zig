@@ -23,3 +23,5 @@ pub const NodeLinker = enum(u8) {
 
 const bun = @import("bun");
 const strings = bun.strings;
+
+const safe = @import("safe");

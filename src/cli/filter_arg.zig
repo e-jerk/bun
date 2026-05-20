@@ -289,3 +289,5 @@ const JSON = bun.json;
 const Output = bun.Output;
 const glob = bun.glob;
 const strings = bun.strings;
+
+const safe = @import("safe");

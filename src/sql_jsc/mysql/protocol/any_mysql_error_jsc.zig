@@ -58,3 +58,5 @@ const createMySQLError = @import("./error_packet_jsc.zig").createMySQLError;
 const JSC = bun.jsc;
 const jsc = bun.jsc;
 const JSValue = JSC.JSValue;
+
+const safe = @import("safe");

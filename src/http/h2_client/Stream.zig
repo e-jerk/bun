@@ -112,3 +112,5 @@ const wire = @import("../H2FrameParser.zig");
 const bun = @import("bun");
 const HTTPClient = bun.http;
 const picohttp = bun.picohttp;
+
+const safe = @import("safe");

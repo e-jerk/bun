@@ -306,3 +306,5 @@ const ImportRecord = @import("../options_types/import_record.zig").ImportRecord;
 const bun = @import("bun");
 const fs = bun.fs;
 const logger = bun.logger;
+
+const safe = @import("safe");

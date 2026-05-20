@@ -205,3 +205,5 @@ const bun = @import("bun");
 const Environment = bun.Environment;
 const Syscall = bun.sys;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

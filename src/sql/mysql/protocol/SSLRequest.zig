@@ -40,3 +40,5 @@ const CharacterSet = @import("./CharacterSet.zig").CharacterSet;
 
 const NewWriter = @import("./NewWriter.zig").NewWriter;
 const writeWrap = @import("./NewWriter.zig").writeWrap;
+
+const safe = @import("safe");

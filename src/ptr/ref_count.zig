@@ -627,3 +627,5 @@ const enable_debug = bun.Environment.isDebug;
 
 const allocation_scope = bun.allocators.allocation_scope;
 const AllocationScope = allocation_scope.AllocationScope;
+
+const safe = @import("safe");

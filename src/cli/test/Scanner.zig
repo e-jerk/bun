@@ -266,3 +266,5 @@ const jest = jsc.Jest;
 
 const strings = bun.strings;
 const StringOrTinyString = strings.StringOrTinyString;
+
+const safe = @import("safe");

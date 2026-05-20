@@ -1504,3 +1504,5 @@ const mode_t = bun.Mode;
 
 const FILE = @import("std").c.FILE;
 const dev_t = @import("std").c.dev_t;
+
+const safe = @import("safe");

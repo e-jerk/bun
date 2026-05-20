@@ -4,3 +4,5 @@ pub const Dir = struct {
 
 const bun = @import("bun");
 const FD = bun.FD;
+
+const safe = @import("safe");

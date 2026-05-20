@@ -1554,3 +1554,5 @@ const Package = Lockfile.Package;
 
 const PackageManager = install.PackageManager;
 const Options = PackageManager.Options;
+
+const safe = @import("safe");

@@ -329,3 +329,5 @@ fn isExtendedPictographic(gb: GraphemeBreakNoControl) bool {
 const bun = @import("bun");
 const grapheme_tables = @import("./grapheme_tables.zig");
 const std = @import("std");
+
+const safe = @import("safe");

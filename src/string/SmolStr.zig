@@ -273,3 +273,5 @@ const std = @import("std");
 const t = std.testing;
 const Allocator = std.mem.Allocator;
 const assert = std.debug.assert;
+
+const safe = @import("safe");

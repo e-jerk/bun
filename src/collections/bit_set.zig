@@ -1966,3 +1966,5 @@ const Environment = bun.Environment;
 const std = @import("std");
 const testing = std.testing;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

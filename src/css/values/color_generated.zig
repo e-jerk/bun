@@ -944,3 +944,5 @@ const SRGB = color.SRGB;
 const SRGBLinear = color.SRGBLinear;
 const XYZd50 = color.XYZd50;
 const XYZd65 = color.XYZd65;
+
+const safe = @import("safe");

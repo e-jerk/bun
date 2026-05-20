@@ -142,3 +142,5 @@ pub fn assertUnpoisoned(ptr: *const anyopaque) void {
 }
 
 const bun = @import("bun");
+
+const safe = @import("safe");

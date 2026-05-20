@@ -67,3 +67,5 @@ const bun = @import("bun");
 
 const uws = bun.uws;
 const SocketGroup = uws.SocketGroup;
+
+const safe = @import("safe");

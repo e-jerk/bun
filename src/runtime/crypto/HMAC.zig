@@ -55,3 +55,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const BoringSSL = bun.BoringSSL.c;
 const EVP = jsc.API.Bun.Crypto.EVP;
+
+const safe = @import("safe");

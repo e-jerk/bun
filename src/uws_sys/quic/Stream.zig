@@ -46,3 +46,5 @@ const uws = bun.uws;
 
 const Header = uws.quic.Header;
 const Socket = uws.quic.Socket;
+
+const safe = @import("safe");

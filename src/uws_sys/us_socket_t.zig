@@ -348,3 +348,5 @@ const BoringSSL = bun.BoringSSL.c;
 const uws = bun.uws;
 const SocketGroup = uws.SocketGroup;
 const SocketKind = uws.SocketKind;
+
+const safe = @import("safe");

@@ -179,3 +179,5 @@ const jsc = bun.jsc;
 const shell = bun.shell;
 const IO = shell.IO;
 const Yield = bun.shell.Yield;
+
+const safe = @import("safe");

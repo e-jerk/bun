@@ -143,3 +143,5 @@ pub const bake_debugging_features = env.is_canary or env.isDebug;
 
 const bun = @import("bun");
 const env = @import("./env.zig");
+
+const safe = @import("safe");

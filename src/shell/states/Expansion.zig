@@ -912,3 +912,5 @@ const Syscall = bun.shell.interpret.Syscall;
 const WorkPool = bun.shell.interpret.WorkPool;
 const WorkPoolTask = bun.shell.interpret.WorkPoolTask;
 const log = bun.shell.interpret.log;
+
+const safe = @import("safe");

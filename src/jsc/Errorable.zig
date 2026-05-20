@@ -41,3 +41,5 @@ pub fn Errorable(comptime Type: type) type {
 const bun = @import("bun");
 const ErrorCode = @import("./ErrorCode.zig").ErrorCode;
 const ZigErrorType = @import("./ZigErrorType.zig").ZigErrorType;
+
+const safe = @import("safe");

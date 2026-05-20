@@ -935,3 +935,5 @@ const std = @import("std");
 const bun = @import("bun");
 const OOM = bun.OOM;
 const Mutex = bun.threading.Mutex;
+
+const safe = @import("safe");

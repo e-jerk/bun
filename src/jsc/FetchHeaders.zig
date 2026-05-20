@@ -455,3 +455,5 @@ const ZigString = jsc.ZigString;
 
 const api = bun.schema.api;
 const StringPointer = api.StringPointer;
+
+const safe = @import("safe");

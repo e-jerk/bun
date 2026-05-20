@@ -241,3 +241,5 @@ const version_string = Environment.version_string;
 const bun = @import("bun");
 const Mimalloc = bun.mimalloc;
 const use_mimalloc = bun.use_mimalloc;
+
+const safe = @import("safe");

@@ -116,3 +116,5 @@ const std = @import("std");
 
 const uws = bun.uws;
 const Loop = uws.Loop;
+
+const safe = @import("safe");

@@ -95,3 +95,5 @@ pub fn main() !void {
 const lut = @import("./lut.zig");
 const std = @import("std");
 const uucode = @import("uucode");
+
+const safe = @import("safe");

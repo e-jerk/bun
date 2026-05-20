@@ -84,3 +84,5 @@ const std = @import("std");
 const bun = @import("bun");
 const Async = bun.Async;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

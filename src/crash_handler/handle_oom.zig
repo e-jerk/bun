@@ -64,3 +64,5 @@ pub fn handleOom(error_union_or_set: anytype) return_type: {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

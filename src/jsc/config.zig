@@ -24,3 +24,5 @@ pub fn configureTransformOptionsForBun(_: std.mem.Allocator, _args: api.Transfor
 const bun = @import("bun");
 const std = @import("std");
 const api = bun.schema.api;
+
+const safe = @import("safe");

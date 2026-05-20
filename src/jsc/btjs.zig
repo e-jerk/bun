@@ -17,3 +17,5 @@ fn dumpBtjsTraceDebugImpl() [*:0]const u8 {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

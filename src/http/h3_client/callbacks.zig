@@ -149,3 +149,5 @@ const std = @import("std");
 const bun = @import("bun");
 const strings = bun.strings;
 const quic = bun.uws.quic;
+
+const safe = @import("safe");

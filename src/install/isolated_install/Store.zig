@@ -588,3 +588,5 @@ const invalid_dependency_id = install.invalid_dependency_id;
 
 const Lockfile = install.Lockfile;
 const Package = Lockfile.Package;
+
+const safe = @import("safe");

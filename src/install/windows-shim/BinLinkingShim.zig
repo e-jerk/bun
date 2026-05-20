@@ -309,3 +309,5 @@ const lastIndexOfScalar = std.mem.lastIndexOfScalar;
 
 const bun = @import("bun");
 const simdutf = bun.simdutf;
+
+const safe = @import("safe");

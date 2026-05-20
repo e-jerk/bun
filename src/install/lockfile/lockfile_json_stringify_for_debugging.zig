@@ -425,3 +425,5 @@ const Lockfile = install.Lockfile;
 const Package = Lockfile.Package;
 const PackageIndex = Lockfile.PackageIndex;
 const Tree = Lockfile.Tree;
+
+const safe = @import("safe");

@@ -138,3 +138,5 @@ const BundleV2 = bun.bundle_v2.BundleV2;
 const ParseTask = bun.bundle_v2.ParseTask;
 const PathToSourceIndexMap = bun.bundle_v2.PathToSourceIndexMap;
 const ThreadPool = bun.bundle_v2.ThreadPool;
+
+const safe = @import("safe");

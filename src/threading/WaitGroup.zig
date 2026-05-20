@@ -65,3 +65,5 @@ const std = @import("std");
 
 const Condition = bun.threading.Condition;
 const Mutex = bun.threading.Mutex;
+
+const safe = @import("safe");

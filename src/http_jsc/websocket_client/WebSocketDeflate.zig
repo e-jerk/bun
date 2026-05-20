@@ -234,3 +234,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const libdeflate = bun.libdeflate;
 const zlib = bun.zlib;
+
+const safe = @import("safe");

@@ -60,3 +60,5 @@ pub const PerfEvent = enum(i32) {
     @"TestCommand.printCodeCoverageLCovAndText",
     @"TestCommand.printCodeCoverageText",
 };
+
+const safe = @import("safe");

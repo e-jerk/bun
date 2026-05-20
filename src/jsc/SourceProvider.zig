@@ -6,3 +6,5 @@ pub const SourceProvider = opaque {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

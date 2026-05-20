@@ -200,3 +200,5 @@ const traces_enabled = bun.Environment.isDebug;
 
 const std = @import("std");
 const Thread = std.Thread;
+
+const safe = @import("safe");

@@ -37,3 +37,5 @@ const SSLConfig = bun.api.server.ServerConfig.SSLConfig;
 
 const HTTPClient = bun.http;
 const NewHTTPContext = HTTPClient.NewHTTPContext;
+
+const safe = @import("safe");

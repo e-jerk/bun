@@ -691,3 +691,5 @@ const JSValue = jsc.JSValue;
 
 const std = @import("std");
 const net = @import("std-net-shim");
+
+const safe = @import("safe");

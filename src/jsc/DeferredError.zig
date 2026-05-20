@@ -32,3 +32,5 @@ const ZigString = @import("./ZigString.zig").ZigString;
 const jsc = bun.jsc;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

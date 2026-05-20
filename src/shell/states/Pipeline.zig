@@ -362,3 +362,5 @@ const Pipe = bun.shell.interpret.Pipe;
 const StatePtrUnion = bun.shell.interpret.StatePtrUnion;
 const closefd = bun.shell.interpret.closefd;
 const log = bun.shell.interpret.log;
+
+const safe = @import("safe");

@@ -31,3 +31,5 @@ pub const TestingAPIs = @import("../http_jsc/headers_jsc.zig").H3TestingAPIs;
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

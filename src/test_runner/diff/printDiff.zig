@@ -583,3 +583,5 @@ pub fn printDiff(
 const bun = @import("bun");
 const diff_match_patch = @import("./diff_match_patch.zig");
 const std = @import("std");
+
+const safe = @import("safe");

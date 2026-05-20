@@ -5395,3 +5395,5 @@ pub const Feature = enum {
 };
 
 const Browsers = @import("./targets.zig").Browsers;
+
+const safe = @import("safe");

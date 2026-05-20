@@ -258,3 +258,5 @@ inline fn clamp8(v: f32) u8 {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

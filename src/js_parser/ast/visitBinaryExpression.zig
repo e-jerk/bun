@@ -596,3 +596,5 @@ const SideEffects = js_parser.SideEffects;
 const floatToInt32 = js_parser.floatToInt32;
 const foldStringAddition = js_parser.foldStringAddition;
 const options = js_parser.options;
+
+const safe = @import("safe");

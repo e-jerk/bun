@@ -367,11 +367,23 @@ pub fn build(b: *Build) !void {
     // }
 
     // zig build zust-analyze
+    // Runs zust memory safety analyzer on selective modules (per-file to avoid index crash)
     {
-        var step = b.step("zust-analyze", "Run zust memory safety analyzer on src/ with strictest settings");
+        var step = b.step("zust-analyze", "Run zust memory safety analyzer on high-risk modules");
         const zust_analyze = b.addSystemCommand(&.{
-            "/Users/barrett/github.com/e-jerk/zust/zig-out/bin/zust-analyze",
-            "src",
+            "/Users/barrett/github.com/e-jerk/bun-zust-port/scripts/zust-check.sh",
+            "--strictness=high",
+        });
+        step.dependOn(&zust_analyze.step);
+    }
+
+    // zig build zust-analyze-full
+    // Runs on all src/ files individually (slower but comprehensive)
+    {
+        var step = b.step("zust-analyze-full", "Run zust analyzer on all source files individually");
+        const zust_analyze = b.addSystemCommand(&.{
+            "/Users/barrett/github.com/e-jerk/bun-zust-port/scripts/zust-check.sh",
+            "--all",
             "--strictness=high",
         });
         step.dependOn(&zust_analyze.step);

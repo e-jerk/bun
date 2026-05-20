@@ -230,3 +230,5 @@ const Ref = js_ast.Ref;
 const S = js_ast.S;
 const Stmt = js_ast.Stmt;
 const StmtNodeList = js_ast.StmtNodeList;
+
+const safe = @import("safe");

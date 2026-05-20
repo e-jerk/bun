@@ -22,3 +22,5 @@ pub const Identifier = enum(u32) {
 };
 
 const bun = @import("bun");
+
+const safe = @import("safe");

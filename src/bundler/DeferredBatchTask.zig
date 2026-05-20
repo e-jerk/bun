@@ -50,3 +50,5 @@ pub const Index = bun.ast.Index;
 const bun = @import("bun");
 const Environment = bun.Environment;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

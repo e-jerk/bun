@@ -14,3 +14,5 @@ const std = @import("std");
 const bun = @import("bun");
 const URL = bun.URL;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

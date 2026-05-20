@@ -178,3 +178,5 @@ const Allocator = std.mem.Allocator;
 const bun = @import("bun");
 const NullableAllocator = bun.NullableAllocator;
 const assert = bun.assert;
+
+const safe = @import("safe");

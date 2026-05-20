@@ -402,3 +402,5 @@ const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
 const AutoArrayHashMapUnmanaged = std.array_hash_map.AutoArrayHashMapUnmanaged;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

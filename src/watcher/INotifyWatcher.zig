@@ -387,3 +387,5 @@ const Output = bun.Output;
 const WatchEvent = bun.Watcher.Event;
 const WatchItemIndex = bun.Watcher.WatchItemIndex;
 const max_count = bun.Watcher.max_count;
+
+const safe = @import("safe");

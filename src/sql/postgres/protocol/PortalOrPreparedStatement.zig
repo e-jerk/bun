@@ -16,3 +16,5 @@ pub const PortalOrPreparedStatement = union(enum) {
         };
     }
 };
+
+const safe = @import("safe");

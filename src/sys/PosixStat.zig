@@ -78,3 +78,5 @@ pub const PosixStat = extern struct {
 
 const bun = @import("bun");
 const Environment = bun.Environment;
+
+const safe = @import("safe");

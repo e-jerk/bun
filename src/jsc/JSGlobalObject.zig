@@ -1070,3 +1070,5 @@ const ErrorableString = jsc.ErrorableString;
 const JSValue = jsc.JSValue;
 const VM = jsc.VM;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

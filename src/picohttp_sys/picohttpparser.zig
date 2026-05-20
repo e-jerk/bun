@@ -28,3 +28,5 @@ pub const ChunkedEncodingState = enum(u8) {
     CHUNKED_IN_TRAILERS_LINE_MIDDLE = 5,
     _,
 };
+
+const safe = @import("safe");

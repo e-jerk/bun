@@ -342,3 +342,5 @@ const Environment = bun.Environment;
 const FileDescriptorType = bun.FD;
 const Fs = bun.fs;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

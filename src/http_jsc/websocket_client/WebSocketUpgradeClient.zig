@@ -1558,3 +1558,5 @@ const strings = bun.strings;
 const uws = bun.uws;
 const Headers = bun.http.Headers;
 const SSLConfig = jsc.API.ServerConfig.SSLConfig;
+
+const safe = @import("safe");

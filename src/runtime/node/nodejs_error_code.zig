@@ -1107,3 +1107,5 @@ pub const Code = enum {
     /// Used by node:util parseArgs
     ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL,
 };
+
+const safe = @import("safe");

@@ -359,3 +359,5 @@ const logger = bun.logger;
 const js_ast = bun.ast;
 const E = js_ast.E;
 const Symbol = js_ast.Symbol;
+
+const safe = @import("safe");

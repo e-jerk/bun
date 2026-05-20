@@ -1849,3 +1849,5 @@ const strings = bun.strings;
 
 const std = @import("std");
 const fmt = std.fmt;
+
+const safe = @import("safe");

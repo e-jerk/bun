@@ -91,3 +91,5 @@ const ImportRecord = bun.bundle_v2.ImportRecord;
 const Index = bun.bundle_v2.Index;
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const UseDirective = bun.bundle_v2.UseDirective;
+
+const safe = @import("safe");

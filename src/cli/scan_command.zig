@@ -74,3 +74,5 @@ const PackageManager = @import("../install/install.zig").PackageManager;
 const bun = @import("bun");
 const Global = bun.Global;
 const Output = bun.Output;
+
+const safe = @import("safe");

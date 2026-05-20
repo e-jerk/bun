@@ -72,3 +72,5 @@ const Run = bun.bun_js.Run;
 
 const std = @import("std");
 const std_posix = std.posix;
+
+const safe = @import("safe");

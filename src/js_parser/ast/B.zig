@@ -102,3 +102,5 @@ const ExprNodeIndex = js_ast.ExprNodeIndex;
 const Flags = js_ast.Flags;
 const G = js_ast.G;
 const Ref = js_ast.Ref;
+
+const safe = @import("safe");

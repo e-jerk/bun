@@ -739,3 +739,5 @@ const LineOffsetTable = bun.SourceMap.LineOffsetTable;
 
 const Output = bun.Output;
 const prettyFmt = Output.prettyFmt;
+
+const safe = @import("safe");

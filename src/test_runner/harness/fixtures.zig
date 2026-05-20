@@ -572,3 +572,5 @@ pub const vercel_routes_list = .{
 };
 
 const std = @import("std");
+
+const safe = @import("safe");

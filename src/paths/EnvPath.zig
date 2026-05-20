@@ -90,3 +90,5 @@ const bun = @import("bun");
 const AbsPath = bun.AbsPath;
 const OOM = bun.OOM;
 const strings = bun.strings;
+
+const safe = @import("safe");

@@ -44,3 +44,5 @@ const bun = @import("bun");
 const Global = bun.Global;
 const Output = bun.Output;
 const Command = bun.cli.Command;
+
+const safe = @import("safe");

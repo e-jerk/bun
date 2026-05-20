@@ -524,3 +524,5 @@ pub fn detectConfig(file: anytype) TtyConfig {
     _ = file;
     return .escape_codes;
 }
+
+const safe = @import("safe");

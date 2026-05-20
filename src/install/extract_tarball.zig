@@ -611,3 +611,5 @@ const Semver = bun.Semver;
 const default_allocator = bun.default_allocator;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

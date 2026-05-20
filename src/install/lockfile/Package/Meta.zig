@@ -79,3 +79,5 @@ const Npm = install.Npm;
 const Origin = install.Origin;
 const PackageID = install.PackageID;
 const invalid_package_id = install.invalid_package_id;
+
+const safe = @import("safe");

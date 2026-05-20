@@ -16,3 +16,5 @@ pub fn next(self: *HeaderValueIterator) ?[]const u8 {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

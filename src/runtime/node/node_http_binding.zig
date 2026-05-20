@@ -42,3 +42,5 @@ pub fn setMaxHTTPHeaderSize(globalThis: *jsc.JSGlobalObject, callframe: *jsc.Cal
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

@@ -148,3 +148,5 @@ const ShellExecEnv = Interpreter.ShellExecEnv;
 
 const StateKind = bun.shell.interpret.StateKind;
 const throwShellErr = bun.shell.interpret.throwShellErr;
+
+const safe = @import("safe");

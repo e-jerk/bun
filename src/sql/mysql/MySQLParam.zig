@@ -9,3 +9,5 @@ pub const Param = struct {
 
 const ColumnDefinition41 = @import("./protocol/ColumnDefinition41.zig");
 const types = @import("./MySQLTypes.zig");
+
+const safe = @import("safe");

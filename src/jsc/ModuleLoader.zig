@@ -1402,3 +1402,5 @@ const Bun = jsc.API.Bun;
 const ParseResult = bun.transpiler.ParseResult;
 const PluginRunner = bun.transpiler.PluginRunner;
 const MacroEntryPoint = bun.transpiler.EntryPoints.MacroEntryPoint;
+
+const safe = @import("safe");

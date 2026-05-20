@@ -648,3 +648,5 @@ const Bun = jsc.API.Bun;
 
 const DOMCall = jsc.host_fn.DOMCall;
 const DOMEffect = jsc.host_fn.DOMEffect;
+
+const safe = @import("safe");

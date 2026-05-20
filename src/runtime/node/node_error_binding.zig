@@ -23,3 +23,5 @@ const jsc = bun.jsc;
 
 const createError = jsc.JSGlobalObject.createErrorInstanceWithCode;
 const createTypeError = jsc.JSGlobalObject.createTypeErrorInstanceWithCode;
+
+const safe = @import("safe");

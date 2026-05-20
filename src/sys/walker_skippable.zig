@@ -197,3 +197,5 @@ const FD = bun.FD;
 const OOM = bun.OOM;
 const OSPathSlice = bun.OSPathSlice;
 const OSPathSliceZ = bun.OSPathSliceZ;
+
+const safe = @import("safe");

@@ -1524,3 +1524,5 @@ const Response = jsc.WebCore.Response;
 
 const Blob = jsc.WebCore.Blob;
 const AnyBlob = jsc.WebCore.Blob.Any;
+
+const safe = @import("safe");

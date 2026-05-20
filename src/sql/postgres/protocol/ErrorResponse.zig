@@ -36,3 +36,5 @@ const std = @import("std");
 const DecoderWrap = @import("./DecoderWrap.zig").DecoderWrap;
 const FieldMessage = @import("./FieldMessage.zig").FieldMessage;
 const NewReader = @import("./NewReader.zig").NewReader;
+
+const safe = @import("safe");

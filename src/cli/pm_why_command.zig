@@ -10,3 +10,5 @@ const bun = @import("bun");
 const WhyCommand = @import("./why_command.zig").WhyCommand;
 const Command = bun.cli.Command;
 const PackageManager = bun.install.PackageManager;
+
+const safe = @import("safe");

@@ -3911,3 +3911,5 @@ const CopyFile = @import("./sys/copy_file.zig");
 const builtin = @import("builtin");
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

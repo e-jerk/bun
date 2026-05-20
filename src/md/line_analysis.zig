@@ -528,3 +528,5 @@ const types = @import("./types.zig");
 const Attribute = types.Attribute;
 const Container = types.Container;
 const OFF = types.OFF;
+
+const safe = @import("safe");

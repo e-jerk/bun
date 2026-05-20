@@ -92,3 +92,5 @@ const bun = @import("bun");
 const assert = bun.assert;
 const jsc = bun.jsc;
 const Crypto = jsc.API.Bun.Crypto;
+
+const safe = @import("safe");

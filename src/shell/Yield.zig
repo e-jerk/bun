@@ -170,3 +170,5 @@ const Subshell = bun.shell.Interpreter.Subshell;
 
 const IOWriter = bun.shell.Interpreter.IOWriter;
 const IOWriterChildPtr = IOWriter.IOWriterChildPtr;
+
+const safe = @import("safe");

@@ -24,3 +24,5 @@ const WriteWrap = @import("./WriteWrap.zig").WriteWrap;
 
 const int_types = @import("../types/int_types.zig");
 const int4 = int_types.int4;
+
+const safe = @import("safe");

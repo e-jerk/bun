@@ -17,3 +17,5 @@ pub const Writer = NewWriter(@This());
 const std = @import("std");
 const AnyPostgresError = @import("../AnyPostgresError.zig").AnyPostgresError;
 const NewWriter = @import("./NewWriter.zig").NewWriter;
+
+const safe = @import("safe");

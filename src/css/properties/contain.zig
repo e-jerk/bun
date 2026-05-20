@@ -20,3 +20,5 @@ pub const ContainerNameList = union(enum) {
 
 /// A value for the [container](https://drafts.csswg.org/css-contain-3/#container-shorthand) shorthand property.
 pub const Container = css.DefineEnumProperty(@compileError(css.todo_stuff.depth));
+
+const safe = @import("safe");

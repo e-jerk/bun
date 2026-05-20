@@ -369,3 +369,5 @@ const BoringSSL = bun.BoringSSL;
 const jsc = bun.jsc;
 const uws = bun.uws;
 const SSLConfig = jsc.API.ServerConfig.SSLConfig;
+
+const safe = @import("safe");

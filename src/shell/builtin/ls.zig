@@ -1024,3 +1024,5 @@ const jsc = bun.jsc;
 const shell = bun.shell;
 const ExitCode = shell.ExitCode;
 const Yield = bun.shell.Yield;
+
+const safe = @import("safe");

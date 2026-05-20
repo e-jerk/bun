@@ -603,3 +603,5 @@ const Output = bun.Output;
 const jsc = bun.jsc;
 const Process = bun.spawn.Process;
 const Store = bun.install.Store;
+
+const safe = @import("safe");

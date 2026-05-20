@@ -552,3 +552,5 @@ const jsc = bun.jsc;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
 const Encoding = jsc.Node.Encoding;
+
+const safe = @import("safe");

@@ -261,3 +261,5 @@ const ACL = bun.S3.ACL;
 const S3Credentials = bun.S3.S3Credentials;
 const S3CredentialsWithOptions = bun.S3.S3CredentialsWithOptions;
 const StorageClass = bun.S3.StorageClass;
+
+const safe = @import("safe");

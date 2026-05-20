@@ -60,3 +60,5 @@ const bun = @import("bun");
 const Global = bun.Global;
 const Output = bun.Output;
 const strings = bun.strings;
+
+const safe = @import("safe");

@@ -110,3 +110,5 @@ const E = js_ast.E;
 const Expr = js_ast.Expr;
 const G = js_ast.G;
 const ToJSError = js_ast.ToJSError;
+
+const safe = @import("safe");

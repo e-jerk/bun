@@ -651,3 +651,5 @@ const UpgradedDuplex = uws.UpgradedDuplex;
 const WindowsNamedPipe = uws.WindowsNamedPipe;
 const us_bun_verify_error_t = uws.us_bun_verify_error_t;
 const us_socket_t = uws.us_socket_t;
+
+const safe = @import("safe");

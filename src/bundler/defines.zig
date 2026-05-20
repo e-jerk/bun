@@ -427,3 +427,5 @@ const strings = bun.strings;
 
 const js_ast = bun.ast;
 const Ref = bun.ast.Ref;
+
+const safe = @import("safe");

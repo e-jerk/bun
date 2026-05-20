@@ -1,0 +1,69 @@
+//! expensive heap reference-counted string type
+//! only use this for big strings
+//! like source code
+//! not little ones
+
+const RefString = @This();
+
+ptr: [*]const u8 = undefined,
+len: usize = 0,
+hash: Hash = 0,
+impl: bun.WTF.StringImpl,
+
+allocator: std.mem.Allocator,
+
+ctx: ?*anyopaque = null,
+onBeforeDeinit: ?*const Callback = null,
+
+pub const Hash = u32;
+pub const Map = std.HashMap(Hash, *RefString, bun.IdentityContext(Hash), 80);
+
+pub fn toJS(this: *RefString, global: *jsc.JSGlobalObject) jsc.JSValue {
+    return bun.String.init(this.impl).toJS(global);
+}
+
+pub const Callback = fn (ctx: *anyopaque, str: *RefString) void;
+
+// safe-transpile: function uses raw slice parameter — consider safe.String
+pub fn computeHash(input: []const u8) u32 {
+    return std.hash.XxHash32.hash(0, input);
+}
+
+// safe-transpile: function returns small constant slice — consider safe.String
+pub fn slice(this: *RefString) []const u8 {
+    this.ref();
+
+    return this.leak();
+}
+
+pub fn ref(this: *RefString) void {
+    this.impl.ref();
+}
+
+// safe-transpile: function returns small constant slice — consider safe.String
+pub fn leak(this: RefString) []const u8 {
+    @setRuntimeSafety(false);
+    return this.ptr[0..this.len];
+}
+
+pub fn deref(this: *RefString) void {
+    this.impl.deref();
+}
+
+pub fn deinit(this: *RefString) void {
+    if (this.onBeforeDeinit) |onBeforeDeinit| {
+        onBeforeDeinit(if (this.ctx) |value| {
+    value
+} else {
+    return error.NullPointer;
+}, this);
+    }
+
+    // safe-transpile: free removed (memory owned by safe type);
+    this.allocator.destroy(this);
+}
+
+const std = @import("std");
+
+const bun = @import("bun");
+const jsc = bun.jsc;

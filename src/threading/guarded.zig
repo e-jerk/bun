@@ -70,3 +70,5 @@ pub fn Debug(comptime Value: type) type {
 }
 
 const bun = @import("bun");
+
+const safe = @import("safe");

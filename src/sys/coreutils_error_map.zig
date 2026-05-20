@@ -368,3 +368,5 @@ const std = @import("std");
 const bun = @import("bun");
 const Environment = bun.Environment;
 const SystemErrno = bun.sys.SystemErrno;
+
+const safe = @import("safe");

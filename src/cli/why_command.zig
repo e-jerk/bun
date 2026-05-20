@@ -490,3 +490,5 @@ const Semver = bun.Semver;
 const strings = bun.strings;
 const Command = bun.cli.Command;
 const PackageManager = bun.install.PackageManager;
+
+const safe = @import("safe");

@@ -4171,3 +4171,5 @@ const ServerEntryPoint = bun.transpiler.EntryPoints.ServerEntryPoint;
 
 const webcore = bun.webcore;
 const Body = webcore.Body;
+
+const safe = @import("safe");

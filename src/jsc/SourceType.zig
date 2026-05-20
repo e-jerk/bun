@@ -4,3 +4,5 @@ pub const SourceType = enum(u8) {
     Module = 1,
     WebAssembly = 2,
 };
+
+const safe = @import("safe");

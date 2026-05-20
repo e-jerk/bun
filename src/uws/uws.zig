@@ -175,3 +175,5 @@ pub fn get_default_ciphers() [:0]const u8 {
 
 const bun = @import("bun");
 const Environment = bun.Environment;
+
+const safe = @import("safe");

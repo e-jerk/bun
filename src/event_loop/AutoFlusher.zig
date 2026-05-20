@@ -24,3 +24,5 @@ pub fn registerDeferredMicrotaskWithTypeUnchecked(comptime Type: type, this: *Ty
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

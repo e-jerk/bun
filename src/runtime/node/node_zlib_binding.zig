@@ -392,3 +392,5 @@ const Buffer = bun.api.node.Buffer;
 
 const jsc = bun.jsc;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

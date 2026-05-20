@@ -7,3 +7,5 @@ pub fn freeWithoutSize(ptr: ?*anyopaque) void {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

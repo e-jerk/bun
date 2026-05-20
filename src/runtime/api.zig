@@ -70,3 +70,5 @@ pub const NativeZstd = @import("./node/zlib/NativeZstd.zig");
 
 pub const napi = @import("../napi/napi.zig");
 pub const node = @import("./node.zig");
+
+const safe = @import("safe");

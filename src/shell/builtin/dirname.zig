@@ -74,3 +74,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const Maybe = bun.sys.Maybe;
 const Yield = bun.shell.Yield;
+
+const safe = @import("safe");

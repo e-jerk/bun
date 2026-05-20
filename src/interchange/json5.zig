@@ -911,3 +911,5 @@ const strings = bun.strings;
 const E = bun.ast.E;
 const Expr = bun.ast.Expr;
 const G = bun.ast.G;
+
+const safe = @import("safe");

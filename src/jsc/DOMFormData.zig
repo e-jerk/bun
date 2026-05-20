@@ -128,3 +128,5 @@ const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
 const VM = jsc.VM;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

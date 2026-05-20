@@ -264,3 +264,5 @@ const std = @import("std");
 
 const jsc = bun.bun_js.jsc;
 const webcore = bun.bun_js.webcore;
+
+const safe = @import("safe");

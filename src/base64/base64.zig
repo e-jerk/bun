@@ -556,3 +556,5 @@ const zig_base64 = struct {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

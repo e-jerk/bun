@@ -170,3 +170,5 @@ pub fn whichWin(buf: *bun.WPathBuffer, path: []const u8, cwd: []const u8, bin: [
 const bun = @import("bun");
 const std = @import("std");
 const PosixToWinNormalizer = bun.path.PosixToWinNormalizer;
+
+const safe = @import("safe");

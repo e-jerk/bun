@@ -885,3 +885,5 @@ const logger = bun.logger;
 const strings = bun.strings;
 const BundleV2 = bun.bundle_v2.BundleV2;
 const Command = bun.cli.Command;
+
+const safe = @import("safe");

@@ -159,3 +159,5 @@ const initializeStore = bun.install.initializeStore;
 
 const js_ast = bun.ast;
 const Expr = js_ast.Expr;
+
+const safe = @import("safe");

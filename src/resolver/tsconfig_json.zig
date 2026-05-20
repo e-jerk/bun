@@ -520,3 +520,5 @@ const js_ast = bun.ast;
 const js_lexer = bun.js_lexer;
 const logger = bun.logger;
 const strings = bun.strings;
+
+const safe = @import("safe");

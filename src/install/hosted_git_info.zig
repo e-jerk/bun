@@ -1650,3 +1650,5 @@ const PercentEncoding = @import("../url/url.zig").PercentEncoding;
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

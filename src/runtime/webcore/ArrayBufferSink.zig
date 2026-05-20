@@ -184,3 +184,5 @@ const Sink = webcore.Sink;
 
 const streams = webcore.streams;
 const Signal = webcore.streams.Signal;
+
+const safe = @import("safe");

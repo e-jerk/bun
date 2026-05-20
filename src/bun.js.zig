@@ -654,3 +654,5 @@ const transpiler = bun.transpiler;
 const Arena = bun.allocators.MimallocArena;
 const AsyncHTTP = bun.http.AsyncHTTP;
 const DNSResolver = bun.api.dns.Resolver;
+
+const safe = @import("safe");

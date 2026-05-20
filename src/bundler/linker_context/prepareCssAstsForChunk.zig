@@ -329,3 +329,5 @@ const LinkerContext = bun.bundle_v2.LinkerContext;
 
 const Logger = bun.logger;
 const Loc = Logger.Loc;
+
+const safe = @import("safe");

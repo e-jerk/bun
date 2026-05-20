@@ -425,3 +425,5 @@ const std = @import("std");
 
 const ast = @import("../options_types/import_record.zig");
 const ImportRecord = ast.ImportRecord;
+
+const safe = @import("safe");

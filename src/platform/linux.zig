@@ -91,3 +91,5 @@ export fn sys_epoll_pwait2(epfd: i32, events: ?[*]std.os.linux.epoll_event, maxe
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

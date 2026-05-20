@@ -40,3 +40,5 @@ const int4 = int_types.int4;
 
 const bun = @import("bun");
 const String = bun.String;
+
+const safe = @import("safe");

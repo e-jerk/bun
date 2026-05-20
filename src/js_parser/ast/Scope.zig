@@ -218,3 +218,5 @@ const StrictModeKind = js_ast.StrictModeKind;
 const Symbol = js_ast.Symbol;
 const TSNamespaceScope = js_ast.TSNamespaceScope;
 const TypeScript = js_ast.TypeScript;
+
+const safe = @import("safe");

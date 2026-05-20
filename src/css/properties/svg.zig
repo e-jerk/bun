@@ -73,3 +73,5 @@ pub const ImageRendering = css.DefineEnumProperty(@compileError(css.todo_stuff.d
 
 const std = @import("std");
 const ArrayList = std.ArrayListUnmanaged;
+
+const safe = @import("safe");

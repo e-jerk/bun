@@ -16,3 +16,5 @@ pub const Status = enum(u8) {
         return @intFromEnum(this) > @intFromEnum(Status.pending) and @intFromEnum(this) < @intFromEnum(Status.success);
     }
 };
+
+const safe = @import("safe");

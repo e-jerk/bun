@@ -177,3 +177,5 @@ const std = @import("std");
 const bun = @import("bun");
 const BunString = bun.String;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

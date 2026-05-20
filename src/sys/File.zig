@@ -482,3 +482,5 @@ const pread = sys.pread;
 
 const std = @import("std");
 const posix = std.posix;
+
+const safe = @import("safe");

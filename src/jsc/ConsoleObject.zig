@@ -3831,3 +3831,5 @@ const JSValue = jsc.JSValue;
 const VirtualMachine = jsc.VirtualMachine;
 const ZigException = jsc.ZigException;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");

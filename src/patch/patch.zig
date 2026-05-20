@@ -1377,3 +1377,5 @@ const jsc = bun.jsc;
 const std = @import("std");
 const List = std.ArrayListUnmanaged;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

@@ -98,3 +98,5 @@ const bun = @import("bun");
 const Output = bun.Output;
 const Progress = bun.Progress;
 const PackageManager = bun.install.PackageManager;
+
+const safe = @import("safe");

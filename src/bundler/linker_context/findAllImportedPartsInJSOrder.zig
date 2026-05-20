@@ -219,3 +219,5 @@ const LinkerContext = bun.bundle_v2.LinkerContext;
 const Part = bun.bundle_v2.Part;
 const PartRange = bun.bundle_v2.PartRange;
 const js_ast = bun.bundle_v2.js_ast;
+
+const safe = @import("safe");

@@ -265,3 +265,5 @@ const std = @import("std");
 
 const int_types = @import("./int_types.zig");
 const short = int_types.short;
+
+const safe = @import("safe");

@@ -68,3 +68,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const options = bun.options;
 const strings = bun.strings;
+
+const safe = @import("safe");

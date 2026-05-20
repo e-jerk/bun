@@ -119,3 +119,5 @@ const UnboundedQueue = bun.UnboundedQueue;
 const jsc = bun.jsc;
 const ManagedTask = jsc.ManagedTask;
 const Task = jsc.Task;
+
+const safe = @import("safe");

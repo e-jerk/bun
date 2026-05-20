@@ -56,3 +56,5 @@ pub const Ratio = struct {
 };
 
 const std = @import("std");
+
+const safe = @import("safe");

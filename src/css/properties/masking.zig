@@ -570,3 +570,5 @@ pub fn getWebkitMaskProperty(property_id: *const css.PropertyId) ?css.PropertyId
 const std = @import("std");
 const ArrayList = std.ArrayListUnmanaged;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

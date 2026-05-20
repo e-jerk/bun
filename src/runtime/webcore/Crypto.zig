@@ -286,3 +286,5 @@ const UUID7 = @import("../../jsc/uuid.zig").UUID7;
 const bun = @import("bun");
 const jsc = bun.jsc;
 const BoringSSL = bun.BoringSSL.c;
+
+const safe = @import("safe");

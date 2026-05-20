@@ -106,3 +106,5 @@ const DescribeScope = bun_test.DescribeScope;
 const Execution = bun_test.Execution;
 const ExecutionEntry = bun_test.ExecutionEntry;
 const TestScheduleEntry = bun_test.TestScheduleEntry;
+
+const safe = @import("safe");

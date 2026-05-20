@@ -10,3 +10,5 @@ pub const TransactionStatusIndicator = enum(u8) {
 
     _,
 };
+
+const safe = @import("safe");

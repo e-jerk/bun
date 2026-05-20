@@ -153,3 +153,5 @@ pub const clipboardChangeCount = bun_coregraphics_clipboard_change_count;
 
 const bun = @import("bun");
 const codecs = @import("./codecs.zig");
+
+const safe = @import("safe");

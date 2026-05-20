@@ -10,3 +10,5 @@ pub const StringArrayHashMap = std.array_hash_map.StringArrayHashMap;
 pub fn Auto(comptime K: type, comptime V: type) type {
     return AutoArrayHashMap(K, V);
 }
+
+const safe = @import("safe");

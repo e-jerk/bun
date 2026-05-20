@@ -2046,3 +2046,5 @@ const firstNonASCII16 = strings.firstNonASCII16;
 const log = strings.log;
 const u3_fast = strings.u3_fast;
 const unicode_replacement = strings.unicode_replacement;
+
+const safe = @import("safe");

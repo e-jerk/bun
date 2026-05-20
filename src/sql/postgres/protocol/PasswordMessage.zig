@@ -28,3 +28,5 @@ const Int32 = @import("../types/int_types.zig").Int32;
 const NewWriter = @import("./NewWriter.zig").NewWriter;
 const WriteWrap = @import("./WriteWrap.zig").WriteWrap;
 const toBytes = std.mem.toBytes;
+
+const safe = @import("safe");

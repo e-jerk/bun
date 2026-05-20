@@ -201,3 +201,5 @@ const bun = @import("bun");
 const std = @import("std");
 const ArrayList = std.ArrayListUnmanaged;
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

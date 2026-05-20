@@ -10,3 +10,5 @@ pub fn WriteWrap(comptime Container: type, comptime writeFn: anytype) type {
 const AnyPostgresError = @import("../AnyPostgresError.zig").AnyPostgresError;
 
 const NewWriter = @import("./NewWriter.zig").NewWriter;
+
+const safe = @import("safe");

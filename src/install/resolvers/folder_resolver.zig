@@ -350,3 +350,5 @@ const strings = bun.strings;
 
 const Semver = bun.Semver;
 const String = bun.Semver.String;
+
+const safe = @import("safe");

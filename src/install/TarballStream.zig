@@ -938,3 +938,5 @@ const strings = bun.strings;
 const FileSystem = bun.fs.FileSystem;
 const Mutex = bun.threading.Mutex;
 const lib = bun.libarchive.lib;
+
+const safe = @import("safe");

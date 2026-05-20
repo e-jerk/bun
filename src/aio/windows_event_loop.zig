@@ -420,3 +420,5 @@ const Output = bun.Output;
 const jsc = bun.jsc;
 const uws = bun.uws;
 const uv = bun.windows.libuv;
+
+const safe = @import("safe");

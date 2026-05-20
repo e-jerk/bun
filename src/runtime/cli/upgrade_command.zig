@@ -8,3 +8,5 @@ pub const upgrade_js_bindings = struct {
         return .js_undefined;
     }
 };
+
+const safe = @import("safe");

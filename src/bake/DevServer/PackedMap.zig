@@ -122,3 +122,5 @@ const DevAllocator = bun.bake.DevServer.DevAllocator;
 
 const Owned = bun.ptr.Owned;
 const OwnedIn = bun.ptr.OwnedIn;
+
+const safe = @import("safe");

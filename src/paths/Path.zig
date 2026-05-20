@@ -971,3 +971,5 @@ const FD = bun.FD;
 const Output = bun.Output;
 const PathBuffer = bun.PathBuffer;
 const WPathBuffer = bun.WPathBuffer;
+
+const safe = @import("safe");

@@ -126,3 +126,5 @@ const int_types = @import("../types/int_types.zig");
 const Int32 = int_types.Int32;
 const PostgresInt32 = int_types.PostgresInt32;
 const PostgresInt64 = int_types.PostgresInt64;
+
+const safe = @import("safe");

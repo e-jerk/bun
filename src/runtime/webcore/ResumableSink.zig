@@ -370,3 +370,5 @@ const S3UploadStreamWrapper = @import("./s3/client.zig").S3UploadStreamWrapper;
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

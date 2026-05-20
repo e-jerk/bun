@@ -97,3 +97,5 @@ const PackageJSON = @import("./package_json.zig").PackageJSON;
 const bun = @import("bun");
 const Environment = bun.Environment;
 const logger = bun.logger;
+
+const safe = @import("safe");

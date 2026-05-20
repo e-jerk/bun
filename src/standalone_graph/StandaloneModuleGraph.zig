@@ -1546,3 +1546,5 @@ const macho = bun.macho;
 const pe = bun.pe;
 const strings = bun.strings;
 const Schema = bun.schema.api;
+
+const safe = @import("safe");

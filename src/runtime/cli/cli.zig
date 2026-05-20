@@ -96,3 +96,5 @@ pub const InitCommand = struct {
         return label ++ "";
     }
 };
+
+const safe = @import("safe");

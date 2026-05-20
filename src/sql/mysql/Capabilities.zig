@@ -210,3 +210,5 @@ pub fn getDefaultCapabilities(ssl: bool, has_db_name: bool) Capabilities {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

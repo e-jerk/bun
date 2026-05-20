@@ -7,3 +7,5 @@ pub const Status = enum {
     connected,
     failed,
 };
+
+const safe = @import("safe");

@@ -113,3 +113,5 @@ pub fn Weak(comptime T: type) type {
 
 const bun = @import("bun");
 const jsc = bun.jsc;
+
+const safe = @import("safe");

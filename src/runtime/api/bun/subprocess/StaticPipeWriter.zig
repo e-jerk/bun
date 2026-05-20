@@ -140,3 +140,5 @@ const jsc = bun.jsc;
 const Subprocess = jsc.API.Subprocess;
 const Source = Subprocess.Source;
 const StdioResult = Subprocess.StdioResult;
+
+const safe = @import("safe");

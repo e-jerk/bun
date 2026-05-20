@@ -559,3 +559,5 @@ const bun = @import("bun");
 const Output = bun.Output;
 const Owned = bun.ptr.Owned;
 const StoredTrace = bun.crash_handler.StoredTrace;
+
+const safe = @import("safe");

@@ -528,3 +528,5 @@ const ImportScanner = js_parser.ImportScanner;
 const Ref = js_parser.Ref;
 const TypeScript = js_parser.TypeScript;
 const options = js_parser.options;
+
+const safe = @import("safe");

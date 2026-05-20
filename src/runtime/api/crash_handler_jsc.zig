@@ -97,3 +97,5 @@ const std = @import("std");
 const bun = @import("bun");
 const Global = bun.Global;
 const crash_handler = bun.crash_handler;
+
+const safe = @import("safe");

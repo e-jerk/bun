@@ -1113,3 +1113,5 @@ const InternalBlob = jsc.WebCore.Blob.Internal;
 
 const Body = jsc.WebCore.Body;
 const BodyMixin = jsc.WebCore.Body.Mixin;
+
+const safe = @import("safe");

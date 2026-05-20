@@ -55,3 +55,5 @@ pub const FieldType = enum(u8) {
 
     _,
 };
+
+const safe = @import("safe");

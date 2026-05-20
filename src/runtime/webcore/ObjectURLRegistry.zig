@@ -174,3 +174,5 @@ const std = @import("std");
 const bun = @import("bun");
 const UUID = bun.UUID;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

@@ -34,3 +34,5 @@ const NewReader = @import("./NewReader.zig").NewReader;
 
 const types = @import("../PostgresTypes.zig");
 const int4 = types.int4;
+
+const safe = @import("safe");

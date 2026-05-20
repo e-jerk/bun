@@ -232,3 +232,5 @@ fn shrink(rgba: []const u8, order: []const u32, lo: u32, hi: u32) Box {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

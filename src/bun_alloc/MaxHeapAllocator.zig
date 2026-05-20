@@ -56,3 +56,5 @@ pub fn isInstance(allocator: std.mem.Allocator) bool {
 
 const bun = @import("bun");
 const std = @import("std");
+
+const safe = @import("safe");

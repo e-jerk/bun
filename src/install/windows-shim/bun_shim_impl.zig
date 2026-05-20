@@ -970,3 +970,5 @@ const w = std.os.windows;
 
 const fmt16 = std.unicode.fmtUtf16Le;
 const wliteral = std.unicode.utf8ToUtf16LeStringLiteral;
+
+const safe = @import("safe");

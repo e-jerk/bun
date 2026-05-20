@@ -227,3 +227,5 @@ const writeWrap = @import("./NewWriter.zig").writeWrap;
 const bun = @import("bun");
 const BoringSSL = bun.BoringSSL;
 const jsc = bun.jsc;
+
+const safe = @import("safe");

@@ -2780,3 +2780,5 @@ const logPartDependencyTree = bundler.logPartDependencyTree;
 
 const jsc = bun.jsc;
 const EventLoop = bun.jsc.AnyEventLoop;
+
+const safe = @import("safe");

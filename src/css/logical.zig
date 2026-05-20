@@ -24,3 +24,5 @@ pub const LogicalGroup = enum {
     min_size,
     max_size,
 };
+
+const safe = @import("safe");

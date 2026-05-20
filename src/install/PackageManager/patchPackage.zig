@@ -1077,3 +1077,5 @@ const Package = Lockfile.Package;
 
 const PackageManager = bun.install.PackageManager;
 const Options = PackageManager.Options;
+
+const safe = @import("safe");

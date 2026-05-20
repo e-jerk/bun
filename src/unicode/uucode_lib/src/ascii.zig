@@ -85,3 +85,5 @@ pub fn toLower(c: u21) u21 {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

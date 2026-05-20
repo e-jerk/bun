@@ -201,3 +201,5 @@ fn milliTimestamp() i64 {
     _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
     return @intCast(ts.sec * std.time.ms_per_s + @divTrunc(ts.nsec, std.time.ns_per_ms));
 }
+
+const safe = @import("safe");

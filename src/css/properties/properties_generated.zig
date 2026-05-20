@@ -10360,3 +10360,5 @@ const Allocator = std.mem.Allocator;
 const bun = @import("bun");
 const BabyList = bun.BabyList;
 const bits = bun.bits;
+
+const safe = @import("safe");

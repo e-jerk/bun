@@ -145,3 +145,5 @@ const jsc = bun.jsc;
 const PatchFile = bun.patch.PatchFile;
 const gitDiffInternal = bun.patch.gitDiffInternal;
 const parsePatchFile = bun.patch.parsePatchFile;
+
+const safe = @import("safe");

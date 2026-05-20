@@ -25,3 +25,5 @@ fn detectUncached() ?[]const u8 {
 
 const bun = @import("bun");
 const generated = @import("ci_info");
+
+const safe = @import("safe");

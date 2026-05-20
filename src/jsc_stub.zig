@@ -8,3 +8,5 @@ pub const API = struct {
 pub const Node = struct {};
 
 pub const VirtualMachine = struct {};
+
+const safe = @import("safe");

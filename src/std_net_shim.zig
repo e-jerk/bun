@@ -75,3 +75,5 @@ pub const Ip6Address = struct {
 };
 
 pub const has_unix_sockets = @hasField(std.posix.sockaddr, "un");
+
+const safe = @import("safe");

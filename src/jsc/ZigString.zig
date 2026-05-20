@@ -863,3 +863,5 @@ const jsc = bun.jsc;
 const C_API = bun.jsc.C;
 const JSGlobalObject = jsc.JSGlobalObject;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

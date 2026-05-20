@@ -925,3 +925,5 @@ const VLQ = SourceMap.VLQ;
 
 const bun = @import("bun");
 const MutableString = bun.MutableString;
+
+const safe = @import("safe");

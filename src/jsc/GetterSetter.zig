@@ -9,3 +9,5 @@ pub const GetterSetter = opaque {
     extern fn JSC__GetterSetter__isGetterNull(this: *GetterSetter) bool;
     extern fn JSC__GetterSetter__isSetterNull(this: *GetterSetter) bool;
 };
+
+const safe = @import("safe");

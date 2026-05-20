@@ -80,3 +80,5 @@ pub const Position = union(enum) {
 const bun = @import("bun");
 const std = @import("std");
 const Allocator = std.mem.Allocator;
+
+const safe = @import("safe");

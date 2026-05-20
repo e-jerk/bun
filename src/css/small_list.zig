@@ -670,3 +670,5 @@ const Result = css.Result;
 const generic = css.generic;
 const voidWrap = css.voidWrap;
 const TextShadow = css.css_properties.text.TextShadow;
+
+const safe = @import("safe");

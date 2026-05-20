@@ -306,3 +306,5 @@ const testing = std.testing;
 
 const mem = std.mem;
 const Alignment = std.mem.Alignment;
+
+const safe = @import("safe");

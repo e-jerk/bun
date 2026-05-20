@@ -48,3 +48,5 @@ const jsc = bun.jsc;
 const ConcurrentTask = jsc.ConcurrentTask;
 const Task = jsc.Task;
 const VirtualMachine = jsc.VirtualMachine;
+
+const safe = @import("safe");

@@ -643,3 +643,5 @@ const String = bun.String;
 const JSC = bun.jsc;
 const JSValue = JSC.JSValue;
 const ZigString = JSC.ZigString;
+
+const safe = @import("safe");

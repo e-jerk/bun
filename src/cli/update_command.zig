@@ -16,3 +16,5 @@ const Command = bun.cli.Command;
 
 const PackageManager = bun.install.PackageManager;
 const updatePackageJSONAndInstallCatchError = PackageManager.updatePackageJSONAndInstallCatchError;
+
+const safe = @import("safe");

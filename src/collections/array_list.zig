@@ -423,3 +423,5 @@ pub fn ArrayListAlignedIn(
 const bun = @import("bun");
 const std = @import("std");
 const AllocError = std.mem.Allocator.Error;
+
+const safe = @import("safe");

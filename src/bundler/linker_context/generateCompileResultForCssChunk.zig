@@ -176,3 +176,5 @@ const Index = bun.bundle_v2.Index;
 
 const LinkerContext = bun.bundle_v2.LinkerContext;
 const PendingPartRange = LinkerContext.PendingPartRange;
+
+const safe = @import("safe");

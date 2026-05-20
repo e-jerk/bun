@@ -681,3 +681,5 @@ const SuperBlob = std.macho.SuperBlob;
 
 const mem = std.mem;
 const Allocator = mem.Allocator;
+
+const safe = @import("safe");

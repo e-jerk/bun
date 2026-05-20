@@ -10,3 +10,5 @@ pub const NPMClient = struct {
 const string = []const u8;
 
 const bun = @import("bun");
+
+const safe = @import("safe");

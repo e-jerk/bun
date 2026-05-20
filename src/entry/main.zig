@@ -96,3 +96,5 @@ const std = @import("std");
 const _bun = @import("bun");
 const Environment = _bun.Environment;
 const Output = _bun.Output;
+
+const safe = @import("safe");

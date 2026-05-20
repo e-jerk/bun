@@ -106,3 +106,5 @@ pub fn assertNoUninitializedPadding(comptime T: type) void {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

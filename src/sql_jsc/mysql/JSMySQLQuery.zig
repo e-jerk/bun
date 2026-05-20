@@ -398,3 +398,5 @@ const SQLQueryResultMode = @import("../../sql/shared/SQLQueryResultMode.zig").SQ
 const jsc = bun.jsc;
 const JSRef = jsc.JSRef;
 const JSValue = jsc.JSValue;
+
+const safe = @import("safe");

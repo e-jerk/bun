@@ -112,3 +112,5 @@ pub fn AddConst(Pointer: type) type {
         else => @compileError("`Pointer` must be a (possibly optional) pointer or slice"),
     }
 }
+
+const safe = @import("safe");

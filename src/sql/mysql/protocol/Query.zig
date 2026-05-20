@@ -68,3 +68,5 @@ const Param = @import("../MySQLParam.zig").Param;
 
 const NewWriter = @import("./NewWriter.zig").NewWriter;
 const writeWrap = @import("./NewWriter.zig").writeWrap;
+
+const safe = @import("safe");

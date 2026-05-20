@@ -1884,3 +1884,5 @@ const SmallList = css.SmallList;
 
 const std = @import("std");
 const ArrayList = std.ArrayListUnmanaged;
+
+const safe = @import("safe");

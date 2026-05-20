@@ -40,3 +40,5 @@ pub const Error = error{
 };
 
 pub const mysqlErrorToJS = @import("../../../sql_jsc/mysql/protocol/any_mysql_error_jsc.zig").mysqlErrorToJS;
+
+const safe = @import("safe");

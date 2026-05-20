@@ -4,3 +4,5 @@ pub const InitError = error{
     InvalidCAFile,
     InvalidCA,
 };
+
+const safe = @import("safe");

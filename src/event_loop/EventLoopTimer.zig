@@ -243,3 +243,5 @@ const TimerObjectInternals = bun.api.Timer.TimerObjectInternals;
 const jsc = bun.jsc;
 const VirtualMachine = jsc.VirtualMachine;
 const api = jsc.API;
+
+const safe = @import("safe");

@@ -575,3 +575,5 @@ const JSValue = jsc.JSValue;
 
 const Blob = webcore.Blob;
 const SizeType = Blob.SizeType;
+
+const safe = @import("safe");

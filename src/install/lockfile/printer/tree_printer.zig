@@ -484,3 +484,5 @@ const invalid_package_id = bun.install.invalid_package_id;
 const Lockfile = install.Lockfile;
 const Package = Lockfile.Package;
 const Printer = Lockfile.Printer;
+
+const safe = @import("safe");

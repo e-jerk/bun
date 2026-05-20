@@ -141,3 +141,5 @@ pub fn Rect(comptime T: type) type {
 }
 
 const std = @import("std");
+
+const safe = @import("safe");

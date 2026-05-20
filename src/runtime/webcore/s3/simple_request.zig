@@ -462,3 +462,5 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const picohttp = bun.picohttp;
 const strings = bun.strings;
+
+const safe = @import("safe");

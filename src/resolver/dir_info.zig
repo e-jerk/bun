@@ -126,3 +126,5 @@ const bun = @import("bun");
 const FD = bun.FD;
 const FeatureFlags = bun.FeatureFlags;
 const allocators = bun.allocators;
+
+const safe = @import("safe");

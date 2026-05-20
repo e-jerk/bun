@@ -51,3 +51,5 @@ const assert = bun.assert;
 
 const ExternalString = bun.Semver.ExternalString;
 const String = bun.Semver.String;
+
+const safe = @import("safe");

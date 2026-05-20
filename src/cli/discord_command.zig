@@ -8,3 +8,5 @@ pub const DiscordCommand = struct {
 const bun = @import("bun");
 const open = @import("./open.zig");
 const std = @import("std");
+
+const safe = @import("safe");

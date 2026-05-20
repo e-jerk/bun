@@ -235,3 +235,5 @@ const Allocator = std.mem.Allocator;
 
 const jsc = bun.jsc;
 const ZigString = jsc.ZigString;
+
+const safe = @import("safe");
