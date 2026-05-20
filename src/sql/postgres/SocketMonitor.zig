@@ -1,7 +1,10 @@
 pub fn write(data: []const u8) void {
     debug("SocketMonitor: write {x}", .{data});
     if (comptime bun.Environment.isDebug) {
-        DebugSocketMonitorWriter.check.call();
+        if (!DebugSocketMonitorWriter.check_done) {
+            DebugSocketMonitorWriter.load();
+            DebugSocketMonitorWriter.check_done = true;
+        }
         if (DebugSocketMonitorWriter.enabled) {
             DebugSocketMonitorWriter.write(data);
         }
@@ -11,7 +14,10 @@ pub fn write(data: []const u8) void {
 pub fn read(data: []const u8) void {
     debug("SocketMonitor: read {x}", .{data});
     if (comptime bun.Environment.isDebug) {
-        DebugSocketMonitorReader.check.call();
+        if (!DebugSocketMonitorReader.check_done) {
+            DebugSocketMonitorReader.load();
+            DebugSocketMonitorReader.check_done = true;
+        }
         if (DebugSocketMonitorReader.enabled) {
             DebugSocketMonitorReader.write(data);
         }

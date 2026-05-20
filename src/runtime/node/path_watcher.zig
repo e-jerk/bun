@@ -100,7 +100,7 @@ pub const PathWatcher = struct {
     /// `manager.mutex` on all platforms — every emit path (inotify/kqueue reader
     /// threads and the Darwin FSEvents callback) holds it while iterating, so
     /// attach/detach can never race with dispatch.
-    handlers: std.array_hash_map.Auto(*anyopaque, ChangeEvent) = .{},
+    handlers: std.AutoArrayHashMapUnmanaged(*anyopaque, ChangeEvent) = .{},
 
     /// Per-platform per-watch state (inotify wds, kqueue fds, or the FSEventsWatcher).
     platform: Platform.Watch = .{},
@@ -151,7 +151,7 @@ pub const PathWatcher = struct {
     /// Called from the platform reader thread with `manager.mutex` held.
     /// `rel_path` is borrowed — `onPathUpdatePosix` dupes it before enqueuing.
     fn emit(this: *PathWatcher, event_type: EventType, rel_path: []const u8, is_file: bool) void {
-        const timestamp = std.time.milliTimestamp();
+        const timestamp = @import("std-fs-compat").milliTimestamp();
         const hash = bun.hash(rel_path);
         for (this.handlers.keys(), this.handlers.values()) |ctx, *last| {
             if (last.shouldEmit(hash, timestamp, event_type)) {
@@ -591,7 +591,7 @@ const Linux = struct {
 
             manager.mutex.lock();
             // Track which PathWatchers got at least one event so we flush() each once.
-            var touched: std.array_hash_map.Auto(*PathWatcher, void) = .{};
+            var touched: std.AutoArrayHashMapUnmanaged(*PathWatcher, void) = .{};
             defer touched.deinit(bun.default_allocator);
 
             var i: usize = 0;
@@ -779,7 +779,7 @@ const Kqueue = struct {
     /// ident (fd number) → entry (by value — avoids a per-entry heap alloc for
     /// recursive trees). `udata` on the kevent carries a monotonic generation number
     /// so the reader can reject stale events after the fd is recycled.
-    entries: std.array_hash_map.Auto(i32, KqEntry) = .{},
+    entries: std.AutoArrayHashMapUnmanaged(i32, KqEntry) = .{},
     /// Bumped on every `addOne` and stored in both `KqEntry.gen` and `kev.udata`.
     next_gen: usize = 1,
 
@@ -903,7 +903,7 @@ const Kqueue = struct {
             if (count <= 0) continue;
 
             manager.mutex.lock();
-            var touched: std.array_hash_map.Auto(*PathWatcher, void) = .{};
+            var touched: std.AutoArrayHashMapUnmanaged(*PathWatcher, void) = .{};
             defer touched.deinit(bun.default_allocator);
 
             for (events[0..@intCast(count)]) |kev| {

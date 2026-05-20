@@ -1,10 +1,6 @@
 pub const panic = _bun.crash_handler.panic;
 pub const std_options = std.Options{
     .enable_segfault_handler = false,
-    // Use BoringSSL's RAND_bytes instead of the default getrandom() syscall.
-    // BoringSSL falls back to /dev/urandom on older kernels (< 3.17) where
-    // the getrandom syscall doesn't exist, avoiding a panic on ENOSYS.
-    .cryptoRandomSeed = _bun.csprng,
 };
 
 pub const io_mode = .blocking;
@@ -45,11 +41,13 @@ pub fn main() void {
             &_bun.mimalloc.mi_free,
         );
         _bun.handleOom(_bun.windows.env.convertEnvToWTF8());
-        environ = @ptrCast(std.os.environ.ptr);
-        _environ = @ptrCast(std.os.environ.ptr);
+        environ = @ptrCast(std.c.environ);
+        _environ = @ptrCast(std.c.environ);
     }
 
-    _bun.start_time = std.time.nanoTimestamp();
+    var ts: std.posix.timespec = undefined;
+    _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+    _bun.start_time = @as(i128, ts.sec) * std.time.ns_per_s + ts.nsec;
     _bun.initArgv() catch |err| {
         Output.panic("Failed to initialize argv: {s}\n", .{@errorName(err)});
     };

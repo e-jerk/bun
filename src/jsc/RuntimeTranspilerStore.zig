@@ -17,7 +17,7 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
     if (bun.feature_flag.BUN_DEBUG_NO_DUMP.get()) return;
 
     const BunDebugHolder = struct {
-        pub var dir: ?std.fs.Dir = null;
+        pub var dir: ?@import("std-fs-compat").FsDir = null;
         pub var lock: bun.Mutex = .{};
     };
 
@@ -37,7 +37,8 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
                 break :brk win_temp_buffer[0 .. temp.len + suffix.len :0];
             },
         };
-        const dir = try std.c.AT.FDCWD.makeOpenPath(base_name, .{});
+        const tmp_dir = @import("std-fs-compat").FsDir{ .fd = std.c.AT.FDCWD };
+        const dir = try tmp_dir.makeOpenPath(base_name, @import("std-fs-compat").FsDir.MakePathOptions{});
         BunDebugHolder.dir = dir;
         break :dir dir;
     };
@@ -49,10 +50,7 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
         };
         var parent = try dir.makeOpenPath(dir_path[root_len..], .{});
         defer parent.close();
-        parent.writeFile(.{
-            .sub_path = std.fs.path.basename(specifier),
-            .data = written,
-        }) catch |e| {
+        parent.writeFile(std.fs.path.basename(specifier), written) catch |e| {
             Output.debugWarn("Failed to dump source string: writeFile {}", .{e});
             return;
         };
@@ -92,10 +90,7 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
             try w.flush();
         }
     } else {
-        dir.writeFile(.{
-            .sub_path = std.fs.path.basename(specifier),
-            .data = written,
-        }) catch return;
+        dir.writeFile(std.fs.path.basename(specifier), written) catch return;
     }
 }
 
@@ -159,10 +154,10 @@ pub const RuntimeTranspilerStore = struct {
         if (package_json) |pkg| {
             switch (pkg.module_type) {
                 .cjs => {
-                    resolved_source.tag = .package_json_type_commonjs;
+                    resolved_source.tag = @intFromEnum(ResolvedSource.Tag.package_json_type_commonjs);
                     resolved_source.is_commonjs_module = true;
                 },
-                .esm => resolved_source.tag = .package_json_type_module,
+                .esm => resolved_source.tag = @intFromEnum(ResolvedSource.Tag.package_json_type_module),
                 .unknown => {},
             }
         }
@@ -378,8 +373,8 @@ pub const RuntimeTranspilerStore = struct {
                 strings.eqlLong(vm.main, path.text, false);
 
             const module_type: ModuleType = switch (this.resolved_source.tag) {
-                .package_json_type_commonjs => .cjs,
-                .package_json_type_module => .esm,
+                @intFromEnum(ResolvedSource.Tag.package_json_type_commonjs) => .cjs,
+                @intFromEnum(ResolvedSource.Tag.package_json_type_module) => .esm,
                 else => .unknown,
             };
 

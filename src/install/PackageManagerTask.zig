@@ -222,7 +222,7 @@ pub fn callback(task: *ThreadPool.Task) void {
             };
 
             this.err = null;
-            this.data = .{ .git_clone = .fromStdDir(dir) };
+            this.data = .{ .git_clone = .fromStdDir(dir.toDir()) };
             this.status = Status.success;
         },
         .git_checkout => {
@@ -232,7 +232,7 @@ pub fn callback(task: *ThreadPool.Task) void {
                 this.request.git_checkout.env,
                 &this.log,
                 manager.getCacheDirectory(),
-                git_checkout.repo_dir.stdDir(),
+                @import("std-fs-compat").FsDir.fromDir(git_checkout.repo_dir.stdDir()),
                 git_checkout.name.slice(),
                 git_checkout.url.slice(),
                 git_checkout.resolved.slice(),

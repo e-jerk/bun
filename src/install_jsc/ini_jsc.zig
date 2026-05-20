@@ -46,6 +46,7 @@ pub const IniTestingAPIs = struct {
             const map = try allocator.create(bun.DotEnv.Map);
             map.* = .{
                 .map = envmap,
+                .allocator = allocator,
             };
 
             const env = bun.DotEnv.Loader.init(map, allocator);

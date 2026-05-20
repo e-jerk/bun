@@ -6,6 +6,10 @@ const ManagedTask = @This();
 ctx: ?*anyopaque,
 callback: *const (fn (*anyopaque) bun.JSError!void),
 
+pub fn deinit(this: *ManagedTask) void {
+    bun.default_allocator.destroy(this);
+}
+
 pub fn task(this: *ManagedTask) Task {
     return Task.init(this);
 }

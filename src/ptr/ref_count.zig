@@ -485,7 +485,7 @@ pub fn DebugData(thread_safe: bool) type {
         lock: if (thread_safe) std.debug.SafetyLock else bun.Mutex,
         next_id: u32,
         map: std.AutoHashMapUnmanaged(TrackedRef.Id, TrackedRef),
-        frees: std.array_hash_map.Auto(TrackedRef.Id, TrackedDeref),
+        frees: std.AutoArrayHashMapUnmanaged(TrackedRef.Id, TrackedDeref),
         // Allocation Scope integration
         allocation_scope: ?*AllocationScope,
         count_pointer: ?*Count,
@@ -495,7 +495,7 @@ pub fn DebugData(thread_safe: bool) type {
             .lock = .{},
             .next_id = 0,
             .map = .empty,
-            .frees = .empty,
+            .frees = .{},
             .allocation_scope = null,
             .count_pointer = null,
         };

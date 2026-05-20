@@ -2,8 +2,8 @@ const ExtractTarball = @This();
 
 name: strings.StringOrTinyString,
 resolution: Resolution,
-cache_dir: std.fs.Dir,
-temp_dir: std.fs.Dir,
+cache_dir: @import("std-fs-compat").FsDir,
+temp_dir: @import("std-fs-compat").FsDir,
 dependency_id: DependencyID,
 skip_verify: bool = false,
 integrity: Integrity = .{},
@@ -77,7 +77,7 @@ pub fn buildURLWithPrinter(
     printer: PrinterContext,
     comptime print: fn (ctx: PrinterContext, comptime str: string, args: anytype) ErrorType!ReturnType,
 ) ErrorType!ReturnType {
-    const registry = std.mem.trimRight(u8, registry_, "/");
+    const registry = std.mem.trimEnd(u8, registry_, "/");
     const full_name = full_name_.slice();
 
     var name = full_name;
@@ -181,7 +181,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
     var resolved: string = "";
     const tmpname = try FileSystem.tmpname(basename[0..@min(basename.len, 32)], std.mem.asBytes(&tmpname_buf), bun.fastRandom());
     {
-        var extract_destination = bun.MakePath.makeOpenPath(tmpdir, tmpname, .{}) catch |err| {
+        var extract_destination = @import("std-fs-compat").FsDir.fromDir(bun.MakePath.makeOpenPath(tmpdir.toDir(), tmpname, .{}) catch |err| {
             log.addErrorFmt(
                 null,
                 logger.Loc.Empty,
@@ -190,7 +190,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
                 .{ @errorName(err), tmpname, name },
             ) catch unreachable;
             return error.InstallFailed;
-        };
+        });
 
         defer extract_destination.close();
 
@@ -255,7 +255,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
         if (PackageManager.verbose_install) {
             const decompressing_ended_at: u64 = bun.getRoughTickCount(.allow_mocked_time).ns();
             const elapsed = decompressing_ended_at - time_started_for_verbose_logs;
-            Output.prettyErrorln("[{s}] Extract {s}<r> (decompressed {f} tgz file in {D})", .{ name, tmpname, bun.fmt.size(tgz_bytes.len, .{}), elapsed });
+            Output.prettyErrorln("[{s}] Extract {s}<r> (decompressed {f} tgz file in {d})", .{ name, tmpname, bun.fmt.size(tgz_bytes.len, .{}), elapsed });
         }
 
         switch (this.resolution.tag) {
@@ -317,7 +317,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
 
         if (PackageManager.verbose_install) {
             const elapsed = bun.getRoughTickCount(.allow_mocked_time).ns() - time_started_for_verbose_logs;
-            Output.prettyErrorln("[{s}] Extracted to {s} ({D})<r>", .{ name, tmpname, elapsed });
+            Output.prettyErrorln("[{s}] Extracted to {s} ({d})<r>", .{ name, tmpname, elapsed });
             Output.flush();
         }
     }
@@ -446,14 +446,14 @@ pub fn moveToCacheDirectory(
 
         if (create_subdir) {
             if (bun.Dirname.dirname(u8, folder_name)) |folder| {
-                bun.MakePath.makePath(u8, cache_dir, folder) catch {};
+                bun.MakePath.makePath(u8, cache_dir.toDir(), folder) catch {};
             }
         }
 
         if (bun.sys.renameatConcurrently(
-            .fromStdDir(tmpdir),
+            .fromStdDir(tmpdir.toDir()),
             tmpname,
-            .fromStdDir(cache_dir),
+            .fromStdDir(cache_dir.toDir()),
             folder_name,
             .{ .move_fallback = true },
         ).asErr()) |err| {
@@ -470,7 +470,7 @@ pub fn moveToCacheDirectory(
 
     // We return a resolved absolute absolute file path to the cache dir.
     // To get that directory, we open the directory again.
-    var final_dir = bun.openDir(cache_dir, folder_name) catch |err| {
+    var final_dir = bun.openDir(cache_dir.toDir(), folder_name) catch |err| {
         log.addErrorFmt(
             null,
             logger.Loc.Empty,
@@ -507,7 +507,7 @@ pub fn moveToCacheDirectory(
             this.package_manager.lockfile.trusted_dependencies.?.contains(@truncate(Semver.String.Builder.stringHash(name))),
     }) {
         const json_file, json_buf = bun.sys.File.readFileFrom(
-            bun.FD.fromStdDir(cache_dir),
+            bun.FD.fromStdDir(cache_dir.toDir()),
             bun.path.joinZBuf(&bufs.json_path_buf, &[_]string{ folder_name, "package.json" }, .auto),
             bun.default_allocator,
         ).unwrap() catch |err| {
@@ -571,7 +571,7 @@ pub fn moveToCacheDirectory(
                     break :create_index;
                 };
             } else {
-                var index_dir = bun.FD.fromStdDir(bun.MakePath.makeOpenPath(cache_dir, name, .{}) catch break :create_index);
+                var index_dir = bun.FD.fromStdDir(bun.MakePath.makeOpenPath(cache_dir.toDir(), name, .{}) catch break :create_index);
                 defer index_dir.close();
 
                 bun.sys.symlinkat(final_path, index_dir, dest_name).unwrap() catch break :create_index;

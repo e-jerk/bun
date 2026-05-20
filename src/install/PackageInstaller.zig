@@ -127,7 +127,8 @@ pub const PackageInstaller = struct {
         pub fn makeAndOpenDir(this: *NodeModulesFolder, root: std.fs.Dir) !std.fs.Dir {
             const out = brk: {
                 if (comptime Environment.isPosix) {
-                    break :brk try root.makeOpenPath(this.path.items, .{ .iterate = true, .access_sub_paths = true });
+                    try bun.makePath(root, this.path.items);
+                    break :brk try bun.openDirA(root, this.path.items);
                 }
 
                 break :brk (try bun.sys.openDirAtWindowsA(.fromStdDir(root), this.path.items, .{
@@ -187,7 +188,7 @@ pub const PackageInstaller = struct {
         pub fn close(this: *LazyPackageDestinationDir) void {
             switch (this.*) {
                 .dir => {
-                    if (this.dir.fd != std.c.AT.FDCWD.fd) {
+                    if (this.dir.fd != std.c.AT.FDCWD) {
                         this.dir.close();
                     }
                 },
@@ -578,7 +579,7 @@ pub const PackageInstaller = struct {
         allocator.free(this.trees);
         this.tree_ids_to_trees_the_id_depends_on.deinit(allocator);
         this.node_modules.deinit();
-        this.trusted_dependencies_from_update_requests.deinit(allocator);
+        this.trusted_dependencies_from_update_requests.deinit();
     }
 
     /// Call when you mutate the length of `lockfile.packages`
@@ -868,15 +869,15 @@ pub const PackageInstaller = struct {
                     resolution.value.npm.version,
                     patch_contents_hash,
                 );
-                installer.cache_dir = this.manager.getCacheDirectory();
+                installer.cache_dir = this.manager.getCacheDirectory().toDir();
             },
             .git => {
                 installer.cache_dir_subpath = this.manager.cachedGitFolderName(&resolution.value.git, patch_contents_hash);
-                installer.cache_dir = this.manager.getCacheDirectory();
+                installer.cache_dir = this.manager.getCacheDirectory().toDir();
             },
             .github => {
                 installer.cache_dir_subpath = this.manager.cachedGitHubFolderName(&resolution.value.github, patch_contents_hash);
-                installer.cache_dir = this.manager.getCacheDirectory();
+                installer.cache_dir = this.manager.getCacheDirectory().toDir();
             },
             .folder => {
                 const folder = resolution.value.folder.slice(this.lockfile.buffers.string_bytes.items);
@@ -892,7 +893,7 @@ pub const PackageInstaller = struct {
                         this.folder_path_buf[folder.len] = 0;
                         installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
                     }
-                    installer.cache_dir = std.c.AT.FDCWD;
+                    installer.cache_dir = std.fs.cwd();
                 } else {
                     // transitive folder dependencies are relative to their parent. they are not hoisted
                     @memcpy(this.folder_path_buf[0..folder.len], folder);
@@ -900,16 +901,16 @@ pub const PackageInstaller = struct {
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
 
                     // cache_dir might not be created yet (if it's in node_modules)
-                    installer.cache_dir = std.c.AT.FDCWD;
+                    installer.cache_dir = std.fs.cwd();
                 }
             },
             .local_tarball => {
                 installer.cache_dir_subpath = this.manager.cachedTarballFolderName(resolution.value.local_tarball, patch_contents_hash);
-                installer.cache_dir = this.manager.getCacheDirectory();
+                installer.cache_dir = this.manager.getCacheDirectory().toDir();
             },
             .remote_tarball => {
                 installer.cache_dir_subpath = this.manager.cachedTarballFolderName(resolution.value.remote_tarball, patch_contents_hash);
-                installer.cache_dir = this.manager.getCacheDirectory();
+                installer.cache_dir = this.manager.getCacheDirectory().toDir();
             },
             .workspace => {
                 const folder = resolution.value.workspace.slice(this.lockfile.buffers.string_bytes.items);
@@ -921,11 +922,11 @@ pub const PackageInstaller = struct {
                     this.folder_path_buf[folder.len] = 0;
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
                 }
-                installer.cache_dir = std.c.AT.FDCWD;
+                installer.cache_dir = std.fs.cwd();
             },
             .root => {
                 installer.cache_dir_subpath = ".";
-                installer.cache_dir = std.c.AT.FDCWD;
+                installer.cache_dir = std.fs.cwd();
             },
             .symlink => {
                 const directory = this.manager.globalLinkDir();
@@ -934,7 +935,7 @@ pub const PackageInstaller = struct {
 
                 if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                     installer.cache_dir_subpath = ".";
-                    installer.cache_dir = std.c.AT.FDCWD;
+                    installer.cache_dir = std.fs.cwd();
                 } else {
                     const global_link_dir = this.manager.globalLinkDirPath();
                     var ptr = &this.folder_path_buf;
@@ -950,7 +951,7 @@ pub const PackageInstaller = struct {
                     remain[0] = 0;
                     const len = @intFromPtr(remain.ptr) - @intFromPtr(ptr);
                     installer.cache_dir_subpath = this.folder_path_buf[0..len :0];
-                    installer.cache_dir = directory;
+                    installer.cache_dir = directory.toDir();
                 }
             },
             else => {
@@ -1115,7 +1116,7 @@ pub const PackageInstaller = struct {
             };
 
             defer {
-                if (std.c.AT.FDCWD.fd != destination_dir.fd) destination_dir.close();
+                if (destination_dir.fd != std.c.AT.FDCWD) destination_dir.close();
             }
 
             var lazy_package_dir: LazyPackageDestinationDir = .{ .dir = destination_dir };
@@ -1128,7 +1129,7 @@ pub const PackageInstaller = struct {
                         // and is not hoisted.
                         const dirname = std.fs.path.dirname(this.node_modules.path.items) orelse this.node_modules.path.items;
 
-                        installer.cache_dir = this.root_node_modules_folder.openDir(dirname, .{ .iterate = true, .access_sub_paths = true }) catch |err|
+                        installer.cache_dir = bun.openDirA(this.root_node_modules_folder, dirname) catch |err|
                             break :result .fail(err, .opening_cache_dir, @errorReturnTrace());
 
                         const result = if (resolution.tag == .root)

@@ -422,7 +422,7 @@ fn openDestination(this: *TarballStream) !void {
     );
     this.tmpname = try this.allocator.dupeZ(u8, tmpname);
 
-    this.dest = .fromStdDir(try bun.MakePath.makeOpenPath(tarball.temp_dir, this.tmpname, .{}));
+    this.dest = .fromStdDir(try bun.MakePath.makeOpenPath(tarball.temp_dir.toDir(), this.tmpname, .{}));
 }
 
 fn closeOutputFile(this: *TarballStream) void {

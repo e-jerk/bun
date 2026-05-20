@@ -43,14 +43,14 @@ pub const ConcurrentTaskQueue = UnboundedQueue(AnyTaskWithExtraContext, .next);
 pub fn initGlobal(env: ?*bun.DotEnv.Loader, cwd: ?[]const u8) *MiniEventLoop {
     if (globalInitialized) return global;
     const loop = MiniEventLoop.init(bun.default_allocator);
-    global = bun.handleOom(zust.Box(MiniEventLoop).init(bun.default_allocator, undefined));
+    global = bun.handleOom(zust.Box(MiniEventLoop).init(bun.default_allocator, undefined)).ptr;
     global.* = loop;
     global.loop.internal_loop_data.setParentEventLoop(bun.jsc.EventLoopHandle.init(global));
     global.env = env orelse bun.DotEnv.instance orelse env_loader: {
-        const map = bun.handleOom(zust.Box(bun.DotEnv.Map).init(bun.default_allocator, undefined));
+        const map = bun.handleOom(zust.Box(bun.DotEnv.Map).init(bun.default_allocator, undefined)).ptr;
         map.* = bun.DotEnv.Map.init(bun.default_allocator);
 
-        const loader = bun.handleOom(zust.Box(bun.DotEnv.Loader).init(bun.default_allocator, undefined));
+        const loader = bun.handleOom(zust.Box(bun.DotEnv.Loader).init(bun.default_allocator, undefined)).ptr;
         loader.* = bun.DotEnv.Loader.init(map, bun.default_allocator);
         break :env_loader loader;
     };
@@ -89,8 +89,9 @@ pub fn throwError(_: *MiniEventLoop, err: bun.sys.Error) void {
 
 pub fn pipeReadBuffer(this: *MiniEventLoop) []u8 {
     return this.pipe_read_buffer orelse {
-        this.pipe_read_buffer = bun.handleOom(zust.Box(PipeReadBuffer).init(this.allocator, undefined));
-        return this.pipe_read_buffer.?;
+        const box = bun.handleOom(zust.Box(PipeReadBuffer).init(this.allocator, undefined));
+        this.pipe_read_buffer = box.ptr;
+        return box.ptr;
     };
 }
 
@@ -105,7 +106,7 @@ pub fn onAfterEventLoop(this: *MiniEventLoop) void {
 
 pub fn filePolls(this: *MiniEventLoop) *Async.FilePoll.Store {
     return this.file_polls_ orelse {
-        this.file_polls_ = bun.handleOom(zust.Box(Async.FilePoll.Store).init(this.allocator, undefined));
+        this.file_polls_ = bun.handleOom(zust.Box(Async.FilePoll.Store).init(this.allocator, undefined)).ptr;
         this.file_polls_.?.* = Async.FilePoll.Store.init();
         return this.file_polls_.?;
     };

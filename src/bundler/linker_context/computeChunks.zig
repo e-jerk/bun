@@ -17,7 +17,7 @@ pub noinline fn computeChunks(
     try js_chunks.ensureUnusedCapacity(this.graph.entry_points.len);
 
     // Key is the hash of the CSS order. This deduplicates identical CSS files.
-    var css_chunks = std.array_hash_map.Auto(u64, Chunk).init(temp_allocator);
+    var css_chunks = bun.handleOom(std.array_hash_map.Auto(u64, Chunk).init(temp_allocator));
     var js_chunks_with_css: usize = 0;
 
     // Maps entry point IDs to their index in js_chunks.values().
@@ -164,7 +164,7 @@ pub noinline fn computeChunks(
                     break :brk hasher.final();
                 };
 
-                const css_chunk_entry = try css_chunks.getOrPut(hash_to_use);
+            const css_chunk_entry = try css_chunks.getOrPut(hash_to_use);
 
                 js_chunk_entry.value_ptr.content.javascript.css_chunks = try this.allocator().dupe(u32, &.{
                     @intCast(css_chunk_entry.index),
@@ -172,7 +172,7 @@ pub noinline fn computeChunks(
                 js_chunks_with_css += 1;
 
                 if (!css_chunk_entry.found_existing) {
-                    var css_files_with_parts_in_chunk = std.array_hash_map.Auto(Index.Int, usize){};
+                    var css_files_with_parts_in_chunk = std.AutoArrayHashMapUnmanaged(Index.Int, usize){};
                     for (order.slice()) |entry| {
                         if (entry.kind == .source_index) {
                             bun.handleOom(css_files_with_parts_in_chunk.put(this.allocator(), entry.kind.source_index.get(), 0));

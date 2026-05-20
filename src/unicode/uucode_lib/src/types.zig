@@ -531,13 +531,27 @@ pub fn Data(comptime c: config.Table) type {
         attrs[i] = if (c.packing == .@"packed") .{} else .{ .@"align" = @alignOf(F) };
     }
 
-    return @Struct(
-        if (c.packing == .@"packed") .@"packed" else .auto,
-        null,
-        &names,
-        &types,
-        &attrs,
-    );
+    return @Type(.{
+        .@"struct" = .{
+            .layout = if (c.packing == .@"packed") .@"packed" else .auto,
+            .backing_integer = null,
+            .fields = blk: {
+                var struct_fields: [c.fields.len]std.builtin.Type.StructField = undefined;
+                for (c.fields, 0..) |cf, i| {
+                    struct_fields[i] = .{
+                        .name = cf.name,
+                        .type = types[i],
+                        .default_value_ptr = null,
+                        .is_comptime = false,
+                        .alignment = if (c.packing == .@"packed") 0 else @alignOf(types[i]),
+                    };
+                }
+                break :blk &struct_fields;
+            },
+            .decls = &.{},
+            .is_tuple = false,
+        },
+    });
 }
 
 pub fn writeDataItems(comptime D: type, writer: *std.Io.Writer, data_items: []const D) !void {
@@ -663,7 +677,27 @@ pub fn StructFromDecls(comptime Struct: type, comptime decl: []const u8) type {
         }
     }
 
-    return @Struct(.auto, null, names[0..i], types[0..i], attrs[0..i]);
+    return @Type(.{
+        .@"struct" = .{
+            .layout = .auto,
+            .backing_integer = null,
+            .fields = blk: {
+                var struct_fields: [fields.len]std.builtin.Type.StructField = undefined;
+                for (0..i) |j| {
+                    struct_fields[j] = .{
+                        .name = names[j],
+                        .type = types[j],
+                        .default_value_ptr = null,
+                        .is_comptime = false,
+                        .alignment = @alignOf(types[j]),
+                    };
+                }
+                break :blk struct_fields[0..i];
+            },
+            .decls = &.{},
+            .is_tuple = false,
+        },
+    });
 }
 
 pub fn Slice(
@@ -1296,13 +1330,25 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
         @compileError("Shift can only be used in unions with at least one field of type u21");
     }
 
-    const InnerUnion = @Union(
-        if (packing == .@"packed") .@"packed" else .auto,
-        if (packing == .@"packed") null else Tag,
-        &union_names,
-        &union_types,
-        &union_attrs,
-    );
+    const InnerUnion = @Type(.{
+        .@"union" = .{
+            .layout = if (packing == .@"packed") .@"packed" else .auto,
+            .backing_integer = null,
+            .fields = blk: {
+                var union_fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
+                for (info.fields, 0..) |f, i| {
+                    union_fields[i] = .{
+                        .name = f.name,
+                        .type = union_types[i],
+                        .alignment = if (packing == .@"packed") 0 else @alignOf(union_types[i]),
+                    };
+                }
+                break :blk &union_fields;
+            },
+            .decls = &.{},
+            .tag_type = if (packing == .@"packed") null else Tag,
+        },
+    });
 
     return if (packing == .unpacked) struct {
         @"union": InnerUnion,

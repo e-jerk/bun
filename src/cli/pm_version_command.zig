@@ -132,7 +132,7 @@ const zust = @import("safe");
                 Global.exit(1);
             };
 
-            std.c.AT.FDCWD.writeFile(.{
+            std.fs.cwd().writeFile(.{
                 .sub_path = package_json_path,
                 .data = package_json_writer.ctx.writtenWithoutTrailingZero(),
             }) catch |err| {

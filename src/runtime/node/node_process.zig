@@ -13,11 +13,12 @@ comptime {
 }
 
 var title_mutex = bun.Mutex{};
+var Bun__Node__ProcessTitle: ?[]u8 = null;
 
 pub fn getTitle(_: *JSGlobalObject, title: *bun.String) callconv(.c) void {
     title_mutex.lock();
     defer title_mutex.unlock();
-    const str = bun.cli.Bun__Node__ProcessTitle;
+    const str = Bun__Node__ProcessTitle;
     title.* = bun.String.cloneUTF8(str orelse "bun");
 }
 
@@ -32,8 +33,8 @@ pub fn setTitle(globalObject: *JSGlobalObject, newvalue: *bun.String) callconv(.
         return;
     };
 
-    if (bun.cli.Bun__Node__ProcessTitle) |slice| bun.default_allocator.free(slice);
-    bun.cli.Bun__Node__ProcessTitle = new_title;
+    if (Bun__Node__ProcessTitle) |slice| bun.default_allocator.free(slice);
+    Bun__Node__ProcessTitle = new_title;
 }
 
 pub fn createArgv0(globalObject: *jsc.JSGlobalObject) callconv(.c) jsc.JSValue {

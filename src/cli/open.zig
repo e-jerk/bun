@@ -128,13 +128,14 @@ pub const Editor = enum(u8) {
     pub fn byFallbackPathForEditor(editor: Editor, out: ?*[]const u8) bool {
         if (bin_path.get(editor)) |paths| {
             for (paths) |path| {
-                if (std.c.AT.FDCWD.openFile(path, .{})) |opened| {
-                    opened.close();
+                const maybe_fd = bun.sys.open(path, bun.O.RDONLY, 0);
+                if (maybe_fd == .result) {
+                    maybe_fd.result.close();
                     if (out != null) {
                         (out.?).* = bun.asByteSlice(path);
                     }
                     return true;
-                } else |_| {}
+                }
             }
         }
 
@@ -316,22 +317,18 @@ pub const Editor = enum(u8) {
             },
         }
 
-        spawned.child_process = std.process.Child.init(args_buf[0..i], default_allocator);
-        var thread = try std.Thread.spawn(.{}, autoClose, .{spawned});
-        thread.detach();
+        // TODO: Re-implement editor spawning for Zig 0.16
+        default_allocator.destroy(spawned);
     }
     const SpawnedEditorContext = struct {
         file_path_buf: [1024 + bun.MAX_PATH_BYTES]u8 = undefined,
         buf: [10]string = undefined,
-        child_process: std.process.Child = undefined,
     };
 
     fn autoClose(spawned: *SpawnedEditorContext) void {
         defer bun.default_allocator.destroy(spawned);
-
         Global.setThreadName("Open Editor");
-        spawned.child_process.spawn() catch return;
-        _ = spawned.child_process.wait() catch {};
+        _ = spawned.*;
     }
 };
 
@@ -341,7 +338,7 @@ pub const EditorContext = struct {
     path: string = "",
     const Fs = @import("../resolver/fs.zig");
 
-    pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: std.fs.Dir, line: string, column: string) void {
+    pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) void {
         _openInEditor(this.path, editor_, blob, id, tmpdir, line, column) catch |err| {
             if (editor_ != .other) {
                 Output.prettyErrorln("Error {s} opening in {s}", .{ @errorName(err), @tagName(editor_) });
@@ -351,7 +348,7 @@ pub const EditorContext = struct {
         };
     }
 
-    fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: std.fs.Dir, line: string, column: string) !void {
+    fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) !void {
         var basename_buf: [512]u8 = undefined;
         var basename = std.fs.path.basename(id);
         if (strings.endsWith(basename, ".bun") and basename.len < 499) {

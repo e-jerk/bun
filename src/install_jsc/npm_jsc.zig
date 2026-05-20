@@ -72,7 +72,7 @@ pub const ManifestBindings = struct {
         const registry = registry_str.toUTF8(bun.default_allocator);
         defer registry.deinit();
 
-        const manifest_file = std.c.AT.FDCWD.openFile(manifest_filename.slice(), .{}) catch |err| {
+        const manifest_file = bun.sys.File.openat(bun.FD.cwd(), manifest_filename.ptr[0..manifest_filename.len :0], bun.O.RDONLY, 0).unwrap() catch |err| {
             return global.throw("failed to open manifest file \"{s}\": {s}", .{ manifest_filename.slice(), @errorName(err) });
         };
         defer manifest_file.close();
@@ -97,7 +97,7 @@ pub const ManifestBindings = struct {
         };
 
         var buf: std.ArrayListUnmanaged(u8) = .empty;
-        const writer = buf.writer(bun.default_allocator);
+        const writer = @import("std-io-compat").writer(&buf);
 
         // TODO: we can add more information. for now just versions is fine
 

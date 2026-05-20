@@ -34,11 +34,11 @@ pub const JSValue = enum(i64) {
     }
 
     pub fn isBigIntInUInt64Range(this: JSValue, min: u64, max: u64) bool {
-        return bun.cpp.JSC__isBigIntInUInt64Range(this, min, max);
+        return bun.cpp.JSC__isBigIntInUInt64Range(this, max, min);
     }
 
     pub fn isBigIntInInt64Range(this: JSValue, min: i64, max: i64) bool {
-        return bun.cpp.JSC__isBigIntInInt64Range(this, min, max);
+        return bun.cpp.JSC__isBigIntInInt64Range(this, max, min);
     }
     pub fn coerceToInt32(this: JSValue, globalThis: *jsc.JSGlobalObject) bun.JSError!i32 {
         return bun.cpp.JSC__JSValue__coerceToInt32(this, globalThis);
@@ -99,7 +99,7 @@ pub const JSValue = enum(i64) {
         ctx: ?*anyopaque,
         callback: PropertyIteratorFn,
     ) JSError!void {
-        return bun.cpp.JSC__JSValue__forEachProperty(this, globalThis, ctx, callback);
+        return bun.cpp.JSC__JSValue__forEachProperty(this, globalThis, ctx.?, callback);
     }
 
     pub fn forEachPropertyOrdered(
@@ -108,7 +108,7 @@ pub const JSValue = enum(i64) {
         ctx: ?*anyopaque,
         callback: PropertyIteratorFn,
     ) JSError!void {
-        return bun.cpp.JSC__JSValue__forEachPropertyOrdered(this, globalThis, ctx, callback);
+        return bun.cpp.JSC__JSValue__forEachPropertyOrdered(this, globalThis, ctx.?, callback);
     }
 
     extern fn Bun__JSValue__toNumber(value: JSValue, global: *JSGlobalObject) f64;
@@ -1183,8 +1183,8 @@ pub const JSValue = enum(i64) {
         return JSC__JSValue__isTerminationException(this);
     }
 
-    pub fn toZigException(this: JSValue, global: *JSGlobalObject, exception: *ZigException) void {
-        return bun.cpp.JSC__JSValue__toZigException(this, global, exception) catch return; // TODO: properly propagate termination
+    pub fn toZigException(this: JSValue, global: *JSGlobalObject, exception: *ZigException) JSError!void {
+        return bun.cpp.JSC__JSValue__toZigException(this, global, exception);
     }
 
     extern fn JSC__JSValue__toZigString(this: JSValue, out: *ZigString, global: *JSGlobalObject) void;
@@ -1541,7 +1541,7 @@ pub const JSValue = enum(i64) {
         }
 
         return switch (try bun.cpp.JSC__JSValue__getIfPropertyExistsImpl(target, global, property_slice.ptr, property_slice.len)) {
-            .zero => unreachable, // handled by fromJSHostCall
+            .zero => error.JSError,
             .property_does_not_exist_on_object => null,
 
             // TODO: see bug described in ObjectBindings.cpp

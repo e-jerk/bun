@@ -317,7 +317,7 @@ pub fn spawnPackageLifecycleScripts(
 pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) std.array_hash_map.Auto(TruncatedPackageNameHash, void) {
     const parts = this.lockfile.packages.slice();
     // find all deps originating from --trust packages from cli
-    var set: std.array_hash_map.Auto(TruncatedPackageNameHash, void) = .{};
+    var set = std.array_hash_map.Auto(TruncatedPackageNameHash, void).init(this.lockfile.allocator);
     if (this.options.do.trust_dependencies_from_args and this.lockfile.packages.len > 0) {
         const root_deps = parts.items(.dependencies)[this.root_package_id.get(this.lockfile, this.workspace_name_hash)];
         var dep_id = root_deps.off;
@@ -329,7 +329,7 @@ pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) std.arra
                     const package_id = this.lockfile.buffers.resolutions.items[dep_id];
                     if (package_id == invalid_package_id) continue;
 
-                    const entry = bun.handleOom(set.getOrPut(this.lockfile.allocator, @truncate(root_dep.name_hash)));
+                    const entry = bun.handleOom(set.getOrPut(@truncate(root_dep.name_hash)));
                     if (!entry.found_existing) {
                         const dependency_slice = parts.items(.dependencies)[package_id];
                         addDependenciesToSet(&set, this.lockfile, dependency_slice);
@@ -356,7 +356,7 @@ fn addDependenciesToSet(
         if (package_id == invalid_package_id) continue;
 
         const dep = lockfile.buffers.dependencies.items[dep_id];
-        const entry = bun.handleOom(names.getOrPut(lockfile.allocator, @truncate(dep.name_hash)));
+        const entry = bun.handleOom(names.getOrPut(@truncate(dep.name_hash)));
         if (!entry.found_existing) {
             const dependency_slice = lockfile.packages.items(.dependencies)[package_id];
             addDependenciesToSet(names, lockfile, dependency_slice);

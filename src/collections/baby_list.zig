@@ -385,7 +385,7 @@ pub fn BabyList(comptime Type: type) type {
         ) OOM!void {
             if ((comptime safety_checks) and this.len == this.cap) this.assertOwned();
             var list_ = this.listManaged(allocator);
-            const writer = list_.writer();
+            const writer = @import("std-io-compat").arrayListWriter(&list_);
             try writer.print(fmt, args);
             this.update(list_);
         }

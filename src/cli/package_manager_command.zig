@@ -48,10 +48,10 @@ pub const PackageManagerCommand = struct {
 
         handleLoadLockfileErrors(load_lockfile, pm);
 
-        Output.flush();
-        Output.disableBuffering();
-        try Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
-        Output.enableBuffering();
+            Output.flush();
+            Output.disableBuffering();
+            Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
+            Output.enableBuffering();
         Global.exit(0);
     }
 
@@ -136,8 +136,8 @@ pub const PackageManagerCommand = struct {
     }
 
     pub fn exec(ctx: Command.Context) !void {
-        var args = try std.process.argsAlloc(ctx.allocator);
-        args = args[1..];
+        var args = bun.argv;
+        if (args.len > 0) args = args[1..];
 
         // Check if we're being invoked directly as "bun whoami" instead of "bun pm whoami"
         const is_direct_whoami = if (bun.argv.len > 1) strings.eqlComptime(bun.argv[1], "whoami") else false;
@@ -230,7 +230,7 @@ pub const PackageManagerCommand = struct {
 
             Output.flush();
             Output.disableBuffering();
-            try Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
+            Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
             Output.enableBuffering();
             Global.exit(0);
         } else if (strings.eqlComptime(subcommand, "hash-print")) {
@@ -239,7 +239,7 @@ pub const PackageManagerCommand = struct {
 
             Output.flush();
             Output.disableBuffering();
-            try Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
+            Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
             Output.enableBuffering();
             Global.exit(0);
         } else if (strings.eqlComptime(subcommand, "hash-string")) {
@@ -251,17 +251,19 @@ pub const PackageManagerCommand = struct {
         } else if (strings.eqlComptime(subcommand, "cache")) {
             var dir: bun.PathBuffer = undefined;
             var fd = pm.getCacheDirectory();
-            const outpath = bun.getFdPath(.fromStdDir(fd), &dir) catch |err| {
+            const outpath_slice = bun.getFdPath(.fromStdDir(fd.toDir()), &dir) catch |err| {
                 Output.prettyErrorln("{s} getting cache directory", .{@errorName(err)});
                 Global.crash();
             };
+            dir[outpath_slice.len] = 0;
+            const outpath = dir[0..outpath_slice.len :0];
 
             if (pm.options.positionals.len > 1 and strings.eqlComptime(pm.options.positionals[1], "rm")) {
                 fd.close();
 
                 var had_err = false;
 
-                std.fs.deleteTreeAbsolute(outpath) catch |err| {
+                bun.sys.unlink(outpath).unwrap() catch |err| {
                     Output.err(err, "Could not delete {s}", .{outpath});
                     had_err = true;
                 };
@@ -269,7 +271,7 @@ pub const PackageManagerCommand = struct {
 
                 bunx: {
                     const tmp = bun.fs.FileSystem.RealFS.platformTempDir();
-                    const tmp_dir = std.fs.openDirAbsolute(tmp, .{ .iterate = true }) catch |err| {
+                    const tmp_dir = bun.openDirAbsolute(tmp) catch |err| {
                         Output.err(err, "Could not open {s}", .{tmp});
                         had_err = true;
                         break :bunx;

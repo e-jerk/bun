@@ -373,7 +373,7 @@ const WasmImpl = struct {
 /// to Futex timedWait() can block for and report more accurate error.Timeouts.
 pub const Deadline = struct {
     timeout: ?u64,
-    started: std.time.Timer,
+    started: @import("std-fs-compat").Timer,
 
     /// Create the deadline to expire after the given amount of time in nanoseconds passes.
     /// Pass in `null` to have the deadline call `Futex.wait()` and never expire.
@@ -381,9 +381,9 @@ pub const Deadline = struct {
         var deadline: Deadline = undefined;
         deadline.timeout = expires_in_ns;
 
-        // std.time.Timer is required to be supported for somewhat accurate reportings of error.Timeout.
+        // @import("std-fs-compat").Timer is required to be supported for somewhat accurate reportings of error.Timeout.
         if (deadline.timeout != null) {
-            deadline.started = std.time.Timer.start() catch unreachable;
+            deadline.started = @import("std-fs-compat").Timer.start() catch unreachable;
         }
 
         return deadline;

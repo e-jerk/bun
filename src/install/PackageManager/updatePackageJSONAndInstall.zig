@@ -424,7 +424,7 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
         ).unwrap()).handle.stdFile();
 
         try workspace_package_json_file.pwriteAll(source, 0);
-        std.posix.ftruncate(workspace_package_json_file.handle, source.len) catch {};
+        _ = bun.sys.ftruncate(.fromStdFile(workspace_package_json_file), @intCast(source.len));
         workspace_package_json_file.close();
 
         if (subcommand == .remove) {
@@ -433,16 +433,14 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
                 return;
             }
 
-            var cwd = std.c.AT.FDCWD;
+            var cwd = std.fs.cwd();
             // This is not exactly correct
             var node_modules_buf: bun.PathBuffer = undefined;
             bun.copy(u8, &node_modules_buf, "node_modules" ++ std.fs.path.sep_str);
             const offset_buf = node_modules_buf["node_modules/".len..];
             const name_hashes = manager.lockfile.packages.items(.name_hash);
+
             for (updates.*) |request| {
-                // If the package no longer exists in the updated lockfile, delete the directory
-                // This is not thorough.
-                // It does not handle nested dependencies
                 // This is a quick & dirty cleanup intended for when deleting top-level dependencies
                 if (std.mem.indexOfScalar(PackageNameHash, name_hashes, String.Builder.stringHash(request.name)) == null) {
                     bun.copy(u8, offset_buf, request.name);
@@ -453,12 +451,12 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
             // This is where we clean dangling symlinks
             // This could be slow if there are a lot of symlinks
             if (bun.openDir(cwd, manager.options.bin_path)) |node_modules_bin_handle| {
-                var node_modules_bin: std.fs.Dir = node_modules_bin_handle;
+                var node_modules_bin = node_modules_bin_handle;
                 defer node_modules_bin.close();
-                var iter: std.fs.Dir.Iterator = node_modules_bin.iterate();
+                var iter = node_modules_bin.iterate();
                 iterator: while (iter.next() catch null) |entry| {
                     switch (entry.kind) {
-                        std.fs.Dir.Entry.Kind.sym_link => {
+                        .sym_link => {
 
                             // any symlinks which we are unable to open are assumed to be dangling
                             // note that using access won't work here, because access doesn't resolve symlinks
@@ -466,9 +464,12 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
                             node_modules_buf[entry.name.len] = 0;
                             const buf: [:0]u8 = node_modules_buf[0..entry.name.len :0];
 
-                            var file = node_modules_bin.openFileZ(buf, .{ .mode = .read_only }) catch {
-                                node_modules_bin.deleteFileZ(buf) catch {};
-                                continue :iterator;
+                            var file = switch (bun.sys.File.openat(bun.FD.fromSystem(node_modules_bin.fd), buf, bun.O.RDONLY, 0)) {
+                                .result => |f| f,
+                                .err => {
+                                    _ = bun.sys.unlinkat(bun.FD.fromSystem(node_modules_bin.fd), buf);
+                                    continue :iterator;
+                                },
                             };
 
                             file.close();
@@ -650,7 +651,7 @@ fn updatePackageJSONAndInstallAndCLI(
                                     // Regular quotes will do here.
                                     try writer.print("fish_add_path {f}", .{bun.fmt.quote(instructions.folder)});
                                 },
-                                .pwsh => {
+                                .powershell, .pwsh => {
                                     try writer.print("$env:PATH += \";{f}\"", .{path});
                                 },
                             }

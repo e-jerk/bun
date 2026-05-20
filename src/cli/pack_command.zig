@@ -228,7 +228,7 @@ const zust = @import("safe");
     const PackQueue = std.PriorityQueue(PackQueueItem, void, PackQueueContext.lessThan);
 
     const DirInfo = struct {
-        std.fs.Dir, // the dir
+        @import("std-fs-compat").FsDir, // the dir
         string, // the dir subpath
         usize, // dir depth. used to shrink ignore stack
     };
@@ -239,7 +239,7 @@ const zust = @import("safe");
         bins: []const BinInfo,
         includes: []const Pattern,
         excludes: []const Pattern,
-        root_dir: std.fs.Dir,
+        root_dir: @import("std-fs-compat").FsDir,
         log_level: LogLevel,
     ) OOM!void {
         if (comptime Environment.isDebug) {
@@ -271,7 +271,7 @@ const zust = @import("safe");
                 }
             }
 
-            var dir_iter = DirIterator.iterate(.fromStdDir(dir), .u8);
+            var dir_iter = DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
             next_entry: while (dir_iter.next().unwrap() catch null) |entry| {
                 if (entry.kind != .file and entry.kind != .directory) continue;
 
@@ -332,7 +332,7 @@ const zust = @import("safe");
                                 continue :next_entry;
                             }
                         }
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
                         try dirs.append(allocator, .{ subdir, entry_subpath, dir_depth + 1 });
                     }
 
@@ -346,7 +346,7 @@ const zust = @import("safe");
                                 continue :next_entry;
                             }
                         }
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
                         try included_dirs.append(allocator, .{ subdir, entry_subpath, dir_depth + 1 });
                     },
                     .file => {
@@ -441,7 +441,7 @@ const zust = @import("safe");
                 }
             }
 
-            var iter = DirIterator.iterate(.fromStdDir(dir), .u8);
+            var iter = DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
             next_entry: while (iter.next().unwrap() catch null) |entry| {
                 if (entry.kind != .file and entry.kind != .directory) continue;
 
@@ -484,7 +484,7 @@ const zust = @import("safe");
                             }
                         }
 
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
 
                         try dirs.append(allocator, .{
                             subdir,
@@ -499,17 +499,15 @@ const zust = @import("safe");
     }
 
     fn openSubdir(
-        dir: std.fs.Dir,
+        dir: @import("std-fs-compat").Dir,
         entry_name: string,
         entry_subpath: stringZ,
-    ) std.fs.Dir {
-        return dir.openDirZ(
-            entryNameZ(entry_name, entry_subpath),
-            .{ .iterate = true },
-        ) catch |err| {
+    ) @import("std-fs-compat").FsDir {
+        const opened = bun.openDirA(dir, entryNameZ(entry_name, entry_subpath)) catch |err| {
             Output.err(err, "failed to open directory \"{s}\" for packing", .{entry_subpath});
             Global.crash();
         };
+        return @import("std-fs-compat").FsDir{ .fd = opened.fd };
     }
 
     fn entrySubpath(
@@ -534,13 +532,13 @@ const zust = @import("safe");
 
     fn iterateBundledDeps(
         ctx: *Context,
-        root_dir: std.fs.Dir,
+        root_dir: @import("std-fs-compat").FsDir,
         log_level: LogLevel,
     ) OOM!PackQueue {
         var bundled_pack_queue = PackQueue.init(ctx.allocator, {});
         if (ctx.bundled_deps.items.len == 0) return bundled_pack_queue;
 
-        var dir = root_dir.openDirZ("node_modules", .{ .iterate = true }) catch |err| {
+        var dir = bun.openDirA(root_dir.toDir(), "node_modules") catch |err| {
             switch (err) {
                 // ignore node_modules if it isn't a directory, or doesn't exist
                 error.NotDir, error.FileNotFound => return bundled_pack_queue,
@@ -564,7 +562,7 @@ const zust = @import("safe");
         var additional_bundled_deps: std.ArrayListUnmanaged(DirInfo) = .empty;
         defer additional_bundled_deps.deinit(ctx.allocator);
 
-        var iter = DirIterator.iterate(.fromStdDir(dir), .u8);
+        var iter = DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
         while (iter.next().unwrap() catch null) |entry| {
             if (entry.kind != .directory) continue;
 
@@ -573,12 +571,12 @@ const zust = @import("safe");
             if (strings.startsWithChar(_entry_name, '@')) {
                 const concat = try entrySubpath(ctx.allocator, "node_modules", _entry_name);
 
-                var scoped_dir = root_dir.openDirZ(concat, .{ .iterate = true }) catch {
+                var scoped_dir = root_dir.openDir(concat, .{ .iterate = true }) catch {
                     continue;
                 };
                 defer scoped_dir.close();
 
-                var scoped_iter = DirIterator.iterate(.fromStdDir(scoped_dir), .u8);
+                var scoped_iter = DirIterator.iterate(bun.FD.fromSystem(scoped_dir.fd), .u8);
                 while (scoped_iter.next().unwrap() catch null) |sub_entry| {
                     const entry_name = try entrySubpath(ctx.allocator, _entry_name, sub_entry.name.slice());
 
@@ -670,7 +668,7 @@ const zust = @import("safe");
 
     fn addBundledDep(
         ctx: *Context,
-        root_dir: std.fs.Dir,
+        root_dir: @import("std-fs-compat").FsDir,
         bundled_dir_info: DirInfo,
         bundled_pack_queue: *PackQueue,
         dedupe: *bun.StringHashMap(void),
@@ -688,7 +686,7 @@ const zust = @import("safe");
             var dir, const dir_subpath, const dir_depth = dir_info;
             defer dir.close();
 
-            var iter = DirIterator.iterate(.fromStdDir(dir), .u8);
+            var iter = DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
             while (iter.next().unwrap() catch null) |entry| {
                 if (entry.kind != .file and entry.kind != .directory) continue;
 
@@ -730,7 +728,7 @@ const zust = @import("safe");
                                 // starting at `node_modules/is-even/node_modules/is-odd`
                                 var dep_dir_depth: usize = bundled_dir_info[2] + 2;
 
-                                if (root_dir.openDirZ(dep_subpath, .{ .iterate = true })) |dep_dir| {
+                                if (root_dir.openDir(dep_subpath, .{ .iterate = true })) |dep_dir| {
                                     const dedupe_entry = try dedupe.getOrPut(dep_subpath);
                                     if (dedupe_entry.found_existing) continue;
 
@@ -750,7 +748,7 @@ const zust = @import("safe");
                                         const parent_dep_subpath = dep_subpath[0 .. node_modules_end + 1 + dep_name.len :0];
                                         remain = remain[0..node_modules_start];
 
-                                        const parent_dep_dir = root_dir.openDirZ(parent_dep_subpath, .{ .iterate = true }) catch continue;
+                                        const parent_dep_dir = root_dir.openDir(parent_dep_subpath, .{ .iterate = true }) catch continue;
 
                                         const dedupe_entry = try dedupe.getOrPut(parent_dep_subpath);
                                         if (dedupe_entry.found_existing) continue :next_dep;
@@ -787,7 +785,7 @@ const zust = @import("safe");
                         try bundled_pack_queue.add(.{ .path = entry_subpath });
                     },
                     .directory => {
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
 
                         try dirs.append(ctx.allocator, .{
                             subdir,
@@ -848,7 +846,7 @@ const zust = @import("safe");
                 }
             }
 
-            var dir_iter = DirIterator.iterate(.fromStdDir(dir), .u8);
+            var dir_iter = DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
             next_entry: while (dir_iter.next().unwrap() catch null) |entry| {
                 if (entry.kind != .file and entry.kind != .directory) continue;
 
@@ -897,7 +895,7 @@ const zust = @import("safe");
                             }
                         }
 
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
 
                         try dirs.append(allocator, .{
                             subdir,
@@ -922,7 +920,7 @@ const zust = @import("safe");
         invalid_field: {
             switch (bundled_deps.data) {
                 .e_array => {
-                    var iter = bundled_deps.asArray() orelse return .{};
+                    var iter = bundled_deps.asArray() orelse return .empty;
 
                     while (iter.next()) |bundled_dep_item| {
                         const bundled_dep = try bundled_dep_item.asStringCloned(allocator) orelse break :invalid_field;
@@ -933,8 +931,8 @@ const zust = @import("safe");
                     }
                 },
                 .e_boolean => {
-                    const b = bundled_deps.asBool() orelse return .{};
-                    if (!b == true) return .{};
+                    const b = bundled_deps.asBool() orelse return .empty;
+                    if (!b == true) return .empty;
 
                     if (json.get("dependencies")) |dependencies_expr| {
                         switch (dependencies_expr.data) {
@@ -1314,6 +1312,10 @@ const zust = @import("safe");
                                 Global.crash();
                             },
                             error.OutOfMemory => |oom| return oom,
+                            error.Unimplemented => {
+                                Output.errGeneric("runPackageScriptForeground not implemented", .{});
+                                Global.crash();
+                            },
                         }
                     };
                 }
@@ -1339,6 +1341,10 @@ const zust = @import("safe");
                                 Global.crash();
                             },
                             error.OutOfMemory => |oom| return oom,
+                            error.Unimplemented => {
+                                Output.errGeneric("runPackageScriptForeground not implemented", .{});
+                                Global.crash();
+                            },
                         }
                     };
                 }
@@ -1424,9 +1430,7 @@ const zust = @import("safe");
             var path_buf: PathBuffer = undefined;
             @memcpy(path_buf[0..abs_workspace_path.len], abs_workspace_path);
             path_buf[abs_workspace_path.len] = 0;
-            break :root_dir std.fs.openDirAbsoluteZ(path_buf[0..abs_workspace_path.len :0], .{
-                .iterate = true,
-            }) catch |err| {
+            break :root_dir bun.openDirAbsolute(path_buf[0..abs_workspace_path.len :0]) catch |err| {
                 Output.err(err, "failed to open root directory: {s}\n", .{abs_workspace_path});
                 Global.crash();
             };
@@ -1443,9 +1447,9 @@ const zust = @import("safe");
 
         ctx.bundled_deps = try getBundledDeps(ctx.allocator, json.root, "bundledDependencies") orelse
             try getBundledDeps(ctx.allocator, json.root, "bundleDependencies") orelse
-            .{};
+            .empty;
 
-        var pack_queue: PackQueue = .init(ctx.allocator, {});
+        var pack_queue = PackQueue.init(ctx.allocator, {});
         defer pack_queue.deinit();
 
         const bins = try getPackageBins(ctx.allocator, json.root);
@@ -1462,7 +1466,7 @@ const zust = @import("safe");
                         continue;
                     };
 
-                    try iterateProjectTree(ctx.allocator, &pack_queue, &.{}, .{ bin_dir, bin.path, 2 }, log_level);
+                    try iterateProjectTree(ctx.allocator, &pack_queue, &.{}, .{ @import("std-fs-compat").FsDir{ .fd = bin_dir.fd }, bin.path, 2 }, log_level);
                 },
             }
         }
@@ -1503,7 +1507,7 @@ const zust = @import("safe");
                             bins,
                             includes.items,
                             excludes.items,
-                            root_dir,
+                            @import("std-fs-compat").FsDir{ .fd = root_dir.fd },
                             log_level,
                         );
                         break :iterate_project_tree;
@@ -1518,13 +1522,13 @@ const zust = @import("safe");
                     ctx.allocator,
                     &pack_queue,
                     bins,
-                    .{ root_dir, "", 1 },
+                    .{ @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, "", 1 },
                     log_level,
                 );
             }
         }
 
-        var bundled_pack_queue = try iterateBundledDeps(ctx, root_dir, log_level);
+        var bundled_pack_queue = try iterateBundledDeps(ctx, @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, log_level);
         defer bundled_pack_queue.deinit();
 
         // +1 for package.json
@@ -1533,7 +1537,7 @@ const zust = @import("safe");
         if (manager.options.dry_run) {
             // don't create the tarball, but run scripts if they exists
 
-            printArchivedFilesAndPackages(ctx, root_dir, true, &pack_queue, 0);
+            printArchivedFilesAndPackages(ctx, @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, true, &pack_queue, 0);
 
             if (comptime !for_publish) {
                 if (manager.options.pack_destination.len == 0 and manager.options.pack_filename.len == 0) {
@@ -1572,6 +1576,10 @@ const zust = @import("safe");
                             Global.crash();
                         },
                         error.OutOfMemory => |oom| return oom,
+                        error.Unimplemented => {
+                            Output.errGeneric("runPackageScriptForeground not implemented", .{});
+                            Global.crash();
+                        },
                     }
                 };
             }
@@ -1609,7 +1617,7 @@ const zust = @import("safe");
 
         var print_buf = std.array_list.Managed(u8).init(ctx.allocator);
         defer print_buf.deinit();
-        const print_buf_writer = print_buf.writer();
+        const print_buf_writer = @import("std-io-compat").allocatingWriterFromArrayList(ctx.allocator, &print_buf);
 
         var archive = Archive.writeNew();
 
@@ -1672,7 +1680,7 @@ const zust = @import("safe");
             const most_likely_a_slash = dest_buf[abs_tarball_dest_dir_end];
             dest_buf[abs_tarball_dest_dir_end] = 0;
             const abs_tarball_dest_dir = dest_buf[0..abs_tarball_dest_dir_end :0];
-            bun.makePath(std.c.AT.FDCWD, abs_tarball_dest_dir) catch {};
+            bun.makePath(std.fs.cwd(), abs_tarball_dest_dir) catch {};
             dest_buf[abs_tarball_dest_dir_end] = most_likely_a_slash;
         }
 
@@ -1686,13 +1694,13 @@ const zust = @import("safe");
         }
 
         // append removed items from `pack_queue` with their file size
-        var pack_list: PackList = .{};
+        var pack_list: PackList = .empty;
         defer pack_list.deinit(ctx.allocator);
 
         var read_buf: [8192]u8 = undefined;
         const file_reader = try zust.Box(BufferedFileReader).init(ctx.allocator, undefined);
         defer _ = file_reader.deinit();
-        file_reader.* = .{
+        file_reader.ptr.* = .{
             .unbuffered_reader = undefined,
             .buf = undefined,
         };
@@ -1710,7 +1718,7 @@ const zust = @import("safe");
             }
             defer if (log_level.showProgress()) node.end();
 
-            entry = try archivePackageJSON(ctx, archive, entry, root_dir, edited_package_json);
+            entry = try archivePackageJSON(ctx, archive, entry, @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, edited_package_json);
             if (log_level.showProgress()) node.completeOne();
 
             while (pack_queue.removeOrNull()) |item| {
@@ -1745,7 +1753,7 @@ const zust = @import("safe");
                     stat,
                     item.path,
                     &read_buf,
-                    file_reader,
+                    file_reader.ptr,
                     archive,
                     entry,
                     &print_buf,
@@ -1776,7 +1784,7 @@ const zust = @import("safe");
                     stat,
                     item.path,
                     &read_buf,
-                    file_reader,
+                    file_reader.ptr,
                     archive,
                     entry,
                     &print_buf,
@@ -1836,13 +1844,13 @@ const zust = @import("safe");
                 break :tarball_bytes tarball_bytes;
             }
 
-            file_reader.* = .{
+        file_reader.ptr.* = .{
                 .unbuffered_reader = tarball_file.reader(),
                 .buf = undefined,
             };
 
             var size: usize = 0;
-            var read = file_reader.read(&read_buf) catch |err| {
+            var read = file_reader.ptr.read(&read_buf) catch |err| {
                 Output.err(err, "failed to read tarball: \"{s}\"", .{abs_tarball_dest});
                 Global.crash();
             };
@@ -1850,7 +1858,7 @@ const zust = @import("safe");
                 sha1.update(read_buf[0..read]);
                 sha512.update(read_buf[0..read]);
                 size += read;
-                read = file_reader.read(&read_buf) catch |err| {
+                read = file_reader.ptr.read(&read_buf) catch |err| {
                     Output.err(err, "failed to read tarball: \"{s}\"", .{abs_tarball_dest});
                     Global.crash();
                 };
@@ -1877,7 +1885,7 @@ const zust = @import("safe");
 
         printArchivedFilesAndPackages(
             ctx,
-            root_dir,
+            @import("std-fs-compat").FsDir{ .fd = root_dir.fd },
             false,
             pack_list,
             edited_package_json.len,
@@ -1916,6 +1924,10 @@ const zust = @import("safe");
                         Global.crash();
                     },
                     error.OutOfMemory => |oom| return oom,
+                    error.Unimplemented => {
+                        Output.errGeneric("runPackageScriptForeground not implemented", .{});
+                        Global.crash();
+                    },
                 }
             };
         }
@@ -2045,10 +2057,10 @@ const zust = @import("safe");
         ctx: *Context,
         archive: *Archive,
         entry: *Archive.Entry,
-        root_dir: std.fs.Dir,
+        root_dir: @import("std-fs-compat").FsDir,
         edited_package_json: string,
     ) OOM!*Archive.Entry {
-        const stat = bun.sys.fstatat(.fromStdDir(root_dir), "package.json").unwrap() catch |err| {
+        const stat = bun.sys.fstatat(bun.FD.fromSystem(root_dir.fd), "package.json").unwrap() catch |err| {
             Output.err(err, "failed to stat package.json", .{});
             Global.crash();
         };
@@ -2087,7 +2099,7 @@ const zust = @import("safe");
         print_buf: *std.array_list.Managed(u8),
         bins: []const BinInfo,
     ) OOM!*Archive.Entry {
-        const print_buf_writer = print_buf.writer();
+        const print_buf_writer = @import("std-io-compat").allocatingWriterFromArrayList(print_buf.allocator, print_buf);
 
         try print_buf_writer.print("{s}{s}\x00", .{ package_prefix, filename });
         const pathname = print_buf.items[0 .. package_prefix.len + filename.len :0];
@@ -2431,9 +2443,9 @@ const zust = @import("safe");
 
         pub const List = std.ArrayListUnmanaged(IgnorePatterns);
 
-        fn ignoreFileFail(dir: std.fs.Dir, ignore_kind: Kind, reason: enum { read, open }, err: anyerror) noreturn {
+        fn ignoreFileFail(dir: @import("std-fs-compat").FsDir, ignore_kind: Kind, reason: enum { read, open }, err: anyerror) noreturn {
             var buf: PathBuffer = undefined;
-            const dir_path = bun.getFdPath(.fromStdDir(dir), &buf) catch "";
+            const dir_path = bun.getFdPath(bun.FD.fromSystem(dir.fd), &buf) catch "";
             Output.err(err, "failed to {s} {s} at: \"{s}{s}{s}\"", .{
                 @tagName(reason),
                 @tagName(ignore_kind),
@@ -2456,7 +2468,7 @@ const zust = @import("safe");
         }
 
         // ignore files are always ignored, don't need to worry about opening or reading twice
-        pub fn readFromDisk(allocator: std.mem.Allocator, dir: std.fs.Dir, dir_depth: usize) OOM!?IgnorePatterns {
+        pub fn readFromDisk(allocator: std.mem.Allocator, dir: @import("std-fs-compat").FsDir, dir_depth: usize) OOM!?IgnorePatterns {
             var patterns: std.ArrayListUnmanaged(Pattern) = .empty;
             errdefer patterns.deinit(allocator);
 
@@ -2530,12 +2542,12 @@ const zust = @import("safe");
 
     fn printArchivedFilesAndPackages(
         ctx: *Context,
-        root_dir_std: std.fs.Dir,
+        root_dir_std: @import("std-fs-compat").FsDir,
         comptime is_dry_run: bool,
         pack_list: if (is_dry_run) *PackQueue else PackList,
         package_json_len: usize,
     ) void {
-        const root_dir = bun.FD.fromStdDir(root_dir_std);
+        const root_dir = bun.FD.fromSystem(root_dir_std.fd);
         if (ctx.manager.options.log_level == .silent or ctx.manager.options.log_level == .quiet) return;
         const packed_fmt = "<r><b><cyan>packed<r> {f} {s}";
 
@@ -2649,8 +2661,9 @@ pub const bindings = struct {
         const tarball_path = tarball_path_str.toUTF8(bun.default_allocator);
         defer tarball_path.deinit();
 
-        const tarball_file = File.from(std.c.AT.FDCWD.openFile(tarball_path.slice(), .{}) catch |err| {
-            return global.throw("failed to open tarball file \"{s}\": {s}", .{ tarball_path.slice(), @errorName(err) });
+        const tarball_file = File.from(switch (bun.sys.openA(tarball_path.slice(), bun.O.RDONLY, 0)) {
+            .result => |fd| fd,
+            .err => |err| return global.throw("failed to open tarball file \"{s}\": {s}", .{ tarball_path.slice(), err.toSystemError().message.toUTF8(bun.default_allocator).slice() }),
         });
         defer tarball_file.close();
 

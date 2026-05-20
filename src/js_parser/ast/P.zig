@@ -160,15 +160,15 @@ pub fn NewParser_(
         fn_or_arrow_data_parse: FnOrArrowDataParse = FnOrArrowDataParse{},
         fn_or_arrow_data_visit: FnOrArrowDataVisit = FnOrArrowDataVisit{},
         fn_only_data_visit: FnOnlyDataVisit = FnOnlyDataVisit{},
-        allocated_names: List(string) = .{},
+        allocated_names: List(string) = .empty,
         // allocated_names: ListManaged(string) = ListManaged(string).init(bun.default_allocator),
         // allocated_names_pool: ?*AllocatedNamesPool.Node = null,
         latest_arrow_arg_loc: logger.Loc = logger.Loc.Empty,
         forbid_suffix_after_as_loc: logger.Loc = logger.Loc.Empty,
         current_scope: *js_ast.Scope = undefined,
-        scopes_for_current_part: List(*js_ast.Scope) = .{},
+        scopes_for_current_part: List(*js_ast.Scope) = .empty,
         symbols: ListManaged(js_ast.Symbol) = undefined,
-        ts_use_counts: List(u32) = .{},
+        ts_use_counts: List(u32) = .empty,
         exports_ref: Ref = Ref.None,
         require_ref: Ref = Ref.None,
         module_ref: Ref = Ref.None,
@@ -176,55 +176,9 @@ pub fn NewParser_(
         dirname_ref: Ref = Ref.None,
         import_meta_ref: Ref = Ref.None,
         hmr_api_ref: Ref = Ref.None,
-
-        /// If bake is enabled and this is a server-side file, we want to use
-        /// special `Response` class inside the `bun:app` built-in module to
-        /// support syntax like `return Response(<jsx />, {...})` or `return Response.render("/my-page")`
-        /// or `return Response.redirect("/other")`.
-        ///
-        /// So we'll need to add a `import { Response } from 'bun:app'` to the
-        /// top of the file
-        ///
-        /// We need to declare this `response_ref` upfront
-        response_ref: Ref = Ref.None,
-        /// We also need to declare the namespace ref for `bun:app` and attach
-        /// it to the symbol so the code generated `e_import_identifier`'s
-        bun_app_namespace_ref: Ref = Ref.None,
-
-        /// Used to track the `feature` function from `import { feature } from "bun:bundle"`.
-        /// When visiting e_call, if the target ref matches this, we replace the call with
-        /// a boolean based on whether the feature flag is enabled.
         bundler_feature_flag_ref: Ref = Ref.None,
-        /// Set to true when visiting an if/ternary condition. feature() calls are only valid in this context.
-        in_branch_condition: bool = false,
-
-        scopes_in_order_visitor_index: usize = 0,
-        has_classic_runtime_warned: bool = false,
-        macro_call_count: MacroCallCountType = 0,
-
-        hoisted_ref_for_sloppy_mode_block_fn: RefRefMap = .{},
-
-        /// Used for transforming export default -> module.exports
-        has_export_default: bool = false,
-        has_export_keyword: bool = false,
-
-        // Used for forcing CommonJS
-        has_with_scope: bool = false,
-
-        is_file_considered_to_have_esm_exports: bool = false,
-
-        has_called_runtime: bool = false,
-
-        legacy_cjs_import_stmts: std.array_list.Managed(Stmt),
-
-        injected_define_symbols: List(Ref) = .{},
-        symbol_uses: SymbolUseMap = .{},
-        declared_symbols: DeclaredSymbol.List = .{},
-        declared_symbols_for_reuse: DeclaredSymbol.List = .{},
-        runtime_imports: RuntimeImports = RuntimeImports{},
-
-        /// Used with unwrap_commonjs_packages
-        imports_to_convert_from_require: List(DeferredImportNamespace) = .{},
+        injected_define_symbols: List(Ref) = .empty,
+        imports_to_convert_from_require: List(DeferredImportNamespace) = .empty,
         unwrap_all_requires: bool = false,
 
         commonjs_named_exports: js_ast.Ast.CommonJSNamedExports = .{},
@@ -238,6 +192,17 @@ pub fn NewParser_(
 
         /// Used by commonjs_at_runtime
         has_commonjs_export_names: bool = false,
+        has_called_runtime: bool = false,
+        legacy_cjs_import_stmts: std.array_list.Managed(Stmt),
+        declared_symbols: DeclaredSymbol.List = .{},
+        declared_symbols_for_reuse: DeclaredSymbol.List = .{},
+        runtime_imports: RuntimeImports = RuntimeImports{},
+        response_ref: Ref = Ref.None,
+        bun_app_namespace_ref: Ref = Ref.None,
+        has_classic_runtime_warned: bool = false,
+        macro_call_count: MacroCallCountType = 0,
+        has_export_default: bool = false,
+        in_branch_condition: bool = false,
 
         stack_check: bun.StackCheck,
 
@@ -272,9 +237,12 @@ pub fn NewParser_(
         /// This flag is also set globally when minify_syntax is enabled, in which this means
         /// we always fold constant expressions.
         should_fold_typescript_constant_expressions: bool = false,
+        has_with_scope: bool = false,
+        is_file_considered_to_have_esm_exports: bool = false,
 
         emitted_namespace_vars: RefMap = RefMap{},
         is_exported_inside_namespace: RefRefMap = .{},
+        hoisted_ref_for_sloppy_mode_block_fn: RefRefMap = .{},
         local_type_names: StringBoolMap = StringBoolMap{},
 
         // This is the reference to the generated function argument for the namespace,
@@ -292,6 +260,7 @@ pub fn NewParser_(
         // This variable is "ns2" not "ns1". It is only used during the second
         // "visit" pass.
         enclosing_namespace_arg_ref: ?Ref = null,
+        symbol_uses: SymbolUseMap = .{},
 
         jsx_imports: JSXImport.Symbols = .{},
 
@@ -307,8 +276,8 @@ pub fn NewParser_(
 
         // Imports (both ES6 and CommonJS) are tracked at the top level
         import_records: ImportRecordList,
-        import_records_for_current_part: List(u32) = .{},
-        export_star_import_records: List(u32) = .{},
+        import_records_for_current_part: List(u32) = .empty,
+        export_star_import_records: List(u32) = .empty,
         import_symbol_property_uses: SymbolPropertyUseMap = .{},
 
         // These are for handling ES6 imports and exports
@@ -343,7 +312,7 @@ pub fn NewParser_(
         // symbols must be separate from the pass that binds identifiers to declared
         // symbols to handle declaring a hoisted "var" symbol in a nested scope and
         // binding a name to it in a parent or sibling scope.
-        scopes_in_order: ScopeOrderList = .{},
+        scopes_in_order: ScopeOrderList = .empty,
         scope_order_to_visit: []ScopeOrder = &.{},
 
         // These properties are for the visit pass, which runs after the parse pass.
@@ -431,7 +400,7 @@ pub fn NewParser_(
         then_catch_chain: ThenCatchChain,
 
         // Temporary variables used for lowering
-        temp_refs_to_declare: List(TempRef) = .{},
+        temp_refs_to_declare: List(TempRef) = .empty,
         temp_ref_count: i32 = 0,
 
         // When bundling, hoisted top-level local variables declared with "var" in
@@ -439,7 +408,7 @@ pub fn NewParser_(
         // The old "var" statements are turned into regular assignments instead. This
         // makes it easier to quickly scan the top-level statements for "var" locals
         // with the guarantee that all will be found.
-        relocated_top_level_vars: List(js_ast.LocRef) = .{},
+        relocated_top_level_vars: List(js_ast.LocRef) = .empty,
 
         // ArrowFunction is a special case in the grammar. Although it appears to be
         // a PrimaryExpression, it's actually an AssignmentExpression. This means if
@@ -484,7 +453,7 @@ pub fn NewParser_(
         ts_namespace: RecentlyVisitedTSNamespace = .{},
         top_level_enums: std.ArrayListUnmanaged(Ref) = .empty,
 
-        scopes_in_order_for_enum: std.array_hash_map.Auto(logger.Loc, []ScopeOrder) = .{},
+        scopes_in_order_for_enum: std.array_hash_map.AutoArrayHashMapUnmanaged(logger.Loc, []ScopeOrder) = .{},
 
         // If this is true, then all top-level statements are wrapped in a try/catch
         will_wrap_module_in_try_catch_for_using: bool = false,
@@ -2452,13 +2421,13 @@ pub fn NewParser_(
         pub fn pushScopeForParsePass(noalias p: *P, comptime kind: js_ast.Scope.Kind, loc: logger.Loc) !usize {
             var parent: *Scope = p.current_scope;
             const allocator = p.allocator;
-            var scope = try zust.Box(Scope).init(allocator, undefined);
+            var scope = (try zust.Box(Scope).init(allocator, undefined)).ptr;
 
             scope.* = Scope{
                 .kind = kind,
                 .label_ref = null,
                 .parent = parent,
-                .generated = .{},
+                .generated = .empty,
             };
 
             try parent.children.append(allocator, scope);
@@ -3190,8 +3159,8 @@ pub fn NewParser_(
                 scope: js_ast.TSNamespaceScope,
             };
 
-            var pair = bun.handleOom(zust.Box(Pair).init(p.allocator, undefined));
-            pair.map = .{};
+            var pair = bun.handleOom(zust.Box(Pair).init(p.allocator, undefined)).ptr;
+            pair.map = .empty;
             pair.scope = .{
                 .exported_members = &pair.map,
                 .is_enum_scope = is_enum_scope,
@@ -6756,11 +6725,11 @@ pub fn NewParser_(
             this: *P,
         ) anyerror!void {
             var scope_order = try ScopeOrderList.initCapacity(allocator, 1);
-            const scope = try zust.Box(Scope).init(allocator, undefined);
+            const scope = (try zust.Box(Scope).init(allocator, undefined)).ptr;
             scope.* = Scope{
-                .members = .{},
-                .children = .{},
-                .generated = .{},
+                .members = .empty,
+                .children = .empty,
+                .generated = .empty,
                 .kind = .entry,
                 .label_ref = null,
                 .parent = null,

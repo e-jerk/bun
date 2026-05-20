@@ -199,7 +199,7 @@ pub const AnsiRenderer = struct {
 
     pub fn init(allocator: Allocator, src_text: []const u8, theme: Theme) AnsiRenderer {
         var r: AnsiRenderer = .{
-            .out = .{ .list = .{}, .allocator = allocator, .oom = false },
+            .out = .{ .list = .empty, .allocator = allocator, .oom = false },
             .allocator = allocator,
             .src_text = src_text,
             .theme = theme,
@@ -1604,7 +1604,7 @@ pub const AnsiRenderer = struct {
             for (segments) |*s| s.deinit(self.allocator);
             self.allocator.free(segments);
         }
-        @memset(segments, .{});
+        @memset(segments, .empty);
 
         // Per-cell ANSI state snapshotted at the START of each segment.
         // `state_at[col][line]` is the SGR/OSC 8 state that was active
@@ -1619,7 +1619,7 @@ pub const AnsiRenderer = struct {
             for (state_at) |*s| s.deinit(self.allocator);
             self.allocator.free(state_at);
         }
-        @memset(state_at, .{});
+        @memset(state_at, .empty);
 
         var lines: usize = 1;
         for (widths, 0..) |w, i| {

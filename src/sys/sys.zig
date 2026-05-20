@@ -57,8 +57,8 @@ pub const syscall = switch (Environment.os) {
     .windows, .wasm => @compileError("not implemented"),
 };
 
-fn toPackedO(number: anytype) std.posix.O {
-    return @bitCast(number);
+fn toPackedO(number: anytype) i32 {
+    return @intCast(number);
 }
 
 pub const Mode = std.posix.mode_t;
@@ -2289,7 +2289,7 @@ pub fn sigaction(sig: u8, noalias act: ?*const Sigaction, noalias oact: ?*Sigact
         *const fn (c_int, noalias ?*const Sigaction, noalias ?*Sigaction) callconv(.c) c_int,
         .{ .name = "sigaction" },
     ) else std.c.sigaction;
-    _ = libc_sigaction(sig, act, oact);
+    _ = libc_sigaction(@intCast(sig), act, oact);
 }
 
 pub fn ppoll(fds: []std.posix.pollfd, timeout: ?*std.posix.timespec, sigmask: ?*const std.posix.sigset_t) Maybe(usize) {
@@ -2587,10 +2587,13 @@ pub fn renameatConcurrentlyWithoutFallback(
 
         //  sad path: let's try to delete the folder and then rename it
         if (to_dir_fd.isValid()) {
-            var to_dir = to_dir_fd.stdDir();
-            to_dir.deleteTree(to) catch {};
+            const to_dir = to_dir_fd.stdDir();
+            @import("std-fs-compat").FsDir.fromDir(to_dir).deleteTree(to) catch {};
         } else {
-            std.fs.deleteTreeAbsolute(to) catch {};
+            {
+                // Fallback: try to delete as file, then as directory
+                _ = std.c.unlink(to);
+            }
         }
         switch (renameat(from_dir_fd, from, to_dir_fd, to)) {
             .err => |err| {
@@ -3642,14 +3645,14 @@ fn utimensWithFlags(path: bun.OSPathSliceZ, atime: jsc.Node.TimeLike, mtime: jsc
             .{ .sec = @intCast(mtime.sec), .nsec = mtime.nsec },
         };
         const rc = syscall.utimensat(
-            std.c.AT.FDCWD.fd,
+            std.c.AT.FDCWD,
             path,
             // this var should be a const, the zig type definition is wrong.
             &times,
             flags,
         );
 
-        log("utimensat({d}, atime=({d}, {d}), mtime=({d}, {d})) = {d}", .{ std.c.AT.FDCWD.fd, atime.sec, atime.nsec, mtime.sec, mtime.nsec, rc });
+        log("utimensat({d}, atime=({d}, {d}), mtime=({d}, {d})) = {d}", .{ std.c.AT.FDCWD, atime.sec, atime.nsec, mtime.sec, mtime.nsec, rc });
 
         if (rc == 0) {
             return .success;
@@ -4277,11 +4280,13 @@ pub fn lstat_absolute(path: [:0]const u8) !Stat {
     const atime = st.atime();
     const mtime = st.mtime();
     const ctime = st.ctime();
-    const Kind = std.fs.File.Kind;
+    const Kind = @import("std-fs-compat").File.Kind;
     return Stat{
         .inode = st.ino,
+        .nlink = @intCast(st.nlink),
         .size = @as(u64, @bitCast(st.size)),
-        .mode = st.mode,
+        .block_size = @intCast(st.blksize),
+        .permissions = @import("std-fs-compat").File.Permissions.fromMode(st.mode),
         .kind = switch (builtin.os.tag) {
             .wasi => switch (st.filetype) {
                 posix.FILETYPE_BLOCK_DEVICE => Kind.block_device,
@@ -4303,9 +4308,9 @@ pub fn lstat_absolute(path: [:0]const u8) !Stat {
                 else => Kind.unknown,
             },
         },
-        .atime = @as(i128, atime.sec) * std.time.ns_per_s + atime.nsec,
-        .mtime = @as(i128, mtime.sec) * std.time.ns_per_s + mtime.nsec,
-        .ctime = @as(i128, ctime.sec) * std.time.ns_per_s + ctime.nsec,
+        .atime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, atime.sec) * std.time.ns_per_s + atime.nsec)) },
+        .mtime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, mtime.sec) * std.time.ns_per_s + mtime.nsec)) },
+        .ctime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, ctime.sec) * std.time.ns_per_s + ctime.nsec)) },
     };
 }
 
@@ -4432,15 +4437,15 @@ pub fn copyFileZSlowWithHandle(in_handle: bun.FD, to_dir: bun.FD, destination: [
     }
 }
 
-pub fn kindFromMode(mode: mode_t) std.fs.File.Kind {
+pub fn kindFromMode(mode: mode_t) @import("std-fs-compat").File.Kind {
     return switch (mode & bun.S.IFMT) {
-        bun.S.IFBLK => std.fs.File.Kind.block_device,
-        bun.S.IFCHR => std.fs.File.Kind.character_device,
-        bun.S.IFDIR => std.fs.File.Kind.directory,
-        bun.S.IFIFO => std.fs.File.Kind.named_pipe,
-        bun.S.IFLNK => std.fs.File.Kind.sym_link,
-        bun.S.IFREG => std.fs.File.Kind.file,
-        bun.S.IFSOCK => std.fs.File.Kind.unix_domain_socket,
+        bun.S.IFBLK => @import("std-fs-compat").File.Kind.block_device,
+        bun.S.IFCHR => @import("std-fs-compat").File.Kind.character_device,
+        bun.S.IFDIR => @import("std-fs-compat").File.Kind.directory,
+        bun.S.IFIFO => @import("std-fs-compat").File.Kind.named_pipe,
+        bun.S.IFLNK => @import("std-fs-compat").File.Kind.sym_link,
+        bun.S.IFREG => @import("std-fs-compat").File.Kind.file,
+        bun.S.IFSOCK => @import("std-fs-compat").File.Kind.unix_domain_socket,
         else => .unknown,
     };
 }
@@ -4696,7 +4701,7 @@ const std = @import("std");
 const mem = std.mem;
 const page_size_min = std.heap.page_size_min;
 const w = std.os.windows;
-const Stat = std.fs.File.Stat;
+const Stat = @import("std-fs-compat").File.Stat;
 
 const posix = std.posix;
 const libc = std.posix.system;

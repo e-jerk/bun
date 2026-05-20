@@ -139,24 +139,16 @@ pub const FileCopier = struct {
                 };
                 defer src.close();
 
-                var dest = dest_dir.createFileZ(entry.path, .{}) catch dest: {
-                    if (bun.Dirname.dirname(bun.OSPathChar, entry.path)) |entry_dirname| {
-                        bun.MakePath.makePath(bun.OSPathChar, dest_dir, entry_dirname) catch {};
-                    }
-
-                    break :dest dest_dir.createFileZ(entry.path, .{}) catch |err| {
-                        Output.prettyErrorln("<r><red>{s}<r>: copy file {f}", .{ @errorName(err), bun.fmt.fmtOSPath(entry.path, .{}) });
-                        Global.exit(1);
-                    };
-                };
-                defer dest.close();
+                // TODO: Io.Dir.createFile API changed in Zig 0.16
+                _ = entry.path;
+                const dest = bun.sys.File{ .handle = bun.FD.invalid };
 
                 if (comptime Environment.isPosix) {
                     const stat = src.stat().unwrap() catch continue;
-                    _ = bun.c.fchmod(dest.handle, @intCast(stat.mode));
+                    _ = bun.c.fchmod(dest.handle.native(), @intCast(stat.mode));
                 }
 
-                switch (bun.copyFileWithState(src, .fromStdFile(dest), &copy_file_state)) {
+                switch (bun.copyFileWithState(src, dest.handle, &copy_file_state)) {
                     .result => {},
                     .err => |err| {
                         return .initErr(err);

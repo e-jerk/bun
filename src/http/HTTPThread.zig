@@ -11,7 +11,7 @@ const SslContextCacheEntry = struct {
 };
 const ssl_context_cache_max_size = 60;
 const ssl_context_cache_ttl_ns = 30 * std.time.ns_per_min;
-var custom_ssl_context_map = std.array_hash_map.Auto(*SSLConfig, SslContextCacheEntry).init(bun.default_allocator);
+var custom_ssl_context_map = @import("array-hash-map-compat").Auto(*SSLConfig, SslContextCacheEntry).init(bun.default_allocator);
 
 loop: *jsc.MiniEventLoop,
 http_context: NewHTTPContext(false),
@@ -31,18 +31,18 @@ deferred_tasks: std.ArrayListUnmanaged(*AsyncHTTP) = .empty,
 /// path stays O(1). Owned by the HTTP thread.
 has_pending_queued_abort: bool = false,
 
-queued_shutdowns: std.ArrayListUnmanaged(ShutdownMessage) = std.ArrayListUnmanaged(ShutdownMessage){},
-queued_writes: std.ArrayListUnmanaged(WriteMessage) = std.ArrayListUnmanaged(WriteMessage){},
-queued_response_body_drains: std.ArrayListUnmanaged(DrainMessage) = std.ArrayListUnmanaged(DrainMessage){},
+queued_shutdowns: std.ArrayListUnmanaged(ShutdownMessage) = std.ArrayListUnmanaged(ShutdownMessage).empty,
+queued_writes: std.ArrayListUnmanaged(WriteMessage) = std.ArrayListUnmanaged(WriteMessage).empty,
+queued_response_body_drains: std.ArrayListUnmanaged(DrainMessage) = std.ArrayListUnmanaged(DrainMessage).empty,
 
 queued_shutdowns_lock: bun.Mutex = .{},
 queued_writes_lock: bun.Mutex = .{},
 queued_response_body_drains_lock: bun.Mutex = .{},
 
-queued_threadlocal_proxy_derefs: std.ArrayListUnmanaged(*ProxyTunnel) = std.ArrayListUnmanaged(*ProxyTunnel){},
+queued_threadlocal_proxy_derefs: std.ArrayListUnmanaged(*ProxyTunnel) = std.ArrayListUnmanaged(*ProxyTunnel).empty,
 
 has_awoken: std.atomic.Value(bool) = std.atomic.Value(bool).init(false),
-timer: std.time.Timer,
+timer: @import("std-fs-compat").Timer,
 lazy_libdeflater: ?*LibdeflateState = null,
 lazy_request_body_buffer: ?*HeapRequestBodyBuffer = null,
 
@@ -202,7 +202,7 @@ fn initOnce(opts: *const InitOpts) void {
             .ref_count = .init(),
             .pending_sockets = NewHTTPContext(true).PooledSocketHiveAllocator.empty,
         },
-        .timer = std.time.Timer.start() catch unreachable,
+        .timer = @import("std-fs-compat").Timer.start() catch unreachable,
     };
     bun.libdeflate.load();
     const thread = std.Thread.spawn(
@@ -280,13 +280,13 @@ pub fn connect(this: *@This(), client: *HTTPClient, comptime is_ssl: bool) !?New
             }
 
             // Cache miss - create new SSL context
-            var custom_context = try try zust.Box(NewHTTPContext(is_ssl).init(bun.default_allocator, undefined));
-            custom_context.* = .{
+            var custom_context = bun.handleOom(zust.Box(NewHTTPContext(is_ssl)).init(bun.default_allocator, undefined));
+            custom_context.ptr.* = .{
                 .ref_count = .init(),
                 .pending_sockets = NewHTTPContext(is_ssl).PooledSocketHiveAllocator.empty,
             };
-            custom_context.initWithClientConfig(client) catch |err| {
-                _ = custom_context.deinit();
+            custom_context.ptr.initWithClientConfig(client) catch |err| {
+                bun.default_allocator.destroy(custom_context.ptr);
 
                 return switch (err) {
                     error.FailedToOpenSocket => |e| e,
@@ -298,7 +298,7 @@ pub fn connect(this: *@This(), client: *HTTPClient, comptime is_ssl: bool) !?New
 
             const now = this.timer.read();
             bun.handleOom(custom_ssl_context_map.put(requested_config, .{
-                .ctx = custom_context,
+                .ctx = custom_context.ptr,
                 .last_used_ns = now,
                 // Clone a strong ref for the cache entry; client.tls_props keeps its own.
                 .config_ref = tls.clone(),
@@ -309,15 +309,15 @@ pub fn connect(this: *@This(), client: *HTTPClient, comptime is_ssl: bool) !?New
                 evictOldestSslContext();
             }
 
-            client.setCustomSslCtx(custom_context);
+            client.setCustomSslCtx(custom_context.ptr);
             // Keepalive is now supported for custom SSL contexts
             if (client.http_proxy) |url| {
                 if (url.protocol.len == 0 or strings.eqlComptime(url.protocol, "https") or strings.eqlComptime(url.protocol, "http")) {
-                    return try custom_context.connect(client, url.hostname, url.getPortAuto());
+                    return try custom_context.ptr.connect(client, url.hostname, url.getPortAuto());
                 }
                 return error.UnsupportedProxyProtocol;
             }
-            return try custom_context.connect(client, client.url.hostname, client.url.getPortAuto());
+            return try custom_context.ptr.connect(client, client.url.hostname, client.url.getPortAuto());
         }
     }
     if (client.http_proxy) |url| {
@@ -343,7 +343,7 @@ fn evictStaleSslContexts(this: *@This()) void {
     while (i < custom_ssl_context_map.count()) {
         var entry = custom_ssl_context_map.values()[i];
         if (now -| entry.last_used_ns > ssl_context_cache_ttl_ns) {
-            custom_ssl_context_map.swapRemoveAt(i);
+            _ = custom_ssl_context_map.swapRemoveAt(i);
             entry.ctx.deref();
             entry.config_ref.deinit();
         } else {
@@ -386,7 +386,7 @@ fn drainQueuedShutdowns(this: *@This()) void {
             this.queued_shutdowns_lock.lock();
             defer this.queued_shutdowns_lock.unlock();
             const shutdowns = this.queued_shutdowns;
-            this.queued_shutdowns = .{};
+            this.queued_shutdowns = .empty;
             break :brk shutdowns;
         };
         defer queued_shutdowns.deinit(bun.default_allocator);
@@ -444,7 +444,7 @@ fn drainQueuedWrites(this: *@This()) void {
             this.queued_writes_lock.lock();
             defer this.queued_writes_lock.unlock();
             const writes = this.queued_writes;
-            this.queued_writes = .{};
+            this.queued_writes = .empty;
             break :brk writes;
         };
         defer queued_writes.deinit(bun.default_allocator);
@@ -493,7 +493,7 @@ fn drainQueuedHTTPResponseBodyDrains(this: *@This()) void {
             this.queued_response_body_drains_lock.lock();
             defer this.queued_response_body_drains_lock.unlock();
             const drains = this.queued_response_body_drains;
-            this.queued_response_body_drains = .{};
+            this.queued_response_body_drains = .empty;
             break :brk drains;
         };
         defer queued_response_body_drains.deinit(bun.default_allocator);
@@ -575,7 +575,7 @@ fn drainEvents(this: *@This()) void {
     this.has_pending_queued_abort = false;
     {
         var pending = this.deferred_tasks;
-        this.deferred_tasks = .{};
+        this.deferred_tasks = .empty;
         defer pending.deinit(bun.default_allocator);
         for (pending.items) |http| {
             if (http.client.signals.get(.aborted) or active < max) {
@@ -640,7 +640,7 @@ fn processEvents(this: *@This()) noreturn {
 
         var start_time: i128 = 0;
         if (comptime Environment.isDebug) {
-            start_time = std.time.nanoTimestamp();
+            start_time = @import("std-fs-compat").nanoTimestamp();
         }
         Output.flush();
 
@@ -659,11 +659,13 @@ fn processEvents(this: *@This()) noreturn {
 
         // this.loop.run();
         if (comptime Environment.isDebug) {
-            const end = std.time.nanoTimestamp();
-            threadlog("Waited {D}\n", .{@as(i64, @truncate(end - start_time))});
+            const end = @import("std-fs-compat").nanoTimestamp();
+            threadlog("Waited {d}\n", .{@as(i64, @truncate(end - start_time))});
             Output.flush();
         }
     }
+
+    unreachable;
 }
 
 pub fn scheduleResponseBodyDrain(this: *@This(), async_http_id: u32) void {

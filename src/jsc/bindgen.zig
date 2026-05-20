@@ -130,15 +130,22 @@ pub fn ExternTaggedUnion(comptime field_types: []const type) type {
 
 fn ExternUnion(comptime field_types: []const type) type {
     const info = @typeInfo(bun.meta.TaggedUnion(field_types)).@"union";
-    var names: [info.fields.len][]const u8 = undefined;
-    var types: [info.fields.len]type = undefined;
-    var attrs: [info.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
+    var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
     for (info.fields, 0..) |field, i| {
-        names[i] = field.name;
-        types[i] = field.type;
-        attrs[i] = .{ .@"align" = field.alignment };
+        fields[i] = .{
+            .name = field.name,
+            .type = field.type,
+            .alignment = field.alignment,
+        };
     }
-    return @Union(.@"extern", null, &names, &types, &attrs);
+    return @Type(.{
+        .@"union" = .{
+            .layout = .@"extern",
+            .fields = &fields,
+            .decls = &.{},
+            .tag_type = null,
+        },
+    });
 }
 
 pub fn BindgenArray(comptime Child: type) type {
@@ -213,7 +220,7 @@ pub fn BindgenArray(comptime Child: type) type {
             }
 
             defer unmanaged.deinit(
-                if (bun.use_mimalloc) bun.default_allocator else std.heap.raw_c_allocator,
+                if (bun.use_mimalloc) bun.default_allocator else @import("std-fs-compat").raw_c_allocator,
             );
             var result = bun.handleOom(ZigType.initCapacity(length));
             for (unmanaged.items) |*item| {

@@ -36,8 +36,8 @@ pub const ProcessHandle = struct {
     } = null,
     options: bun.spawn.SpawnOptions,
 
-    start_time: ?std.time.Instant = null,
-    end_time: ?std.time.Instant = null,
+    start_time: ?@import("std-fs-compat").Instant = null,
+    end_time: ?@import("std-fs-compat").Instant = null,
 
     remaining_dependencies: usize = 0,
     dependents: std.array_list.Managed(*This) = std.array_list.Managed(*This).init(bun.default_allocator),
@@ -50,7 +50,7 @@ pub const ProcessHandle = struct {
 
         var argv = [_:null]?[*:0]const u8{ this.state.shell_bin, if (Environment.isPosix) "-c" else "exec", this.config.combined, null };
 
-        this.start_time = std.time.Instant.now() catch null;
+        this.start_time = @import("std-fs-compat").Instant.now() catch null;
         var spawned: bun.spawn.process.SpawnProcessResult = brk: {
 
             // Get the envp with the PATH configured
@@ -118,7 +118,7 @@ pub const ProcessHandle = struct {
 
     pub fn onProcessExit(this: *This, proc: *bun.spawn.Process, status: bun.spawn.Status, _: *const bun.spawn.Rusage) void {
         this.process.?.status = status;
-        this.end_time = std.time.Instant.now() catch null;
+        this.end_time = @import("std-fs-compat").Instant.now() catch null;
         // We just leak the process because we're going to exit anyway after all processes are done
         _ = proc;
         this.state.processExit(this) catch {};
@@ -340,7 +340,9 @@ const State = struct {
     }
 
     fn flushDrawBuf(this: *This) void {
-        std.fs.File.stdout().writeAll(this.draw_buf.items) catch {};
+        var stdout_buf: [1]u8 = undefined;
+        var stdout_writer = @import("std-fs-compat").File.stdout().writerStreaming(&stdout_buf);
+        stdout_writer.interface.writeAll(this.draw_buf.items) catch {};
     }
 
     pub fn abort(this: *This) void {
@@ -376,7 +378,7 @@ const AbortHandler = struct {
 
     var should_abort = false;
 
-    fn posixSignalHandler(sig: i32, info: *const std.posix.siginfo_t, _: ?*const anyopaque) callconv(.c) void {
+    fn posixSignalHandler(sig: i32, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) void {
         _ = sig;
         _ = info;
         should_abort = true;

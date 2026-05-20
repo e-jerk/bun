@@ -286,7 +286,7 @@ pub fn promptForWarnings() bool {
     Output.pretty("\n<yellow>Security warnings found.<r> Continue anyway? [y/N] ", .{});
     Output.flush();
 
-    var stdin = std.fs.File.stdin();
+    var stdin = @import("std-fs-compat").File.stdin();
     var reader_buffer: [1024]u8 = undefined;
     var buffered = stdin.readerStreaming(&reader_buffer);
     const reader = &buffered.interface;
@@ -348,7 +348,7 @@ const PackageCollector = struct {
         dep_path: std.ArrayList(DependencyID),
     };
 
-    pub fn init(manager: *PackageManager) PackageCollector {
+    pub fn init(manager: *PackageManager) !PackageCollector {
         return .{
             .manager = manager,
             .dedupe = std.array_hash_map.Auto(PackageID, void).init(bun.default_allocator),
@@ -363,8 +363,8 @@ const PackageCollector = struct {
 
         var iter = this.package_paths.iterator();
         while (iter.next()) |entry| {
-            this.this.manager.allocator.free(entry.value_ptr.pkg_path);
-            this.this.manager.allocator.free(entry.value_ptr.dep_path);
+            this.manager.allocator.free(entry.value_ptr.pkg_path);
+            this.manager.allocator.free(entry.value_ptr.dep_path);
         }
         this.package_paths.deinit();
     }
@@ -387,13 +387,13 @@ const PackageCollector = struct {
             const dep_res = pkg_resolutions[dep_pkg_id];
             if (dep_res.tag != .npm) continue;
 
-            if ((try this.dedupe.getOrPut(dep_pkg_id)).found_existing) continue;
+            if ((try this.dedupe.getOrPut( dep_pkg_id)).found_existing) continue;
 
-            var pkg_path_buf = std.ArrayList(PackageID).init(this.this.manager.allocator);
+            var pkg_path_buf: std.ArrayList(PackageID) = .empty;
             try pkg_path_buf.append(this.manager.allocator, root_pkg_id);
             try pkg_path_buf.append(this.manager.allocator, dep_pkg_id);
 
-            var dep_path_buf = std.ArrayList(DependencyID).init(this.this.manager.allocator);
+            var dep_path_buf: std.ArrayList(DependencyID) = .empty;
             try dep_path_buf.append(this.manager.allocator, dep_id);
 
             try this.queue.writeItem(.{
@@ -419,13 +419,13 @@ const PackageCollector = struct {
                 const dep_res = pkg_resolutions[dep_pkg_id];
                 if (dep_res.tag != .npm) continue;
 
-                if ((try this.dedupe.getOrPut(dep_pkg_id)).found_existing) continue;
+            if ((try this.dedupe.getOrPut( dep_pkg_id)).found_existing) continue;
 
-            var pkg_path_buf = std.ArrayList(PackageID).init(this.manager.allocator);
+            var pkg_path_buf: std.ArrayList(PackageID) = .empty;
                 try pkg_path_buf.append(this.manager.allocator, pkg_id);
                 try pkg_path_buf.append(this.manager.allocator, dep_pkg_id);
 
-            var dep_path_buf = std.ArrayList(DependencyID).init(this.manager.allocator);
+            var dep_path_buf: std.ArrayList(DependencyID) = .empty;
                 try dep_path_buf.append(this.manager.allocator, dep_id);
 
                 try this.queue.writeItem(.{
@@ -471,15 +471,15 @@ const PackageCollector = struct {
                 }
 
                 if (update_dep_id == invalid_dependency_id) continue;
-                if ((try this.dedupe.getOrPut(update_pkg_id)).found_existing) continue;
+                if ((try this.dedupe.getOrPut( update_pkg_id)).found_existing) continue;
 
-                var initial_pkg_path = std.ArrayList(PackageID).init(this.manager.allocator);
+                var initial_pkg_path: std.ArrayList(PackageID) = .empty;
                 if (parent_pkg_id != invalid_package_id) {
                     try initial_pkg_path.append(this.manager.allocator, parent_pkg_id);
                 }
                 try initial_pkg_path.append(this.manager.allocator, update_pkg_id);
 
-                var initial_dep_path = std.ArrayList(DependencyID).init(this.manager.allocator);
+                var initial_dep_path: std.ArrayList(DependencyID) = .empty;
                 try initial_dep_path.append(this.manager.allocator, update_dep_id);
 
                 try this.queue.writeItem(.{
@@ -499,16 +499,16 @@ const PackageCollector = struct {
 
         while (this.queue.readItem()) |item| {
             var mutable_item = item;
-            defer mutable_item.pkg_path.deinit(this.this.manager.allocator);
-            defer mutable_item.dep_path.deinit(this.this.manager.allocator);
+            defer mutable_item.pkg_path.deinit(this.manager.allocator);
+            defer mutable_item.dep_path.deinit(this.manager.allocator);
 
             const pkg_id = mutable_item.pkg_id;
             _ = mutable_item.dep_id; // Could be useful in the future for dependency-specific processing
 
-            const pkg_path_copy = try this.this.manager.allocator.alloc(PackageID, mutable_item.pkg_path.items.len);
+            const pkg_path_copy = try this.manager.allocator.alloc(PackageID, mutable_item.pkg_path.items.len);
             @memcpy(pkg_path_copy, mutable_item.pkg_path.items);
 
-            const dep_path_copy = try this.this.manager.allocator.alloc(DependencyID, mutable_item.dep_path.items.len);
+            const dep_path_copy = try this.manager.allocator.alloc(DependencyID, mutable_item.dep_path.items.len);
             @memcpy(dep_path_copy, mutable_item.dep_path.items);
 
             try this.package_paths.put(pkg_id, .{
@@ -526,13 +526,13 @@ const PackageCollector = struct {
                 const next_pkg_res = pkg_resolutions[next_pkg_id];
                 if (next_pkg_res.tag != .npm) continue;
 
-                if ((try this.dedupe.getOrPut(next_pkg_id)).found_existing) continue;
+                if ((try this.dedupe.getOrPut( next_pkg_id)).found_existing) continue;
 
-                var extended_pkg_path = std.ArrayList(PackageID).init(this.manager.allocator);
+                var extended_pkg_path: std.ArrayList(PackageID) = .empty;
                 try extended_pkg_path.appendSlice(this.manager.allocator, mutable_item.pkg_path.items);
                 try extended_pkg_path.append(this.manager.allocator, next_pkg_id);
 
-                var extended_dep_path = std.ArrayList(DependencyID).init(this.manager.allocator);
+                var extended_dep_path: std.ArrayList(DependencyID) = .empty;
                 try extended_dep_path.appendSlice(this.manager.allocator, mutable_item.dep_path.items);
                 try extended_dep_path.append(this.manager.allocator, next_dep_id);
 
@@ -552,8 +552,8 @@ const JSONBuilder = struct {
     collector: *PackageCollector,
 
     pub fn buildPackageJSON(this: JSONBuilder) ![]const u8 {
-        var json_buf = std.ArrayList(u8).init(this.manager.allocator);
-        var writer = json_buf.writer(this.manager.allocator);
+        var json_buf: std.ArrayList(u8) = .empty;
+        var writer = @import("std-io-compat").allocatingWriterFromArrayList(this.manager.allocator, &json_buf);
 
         const pkgs = this.manager.lockfile.packages.slice();
         const pkg_names = pkgs.items(.name);
@@ -629,7 +629,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
         Output.prettyErrorln("<d>[SecurityProvider]<r> top_level_dir: '{s}'", .{FileSystem.instance.top_level_dir});
         Output.prettyErrorln("<d>[SecurityProvider]<r> original_cwd: '{s}'", .{original_cwd});
     }
-    const start_time = std.time.milliTimestamp();
+    const start_time = @import("std-fs-compat").milliTimestamp();
 
     const finder = ScannerFinder{ .manager = manager, .scanner_name = security_scanner };
     try finder.validateNotInWorkspaces();
@@ -640,7 +640,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
     // Suppress JavaScript error output unless in verbose mode
     const suppress_error_output = manager.options.log_level != .verbose;
 
-    var collector = PackageCollector.init(manager);
+    var collector = try PackageCollector.init(manager);
     defer collector.deinit();
 
     if (scan_all) {
@@ -655,7 +655,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
     const json_data = try json_builder.buildPackageJSON();
     defer manager.allocator.free(json_data);
 
-    var code = std.ArrayList(u8).init(manager.allocator);
+    var code: std.ArrayList(u8) = .empty;
     defer code.deinit(manager.allocator);
 
     var temp_source: []const u8 = scanner_entry_source;
@@ -670,7 +670,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
 
     const suppress_placeholder = "__SUPPRESS_ERROR__";
     if (std.mem.indexOf(u8, temp_source, suppress_placeholder)) |index| {
-        var new_code = std.ArrayList(u8).init(manager.allocator);
+        var new_code: std.ArrayList(u8) = .empty;
         try new_code.appendSlice(manager.allocator, temp_source[0..index]);
         try new_code.appendSlice(manager.allocator, if (suppress_error_output) "true" else "false");
         try new_code.appendSlice(manager.allocator, temp_source[index + suppress_placeholder.len ..]);
@@ -730,8 +730,8 @@ pub const SecurityScanSubprocess = struct {
     pub const StaticPipeWriter = jsc.Subprocess.NewStaticPipeWriter(@This());
 
     pub fn spawn(this: *SecurityScanSubprocess) !void {
-        this.ipc_data = std.ArrayList(u8).init(this.this.manager.allocator);
-        this.stderr_data = std.ArrayList(u8).init(this.this.manager.allocator);
+        this.ipc_data = .empty;
+        this.stderr_data = .empty;
         this.ipc_reader.setParent(this);
 
         // Two extra pipes for communicating with the scanner subprocess:
@@ -751,15 +751,15 @@ pub const SecurityScanSubprocess = struct {
         const exec_path = try bun.selfExePath();
 
         var argv = [_]?[*:0]const u8{
-            try this.this.manager.allocator.dupeZ(u8, exec_path),
+            try this.manager.allocator.dupeZ(u8, exec_path),
             "--no-install",
             "-e",
-            try this.this.manager.allocator.dupeZ(u8, this.code),
+            try this.manager.allocator.dupeZ(u8, this.code),
             null,
         };
         defer {
-            this.this.manager.allocator.free(bun.span(argv[0].?));
-            this.this.manager.allocator.free(bun.span(argv[3].?));
+            this.manager.allocator.free(bun.span(argv[0].?));
+            this.manager.allocator.free(bun.span(argv[3].?));
         }
 
         if (comptime Environment.isWindows) {
@@ -787,7 +787,7 @@ pub const SecurityScanSubprocess = struct {
             .extra_fds = &extra_fds,
         };
 
-        var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.os.environ.ptr))).unwrap();
+        var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.c.environ))).unwrap();
         defer spawned.extra_pipes.deinit();
 
         ipc_output_fds[1].close();
@@ -846,7 +846,7 @@ pub const SecurityScanSubprocess = struct {
             },
         };
 
-        var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.os.environ.ptr))).unwrap();
+        var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.c.environ))).unwrap();
         defer spawned.extra_pipes.deinit();
 
         ipc_output_fds[1].close();
@@ -941,13 +941,13 @@ pub const SecurityScanSubprocess = struct {
     }
 
     pub fn onStderrChunk(this: *SecurityScanSubprocess, chunk: []const u8) void {
-        bun.handleOom(this.stderr_data.appendSlice(this.this.manager.allocator, chunk));
+        bun.handleOom(this.stderr_data.appendSlice(this.manager.allocator, chunk));
     }
 
     pub fn getReadBuffer(this: *SecurityScanSubprocess) []u8 {
         const available = this.ipc_data.unusedCapacitySlice();
         if (available.len < 4096) {
-            bun.handleOom(this.ipc_data.ensureTotalCapacity(this.this.manager.allocator, this.ipc_data.capacity + 4096));
+            bun.handleOom(this.ipc_data.ensureTotalCapacity(this.manager.allocator, this.ipc_data.capacity + 4096));
             return this.ipc_data.unusedCapacitySlice();
         }
         return available;
@@ -973,8 +973,8 @@ pub const SecurityScanSubprocess = struct {
         _ = command_ctx; // Reserved for future use
         _ = original_cwd; // Reserved for future use
         defer {
-            this.ipc_data.deinit(this.this.manager.allocator);
-            this.stderr_data.deinit(this.this.manager.allocator);
+            this.ipc_data.deinit(this.manager.allocator);
+            this.stderr_data.deinit(this.manager.allocator);
         }
 
         if (this.exit_status == null) {
@@ -1109,7 +1109,7 @@ pub const SecurityScanSubprocess = struct {
         }
 
         // if we got here then we got a result message so we can continue like normal
-        const duration = std.time.milliTimestamp() - start_time;
+        const duration = @import("std-fs-compat").milliTimestamp() - start_time;
 
         if (this.manager.options.log_level == .verbose) {
             switch (status) {
@@ -1184,7 +1184,7 @@ pub const SecurityScanSubprocess = struct {
 };
 
 fn parseSecurityAdvisoriesFromExpr(manager: *PackageManager, advisories_expr: bun.js_parser.Expr, package_paths: *std.array_hash_map.Auto(PackageID, PackagePath)) ![]SecurityAdvisory {
-    var advisories_list = std.ArrayList(SecurityAdvisory).init(manager.allocator);
+    var advisories_list: std.ArrayList(SecurityAdvisory) = .empty;
     defer advisories_list.deinit(manager.allocator);
 
     if (advisories_expr.data != .e_array) {

@@ -39,12 +39,15 @@ pub inline fn implementDeepClone(comptime T: type, this: *const T, allocator: Al
             return strct;
         },
         .@"union" => {
-            inline for (bun.meta.EnumFields(T), tyinfo.@"union".fields) |enum_field, union_field| {
+            inline for (tyinfo.@"union".fields) |union_field| {
+                const enum_field = comptime for (bun.meta.EnumFields(T)) |ef| {
+                    if (std.mem.eql(u8, ef.name, union_field.name)) break ef;
+                } else @compileError("enum field not found for union field: " ++ union_field.name);
                 if (@intFromEnum(this.*) == enum_field.value) {
                     if (comptime canTransitivelyImplementDeepClone(union_field.type) and @hasDecl(union_field.type, "__generateDeepClone")) {
-                        return @unionInit(T, enum_field.name, implementDeepClone(union_field.type, &@field(this, enum_field.name), allocator));
+                        return @unionInit(T, union_field.name, implementDeepClone(union_field.type, &@field(this, union_field.name), allocator));
                     }
-                    return @unionInit(T, enum_field.name, deepClone(union_field.type, &@field(this, enum_field.name), allocator));
+                    return @unionInit(T, union_field.name, deepClone(union_field.type, &@field(this, union_field.name), allocator));
                 }
             }
             unreachable;
@@ -117,14 +120,16 @@ pub fn implementEql(comptime T: type, this: *const T, other: *const T) bool {
         .@"union" => {
             if (tyinfo.@"union".tag_type == null) @compileError("Unions must have a tag type");
             if (@intFromEnum(this.*) != @intFromEnum(other.*)) return false;
-            const enum_fields = bun.meta.EnumFields(T);
-            inline for (enum_fields, std.meta.fields(T)) |enum_field, union_field| {
+            inline for (tyinfo.@"union".fields) |union_field| {
+                const enum_field = comptime for (bun.meta.EnumFields(T)) |ef| {
+                    if (std.mem.eql(u8, ef.name, union_field.name)) break ef;
+                } else @compileError("enum field not found for union field: " ++ union_field.name);
                 if (enum_field.value == @intFromEnum(this.*)) {
                     if (union_field.type != void) {
                         if (comptime canTransitivelyImplementEql(union_field.type) and @hasDecl(union_field.type, "__generateEql")) {
-                            return implementEql(union_field.type, &@field(this, enum_field.name), &@field(other, enum_field.name));
+                            return implementEql(union_field.type, &@field(this, union_field.name), &@field(other, union_field.name));
                         }
-                        return eql(union_field.type, &@field(this, enum_field.name), &@field(other, enum_field.name));
+                        return eql(union_field.type, &@field(this, union_field.name), &@field(other, union_field.name));
                     } else {
                         return true;
                     }
@@ -149,7 +154,7 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
             .small_list => this.slice(),
         };
         bun.writeAnyToHasher(hasher, list.len);
-        for (list) |*item| {
+        inline for (list) |*item| {
             hash(tyinfo.array.child, item, hasher);
         }
         return;
@@ -177,7 +182,7 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
         },
         .array => {
             bun.writeAnyToHasher(hasher, this.len);
-            for (this.*[0..]) |*item| {
+            inline for (this.*[0..]) |*item| {
                 hash(tyinfo.array.child, item, hasher);
             }
         },
@@ -199,8 +204,7 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
         .@"union" => {
             if (tyinfo.@"union".tag_type == null) @compileError("Unions must have a tag type");
             bun.writeAnyToHasher(hasher, @intFromEnum(this.*));
-            const enum_fields = bun.meta.EnumFields(T);
-            inline for (enum_fields, std.meta.fields(T)) |enum_field, union_field| {
+            inline for (comptime bun.meta.EnumFields(T), comptime std.meta.fields(T)) |enum_field, union_field| {
                 if (enum_field.value == @intFromEnum(this.*)) {
                     const field = union_field;
                     if (comptime hasHash(field.type)) {

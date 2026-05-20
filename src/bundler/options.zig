@@ -1599,7 +1599,7 @@ pub fn loadersFromTransformOptions(allocator: std.mem.Allocator, _loaders: ?api.
     return loaders;
 }
 
-const Dir = std.fs.Dir;
+const Dir = @import("std-fs-compat").Dir;
 
 pub const SourceMapOption = enum {
     none,
@@ -1690,7 +1690,7 @@ pub const BundleOptions = struct {
     react_fast_refresh: bool = false,
     inject: ?[]string = null,
     origin: URL = URL{},
-    output_dir_handle: ?Dir = null,
+    output_dir_handle: ?@import("std-fs-compat").FsDir = null,
 
     output_dir: string = "out",
     root_dir: string = "",
@@ -2075,7 +2075,7 @@ pub const BundleOptions = struct {
 
         if (opts.write and opts.output_dir.len > 0) {
             opts.output_dir_handle = try openOutputDir(opts.output_dir);
-            opts.output_dir = try fs.getFdPath(.fromStdDir(opts.output_dir_handle.?));
+            opts.output_dir = try fs.getFdPath(.fromStdDir(opts.output_dir_handle.?.toDir()));
         }
 
         opts.polyfill_node_globals = opts.target == .browser;
@@ -2090,18 +2090,19 @@ pub const BundleOptions = struct {
     }
 };
 
-pub fn openOutputDir(output_dir: string) !std.fs.Dir {
-    return std.c.AT.FDCWD.openDir(output_dir, .{}) catch brk: {
-        std.c.AT.FDCWD.makeDir(output_dir) catch |err| {
+pub fn openOutputDir(output_dir: string) !@import("std-fs-compat").FsDir {
+    const fs_compat = @import("std-fs-compat");
+    const cwd_dir = fs_compat.FsDir{ .fd = std.c.AT.FDCWD };
+    return cwd_dir.openDir(output_dir, .{}) catch brk: {
+        cwd_dir.makeDir(output_dir) catch |err| {
             Output.printErrorln("error: Unable to mkdir \"{s}\": \"{s}\"", .{ output_dir, @errorName(err) });
             Global.crash();
         };
 
-        const handle = std.c.AT.FDCWD.openDir(output_dir, .{}) catch |err2| {
+        break :brk cwd_dir.openDir(output_dir, .{}) catch |err2| {
             Output.printErrorln("error: Unable to open \"{s}\": \"{s}\"", .{ output_dir, @errorName(err2) });
             Global.crash();
         };
-        break :brk handle;
     };
 }
 
@@ -2165,7 +2166,7 @@ pub const TransformResult = struct {
     warnings: []logger.Msg = &([_]logger.Msg{}),
     output_files: []OutputFile = &([_]OutputFile{}),
     outbase: string,
-    root_dir: ?std.fs.Dir = null,
+    root_dir: ?@import("std-fs-compat").Dir = null,
     pub fn init(
         outbase: string,
         output_files: []OutputFile,
@@ -2436,19 +2437,19 @@ pub const RouteConfig = struct {
     pub fn fromApi(router_: api.RouteConfig, allocator: std.mem.Allocator) !RouteConfig {
         var router = zero();
 
-        const static_dir: string = std.mem.trimRight(u8, router_.static_dir orelse "", "/\\");
-        const asset_prefix: string = std.mem.trimRight(u8, router_.asset_prefix orelse "", "/\\");
+        const static_dir: string = std.mem.trimEnd(u8, router_.static_dir orelse "", "/\\");
+        const asset_prefix: string = std.mem.trimEnd(u8, router_.asset_prefix orelse "", "/\\");
 
         switch (router_.dir.len) {
             0 => {},
             1 => {
-                router.dir = std.mem.trimRight(u8, router_.dir[0], "/\\");
+                router.dir = std.mem.trimEnd(u8, router_.dir[0], "/\\");
                 router.routes_enabled = router.dir.len > 0;
             },
             else => {
                 router.possible_dirs = router_.dir;
                 for (router_.dir) |dir| {
-                    const trimmed = std.mem.trimRight(u8, dir, "/\\");
+                    const trimmed = std.mem.trimEnd(u8, dir, "/\\");
                     if (trimmed.len > 0) {
                         router.dir = trimmed;
                     }
@@ -2469,7 +2470,7 @@ pub const RouteConfig = struct {
         if (router_.extensions.len > 0) {
             var count: usize = 0;
             for (router_.extensions) |_ext| {
-                const ext = std.mem.trimLeft(u8, _ext, ".");
+                const ext = @import("std-fs-compat").trimLeft(u8, _ext, ".");
 
                 if (ext.len == 0) {
                     continue;
@@ -2482,7 +2483,7 @@ pub const RouteConfig = struct {
             var remainder = extensions;
 
             for (router_.extensions) |_ext| {
-                const ext = std.mem.trimLeft(u8, _ext, ".");
+                const ext = @import("std-fs-compat").trimLeft(u8, _ext, ".");
 
                 if (ext.len == 0) {
                     continue;

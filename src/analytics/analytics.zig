@@ -187,24 +187,38 @@ pub const packed_features_list = brk: {
     break :brk names[0..i].*;
 };
 
-pub const PackedFeatures = blk: {
-    var names: [64][]const u8 = undefined;
-    var types: [64]type = undefined;
-    var attrs: [64]std.builtin.Type.StructField.Attributes = undefined;
-    var i: usize = 0;
-    for (packed_features_list) |name| {
-        names[i] = name;
-        types[i] = bool;
-        attrs[i] = .{ .default_value_ptr = &false };
-        i += 1;
-    }
-    while (i < names.len) : (i += 1) {
-        names[i] = std.fmt.comptimePrint("_{d}", .{i});
-        types[i] = bool;
-        attrs[i] = .{ .default_value_ptr = &false };
-    }
-    break :blk @Struct(.@"packed", u64, &names, &types, &attrs);
-};
+pub const PackedFeatures = @Type(.{
+    .@"struct" = .{
+        .layout = .@"packed",
+        .backing_integer = u64,
+        .fields = brk: {
+            var fields: [64]std.builtin.Type.StructField = undefined;
+            var i: usize = 0;
+            for (packed_features_list) |name| {
+                fields[i] = .{
+                    .name = name,
+                    .type = bool,
+                    .default_value_ptr = &false,
+                    .is_comptime = false,
+                    .alignment = 0,
+                };
+                i += 1;
+            }
+            while (i < fields.len) : (i += 1) {
+                fields[i] = .{
+                    .name = std.fmt.comptimePrint("_{d}", .{i}),
+                    .type = bool,
+                    .default_value_ptr = &false,
+                    .is_comptime = false,
+                    .alignment = 0,
+                };
+            }
+            break :brk &fields;
+        },
+        .decls = &.{},
+        .is_tuple = false,
+    },
+});
 
 pub fn packedFeatures() PackedFeatures {
     var bits = PackedFeatures{};
@@ -251,31 +265,33 @@ pub const GenerateHeader = struct {
         var platform_: analytics.Platform = undefined;
         pub const Platform = analytics.Platform;
         var linux_kernel_version: Semver.Version = undefined;
-        var run_once = std.once(struct {
-            fn run() void {
-                if (comptime Environment.isMac) {
-                    platform_ = forMac();
-                } else if (comptime Environment.isLinux) {
-                    platform_ = forLinux();
+        var platform_initialized = false;
+        fn initPlatform() void {
+            if (comptime Environment.isMac) {
+                platform_ = forMac();
+            } else if (comptime Environment.isLinux) {
+                platform_ = forLinux();
 
-                    const release = bun.sliceTo(&linux_os_name.release, 0);
-                    const sliced_string = Semver.SlicedString.init(release, release);
-                    const result = Semver.Version.parse(sliced_string);
-                    linux_kernel_version = result.version.min();
-                } else if (comptime Environment.isFreeBSD) {
-                    platform_ = forFreeBSD();
-                } else if (Environment.isWindows) {
-                    platform_ = Platform{
-                        .os = analytics.OperatingSystem.windows,
-                        .version = &[_]u8{},
-                        .arch = platform_arch,
-                    };
-                }
+                const release = bun.sliceTo(&linux_os_name.release, 0);
+                const sliced_string = Semver.SlicedString.init(release, release);
+                const result = Semver.Version.parse(sliced_string);
+                linux_kernel_version = result.version.min();
+            } else if (comptime Environment.isFreeBSD) {
+                platform_ = forFreeBSD();
+            } else if (Environment.isWindows) {
+                platform_ = Platform{
+                    .os = analytics.OperatingSystem.windows,
+                    .version = &[_]u8{},
+                    .arch = platform_arch,
+                };
             }
-        }.run);
+        }
 
         pub fn forOS() analytics.Platform {
-            run_once.call();
+            if (!platform_initialized) {
+                platform_initialized = true;
+                initPlatform();
+            }
             return platform_;
         }
 

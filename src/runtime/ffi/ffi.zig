@@ -19,7 +19,7 @@ fn getDlError(allocator: std.mem.Allocator) ![]const u8 {
     } else {
         // On POSIX systems, use dlerror() to get the actual system error
         const msg = if (std.c.dlerror()) |err_ptr|
-            std.mem.span(err_ptr)
+            @import("std-fs-compat").spanC(err_ptr)
         else
             "unknown error";
         // Return a copy since dlerror() string is not stable
@@ -732,7 +732,7 @@ pub const FFI = struct {
 
         if (try object.getOwn(globalThis, "source")) |source_value| {
             if (source_value.isArray()) {
-                compile_c.source = .{ .files = .{} };
+                compile_c.source = .{ .files = .empty };
                 var iter = try source_value.arrayIterator(globalThis);
                 while (try iter.next()) |value| {
                     if (!value.isString()) {
@@ -758,7 +758,7 @@ pub const FFI = struct {
                 error.DeferredErrors => {
                     var combined = std.array_list.Managed(u8).init(bun.default_allocator);
                     defer combined.deinit();
-                    var writer = combined.writer();
+                    var writer = @import("std-io-compat").writer(&combined);
                     bun.handleOom(writer.print("{d} errors while compiling {s}\n", .{ compile_c.deferred_errors.items.len, if (compile_c.current_file_for_errors.len > 0) compile_c.current_file_for_errors else compile_c.source.first() }));
 
                     for (compile_c.deferred_errors.items) |deferred_error| {
@@ -934,7 +934,7 @@ pub const FFI = struct {
 
         var arraylist = std.array_list.Managed(u8).init(allocator);
         defer arraylist.deinit();
-        var writer = arraylist.writer();
+        var writer = @import("std-io-compat").writer(&arraylist);
 
         function.base_name = "my_callback_function";
 
@@ -977,8 +977,8 @@ pub const FFI = struct {
         }
         for (symbols.values()) |*function| {
             var arraylist = std.array_list.Managed(u8).init(allocator);
-            var aw = std.Io.Writer.Allocating.fromArrayList(allocator, &arraylist);
-            function.printSourceCode(&aw.writer) catch {
+            var aw = @import("std-io-compat").allocatingWriterFromArrayList(allocator, &arraylist);
+            function.printSourceCode(&aw) catch {
                 // an error while generating source code
                 for (symbols.keys()) |key| {
                     allocator.free(@constCast(key));
@@ -1292,7 +1292,7 @@ pub const FFI = struct {
     pub fn generateSymbolForFunction(global: *JSGlobalObject, allocator: std.mem.Allocator, value: jsc.JSValue, function: *Function) bun.JSError!?JSValue {
         jsc.markBinding(@src());
 
-        var abi_types = std.ArrayListUnmanaged(ABIType){};
+        var abi_types = std.ArrayListUnmanaged(ABIType).empty;
 
         if (try value.getOwn(global, "args")) |args| {
             if (args.isEmptyOrUndefinedOrNull() or !args.jsType().isArray()) {
@@ -1542,8 +1542,8 @@ pub const FFI = struct {
 
         pub fn compile(this: *Function, napiEnv: ?*napi.NapiEnv) !void {
             var source_code = std.array_list.Managed(u8).init(this.allocator);
-            var aw = std.Io.Writer.Allocating.fromArrayList(this.allocator, &source_code);
-            try this.printSourceCode(&aw.writer);
+            var aw = @import("std-io-compat").allocatingWriterFromArrayList(this.allocator, &source_code);
+            try this.printSourceCode(&aw);
 
             try source_code.append(0);
             defer source_code.deinit();
@@ -1607,16 +1607,22 @@ pub const FFI = struct {
         ) !void {
             jsc.markBinding(@src());
             var source_code = std.array_list.Managed(u8).init(this.allocator);
-            var source_code_writer = source_code.writer();
+            var source_code_writer = @import("std-io-compat").writer(&source_code);
             const ffi_wrapper = Bun__createFFICallbackFunction(js_context, js_function);
             try this.printCallbackSourceCode(js_context, ffi_wrapper, &source_code_writer);
 
             if (comptime Environment.isDebug and Environment.isPosix) {
                 debug_write: {
-                    const fd = std.posix.open("/tmp/bun-ffi-callback-source.c", .{ .CREAT = true, .ACCMODE = .WRONLY }, 0o644) catch break :debug_write;
-                    _ = std.posix.write(fd, source_code.items) catch break :debug_write;
-                    std.posix.ftruncate(fd, source_code.items.len) catch break :debug_write;
-                    std.posix.close(fd);
+                    const fd = switch (bun.sys.open("/tmp/bun-ffi-callback-source.c", bun.O.CREAT | bun.O.WRONLY, 0o644)) {
+                        .result => |fd| fd,
+                        .err => break :debug_write,
+                    };
+                    _ = switch (bun.sys.write(fd, source_code.items)) {
+                        .result => |n| n,
+                        .err => break :debug_write,
+                    };
+                    if (bun.sys.ftruncate(fd, @intCast(source_code.items.len)).asErr()) |_| break :debug_write;
+                    fd.close();
                 }
             }
 
@@ -2344,13 +2350,13 @@ const CompilerRT = struct {
 
         inline for (comptime std.meta.declarations(compiler_rt_sources)) |decl| {
             const source = @field(compiler_rt_sources, decl.name);
-            bunCC.writeFile(.{
+            bunCC.toDir().writeFile(.{
                 .sub_path = decl.name,
                 .data = source,
             }) catch {};
         }
         var path_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
-        compiler_rt_dir = bun.handleOom(bun.default_allocator.dupeZ(u8, bun.getFdPath(.fromStdDir(bunCC), &path_buf) catch return));
+        compiler_rt_dir = bun.handleOom(bun.default_allocator.dupeZ(u8, bun.getFdPath(bun.FD.fromSystem(bunCC.fd), &path_buf) catch return));
     }
     var create_compiler_rt_dir_once_done = false;
 

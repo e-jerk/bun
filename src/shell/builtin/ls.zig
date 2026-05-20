@@ -298,7 +298,7 @@ pub const ShellLsTask = struct {
     pub fn run(this: *@This()) void {
         // Cache current time once per task for timestamp formatting
         if (this.opts.long_listing) {
-            this._now_secs = @intCast(std.time.timestamp());
+            this._now_secs = @intCast(@import("std-fs-compat").timestamp());
         }
 
         const fd = switch (ShellSyscall.openat(this.cwd, this.path, bun.O.RDONLY | bun.O.DIRECTORY, 0)) {
@@ -327,7 +327,7 @@ pub const ShellLsTask = struct {
 
         if (!this.opts.list_directories) {
             if (this.print_directory) {
-                const writer = this.output.writer();
+                const writer = @import("std-io-compat").arrayListWriter(&this.output);
                 bun.handleOom(writer.print("{s}:\n", .{this.path}));
             }
 
@@ -355,7 +355,7 @@ pub const ShellLsTask = struct {
             return;
         }
 
-        const writer = this.output.writer();
+        const writer = @import("std-io-compat").arrayListWriter(&this.output);
         bun.handleOom(writer.print("{s}\n", .{this.path}));
         return;
     }
@@ -395,14 +395,14 @@ pub const ShellLsTask = struct {
         const stat = switch (stat_result) {
             .err => {
                 // If stat fails, just output the name with placeholders
-                const writer = this.output.writer();
+                const writer = @import("std-io-compat").arrayListWriter(&this.output);
                 bun.handleOom(writer.print("?????????? ? ? ? ?            ? {s}\n", .{name}));
                 return;
             },
             .result => |s| s,
         };
 
-        const writer = this.output.writer();
+        const writer = @import("std-io-compat").arrayListWriter(&this.output);
 
         // File type and permissions
         const mode: u32 = @intCast(stat.mode);

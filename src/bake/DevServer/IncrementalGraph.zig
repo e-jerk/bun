@@ -62,7 +62,7 @@ const Content = union(enum) {
     css_root: CssAssetId,
     css_child: void,
 
-    const Untagged = extern union {
+    const Untagged = union {
         unknown: void,
         js: JsCode,
         asset: JsCode,
@@ -518,7 +518,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
 
             // Dump to filesystem if enabled
             if (bun.FeatureFlags.bake_debugging_features and content == .js) if (dev.dump_dir) |dump_dir| {
-                DevServer.dumpBundleForChunk(dev, dump_dir, side, key, content.js.code, true, is_ssr_graph);
+                DevServer.dumpBundleForChunk(dev, @import("std-fs-compat").FsDir{ .fd = dump_dir.fd }, side, key, content.js.code, true, is_ssr_graph);
             };
 
             const gop = try g.bundled_files.getOrPut(dev.allocator(), key);
@@ -1724,7 +1724,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             assert(g.current_chunk_len > 0);
 
             const runtime: bake.HmrRuntime = switch (kind) {
-                .initial_response => bun.bake.getHmrRuntime(side),
+                .initial_response => bun.bake.getHmrRuntime(side.graph()),
                 .hmr_chunk => switch (side) {
                     .server => comptime .init("({"),
                     .client => comptime .init("self[Symbol.for(\"bun:hmr\")]({\n"),
@@ -1739,7 +1739,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             var end_list = std.array_list.Managed(u8).initCapacity(end_sfa.get(), 65536) catch unreachable;
             defer end_list.deinit();
             const end = end: {
-                const w = end_list.writer();
+                const w = @import("std-io-compat").writer(end_list);
                 switch (kind) {
                     .initial_response => {
                         if (comptime side == .server) @panic("unreachable");
@@ -2077,5 +2077,5 @@ const Shared = bun.ptr.Shared;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.AutoArrayHashMapUnmanaged;
 const Allocator = std.mem.Allocator;

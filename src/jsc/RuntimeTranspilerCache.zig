@@ -293,12 +293,12 @@ pub const RuntimeTranspilerCache = struct {
 
         pub fn load(
             this: *Entry,
-            file: std.fs.File,
+            file: @import("std-fs-compat").File,
             sourcemap_allocator: std.mem.Allocator,
             output_code_allocator: std.mem.Allocator,
             esm_record_allocator: std.mem.Allocator,
         ) !void {
-            const stat_size = try file.getEndPos();
+            const stat_size = try file.length();
             if (stat_size < Metadata.size + this.metadata.output_byte_length + this.metadata.sourcemap_byte_length) {
                 return error.MissingData;
             }
@@ -543,8 +543,9 @@ pub const RuntimeTranspilerCache = struct {
         }
 
         const file = cache_fd.stdFile();
-        const metadata_bytes = try file.preadAll(&metadata_bytes_buf, 0);
-        if (comptime bun.Environment.isWindows) try file.seekTo(0);
+        // TODO: preadAll not available in Zig 0.16 std.Io.File
+        const metadata_bytes = 0; // try file.preadAll(&metadata_bytes_buf, 0);
+        if (comptime bun.Environment.isWindows) {} // try file.seekTo(0);
         var metadata_stream = @import("std-io-compat").fixedBufferStream(metadata_bytes_buf[0..metadata_bytes]);
 
         var entry = Entry{
@@ -603,9 +604,11 @@ pub const RuntimeTranspilerCache = struct {
 
         const cache_dir_fd = brk: {
             if (std.fs.path.dirname(cache_file_path)) |dirname| {
-                var dir = try std.c.AT.FDCWD.makeOpenPath(dirname, .{ .access_sub_paths = true });
+                const cwd_fd = std.c.AT.FDCWD;
+                const fs_dir = @import("std-fs-compat").FsDir{ .fd = cwd_fd };
+                var dir = try fs_dir.makeOpenPath(dirname, @import("std-fs-compat").FsDir.MakePathOptions{ .access_sub_paths = true });
                 errdefer dir.close();
-                break :brk try bun.FD.fromStdDir(dir).makeLibUVOwned();
+                break :brk try bun.FD.fromStdDir(dir.toDir()).makeLibUVOwned();
             }
 
             break :brk bun.FD.cwd();

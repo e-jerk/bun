@@ -548,7 +548,7 @@ pub const Transpiler = struct {
                     .copy = options.OutputFile.FileOperation{
                         .pathname = pathname,
                         .dir = if (transpiler.options.output_dir_handle) |output_handle|
-                            .fromStdDir(output_handle)
+                            .fromStdDir(output_handle.toDir())
                         else
                             .invalid,
                         .is_outdir = true,
@@ -1223,8 +1223,14 @@ pub const Transpiler = struct {
         var paths = [_]string{_entry};
         var entry = transpiler.fs.abs(&paths);
 
-        std.fs.accessAbsolute(entry, .{}) catch
-            return _entry;
+        var entry_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
+        @memcpy(entry_buf[0..entry.len], entry);
+        entry_buf[entry.len] = 0;
+        const entryz = entry_buf[0..entry.len :0];
+        switch (bun.sys.access(entryz, std.c.F_OK)) {
+            .err => return _entry,
+            .result => {},
+        }
 
         entry = transpiler.fs.relativeTo(entry);
 
@@ -1300,7 +1306,7 @@ pub const Transpiler = struct {
         const did_start = false;
 
         if (transpiler.options.output_dir_handle == null) {
-            const outstream = bun.sys.File.from(std.fs.File.stdout());
+            const outstream = bun.sys.File.from(@import("std-fs-compat").File.stdout());
 
             if (!did_start) {
                 try switch (transpiler.options.import_path_format) {
@@ -1318,10 +1324,10 @@ pub const Transpiler = struct {
 
             if (!did_start) {
                 try switch (transpiler.options.import_path_format) {
-                    .relative => transpiler.processResolveQueue(.relative, false, std.fs.Dir, output_dir),
-                    .absolute_url => transpiler.processResolveQueue(.absolute_url, false, std.fs.Dir, output_dir),
-                    .absolute_path => transpiler.processResolveQueue(.absolute_path, false, std.fs.Dir, output_dir),
-                    .package_path => transpiler.processResolveQueue(.package_path, false, std.fs.Dir, output_dir),
+                    .relative => transpiler.processResolveQueue(.relative, false, @import("std-fs-compat").FsDir, output_dir),
+                    .absolute_url => transpiler.processResolveQueue(.absolute_url, false, @import("std-fs-compat").FsDir, output_dir),
+                    .absolute_path => transpiler.processResolveQueue(.absolute_path, false, @import("std-fs-compat").FsDir, output_dir),
+                    .package_path => transpiler.processResolveQueue(.package_path, false, @import("std-fs-compat").FsDir, output_dir),
                 };
             }
         }
@@ -1337,7 +1343,7 @@ pub const Transpiler = struct {
         }
 
         var final_result = try options.TransformResult.init(try allocator.dupe(u8, transpiler.result.outbase), try transpiler.output_files.toOwnedSlice(), log, allocator);
-        final_result.root_dir = transpiler.options.output_dir_handle;
+        final_result.root_dir = if (transpiler.options.output_dir_handle) |h| h.toDir() else null;
         return final_result;
     }
 

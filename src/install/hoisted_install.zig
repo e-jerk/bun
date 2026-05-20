@@ -54,7 +54,7 @@ pub fn installHoistedPackages(
     const node_modules_folder = brk: {
         // Attempt to open the existing node_modules folder
         switch (bun.sys.openatOSPath(cwd, bun.OSPathLiteral("node_modules"), bun.O.DIRECTORY | bun.O.RDONLY, 0o755)) {
-            .result => |fd| break :brk std.fs.Dir{ .fd = fd.cast() },
+            .result => |fd| break :brk @import("std-fs-compat").FsDir{ .fd = fd.cast() },
             .err => {},
         }
 
@@ -67,10 +67,11 @@ pub fn installHoistedPackages(
                 Global.crash();
             }
         }
-        break :brk bun.openDir(cwd.stdDir(), "node_modules") catch |err| {
+        const dir = bun.openDir(cwd.stdDir(), "node_modules") catch |err| {
             Output.err(err, "could not open the <b>\"node_modules\"<r> directory", .{});
             Global.crash();
         };
+        break :brk @import("std-fs-compat").FsDir{ .fd = dir.fd };
     };
 
     var skip_delete = new_node_modules;
@@ -146,7 +147,7 @@ pub fn installHoistedPackages(
                 .options = &this.options,
                 .metas = parts.items(.meta),
                 .bins = parts.items(.bin),
-                .root_node_modules_folder = node_modules_folder,
+                .root_node_modules_folder = @import("std-fs-compat").FsDir.toDir(node_modules_folder),
                 .names = parts.items(.name),
                 .pkg_name_hashes = parts.items(.name_hash),
                 .resolutions = parts.items(.resolution),

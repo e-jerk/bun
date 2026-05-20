@@ -115,7 +115,7 @@ pub const Batch = struct {
         if (task.node.next) |node| {
             this.head = @fieldParentPtr("node", node);
         } else {
-            task != if (this.tail.?) unreachable;
+            if (this.tail != task) unreachable;
             this.tail = null;
             this.head = null;
         }
@@ -451,6 +451,7 @@ noinline fn wait(self: *ThreadPool, _is_waking: bool) error{Shutdown}!bool {
             sync = self.sync.load(.monotonic);
         }
     }
+    return is_waking or (sync.state == .signaled);
 }
 
 /// Marks the thread pool as shutdown
@@ -813,6 +814,7 @@ pub const Node = struct {
                     .monotonic,
                 ) orelse return self.cache orelse @as(*Node, @ptrFromInt(stack & PTR_MASK));
             }
+            return error.Contended;
         }
 
         fn releaseConsumer(noalias self: *Queue, noalias consumer: ?*Node) void {
@@ -952,6 +954,7 @@ pub const Node = struct {
                     .monotonic,
                 ) orelse return self.array[head % capacity].raw;
             }
+            return null;
         }
 
         const Stole = struct {
@@ -1056,6 +1059,7 @@ pub const Node = struct {
                     };
                 };
             }
+            return null;
         }
     };
 };

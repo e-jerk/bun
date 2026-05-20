@@ -578,7 +578,7 @@ pub const Process = struct {
         if (comptime Environment.isPosix) {
             switch (this.poller) {
                 .waiter_thread, .fd => {
-                    const err = std.c.kill(this.pid, signal);
+                    const err = std.c.kill(this.pid, @intCast(signal));
                     if (err != 0) {
                         const errno_ = bun.sys.getErrno(err);
 
@@ -2387,9 +2387,10 @@ pub const sync = struct {
         // scan root after spawn.
         var no_orphans_kq: bun.FD = bun.invalid_fd;
         if (comptime Environment.isMac) if (no_orphans) {
-            if (std.posix.kqueue()) |kq| {
+            const kq = std.c.kqueue();
+            if (kq >= 0) {
                 no_orphans_kq = bun.FD.fromNative(kq);
-            } else |_| {}
+            }
         };
         // LIFO: this runs LAST — after killSyncScriptTree() (which scans via
         // m_kq) and releaseKq().
@@ -2466,7 +2467,7 @@ pub const sync = struct {
                 for (&out) |*array_list| {
                     array_list.clearAndFree();
                 }
-                _ = std.c.kill(process.pid, 1);
+                _ = std.c.kill(process.pid, std.c.SIG.HUP);
             }
 
             for (out_fds) |fd| {
@@ -2641,7 +2642,7 @@ pub const sync = struct {
         // disposition; only direct children raise SIGCHLD, so this fires for
         // `child` alone.
         if (jc.isActive())
-            add(&changes, std.posix.SIG.CHLD, std.c.EVFILT.SIGNAL, 0, 0);
+            add(&changes, @intCast(std.c.SIG.CHLD), std.c.EVFILT.SIGNAL, 0, 0);
         for (out_fds_to_wait_for, 0..) |fd, i| {
             if (fd != bun.invalid_fd) add(&changes, @intCast(fd.cast()), std.c.EVFILT.READ, 0, i);
         }
@@ -2760,6 +2761,7 @@ while (true) : (__loop_limit_4 += 1) {
                 return .{ .result = child_status orelse reapChild(child) };
             }
         }
+        return null;
     }
 
     fn waitLinuxSignalfd(
@@ -2931,6 +2933,7 @@ while (true) : (__loop_limit_7 += 1) {
                 },
             }
         }
+        return null;
     }
 
     /// Blocking `wait4()` until `Status.from` returns a terminal status.
@@ -2941,6 +2944,7 @@ while (true) : (__loop_limit_8 += 1) {
     if (__loop_limit_8 > 1_000_000) break;
             if (Status.from(child, &PosixSpawn.wait4(child, 0, null))) |stat| return stat;
         }
+        unreachable;
     }
 };
 

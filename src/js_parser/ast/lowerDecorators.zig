@@ -106,7 +106,7 @@ pub fn LowerDecorators(
         fn makeStaticBlock(p: *P, expr: Expr, l: logger.Loc) Property {
             const stmts = bun.handleOom(p.allocator.alloc(Stmt, 1));
             stmts[0] = p.s(S.SExpr{ .value = expr }, l);
-            const sb = bun.handleOom(zust.Box(G.ClassStaticBlock).init(p.allocator, undefined));
+            const sb = bun.handleOom(zust.Box(G.ClassStaticBlock).init(p.allocator, undefined)).ptr;
             sb.* = .{ .loc = l, .stmts = bun.BabyList(Stmt).fromOwnedSlice(stmts) };
             return .{ .kind = .class_static_block, .class_static_block = sb };
         }
@@ -835,7 +835,7 @@ pub fn LowerDecorators(
                             p.newExpr(E.This{}, loc),
                             useRef(p, wm_ref, loc),
                         }) }, loc);
-                        const get_fn = bun.handleOom(zust.Box(G.Fn).init(p.allocator, undefined));
+                        const get_fn = bun.handleOom(zust.Box(G.Fn).init(p.allocator, undefined)).ptr;
                         get_fn.* = .{ .body = .{ .stmts = get_body, .loc = loc } };
 
                         // Setter: set foo(v) { __privateSet(this, _foo, v); }
@@ -848,7 +848,7 @@ pub fn LowerDecorators(
                         }) }, loc);
                         const setter_fn_args = bun.handleOom(p.allocator.alloc(G.Arg, 1));
                         setter_fn_args[0] = .{ .binding = p.b(B.Identifier{ .ref = setter_param_ref }, loc) };
-                        const set_fn = bun.handleOom(zust.Box(G.Fn).init(p.allocator, undefined));
+                        const set_fn = bun.handleOom(zust.Box(G.Fn).init(p.allocator, undefined)).ptr;
                         set_fn.* = .{ .args = setter_fn_args, .body = .{ .stmts = set_body, .loc = loc } };
 
                         var getter_flags = prop.flags;

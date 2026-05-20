@@ -641,7 +641,7 @@ pub const StandaloneModuleGraph = struct {
 
     pub fn inject(bytes: []const u8, self_exe: [:0]const u8, inject_options: InjectOptions, target: *const CompileTarget) bun.FD {
         var buf: bun.PathBuffer = undefined;
-        var zname: [:0]const u8 = bun.fs.FileSystem.tmpname("bun-build", &buf, @as(u64, @bitCast(std.time.milliTimestamp()))) catch |err| {
+        var zname: [:0]const u8 = bun.fs.FileSystem.tmpname("bun-build", &buf, @as(u64, @bitCast(@import("std-fs-compat").milliTimestamp()))) catch |err| {
             Output.prettyErrorln("<r><red>error<r><d>:<r> failed to get temporary file name: {s}", .{@errorName(err)});
             return bun.invalid_fd;
         };
@@ -1091,7 +1091,7 @@ pub const StandaloneModuleGraph = struct {
         target: *const CompileTarget,
         allocator: std.mem.Allocator,
         output_files: []const bun.options.OutputFile,
-        root_dir: std.fs.Dir,
+        root_dir: @import("std-fs-compat").FsDir,
         module_prefix: []const u8,
         outfile: []const u8,
         env: *bun.DotEnv.Loader,
@@ -1247,7 +1247,7 @@ pub const StandaloneModuleGraph = struct {
             fd,
             bun.FD.cwd(),
             bun.sliceTo(&temp_posix, 0),
-            .fromStdDir(root_dir),
+            .fromStdDir(root_dir.toDir()),
             bun.sliceTo(&outfile_posix, 0),
         ) catch |err| {
             fd.close();
@@ -1439,7 +1439,7 @@ pub const StandaloneModuleGraph = struct {
         arena: std.mem.Allocator,
         json_source: []const u8,
     ) !void {
-        const out = header_list.writer();
+        const out = @import("std-io-compat").writer(header_list);
         const json_src = bun.logger.Source.initPathString("sourcemap.json", json_source);
         var log = bun.logger.Log.init(arena);
         defer log.deinit();

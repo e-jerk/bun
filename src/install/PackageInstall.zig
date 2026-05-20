@@ -36,7 +36,7 @@ pub const PackageInstall = struct {
         /// Package name hash -> number of scripts skipped.
         /// Multiple versions of the same package might add to the count, and each version
         /// might have a different number of scripts
-        packages_with_blocked_scripts: std.array_hash_map.Auto(TruncatedPackageNameHash, usize) = .{},
+        packages_with_blocked_scripts: std.AutoArrayHashMapUnmanaged(TruncatedPackageNameHash, usize) = .{},
     };
 
     pub const Method = enum(u8) {
@@ -116,7 +116,7 @@ pub const PackageInstall = struct {
 
         var destination_dir = this.node_modules.openDir(root_node_modules_dir) catch return false;
         defer {
-            if (std.c.AT.FDCWD.fd != destination_dir.fd) destination_dir.close();
+            if (destination_dir.fd != std.c.AT.FDCWD) destination_dir.close();
         }
 
         if (comptime bun.Environment.isPosix) {
@@ -432,7 +432,8 @@ pub const PackageInstall = struct {
             }
         };
 
-        var subdir = destination_dir.makeOpenPath(bun.span(this.destination_dir_subpath), .{}) catch |err| return Result.fail(err, .opening_dest_dir, @errorReturnTrace());
+        bun.makePath(destination_dir, bun.span(this.destination_dir_subpath)) catch |err| return Result.fail(err, .opening_dest_dir, @errorReturnTrace());
+        var subdir = bun.openDirA(destination_dir, bun.span(this.destination_dir_subpath)) catch |err| return Result.fail(err, .opening_dest_dir, @errorReturnTrace());
         defer subdir.close();
 
         this.file_count = FileCopier.copy(
@@ -451,7 +452,7 @@ pub const PackageInstall = struct {
             if (strings.indexOfCharZ(this.destination_dir_subpath, std.fs.path.sep)) |slash| {
                 this.destination_dir_subpath_buf[slash] = 0;
                 const subdir = this.destination_dir_subpath_buf[0..slash :0];
-                destination_dir.makeDirZ(subdir) catch {};
+                _ = bun.sys.mkdiratZ(bun.FD.fromSystem(destination_dir.fd), subdir, 0o755);
                 this.destination_dir_subpath_buf[slash] = std.fs.path.sep;
             }
         }
@@ -527,10 +528,12 @@ pub const PackageInstall = struct {
         state.walker.resolve_unknown_entry_types = true;
 
         if (!Environment.isWindows) {
-            state.subdir = destbase.makeOpenPath(bun.span(destpath), .{
-                .iterate = true,
-                .access_sub_paths = true,
-            }) catch |err| {
+            bun.makePath(destbase, bun.span(destpath)) catch |err| {
+                state.cached_package_dir.close();
+                state.walker.deinit();
+                return Result.fail(err, .opening_dest_dir, @errorReturnTrace());
+            };
+            state.subdir = bun.openDirA(destbase, bun.span(destpath)) catch |err| {
                 state.cached_package_dir.close();
                 state.walker.deinit();
                 return Result.fail(err, .opening_dest_dir, @errorReturnTrace());
@@ -689,7 +692,7 @@ pub const PackageInstall = struct {
                             _ = bun.c.fchmod(outfile.handle, @intCast(stat.mode));
                         }
 
-                        bun.copyFileWithState(in_file, .fromStdFile(outfile), &copy_file_state).unwrap() catch |err| {
+                        bun.copyFileWithState(in_file, bun.FD.fromSystem(outfile.handle), &copy_file_state).unwrap() catch |err| {
                             if (progress_) |progress| {
                                 progress.root.end();
                                 progress.refresh();
@@ -889,13 +892,13 @@ pub const PackageInstall = struct {
                                 bun.MakePath.makePath(std.meta.Elem(@TypeOf(entry.path)), destination_dir, entry.path) catch {};
                             },
                             .file => {
-                                std.posix.linkatZ(entry.dir.cast(), entry.basename, destination_dir.fd, entry.path, 0) catch |err| {
+                                bun.sys.linkatZ(entry.dir, entry.basename, bun.FD.fromSystem(destination_dir.fd), entry.path).unwrap() catch |err| {
                                     if (err != error.PathAlreadyExists) {
                                         return err;
                                     }
 
-                                    std.posix.unlinkatZ(destination_dir.fd, entry.path, 0) catch {};
-                                    try std.posix.linkatZ(entry.dir.cast(), entry.basename, destination_dir.fd, entry.path, 0);
+                                    _ = bun.sys.unlinkat(bun.FD.fromSystem(destination_dir.fd), entry.path);
+                                    bun.sys.linkatZ(entry.dir, entry.basename, bun.FD.fromSystem(destination_dir.fd), entry.path).unwrap() catch |err2| return err2;
                                 };
 
                                 real_file_count += 1;
@@ -1003,13 +1006,13 @@ pub const PackageInstall = struct {
                                 head2[entry.path.len + (head2.len - to_copy_into2.len)] = 0;
                                 const target: [:0]u8 = head2[0 .. entry.path.len + head2.len - to_copy_into2.len :0];
 
-                                std.posix.symlinkat(target, destination_dir.fd, entry.path) catch |err| {
+                                bun.sys.symlinkat(target, bun.FD.fromSystem(destination_dir.fd), entry.path).unwrap() catch |err| {
                                     if (err != error.PathAlreadyExists) {
                                         return err;
                                     }
 
-                                    std.posix.unlinkat(destination_dir.fd, entry.path, 0) catch {};
-                                    try std.posix.symlinkat(entry.basename, destination_dir.fd, entry.path);
+                                    _ = bun.sys.unlinkat(bun.FD.fromSystem(destination_dir.fd), entry.path);
+                                    bun.sys.symlinkat(entry.basename, bun.FD.fromSystem(destination_dir.fd), entry.path).unwrap() catch |err2| return err2;
                                 };
 
                                 real_file_count += 1;
@@ -1165,7 +1168,7 @@ pub const PackageInstall = struct {
                         };
                         const basename = std.fs.path.basename(unintall_task.absolute_path);
 
-                        var dir = bun.openDirA(std.c.AT.FDCWD, dirname) catch |err| {
+                        var dir = bun.openDirA(bun.FD.cwd().stdDir(), dirname) catch |err| {
                             if (comptime Environment.isDebug or Environment.enable_asan) {
                                 Output.debugWarn("Failed to delete {s}: {s}", .{ unintall_task.absolute_path, @errorName(err) });
                             }
@@ -1260,8 +1263,11 @@ pub const PackageInstall = struct {
         // cache_dir_subpath in here is actually the full path to the symlink pointing to the linked package
         const symlinked_path = this.cache_dir_subpath;
         var to_buf: bun.PathBuffer = undefined;
-        const to_path = this.cache_dir.realpath(symlinked_path, &to_buf) catch |err|
-            return Result.fail(err, .linking_dependency, @errorReturnTrace());
+        const to_path = brk: {
+            const rc = std.c.realpath(symlinked_path, &to_buf);
+            if (rc == null) return Result.fail(error.SymLinkLoop, .linking_dependency, @errorReturnTrace());
+            break :brk std.mem.span(rc);
+        };
 
         const dest = std.fs.path.basename(dest_path);
         // When we're linking on Windows, we want to avoid keeping the source directory handle open
@@ -1335,8 +1341,14 @@ pub const PackageInstall = struct {
 
             const dest_dir_path = bun.getFdPath(.fromStdDir(dest_dir), &dest_buf) catch |err| return Result.fail(err, .linking_dependency, @errorReturnTrace());
 
-            const target = Path.relative(dest_dir_path, to_path);
-            std.posix.symlinkat(target, dest_dir.fd, dest) catch |err| return Result.fail(err, .linking_dependency, null);
+            const target = Path.relative(dest_dir_path, to_path.?);
+            var target_buf: bun.PathBuffer = undefined;
+            @memcpy(target_buf[0..target.len], target);
+            target_buf[target.len] = 0;
+            var dest_buf2: bun.PathBuffer = undefined;
+            @memcpy(dest_buf2[0..dest.len], dest);
+            dest_buf2[dest.len] = 0;
+            bun.sys.symlinkat(target_buf[0..target.len :0], bun.FD.fromSystem(dest_dir.fd), dest_buf2[0..dest.len :0]).unwrap() catch |err| return Result.fail(err, .linking_dependency, null);
         }
 
         if (isDanglingSymlink(symlinked_path)) return Result.fail(error.DanglingSymlink, .linking_dependency, @errorReturnTrace());

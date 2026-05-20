@@ -139,7 +139,7 @@ pub fn preconnect(
 
     var this = Preconnect.new(.{
         .async_http = undefined,
-        .response_buffer = MutableString{ .allocator = bun.http.default_allocator, .list = .{} },
+        .response_buffer = MutableString{ .allocator = bun.http.default_allocator, .list = .empty },
         .url = url,
         .is_url_owned = is_url_owned,
     });
@@ -237,14 +237,14 @@ pub fn init(
                 defer allocator.free(auth);
                 const size = std.base64.standard.Encoder.calcSize(auth.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], auth);
+                const encoded = std.base64.standard.Encoder.encode(buf["Basic ".len..], auth);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             } else {
                 // only use user
                 const size = std.base64.standard.Encoder.calcSize(username.len);
                 var buf = allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], username);
+                const encoded = std.base64.standard.Encoder.encode(buf["Basic ".len..], username);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             }
@@ -314,14 +314,14 @@ fn reset(this: *AsyncHTTP) !void {
                 defer this.allocator.free(auth);
                 const size = std.base64.standard.Encoder.calcSize(auth.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], auth);
+                const encoded = std.base64.standard.Encoder.encode(buf["Basic ".len..], auth);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             } else {
                 // only use user
                 const size = std.base64.standard.Encoder.calcSize(username.len);
                 var buf = this.allocator.alloc(u8, size + "Basic ".len) catch unreachable;
-                const encoded = std.base64.url_zust.Encoder.encode(buf["Basic ".len..], username);
+                const encoded = std.base64.standard.Encoder.encode(buf["Basic ".len..], username);
                 buf[0.."Basic ".len].* = "Basic ".*;
                 this.client.proxy_authorization = buf[0 .. "Basic ".len + encoded.len];
             }
@@ -343,7 +343,7 @@ fn sendSyncCallback(this: *SingleHTTPChannel, async_http: *AsyncHTTP, result: HT
 pub fn sendSync(this: *AsyncHTTP) anyerror!picohttp.Response {
     HTTPThread.init(&.{});
 
-    var ctx = try try zust.Box(SingleHTTPChannel).init(bun.default_allocator, undefined);
+    var ctx = (try zust.Box(SingleHTTPChannel).init(bun.default_allocator, undefined)).ptr;
     ctx.* = SingleHTTPChannel.init();
     this.result_callback = HTTPClientResult.Callback.New(
         *SingleHTTPChannel,
@@ -400,7 +400,7 @@ pub fn onAsyncHTTPCallback(this: *AsyncHTTP, async_http: *AsyncHTTP, result: HTT
             this.client.deinit();
             var threadlocal_http: *bun.http.ThreadlocalAsyncHTTP = @fieldParentPtr("async_http", async_http);
             defer threadlocal_http.deinit();
-            log("onAsyncHTTPCallback: {D}", .{this.elapsed});
+            log("onAsyncHTTPCallback: {d}", .{this.elapsed});
             callback.function(callback.ctx, async_http, result);
         }
 

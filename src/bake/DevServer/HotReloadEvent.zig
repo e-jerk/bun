@@ -18,7 +18,7 @@ dirs: bun.StringArrayHashMapUnmanaged(void),
 /// Same purpose as `files` but keys do not have an owner.
 extra_files: std.ArrayListUnmanaged(u8),
 /// Initialized by the WatcherAtomics.watcherAcquireEvent
-timer: std.time.Timer,
+timer: @import("std-fs-compat").Timer,
 /// This event may be referenced by either DevServer or Watcher thread.
 /// 1 if referenced, 0 if unreferenced; see WatcherAtomics
 contention_indicator: std.atomic.Value(u32),

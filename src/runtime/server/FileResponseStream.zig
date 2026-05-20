@@ -307,6 +307,7 @@ while (true) : (__loop_limit_2 += 1) {
     } else {
         unreachable; // canSendfile gates this
     }
+    return false;
 }
 
 fn armSendfileWritable(this: *FileResponseStream) bool {

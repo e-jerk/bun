@@ -36,7 +36,7 @@ const zust = @import("safe");
     }
 
     pub fn decodeList(comptime Context: type, reader: NewReader(Context)) !std.ArrayListUnmanaged(FieldMessage) {
-        var messages = std.ArrayListUnmanaged(FieldMessage){};
+        var messages = std.ArrayListUnmanaged(FieldMessage).empty;
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
     if (__loop_limit_1 > 1_000_000) break;

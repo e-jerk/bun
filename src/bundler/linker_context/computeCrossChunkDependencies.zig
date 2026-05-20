@@ -8,9 +8,9 @@ pub fn computeCrossChunkDependencies(c: *LinkerContext, chunks: []Chunk) bun.OOM
     for (chunk_metas) |*meta| {
         // these must be global allocator
         meta.* = .{
-            .imports = ChunkMeta.Map.init(bun.default_allocator),
-            .exports = ChunkMeta.Map.init(bun.default_allocator),
-            .dynamic_imports = std.array_hash_map.Auto(Index.Int, void).init(bun.default_allocator),
+            .imports = bun.handleOom(ChunkMeta.Map.init(bun.default_allocator)),
+            .exports = bun.handleOom(ChunkMeta.Map.init(bun.default_allocator)),
+            .dynamic_imports = bun.handleOom(std.array_hash_map.Auto(Index.Int, void).init(bun.default_allocator)),
         };
     }
     defer {

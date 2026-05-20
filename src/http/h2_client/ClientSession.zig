@@ -36,7 +36,7 @@ write_buffer: bun.io.StreamBuffer = .{},
 /// available, so frame handlers always see complete frames.
 read_buffer: std.ArrayListUnmanaged(u8) = .empty,
 
-streams: std.array_hash_map.Auto(u31, *Stream) = .{},
+streams: std.array_hash_map.AutoArrayHashMapUnmanaged(u31, *Stream) = .{},
 next_stream_id: u31 = 1,
 /// Stream id whose CONTINUATION sequence is in progress; 0 = none.
 expecting_continuation: u31 = 0,
@@ -178,7 +178,7 @@ pub fn enqueue(this: *ClientSession, client: *HTTPClient) void {
 fn drainPending(this: *ClientSession) void {
     if (!this.settings_received or this.pending_attach.items.len == 0) return;
     var waiters = this.pending_attach;
-    this.pending_attach = .{};
+    this.pending_attach = .empty;
     defer waiters.deinit(bun.default_allocator);
     for (waiters.items) |client| {
         if (this.fatal_error) |err| {
@@ -295,7 +295,7 @@ fn removeStream(this: *ClientSession, stream: *Stream) void {
     if (this.expecting_continuation == stream.id) {
         this.orphan_header_block.deinit(bun.default_allocator);
         this.orphan_header_block = stream.header_block;
-        stream.header_block = .{};
+        stream.header_block = .empty;
     }
     _ = this.streams.swapRemove(stream.id);
     stream.deinit();

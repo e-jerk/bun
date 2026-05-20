@@ -1,14 +1,11 @@
-pub const bun = @import("./bun.zig");
+pub const bun = @import("bun");
 
 const Output = bun.Output;
 const Environment = bun.Environment;
 
 // pub const panic = bun.crash_handler.panic;
 pub const panic = recover.panic;
-pub const std_options = std.Options{
-    .enable_segfault_handler = false,
-    .cryptoRandomSeed = bun.csprng,
-};
+// std.Options removed in Zig 0.16
 
 pub const io_mode = .blocking;
 
@@ -53,13 +50,13 @@ const Stats = struct {
 
     fn init() Stats {
         var stats = std.mem.zeroes(Stats);
-        stats.start = std.time.milliTimestamp();
+        stats.start = milliTimestamp();
         return stats;
     }
 
     /// Time elapsed since start in milliseconds
     fn elapsed(this: *const Stats) i64 {
-        return std.time.milliTimestamp() - this.start;
+        return milliTimestamp() - this.start;
     }
 
     /// Total number of tests run
@@ -78,7 +75,7 @@ const Stats = struct {
 
 fn runTests() u8 {
     var stats = Stats.init();
-    var stderr = std.fs.File.stderr();
+    const stderr = std.fs.File.stderr();
 
     namebuf = std.heap.page_allocator.alloc(u8, namebuf_size) catch {
         Output.panic("Failed to allocate name buffer", .{});
@@ -89,15 +86,12 @@ fn runTests() u8 {
     for (tests) |t| {
         std.testing.allocator_instance = .{};
 
-        var did_lock = true;
-        stderr.lock(.exclusive) catch {
-            did_lock = false;
-        };
-        defer if (did_lock) stderr.unlock();
+        // File locking requires Io object in Zig 0.16; skip for test runner
+        _ = stderr;
 
-        const start = std.time.milliTimestamp();
+        const start = milliTimestamp();
         const result = recover.callForTest(t.func);
-        const elapsed = std.time.milliTimestamp() - start;
+        const elapsed = milliTimestamp() - start;
 
         const name = extractName(t);
         const memory_check = std.testing.allocator_instance.deinit();
@@ -195,12 +189,15 @@ comptime {
 
     _ = bun.bun_js.Bun__onRejectEntryPointResult;
     _ = bun.bun_js.Bun__onResolveEntryPointResult;
-    _ = &@import("./runtime/node/buffer.zig").BufferVectorized;
-    @import("./cli/upgrade_command.zig").@"export"();
-    @import("./cli/test_command.zig").@"export"();
 }
 
 const builtin = @import("builtin");
 const recover = @import("./test_runner/harness/recover.zig");
 const std = @import("std");
 const TestFn = std.builtin.TestFn;
+
+fn milliTimestamp() i64 {
+    var ts: std.posix.timespec = undefined;
+    _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+    return @intCast(ts.sec * std.time.ms_per_s + @divTrunc(ts.nsec, std.time.ns_per_ms));
+}

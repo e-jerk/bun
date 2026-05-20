@@ -103,7 +103,7 @@ pub fn scan(this: *Scanner, path_literal: []const u8) Error!void {
             const child_dir = bun.openDir(dir, pathZ) catch continue;
             path2 = try this.fs.dirname_store.append([]const u8, path2);
             FileSystem.setMaxFd(child_dir.fd);
-            _ = this.readDirWithName(path2, child_dir) catch return error.OutOfMemory;
+            _ = this.readDirWithName(path2, @import("std-fs-compat").FsDir{ .fd = child_dir.fd }) catch return error.OutOfMemory;
         } else {
             const parts2 = &[_][]const u8{ entry.dir_path, entry.name.slice() };
             const path2 = this.fs.absBufZ(parts2, &this.open_dir_buf);
@@ -116,7 +116,7 @@ pub fn scan(this: *Scanner, path_literal: []const u8) Error!void {
     }
 }
 
-fn readDirWithName(this: *Scanner, name: []const u8, handle: ?std.fs.Dir) !*FileSystem.RealFS.EntriesOption {
+fn readDirWithName(this: *Scanner, name: []const u8, handle: ?@import("std-fs-compat").FsDir) !*FileSystem.RealFS.EntriesOption {
     return try this.fs.fs.readDirectoryWithIterator(name, handle, 0, true, *Scanner, this);
 }
 

@@ -72,14 +72,12 @@ pub const CssColor = union(enum) {
         pub fn takeLightFreeDark(this: *const @This(), allocator: Allocator) *CssColor {
             const ret = this.light;
             this.dark.deinit(allocator);
-            _ = this.dark.deinit();
             return ret;
         }
 
         pub fn takeDarkFreeLight(this: *const @This(), allocator: Allocator) *CssColor {
             const ret = this.dark;
             this.light.deinit(allocator);
-            _ = this.light.deinit();
             return ret;
         }
 
@@ -296,8 +294,6 @@ pub const CssColor = union(enum) {
             .light_dark => {
                 this.light_dark.light.deinit(allocator);
                 this.light_dark.dark.deinit(allocator);
-                _ = this.light_dark.light.deinit();
-                _ = this.light_dark.dark.deinit();
             },
             .system => {},
         }
@@ -1463,6 +1459,8 @@ pub const LABColor = union(enum) {
         };
     }
 
+    pub fn deinit(_: LABColor) void {}
+
     pub fn hash(this: *const @This(), hasher: *std.hash.Wyhash) void {
         return css.implementHash(@This(), this, hasher);
     }
@@ -1487,6 +1485,8 @@ pub const PredefinedColor = union(enum) {
     /// A color in the `xyz-d65` color space.
     xyz_d65: XYZd65,
 
+    pub fn deinit(_: PredefinedColor) void {}
+
     pub fn hash(this: *const @This(), hasher: *std.hash.Wyhash) void {
         return css.implementHash(@This(), this, hasher);
     }
@@ -1502,6 +1502,8 @@ pub const FloatColor = union(enum) {
     hsl: HSL,
     /// An HWB color.
     hwb: HWB,
+
+    pub fn deinit(_: FloatColor) void {}
 
     pub fn hash(this: *const @This(), hasher: *std.hash.Wyhash) void {
         return css.implementHash(@This(), this, hasher);

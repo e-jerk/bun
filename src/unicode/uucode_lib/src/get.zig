@@ -96,12 +96,23 @@ pub const FieldEnum = blk: {
         }
     }
 
-    break :blk @Enum(
-        std.math.IntFittingRange(0, fields_len - 1),
-        .exhaustive,
-        &names,
-        &values,
-    );
+    break :blk @Type(.{
+        .@"enum" = .{
+            .tag_type = std.math.IntFittingRange(0, fields_len - 1),
+            .fields = blk: {
+                var enum_fields: [fields_len]std.builtin.Type.EnumField = undefined;
+                for (0..fields_len) |i| {
+                    enum_fields[i] = .{
+                        .name = names[i],
+                        .value = values[i],
+                    };
+                }
+                break :blk &enum_fields;
+            },
+            .decls = &.{},
+            .is_exhaustive = true,
+        },
+    });
 };
 
 fn DataField(comptime field: []const u8) type {

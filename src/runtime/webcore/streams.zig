@@ -1267,7 +1267,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             }
             this.buffer.deinit(this.allocator);
             this.unregisterAutoFlusher();
-            defer _ = this.deinit();
         }
 
         // This can be called _many_ times for the same instance

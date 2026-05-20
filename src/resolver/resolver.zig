@@ -1097,7 +1097,7 @@ pub const Resolver = struct {
                         if (!query.entry.cache.fd.isValid() and store_fd) {
                             buf[out.len] = 0;
                             const span = buf[0..out.len :0];
-                            var file: bun.FD = .fromStdFile(try std.fs.openFileAbsoluteZ(span, .{ .mode = .read_only }));
+                            var file: bun.FD = .fromStdFile(try bun.openFileForPath(span));
                             query.entry.cache.fd = file;
                             Fs.FileSystem.setMaxFd(file.native());
                         }
@@ -2303,7 +2303,7 @@ pub const Resolver = struct {
                 existing.data.clearAndFree(allocator);
             }
 
-            var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable;
+            var dir_entries_ptr = in_place orelse (zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable).ptr;
             dir_entries_ptr.* = new_entry;
 
             if (r.store_fd) {
@@ -2876,11 +2876,13 @@ pub const Resolver = struct {
                 const sentinel = path.ptr[0..queue_top.unsafe_path.len :0];
 
                 const open_req = if (comptime Environment.isPosix) open_req: {
-                    const dir_result = std.fs.openDirAbsoluteZ(
+                    const dir_fd = std.c.open(
                         sentinel,
-                        .{ .no_follow = !follow_symlinks, .iterate = true },
-                    ) catch |err| break :open_req err;
-                    break :open_req FD.fromStdDir(dir_result);
+                        std.c.O{ .DIRECTORY = true, .ACCMODE = .RDONLY, .NOFOLLOW = !follow_symlinks },
+                        @as(std.posix.mode_t, 0),
+                    );
+                    if (dir_fd < 0) break :open_req error.Unexpected;
+                    break :open_req FD.fromStdDir(std.fs.Dir{ .fd = dir_fd });
                 } else if (comptime Environment.isWindows) open_req: {
                     const dirfd_result = bun.sys.openDirAtWindowsA(bun.invalid_fd, sentinel, .{
                         .iterable = true,
@@ -3011,7 +3013,7 @@ pub const Resolver = struct {
                     existing.data.clearAndFree(allocator);
                 }
                 new_entry.fd = if (r.store_fd) open_dir else .invalid;
-                var dir_entries_ptr = in_place orelse zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable;
+                var dir_entries_ptr = in_place orelse (zust.Box(Fs.FileSystem.DirEntry).init(allocator, undefined) catch unreachable).ptr;
                 dir_entries_ptr.* = new_entry;
                 dir_entries_option = try rfs.entries.put(&cached_dir_entry_result, .{
                     .entries = dir_entries_ptr,
@@ -3149,7 +3151,7 @@ pub const Resolver = struct {
                 var matched_text_with_suffix = bufs(.tsconfig_match_full_buf3);
                 var matched_text_with_suffix_len: usize = 0;
                 if (total_length != null) {
-                    const suffix = std.mem.trimLeft(u8, original_path[total_length orelse original_path.len ..], "*");
+                    const suffix = @import("std-fs-compat").trimLeft(u8, original_path[total_length orelse original_path.len ..], "*");
                     matched_text_with_suffix_len = matched_text.len + suffix.len;
                     if (matched_text_with_suffix_len > matched_text_with_suffix.len) continue;
                     bun.concat(u8, matched_text_with_suffix, &.{ matched_text, suffix });
@@ -3163,8 +3165,8 @@ pub const Resolver = struct {
                 // so that "/Users/foo/components/", "/foo/bar" => /Users/foo/components/foo/bar
                 var parts = [_]string{
                     prefix,
-                    if (matched_text_with_suffix_len > 0) std.mem.trimLeft(u8, matched_text_with_suffix[0..matched_text_with_suffix_len], "/") else "",
-                    std.mem.trimLeft(u8, longest_match.suffix, "/"),
+                    if (matched_text_with_suffix_len > 0) @import("std-fs-compat").trimLeft(u8, matched_text_with_suffix[0..matched_text_with_suffix_len], "/") else "",
+                    @import("std-fs-compat").trimLeft(u8, longest_match.suffix, "/"),
                 };
                 const absolute_original_path = r.fs.absBufChecked(
                     &parts,
@@ -3301,7 +3303,7 @@ pub const Resolver = struct {
 
             var index_path: string = "";
             {
-                var parts = [_]string{ std.mem.trimRight(u8, path_to_check, std.fs.path.sep_str), std.fs.path.sep_str ++ "index" };
+                var parts = [_]string{ std.mem.trimEnd(u8, path_to_check, std.fs.path.sep_str), std.fs.path.sep_str ++ "index" };
                 index_path = ResolvePath.joinStringBuf(bufs(.tsconfig_base_url), &parts, .auto);
             }
 
@@ -4048,7 +4050,7 @@ pub const Resolver = struct {
                         }
 
                         const this_dir = fd.stdDir();
-                        var file = bun.FD.fromStdDir(this_dir.openDirZ(bun.pathLiteral("node_modules/.bin"), .{}) catch
+                        var file = bun.FD.fromStdDir(bun.openDir(this_dir, bun.pathLiteral("node_modules/.bin")) catch
                             break :append_bin_dir);
                         defer file.close();
                         const bin_path = file.getFdPath(bufs(.node_bin_path)) catch break :append_bin_dir;
@@ -4074,7 +4076,7 @@ pub const Resolver = struct {
                             }
 
                             const this_dir = fd.stdDir();
-                            var file = this_dir.openDirZ(".bin", .{}) catch break :append_bin_dir;
+                            var file = bun.openDir(this_dir, bun.pathLiteral(".bin")) catch break :append_bin_dir;
                             defer file.close();
                             const bin_path = bun.getFdPath(.fromStdDir(file), bufs(.node_bin_path)) catch break :append_bin_dir;
                             bin_folders_lock.lock();

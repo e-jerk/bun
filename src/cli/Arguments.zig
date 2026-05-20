@@ -21,7 +21,7 @@ pub fn readFile(
     var paths = [_]string{ cwd, filename };
     const outpath = try std.fs.path.resolve(allocator, &paths);
     defer allocator.free(outpath);
-    var file = try bun.openFileZ(&try std.posix.toPosixPath(outpath), std.fs.File.OpenFlags{ .mode = .read_only });
+    var file = try bun.openFileZ(&try std.posix.toPosixPath(outpath), @import("std-fs-compat").File.OpenFlags{ .mode = .read_only });
     defer file.close();
     const size = try file.getEndPos();
     return try file.readToEndAlloc(allocator, size);
@@ -1029,7 +1029,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
             Bun__Node__ProcessThrowDeprecation = true;
         }
         if (args.option("--title")) |title| {
-            CLI.Bun__Node__ProcessTitle = title;
+            @import("./cli.zig").Bun__Node__ProcessTitle = title;
         }
         if (args.flag("--zero-fill-buffers")) {
             Bun__Node__ZeroFillBuffers = true;

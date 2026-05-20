@@ -83,7 +83,7 @@ pub fn openForWritingImpl(
                 // pollable.* = bun.sys.isPollable(stat.mode);
                 pollable.* = isPollable(stat.mode);
                 if (!pollable.*) {
-                    isatty = std.posix.isatty(fd.native());
+                    isatty = @import("std-fs-compat").isatty(fd.native());
                 }
 
                 if (isatty) {

@@ -188,7 +188,7 @@ current_bundle: ?struct {
     /// Information BundleV2 needs to finalize the bundle
     start_data: bun.bundle_v2.DevServerInput,
     /// Started when the bundle was queued
-    timer: std.time.Timer,
+    timer: @import("std-fs-compat").Timer,
     /// If any files in this bundle were due to hot-reloading, some extra work
     /// must be done to inform clients to reload routes. When this is false,
     /// all entry points do not have bundles yet.
@@ -226,7 +226,7 @@ active_websocket_connections: std.AutoHashMapUnmanaged(*HmrSocket, void),
 
 // Debugging
 
-dump_dir: if (bun.FeatureFlags.bake_debugging_features) ?std.fs.Dir else void,
+dump_dir: if (bun.FeatureFlags.bake_debugging_features) ?@import("std-fs-compat").FsDir else void,
 /// Reference count to number of active sockets with the incremental_visualizer enabled.
 emit_incremental_visualizer_events: u32,
 /// Reference count to number of active sockets with the memory_visualizer enabled.
@@ -273,7 +273,7 @@ pub const RouteBundle = @import("./DevServer/RouteBundle.zig");
 
 const DeferredPromise = struct {
     strong: jsc.JSPromise.Strong = .empty,
-    route_bundle_indices: std.array_hash_map.Auto(RouteBundle.Index, void) = .{},
+    route_bundle_indices: std.AutoArrayHashMapUnmanaged(RouteBundle.Index, void) = .{},
 
     pub fn setRouteBundleState(self: *DeferredPromise, dev: *DevServer, state: RouteBundle.State) void {
         for (self.route_bundle_indices.keys()) |route_bundle_index| {
@@ -298,12 +298,14 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
     bun.analytics.Features.dev_server +|= 1;
 
     var dump_dir = if (bun.FeatureFlags.bake_debugging_features)
-        if (options.dump_sources) |dir|
-            std.c.AT.FDCWD.makeOpenPath(dir, .{}) catch |err| dir: {
+        if (options.dump_sources) |dir| dir: {
+            var cwd_dir = @import("std-fs-compat").FsDir{ .fd = std.c.AT.FDCWD };
+            break :dir cwd_dir.makeOpenPath(dir, .{}) catch |err| {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 Output.warn("Could not open directory for dumping sources: {}", .{err});
                 break :dir null;
-            }
+            };
+        }
         else
             null;
     errdefer if (bun.FeatureFlags.bake_debugging_features) if (dump_dir) |*dir| dir.close();
@@ -626,7 +628,7 @@ pub fn deinit(dev: *DevServer) void {
             dev.vm.timer.remove(&dev.memory_visualizer_timer),
         .graph_safety_lock = dev.graph_safety_lock.lock(),
         .bun_watcher = dev.bun_watcher.deinit(true),
-        .dump_dir = if (bun.FeatureFlags.bake_debugging_features) if (dev.dump_dir) |*dir| dir.close(),
+        .dump_dir = if (bun.FeatureFlags.bake_debugging_features) if (dev.dump_dir) |*dir| blk: { _ = std.c.close(dir.fd); break :blk {}; },
         .log = dev.log.deinit(),
         .server_fetch_function_callback = dev.server_fetch_function_callback.deinit(),
         .server_register_update_callback = dev.server_register_update_callback.deinit(),
@@ -1174,7 +1176,7 @@ fn ensureRouteIsBundled(
             dev.startAsyncBundle(
                 entry_points,
                 false,
-                std.time.Timer.start() catch @panic("timers unsupported"),
+                @import("std-fs-compat").Timer.start() catch @panic("timers unsupported"),
             ) catch |err| bun.handleOom(err);
         },
         .deferred_to_next_bundle => {
@@ -1633,7 +1635,7 @@ fn generateJavaScriptCodeForHTMLFile(
     const sfa = sfa_state.get();
     var array = bun.handleOom(std.ArrayListUnmanaged(u8).initCapacity(sfa, 65536));
     defer array.deinit(sfa);
-    const w = array.writer(sfa);
+    const w = @import("std-io-compat").allocatingWriterFromArrayList(sfa, &array);
 
     try w.writeAll("  ");
     try bun.js_printer.writeJSONString(input_file_sources[index.get()].path.pretty, @TypeOf(w), w, .utf8);
@@ -1870,7 +1872,7 @@ pub fn startAsyncBundle(
     dev: *DevServer,
     entry_points: EntryPointList,
     had_reload_event: bool,
-    timer: std.time.Timer,
+    timer: @import("std-fs-compat").Timer,
 ) bun.OOM!void {
     assert(dev.current_bundle == null);
     assert(entry_points.set.count() > 0);
@@ -1910,7 +1912,7 @@ pub fn startAsyncBundle(
             .framework = dev.framework,
             .client_transpiler = &dev.client_transpiler,
             .ssr_transpiler = &dev.ssr_transpiler,
-            .plugins = dev.bundler_options.plugin,
+            .plugins = @ptrCast(dev.bundler_options.plugin),
         },
         alloc,
         .{ .js = dev.vm.eventLoop() },
@@ -1991,7 +1993,7 @@ fn indexFailures(dev: *DevServer) !void {
         var payload = try std.array_list.Managed(u8).initCapacity(sfa, total_len);
         defer payload.deinit();
         payload.appendAssumeCapacity(MessageId.errors.char());
-        const w = payload.writer();
+        const w = @import("std-io-compat").writer(&payload);
 
         try w.writeInt(u32, @intCast(dev.incremental_result.failures_removed.items.len), .little);
 
@@ -2031,7 +2033,7 @@ fn indexFailures(dev: *DevServer) !void {
         var payload = try std.array_list.Managed(u8).initCapacity(sfa, @sizeOf(MessageId) + @sizeOf(u32) + dev.incremental_result.failures_removed.items.len * @sizeOf(u32));
         defer payload.deinit();
         payload.appendAssumeCapacity(MessageId.errors.char());
-        const w = payload.writer();
+        const w = @import("std-io-compat").writer(&payload);
 
         try w.writeInt(u32, @intCast(dev.incremental_result.failures_removed.items.len), .little);
 
@@ -2630,7 +2632,7 @@ pub fn finalizeBundle(
     hot_update_payload.appendAssumeCapacity(MessageId.hot_update.char());
 
     // The writer used for the hot_update payload
-    const w = hot_update_payload.writer();
+    const w = @import("std-io-compat").writer(&hot_update_payload);
 
     // It was discovered that if a tree falls with nobody around it, it does not
     // make any sound. Let's avoid writing into `w` if no sockets are open.
@@ -3052,7 +3054,7 @@ while (true) : (__loop_limit_4 += 1) {
             }
 
             break :brk .{ true, reload_event_timer };
-        } else .{ false, std.time.Timer.start() catch @panic("timers unsupported") };
+        } else .{ false, @import("std-fs-compat").Timer.start() catch @panic("timers unsupported") };
 
         for (dev.next_bundle.route_queue.keys()) |route_bundle_index| {
             const rb = dev.routeBundlePtr(route_bundle_index);
@@ -3301,7 +3303,11 @@ fn getOrPutRouteBundle(dev: *DevServer, route: RouteBundle.UnresolvedIndex) !Rou
                 } };
             },
         },
-        .client_script_generation = std.crypto.random.int(u32),
+        .client_script_generation = blk: {
+            var buf: [4]u8 = undefined;
+            std.c.arc4random_buf(&buf, 4);
+            break :blk std.mem.readInt(u32, &buf, .little);
+        },
         .server_state = .unqueued,
         .client_bundle = null,
         .active_viewers = 0,
@@ -3523,15 +3529,15 @@ pub const IncrementalResult = struct {
     failures_added: ArrayListUnmanaged(SerializedFailure),
 
     pub const empty: IncrementalResult = .{
-        .framework_routes_affected = .{},
-        .html_routes_soft_affected = .{},
-        .html_routes_hard_affected = .{},
+        .framework_routes_affected = .empty,
+        .html_routes_soft_affected = .empty,
+        .html_routes_hard_affected = .empty,
         .had_adjusted_edges = false,
-        .failures_removed = .{},
-        .failures_added = .{},
-        .client_components_added = .{},
-        .client_components_removed = .{},
-        .client_components_affected = .{},
+        .failures_removed = .empty,
+        .failures_added = .empty,
+        .client_components_added = .empty,
+        .client_components_removed = .empty,
+        .client_components_affected = .empty,
     };
 
     fn reset(result: *IncrementalResult) void {
@@ -3614,7 +3620,7 @@ pub const ChunkKind = enum(u1) {
 pub const SerializedFailure = @import("./DevServer/SerializedFailure.zig");
 
 // For debugging, it is helpful to be able to see bundles.
-pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8, chunk: []const u8, wrap: bool) !void {
+pub fn dumpBundle(dump_dir: @import("std-fs-compat").FsDir, graph: bake.Graph, rel_path: []const u8, chunk: []const u8, wrap: bool) !void {
     const buf = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(buf);
     const name = bun.path.joinAbsStringBuf("/", buf, &.{
@@ -3624,7 +3630,7 @@ pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8,
     var inner_dir = try dump_dir.makeOpenPath(bun.Dirname.dirname(u8, name).?, .{});
     defer inner_dir.close();
 
-    const file = try inner_dir.createFile(bun.path.basename(name), .{});
+    const file = try inner_dir.createFile(bun.path.basename(name), @import("std-fs-compat").FsDir.CreateFileOptions{ .mode = 0 });
     defer file.close();
     var file_buffer: [1024]u8 = undefined;
     var file_writer = file.writerStreaming(&file_buffer);
@@ -3636,7 +3642,7 @@ pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8,
             @tagName(graph),
         });
         try bufw.print("// Bundled at {d}, Bun " ++ bun.Global.package_json_version_with_canary ++ "\n", .{
-            std.time.nanoTimestamp(),
+            @import("std-fs-compat").nanoTimestamp(),
         });
     }
 
@@ -3654,7 +3660,7 @@ pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8,
     try bufw.flush();
 }
 
-pub noinline fn dumpBundleForChunk(dev: *DevServer, dump_dir: std.fs.Dir, side: bake.Side, key: []const u8, code: []const u8, wrap: bool, is_ssr_graph: bool) void {
+pub noinline fn dumpBundleForChunk(dev: *DevServer, dump_dir: @import("std-fs-compat").FsDir, side: bake.Side, key: []const u8, code: []const u8, wrap: bool, is_ssr_graph: bool) void {
     const cwd = dev.root;
     var a: bun.PathBuffer = undefined;
     var b: [bun.MAX_PATH_BYTES * 2]u8 = undefined;
@@ -3715,7 +3721,7 @@ pub fn emitMemoryVisualizerMessage(dev: *DevServer) void {
 }
 
 pub fn writeMemoryVisualizerMessage(dev: *DevServer, payload: *std.array_list.Managed(u8)) !void {
-    const w = payload.writer();
+    const w = @import("std-io-compat").writer(&payload);
     const Fields = extern struct {
         incremental_graph_client: u32,
         incremental_graph_server: u32,
@@ -3770,7 +3776,7 @@ pub fn writeMemoryVisualizerMessage(dev: *DevServer, payload: *std.array_list.Ma
 
 pub fn writeVisualizerMessage(dev: *DevServer, payload: *std.array_list.Managed(u8)) !void {
     payload.appendAssumeCapacity(MessageId.visualizer.char());
-    const w = payload.writer();
+    const w = @import("std-io-compat").writer(&payload);
 
     inline for (
         [2]bake.Side{ .client, .server },
@@ -4007,7 +4013,7 @@ pub const HmrTopic = enum(u8) {
         incremental_visualizer: bool = false,
         memory_visualizer: bool = false,
         testing_watch_synchronization: bool = false,
-        _: bool = false,
+        _: u2 = 0,
     };
 };
 
@@ -4164,7 +4170,7 @@ pub fn numSubscribers(dev: *DevServer, topic: HmrTopic) u32 {
 }
 
 const SafeFileId = packed struct(u32) {
-    side: bake.Side,
+    side: u1,
     index: u30,
     unused: enum(u1) { unused = 0 } = .unused,
 };
@@ -4205,7 +4211,7 @@ pub fn onRouterCollisionError(dev: *DevServer, rel_path: []const u8, other_id: O
 fn toOpaqueFileId(comptime side: bake.Side, index: IncrementalGraph(side).FileIndex) OpaqueFileId {
     if (Environment.allow_assert) {
         return OpaqueFileId.init(@bitCast(SafeFileId{
-            .side = side,
+            .side = @intFromEnum(side),
             .index = index.get(),
         }));
     }
@@ -4216,8 +4222,8 @@ fn toOpaqueFileId(comptime side: bake.Side, index: IncrementalGraph(side).FileIn
 fn fromOpaqueFileId(comptime side: bake.Side, id: OpaqueFileId) IncrementalGraph(side).FileIndex {
     if (Environment.allow_assert) {
         const safe: SafeFileId = @bitCast(id.get());
-        assert(side == zust.side);
-        return IncrementalGraph(side).FileIndex.init(zust.index);
+        assert(@intFromEnum(side) == safe.side);
+        return IncrementalGraph(side).FileIndex.init(safe.index);
     }
     return IncrementalGraph(side).FileIndex.init(@intCast(id.get()));
 }
@@ -4260,11 +4266,13 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
 
     // being conservative about how much stuff is put on the stack.
     var filepath_buf: [@min(4096, bun.MAX_PATH_BYTES)]u8 = undefined;
-    const filepath = std.fmt.bufPrintZ(&filepath_buf, "incremental-graph-crash-dump.{d}.html", .{std.time.timestamp()}) catch "incremental-graph-crash-dump.html";
-    const file = std.c.AT.FDCWD.createFileZ(filepath, .{}) catch |err| {
-        bun.handleErrorReturnTrace(err, @errorReturnTrace());
-        Output.warn("Could not open file for dumping incremental graph: {}", .{err});
-        return;
+    const filepath = std.fmt.bufPrintZ(&filepath_buf, "incremental-graph-crash-dump.{d}.html", .{@import("std-fs-compat").timestamp()}) catch "incremental-graph-crash-dump.html";
+    const file = switch (bun.sys.open(filepath, bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, 0o644)) {
+        .result => |fd| fd,
+        .err => |err| {
+            Output.warn("Could not open file for dumping incremental graph: {}", .{err});
+            return;
+        },
     };
     defer file.close();
 
@@ -4274,8 +4282,8 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
         const i = (std.mem.lastIndexOf(u8, visualizer, "<script>") orelse unreachable) + "<script>".len;
         break :brk .{ visualizer[0..i], visualizer[i..] };
     };
-    try file.writeAll(start);
-    try file.writeAll("\nlet inlinedData = Uint8Array.from(atob(\"");
+    try writeAllFd(file, start);
+    try writeAllFd(file, "\nlet inlinedData = Uint8Array.from(atob(\"");
 
     var sfb = std.heap.stackFallback(4096, dev.allocator());
     var payload = try std.array_list.Managed(u8).initCapacity(sfb.get(), 4096);
@@ -4285,13 +4293,23 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
     var buf: [bun.base64.encodeLenFromSize(4096)]u8 = undefined;
     var it = std.mem.window(u8, payload.items, 4096, 4096);
     while (it.next()) |chunk| {
-        try file.writeAll(buf[0..bun.base64.encode(&buf, chunk)]);
+        try writeAllFd(file, buf[0..bun.base64.encode(&buf, chunk)]);
     }
 
-    try file.writeAll("\"), c => c.charCodeAt(0));\n");
-    try file.writeAll(end);
+    try writeAllFd(file, "\"), c => c.charCodeAt(0));\n");
+    try writeAllFd(file, end);
 
     Output.note("Dumped incremental bundler graph to {f}", .{bun.fmt.quote(filepath)});
+}
+
+fn writeAllFd(fd: bun.FD, bytes: []const u8) !void {
+    var written: usize = 0;
+    while (written < bytes.len) {
+        switch (bun.sys.write(fd, bytes[written..])) {
+            .result => |n| written += n,
+            .err => |err| return err.toZigErr(),
+        }
+    }
 }
 
 const RouteIndexAndRecurseFlag = packed struct(u32) {
@@ -4774,5 +4792,5 @@ const Request = uws.Request;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.AutoArrayHashMapUnmanaged;
 const Allocator = std.mem.Allocator;

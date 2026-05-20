@@ -46,7 +46,6 @@ pub const SupportsCondition = union(enum) {
         switch (this.*) {
             .not => |not| {
                 not.deinit(allocator);
-                _ = not.deinit();
             },
             inline .@"and", .@"or" => |*list| {
                 css.deepDeinit(SupportsCondition, allocator, list);
@@ -113,23 +112,23 @@ pub const SupportsCondition = union(enum) {
             .err => |e| return .{ .err = e },
         };
         var expected_type: ?i32 = null;
-        var conditions = ArrayList(SupportsCondition){};
+        var conditions = ArrayList(SupportsCondition).empty;
         const mapalloc: std.mem.Allocator = input.allocator();
-        var seen_declarations = std.ArrayHashMap(
+        var seen_declarations = @import("array-hash-map-compat").ArrayHashMap(
             SeenDeclKey,
             usize,
             struct {
                 pub fn hash(self: @This(), s: SeenDeclKey) u32 {
-                    _ = self; // autofix
+                    _ = self;
                     return std.array_hash_map.hashString(s[1]) +% @intFromEnum(s[0]);
                 }
                 pub fn eql(self: @This(), a: SeenDeclKey, b: SeenDeclKey, b_index: usize) bool {
-                    _ = self; // autofix
-                    _ = b_index; // autofix
+                    _ = self;
+                    _ = b_index;
                     return seenDeclKeyEql(a, b);
                 }
 
-                pub inline fn seenDeclKeyEql(this: SeenDeclKey, that: SeenDeclKey) bool {
+                pub fn seenDeclKeyEql(this: SeenDeclKey, that: SeenDeclKey) bool {
                     return @intFromEnum(this[0]) == @intFromEnum(that[0]) and bun.strings.eql(this[1], that[1]);
                 }
             },

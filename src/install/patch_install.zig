@@ -18,7 +18,7 @@ pub const BuntagHashBuf = [max_buntag_hash_buf_len]u8;
 
 pub const PatchTask = struct {
     manager: *PackageManager,
-    tempdir: std.fs.Dir,
+    tempdir: @import("std-fs-compat").FsDir,
     project_dir: []const u8,
     callback: union(enum) {
         calc_hash: CalcPatchHash,
@@ -59,7 +59,7 @@ pub const PatchTask = struct {
         patchfilepath: []const u8,
         pkgname: String,
 
-        cache_dir: std.fs.Dir,
+        cache_dir: @import("std-fs-compat").FsDir,
         cache_dir_subpath: stringZ,
         cache_dir_subpath_without_patch_hash: stringZ,
 
@@ -296,7 +296,7 @@ pub const PatchTask = struct {
         // 3. copy the unpatched files into temp dir
         var pkg_install: PackageInstall = .{
             .allocator = bun.default_allocator,
-            .cache_dir = this.callback.apply.cache_dir,
+            .cache_dir = this.callback.apply.cache_dir.toDir(),
             .cache_dir_subpath = this.callback.apply.cache_dir_subpath_without_patch_hash,
             .destination_dir_subpath = tempdir_name,
             .destination_dir_subpath_buf = tmpname_buf[0..],
@@ -309,7 +309,7 @@ pub const PatchTask = struct {
             .lockfile = this.manager.lockfile,
         };
 
-        switch (pkg_install.install(true, system_tmpdir, .copyfile, resolution_tag)) {
+        switch (pkg_install.install(true, system_tmpdir.toDir(), .copyfile, resolution_tag)) {
             .success => {},
             .failure => |reason| {
                 return try log.addErrorFmtOpts(
@@ -323,7 +323,7 @@ pub const PatchTask = struct {
 
         {
             const patch_pkg_dir = switch (bun.sys.openat(
-                .fromStdDir(system_tmpdir),
+                .fromStdDir(system_tmpdir.toDir()),
                 tempdir_name,
                 bun.O.RDONLY | bun.O.DIRECTORY,
                 0,
@@ -385,9 +385,9 @@ pub const PatchTask = struct {
         );
 
         if (bun.sys.renameatConcurrently(
-            .fromStdDir(system_tmpdir),
+            .fromStdDir(system_tmpdir.toDir()),
             path_in_tmpdir,
-            .fromStdDir(this.callback.apply.cache_dir),
+            .fromStdDir(this.callback.apply.cache_dir.toDir()),
             this.callback.apply.cache_dir_subpath,
             .{ .move_fallback = true },
         ).asErr()) |e| return try log.addErrorFmtOpts(

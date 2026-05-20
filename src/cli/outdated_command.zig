@@ -238,7 +238,7 @@ pub const OutdatedCommand = struct {
         const pkg_names = packages.items(.name);
         const dependencies = lockfile.buffers.dependencies.items;
 
-        var result = std.ArrayListUnmanaged(GroupedOutdatedInfo){};
+        var result = std.ArrayListUnmanaged(GroupedOutdatedInfo).empty;
 
         const CatalogKey = struct {
             name_hash: u64,
@@ -380,7 +380,7 @@ pub const OutdatedCommand = struct {
 
         var version_buf = std.array_list.Managed(u8).init(bun.default_allocator);
         defer version_buf.deinit();
-        const version_writer = version_buf.writer();
+        const version_writer = @import("std-io-compat").writer(&version_buf);
 
         var outdated_ids: std.ArrayListUnmanaged(OutdatedInfo) = .empty;
         defer outdated_ids.deinit(manager.allocator);

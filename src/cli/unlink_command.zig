@@ -69,7 +69,7 @@ fn unlink(ctx: Command.Context) !void {
         }
 
         // Step 2. Setup the global directory
-        var node_modules: std.fs.Dir = brk: {
+        var node_modules: @import("std-fs-compat").FsDir = brk: {
             Bin.Linker.ensureUmask();
             var explicit_global_dir: string = "";
             if (ctx.install) |install_| {
@@ -92,7 +92,7 @@ fn unlink(ctx: Command.Context) !void {
             var link_dest_buf: bun.PathBuffer = undefined;
             var link_rel_buf: bun.PathBuffer = undefined;
 
-            var node_modules_path = bun.AbsPath(.{}).initFdPath(.fromStdDir(node_modules)) catch |err| {
+            var node_modules_path = bun.AbsPath(.{}).initFdPath(.fromStdDir(node_modules.toDir())) catch |err| {
                 if (manager.options.log_level != .silent) {
                     Output.err(err, "failed to link binary", .{});
                 }

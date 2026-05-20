@@ -588,7 +588,7 @@ pub const ShellCpTask = struct {
         this.verbose_output_lock.lock();
         log("onCopy: {s} -> {s}\n", .{ src, dest });
         defer this.verbose_output_lock.unlock();
-        var writer = this.verbose_output.writer();
+        var writer = @import("std-io-compat").writer(&this.verbose_output);
         bun.handleOom(writer.print("{s} -> {s}\n", .{ src, dest }));
     }
 

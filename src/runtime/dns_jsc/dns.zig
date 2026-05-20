@@ -702,6 +702,10 @@ pub const GetAddrInfoRequest = struct {
         return request;
     }
 
+    pub fn deinit(this: *GetAddrInfoRequest) void {
+        bun.default_allocator.destroy(this);
+    }
+
     pub const Task = bun.jsc.WorkTask(GetAddrInfoRequest);
 
     pub const CacheConfig = packed struct(u16) {
@@ -1563,7 +1567,7 @@ pub const internal = struct {
         };
         var notify = req.notify;
         defer notify.deinit(bun.default_allocator);
-        req.notify = .{};
+        req.notify = .empty;
         req.refcount -= 1;
 
         // is this correct, or should it go after the loop?
@@ -1947,6 +1951,7 @@ pub const Resolver = struct {
     channel: ?*c_ares.Channel = null,
     vm: *jsc.VirtualMachine,
     polls: PollsMap,
+    allocator: std.mem.Allocator,
     options: c_ares.ChannelOptions = .{},
 
     event_loop_timer: EventLoopTimer = .{
@@ -2000,7 +2005,8 @@ pub const Resolver = struct {
         return .{
             .ref_count = .init(),
             .vm = vm,
-            .polls = Resolver.PollsMap.init(allocator),
+            .polls = bun.handleOom(Resolver.PollsMap.init(allocator)),
+            .allocator = allocator,
             .pending_host_cache_cares = PendingCache.empty,
             .pending_host_cache_native = PendingCache.empty,
             .pending_srv_cache_cares = SrvPendingCache.empty,

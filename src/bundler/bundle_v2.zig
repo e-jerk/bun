@@ -45,7 +45,7 @@
 pub const logPartDependencyTree = Output.scoped(.part_dep_tree, .visible);
 const zust = @import("safe");
 
-pub const MangledProps = std.array_hash_map.Auto(Ref, []const u8);
+pub const MangledProps = std.array_hash_map.AutoArrayHashMapUnmanaged(Ref, []const u8);
 pub const PathToSourceIndexMap = @import("./PathToSourceIndexMap.zig");
 
 pub const Watcher = bun.jsc.hot_reloader.NewHotReloader(BundleV2, EventLoop, true);
@@ -125,14 +125,14 @@ pub const BundleV2 = struct {
     source_code_length: usize,
 
     /// There is a race condition where an onResolve plugin may schedule a task on the bundle thread before it's parsing task completes
-    resolve_tasks_waiting_for_import_source_index: std.array_hash_map.Auto(Index.Int, BabyList(struct { to_source_index: Index, import_record_index: u32 })) = .{},
+    resolve_tasks_waiting_for_import_source_index: std.array_hash_map.AutoArrayHashMapUnmanaged(Index.Int, BabyList(struct { to_source_index: Index, import_record_index: u32 })) = .{},
 
     /// Allocations not tracked by a threadlocal heap
     free_list: std.array_list.Managed([]const u8) = std.array_list.Managed([]const u8).init(bun.default_allocator),
 
     /// See the comment in `Chunk.OutputPiece`
     unique_key: u64 = 0,
-    dynamic_import_entry_points: std.array_hash_map.Auto(Index.Int, void) = undefined,
+    dynamic_import_entry_points: @import("array-hash-map-compat").Auto(Index.Int, void) = undefined,
     has_on_parse_plugins: bool = false,
 
     finalizers: std.ArrayListUnmanaged(CacheEntry.ExternalFreeFunction) = .empty,
@@ -156,7 +156,7 @@ pub const BundleV2 = struct {
     /// track requested export names for deduplication and cycle detection.
     /// Persists across calls to scheduleBarrelDeferredImports so cross-file
     /// deduplication is free.
-    requested_exports: std.array_hash_map.Auto(u32, barrel_imports.RequestedExports) = .{},
+    requested_exports: std.array_hash_map.AutoArrayHashMapUnmanaged(u32, barrel_imports.RequestedExports) = .{},
 
     const barrel_imports = @import("./barrel_imports.zig");
 
@@ -285,7 +285,7 @@ pub const BundleV2 = struct {
         all_urls_for_css: []const []const u8,
         redirects: []u32,
         redirect_map: PathToSourceIndexMap,
-        dynamic_import_entry_points: *std.array_hash_map.Auto(Index.Int, void),
+        dynamic_import_entry_points: *@import("array-hash-map-compat").Auto(Index.Int, void),
         /// Files which are Server Component Boundaries
         scb_bitset: ?bun.bit_set.DynamicBitSetUnmanaged,
         scb_list: ServerComponentBoundary.List.Slice,
@@ -403,7 +403,7 @@ pub const BundleV2 = struct {
             additional_files_imported_by_css_and_inlined.deinit(stack_alloc);
         }
 
-        this.dynamic_import_entry_points = std.array_hash_map.Auto(Index.Int, void).init(this.allocator());
+        this.dynamic_import_entry_points = @import("array-hash-map-compat").Auto(Index.Int, void).init(this.allocator());
 
         const all_urls_for_css = this.graph.ast.items(.url_for_css);
 
@@ -1037,7 +1037,7 @@ pub const BundleV2 = struct {
             .normal => []const []const u8,
             .dev_server => struct {
                 files: bake.DevServer.EntryPointList,
-                css_data: *std.array_hash_map.Auto(Index, CssEntryPointMeta),
+                css_data: *std.array_hash_map.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
             },
             .bake_production => bake.production.EntryPointMap,
         },
@@ -1575,7 +1575,7 @@ pub const BundleV2 = struct {
 
         this.waitForParse();
 
-        minify_duration.* = @as(u64, @intCast(@divTrunc(@as(i64, @truncate(std.time.nanoTimestamp())) - @as(i64, @truncate(bun.cli.start_time)), @as(i64, std.time.ns_per_ms))));
+        minify_duration.* = @as(u64, @intCast(@divTrunc(@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp())) - @as(i64, @truncate(bun.cli.start_time)), @as(i64, std.time.ns_per_ms))));
         source_code_size.* = this.source_code_length;
 
         if (this.transpiler.log.hasErrors()) {
@@ -2132,7 +2132,7 @@ pub const BundleV2 = struct {
                             .loader = loader,
                             .side_effects = .has_side_effects,
                         }) catch unreachable;
-                        var task = zust.Box(ParseTask).init(bun.default_allocator, undefined) catch unreachable;
+                        var task = (zust.Box(ParseTask).init(bun.default_allocator, undefined) catch unreachable).ptr;
                         task.* = ParseTask{
                             .ctx = this,
                             .path = path,
@@ -2220,7 +2220,7 @@ pub const BundleV2 = struct {
         {
             // We do this first to make it harder for any dangling pointers to data to be used in there.
             var on_parse_finalizers = this.finalizers;
-            this.finalizers = .{};
+            this.finalizers = .empty;
             for (on_parse_finalizers.items) |finalizer| {
                 finalizer.call();
             }
@@ -2357,7 +2357,7 @@ pub const BundleV2 = struct {
     ) !void {
         if (outdir.len > 0) {
             // Open the output directory
-            var root_dir = bun.FD.cwd().stdDir().makeOpenPath(outdir, .{}) catch |err| {
+            var root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), outdir, .{}) catch |err| {
                 bun.Output.warn("Failed to open output directory '{s}': {s}", .{ outdir, @errorName(err) });
                 return;
             };
@@ -2366,7 +2366,7 @@ pub const BundleV2 = struct {
             // Create parent directories if needed (relative to outdir)
             if (std.fs.path.dirname(file_path)) |parent| {
                 if (parent.len > 0) {
-                    root_dir.makePath(parent) catch {};
+                    bun.makePath(root_dir, parent) catch {};
                 }
             }
 
@@ -2449,7 +2449,7 @@ pub const BundleV2 = struct {
         this.graph.heap.helpCatchMemoryIssues();
 
         this.dynamic_import_entry_points = .init(this.allocator());
-        var html_files: std.array_hash_map.Auto(Index, void) = .{};
+        var html_files: std.array_hash_map.AutoArrayHashMapUnmanaged(Index, void) = .{};
 
         // Separate non-failing files into two lists: JS and CSS
         const js_reachable_files = reachable_files: {
@@ -2689,7 +2689,7 @@ pub const BundleV2 = struct {
         if (this.plugins) |plugins| {
             if (plugins.hasAnyMatches(&import_record.path, false)) {
                 // This is where onResolve plugins are enqueued
-                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = (zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable).ptr;
                 debug("enqueue onResolve: {s}:{s}", .{
                     import_record.path.namespace,
                     import_record.path.text,
@@ -2726,7 +2726,7 @@ pub const BundleV2 = struct {
             if (plugins.hasAnyMatches(&temp_path, false)) {
                 debug("Entry point '{s}' plugin match", .{entry_point});
 
-                var resolve: *jsc.API.JSBundler.Resolve = zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable;
+                var resolve: *jsc.API.JSBundler.Resolve = (zust.Box(jsc.API.JSBundler.Resolve).init(bun.default_allocator, undefined) catch unreachable).ptr;
                 this.incrementScanCounter();
 
                 resolve.* = jsc.API.JSBundler.Resolve.init(this, .{
@@ -2778,7 +2778,7 @@ pub const BundleV2 = struct {
                     parse.path.namespace,
                     parse.path.text,
                 });
-                const load = bun.handleOom(zust.Box(jsc.API.JSBundler.Load).init(bun.default_allocator, undefined));
+                const load = bun.handleOom(zust.Box(jsc.API.JSBundler.Load).init(bun.default_allocator, undefined)).ptr;
                 load.* = jsc.API.JSBundler.Load.init(this, parse);
                 load.dispatch();
                 return true;
@@ -3079,7 +3079,7 @@ pub const BundleV2 = struct {
                     import_record.path = path_primary;
                     resolve_entry.key_ptr.* = path_primary.text;
                     debug("created ParseTask from FileMap: {s}", .{path_primary.text});
-                    const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined));
+                    const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined)).ptr;
                     file_map_result.path_pair.primary = path_primary;
                     resolve_task.* = ParseTask.init(&file_map_result, Index.invalid, this);
                     resolve_task.known_target = target;
@@ -3345,7 +3345,7 @@ pub const BundleV2 = struct {
             import_record.path = path.*;
             resolve_entry.key_ptr.* = path.text;
             debug("created ParseTask: {s}", .{path.text});
-            const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined));
+            const resolve_task = bun.handleOom(zust.Box(ParseTask).init(bun.default_allocator, undefined)).ptr;
             resolve_task.* = ParseTask.init(&resolve_result, Index.invalid, this);
 
             resolve_task.known_target = if (import_record.kind == .html_manifest)
@@ -4344,14 +4344,14 @@ pub const CssEntryPointMeta = struct {
 
 /// The lifetime of this structure is tied to the bundler's arena
 pub const DevServerInput = struct {
-    css_entry_points: std.array_hash_map.Auto(Index, CssEntryPointMeta),
+    css_entry_points: std.array_hash_map.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
 };
 
 /// The lifetime of this structure is tied to the bundler's arena
 pub const DevServerOutput = struct {
     chunks: []Chunk,
-    css_file_list: std.array_hash_map.Auto(Index, CssEntryPointMeta),
-    html_files: std.array_hash_map.Auto(Index, void),
+    css_file_list: std.array_hash_map.AutoArrayHashMapUnmanaged(Index, CssEntryPointMeta),
+    html_files: std.array_hash_map.AutoArrayHashMapUnmanaged(Index, void),
 
     pub fn jsPseudoChunk(out: *const DevServerOutput) *Chunk {
         return &out.chunks[0];
@@ -4367,7 +4367,9 @@ pub const DevServerOutput = struct {
 };
 
 pub fn generateUniqueKey() u64 {
-    const key = std.crypto.random.int(u64) & @as(u64, 0x0FFFFFFF_FFFFFFFF);
+    var key_buf: [8]u8 = undefined;
+    std.c.arc4random_buf(&key_buf, 8);
+    const key = std.mem.readInt(u64, &key_buf, .little) & @as(u64, 0x0FFFFFFF_FFFFFFFF);
     // without this check, putting unique_key in an object key would
     // sometimes get converted to an identifier. ensuring it starts
     // with a number forces that optimization off.
@@ -4408,10 +4410,14 @@ const ExternalFreeFunctionAllocator = struct {
         return null;
     }
 
+    pub fn deinit(self: *ExternalFreeFunctionAllocator) void {
+        bun.default_allocator.destroy(self);
+    }
+
     fn free(ext_free_function: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize) void {
         const info: *ExternalFreeFunctionAllocator = @ptrCast(@alignCast(ext_free_function));
         info.free_callback(info.context);
-        _ = info.deinit();
+        info.deinit();
     }
 };
 

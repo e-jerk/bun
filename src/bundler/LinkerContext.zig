@@ -712,7 +712,7 @@ pub const LinkerContext = struct {
         //   -->
         //    Which source index in the generated sourcemap, referred to
         //    as the "mapping source index" within this function to be distinct.
-        var source_id_map = std.array_hash_map.Auto(u32, i32).init(worker.allocator);
+        var source_id_map = bun.handleOom(std.array_hash_map.Auto(u32, i32).init(worker.allocator));
         defer source_id_map.deinit();
 
         const source_indices = results.items(.source_index);
@@ -1060,7 +1060,7 @@ pub const LinkerContext = struct {
             has_async_dependency: bool,
 
             pub fn init(alloc: std.mem.Allocator) InsideWrapperPrefix {
-                return .{ .stmts = .{}, .allocator = alloc, .sync_dependencies_end = 0, .has_async_dependency = false };
+                return .{ .stmts = .empty, .allocator = alloc, .sync_dependencies_end = 0, .has_async_dependency = false };
             }
 
             pub fn deinit(this: *InsideWrapperPrefix) void {
@@ -1148,9 +1148,9 @@ pub const LinkerContext = struct {
             return .{
                 .allocator = alloc,
                 .inside_wrapper_prefix = .init(alloc),
-                .outside_wrapper_prefix = .{},
-                .inside_wrapper_suffix = .{},
-                .all_stmts = .{},
+                .outside_wrapper_prefix = .empty,
+                .inside_wrapper_suffix = .empty,
+                .all_stmts = .empty,
             };
         }
 

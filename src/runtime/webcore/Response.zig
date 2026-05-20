@@ -423,8 +423,9 @@ pub fn cloneValue(
         if (this._js_ref.tryGet()) |js_ref| {
             if (js.gc.stream.get(js_ref)) |stream| {
                 const readable = try jsc.WebCore.ReadableStream.fromJS(stream, globalThis);
-                if (readable != null) {
-                    break :brk try this._body.cloneWithReadableStream(globalThis, &(readable.?));
+                if (readable) |readable_stream| {
+                    var readable_stream_copy = readable_stream;
+                    break :brk try this._body.cloneWithReadableStream(globalThis, &readable_stream_copy);
                 }
             }
         }

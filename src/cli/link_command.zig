@@ -56,7 +56,7 @@ fn link(ctx: Command.Context) !void {
         }
 
         // Step 2. Setup the global directory
-        var node_modules: std.fs.Dir = brk: {
+        var node_modules: @import("std-fs-compat").FsDir = brk: {
             Bin.Linker.ensureUmask();
             var explicit_global_dir: string = "";
             if (ctx.install) |install_| {
@@ -115,7 +115,14 @@ fn link(ctx: Command.Context) !void {
                 }
             } else {
                 // create the symlink
-                node_modules.symLink(Fs.FileSystem.instance.topLevelDirWithoutTrailingSlash(), name, .{ .is_directory = true }) catch |err| {
+                var link_buf: bun.PathBuffer = undefined;
+                const link_target = Fs.FileSystem.instance.topLevelDirWithoutTrailingSlash();
+                @memcpy(link_buf[0..link_target.len], link_target);
+                link_buf[link_target.len] = 0;
+                var name_buf: bun.PathBuffer = undefined;
+                @memcpy(name_buf[0..name.len], name);
+                name_buf[name.len] = 0;
+                bun.sys.symlinkat(link_buf[0..link_target.len :0], bun.FD.fromSystem(node_modules.fd), name_buf[0..name.len :0]).unwrap() catch |err| {
                     if (manager.options.log_level != .silent)
                         Output.prettyErrorln("<r><red>error:<r> failed to create symlink to node_modules in global dir due to error {s}", .{@errorName(err)});
                     Global.crash();
@@ -129,7 +136,7 @@ fn link(ctx: Command.Context) !void {
             var link_dest_buf: bun.PathBuffer = undefined;
             var link_rel_buf: bun.PathBuffer = undefined;
 
-            var node_modules_path = bun.AbsPath(.{}).initFdPath(.fromStdDir(node_modules)) catch |err| {
+            var node_modules_path = bun.AbsPath(.{}).initFdPath(.fromStdDir(node_modules.toDir())) catch |err| {
                 if (manager.options.log_level != .silent) {
                     Output.err(err, "failed to link binary", .{});
                 }

@@ -47,9 +47,9 @@ const History = struct {
 
     total_memory_allocated: usize = 0,
     /// Allocated by `State.parent`.
-    allocations: std.AutoHashMapUnmanaged([*]const u8, Allocation) = .empty,
+    allocations: std.AutoHashMapUnmanaged([*]const u8, Allocation) = .{},
     /// Allocated by `State.parent`.
-    frees: std.array_hash_map.Auto([*]const u8, Free) = .empty,
+    frees: std.AutoArrayHashMapUnmanaged([*]const u8, Free) = .{},
     /// Once `frees` fills up, entries are overwritten from start to end.
     free_overwrite_index: std.math.IntFittingRange(0, max_free_tracking + 1) = 0,
 

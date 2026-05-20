@@ -786,9 +786,10 @@ pub const JSBundler = struct {
 
                 defer path.deinit();
 
-                var dir = bun.FD.fromStdDir(std.c.AT.FDCWD.openDir(path.slice(), .{}) catch |err| {
-                    return globalThis.throwPretty("{s}: failed to open root directory: {s}", .{ @errorName(err), path.slice() });
-                });
+                var dir = switch (bun.sys.openatA(bun.FD.cwd(), path.slice(), bun.O.DIRECTORY | bun.O.RDONLY, 0)) {
+                    .result => |fd| fd,
+                    .err => |err| return globalThis.throwPretty("{s}: failed to open root directory: {s}", .{ err.name(), path.slice() }),
+                };
                 defer dir.close();
 
                 var rootdir_buf: bun.PathBuffer = undefined;

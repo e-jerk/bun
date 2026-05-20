@@ -241,7 +241,7 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
 
     var out: std.array_list.Managed(u8) = .init(ctx.dev.allocator());
     errdefer out.deinit();
-    const w = out.writer();
+    const w = @import("std-io-compat").writer(out);
 
     try w.writeInt(u32, exception.stack.frames_len, .little);
     for (exception.stack.frames()) |frame| {
@@ -400,5 +400,5 @@ const Request = uws.Request;
 
 const std = @import("std");
 const ArrayListUnmanaged = std.ArrayListUnmanaged;
-const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.AutoArrayHashMapUnmanaged;
 const Allocator = std.mem.Allocator;

@@ -3,7 +3,7 @@
 pub fn msgFromJS(allocator: std.mem.Allocator, globalObject: *jsc.JSGlobalObject, file: []const u8, err: jsc.JSValue) bun.JSError!Msg {
     var zig_exception_holder: jsc.ZigException.Holder = jsc.ZigException.Holder.init();
     if (err.toError()) |value| {
-        value.toZigException(globalObject, zig_exception_holder.zigException());
+        try value.toZigException(globalObject, zig_exception_holder.zigException());
     } else {
         zig_exception_holder.zigException().message = try err.toBunString(globalObject);
     }

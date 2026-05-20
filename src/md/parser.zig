@@ -22,7 +22,7 @@ pub const Parser = struct {
     // Dynamic arrays
     marks: std.ArrayListUnmanaged(Mark) = .empty,
     containers: std.ArrayListUnmanaged(Container) = .empty,
-    block_bytes: std.ArrayListAlignedUnmanaged(u8, .@"4") = .{},
+    block_bytes: std.ArrayListAlignedUnmanaged(u8, .@"4") = .empty,
     buffer: std.ArrayListUnmanaged(u8) = .empty,
     emph_delims: std.ArrayListUnmanaged(EmphDelim) = .empty,
 

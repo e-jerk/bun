@@ -1,3 +1,13 @@
+fn writeAllFd(fd: bun.FD, bytes: []const u8) !void {
+    var written: usize = 0;
+    while (written < bytes.len) {
+        switch (bun.sys.write(fd, bytes[written..])) {
+            .result => |n| written += n,
+            .err => |err| return err.toZigErr(),
+        }
+    }
+}
+
 pub const InitCommand = struct {
 const zust = @import("safe");
     pub fn prompt(
@@ -24,7 +34,16 @@ const zust = @import("safe");
         };
 
         var input: std.array_list.Managed(u8) = .init(alloc);
-        try bun.Output.buffered_stdin.reader().readUntilDelimiterArrayList(&input, '\n', 1024);
+        {
+            var reader = bun.Output.buffered_stdin.reader();
+            var buf: [1]u8 = undefined;
+            while (true) {
+                const n = try reader.read(&buf);
+                if (n == 0) break;
+                if (buf[0] == '\n') break;
+                try input.append(buf[0]);
+            }
+        }
 
         if (strings.endsWithChar(input.items, '\r')) {
             _ = input.pop();
@@ -118,7 +137,7 @@ while (true) : (__loop_limit_1 += 1) {
 
             // Read a single character
             var stdin_b: [1]u8 = undefined;
-            var stdin_r = std.fs.File.stdin().readerStreaming(&stdin_b);
+            var stdin_r = @import("std-fs-compat").File.stdin().readerStreaming(&stdin_b);
             var stdin_i = &stdin_r.interface;
             const byte = stdin_i.takeByte() catch return selected;
 
@@ -175,6 +194,7 @@ while (true) : (__loop_limit_1 += 1) {
                 else => {},
             }
         }
+        return selected;
     }
 
     /// `Choices` must be an enum type with the `fmt` method.
@@ -263,18 +283,21 @@ while (true) : (__loop_limit_1 += 1) {
             /// Format arguments
             args: anytype,
         ) !void {
-            var file = try std.c.AT.FDCWD.createFile(filename, .{ .truncate = true });
+            var file = switch (bun.sys.openA(filename, bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, 0o644)) {
+                .result => |fd| fd,
+                .err => |err| return err.toZigErr(),
+            };
             defer file.close();
-            var file_w = file.writerStreaming(&.{});
-            const file_i = &file_w.interface;
 
             // Write contents of known assets to the new file. Template assets get formatted.
             if (comptime @hasDecl(Assets, asset_name)) {
                 const asset = @field(Assets, asset_name);
                 if (comptime is_template) {
-                    try file_i.print(asset, args);
+                    var buf: [4096]u8 = undefined;
+                    const formatted = try std.fmt.bufPrint(&buf, asset, args);
+                    try writeAllFd(file, formatted);
                 } else {
-                    try file_i.writeAll(asset);
+                    try writeAllFd(file, asset);
                 }
                 Output.prettyln(" + <r><d>{s}{s}<r>", .{ filename, message_suffix });
                 Output.flush();
@@ -294,15 +317,18 @@ while (true) : (__loop_limit_1 += 1) {
             /// Format arguments
             args: anytype,
         ) !void {
-            var file = try std.c.AT.FDCWD.createFile(filename, .{ .truncate = true });
+            var file = switch (bun.sys.openA(filename, bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, 0o644)) {
+                .result => |fd| fd,
+                .err => |err| return err.toZigErr(),
+            };
             defer file.close();
-            var file_w = file.writerStreaming(&.{});
-            var file_i = &file_w.interface;
 
             if (comptime is_template) {
-                try file_i.print(contents, args);
+                var buf: [4096]u8 = undefined;
+                const formatted = try std.fmt.bufPrint(&buf, contents, args);
+                try writeAllFd(file, formatted);
             } else {
-                try file_i.writeAll(contents);
+                try writeAllFd(file, contents);
             }
 
             Output.prettyln(" + <r><d>{s}{s}<r>", .{ filename, message_suffix });
@@ -395,7 +421,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         if (initialize_in_folder) |ifdir| {
-            std.c.AT.FDCWD.makePath(ifdir) catch |err| {
+            bun.makePath(std.fs.cwd(), ifdir) catch |err| {
                 Output.prettyErrorln("Failed to create directory {s}: {s}", .{ ifdir, @errorName(err) });
                 Global.exit(1);
             };
@@ -407,11 +433,12 @@ while (true) : (__loop_limit_1 += 1) {
 
         var fs = try Fs.FileSystem.init(null);
         const pathname = Fs.PathName.init(fs.topLevelDirWithoutTrailingSlash());
-        const destination_dir = std.c.AT.FDCWD;
-
         var fields = PackageJSONFields{};
 
-        var package_json_file = destination_dir.openFile("package.json", .{ .mode = .read_write }) catch null;
+        var package_json_file = switch (bun.sys.openA("package.json", bun.O.RDWR, 0)) {
+            .result => |fd| fd,
+            .err => null,
+        };
         var package_json_contents: MutableString = MutableString.initEmpty(alloc);
         initializeStore();
         read_package_json: {
@@ -425,23 +452,35 @@ while (true) : (__loop_limit_1 += 1) {
 
                         break :brk end;
                     }
-                    const stat = pkg.stat() catch break :read_package_json;
+                    const stat = switch (pkg.stat()) {
+                        .result => |s| s,
+                        .err => break :read_package_json,
+                    };
 
-                    if (stat.kind != .file or stat.size == 0) {
+                    if ((stat.mode & std.c.S.IFMT) != std.c.S.IFREG or stat.size == 0) {
                         break :read_package_json;
                     }
 
-                    break :brk stat.size;
+                    break :brk @as(usize, @intCast(stat.size));
                 };
 
                 package_json_contents = try MutableString.init(alloc, size);
                 package_json_contents.list.expandToCapacity();
 
                 const prev_file_pos = if (comptime Environment.isWindows) try pkg.getPos() else 0;
-                _ = pkg.preadAll(package_json_contents.list.items, 0) catch {
-                    package_json_file = null;
-                    break :read_package_json;
-                };
+                var read_total: usize = 0;
+                while (read_total < size) {
+                    switch (bun.sys.pread(pkg, package_json_contents.list.items[read_total..], @intCast(read_total))) {
+                        .result => |n| {
+                            if (n == 0) break;
+                            read_total += n;
+                        },
+                        .err => {
+                            package_json_file = null;
+                            break :read_package_json;
+                        },
+                    }
+                }
                 if (comptime Environment.isWindows) try pkg.seekTo(prev_file_pos);
             }
         }
@@ -514,9 +553,12 @@ while (true) : (__loop_limit_1 += 1) {
             }
 
             // Find any source file
-            var dir = std.c.AT.FDCWD.openDir(".", .{ .iterate = true }) catch break :infer;
+            var dir = switch (bun.sys.openat(bun.FD.cwd(), ".", bun.O.RDONLY | bun.O.DIRECTORY | bun.O.CLOEXEC, 0)) {
+                .result => |fd| fd,
+                .err => break :infer,
+            };
             defer dir.close();
-            var it = bun.DirIterator.iterate(.fromStdDir(dir), .u8);
+            var it = bun.iterateDir(dir);
             while (try it.next().unwrap()) |file| {
                 if (file.kind != .file) continue;
                 const loader = bun.options.Loader.fromString(std.fs.path.extension(file.name.slice())) orelse
@@ -753,7 +795,10 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         write_package_json: {
-            var fd = bun.FD.fromStdFile(package_json_file orelse try std.c.AT.FDCWD.createFileZ("package.json", .{}));
+            var fd = package_json_file orelse switch (bun.sys.openA("package.json", bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, 0o644)) {
+                .result => |file_fd| file_fd,
+                .err => |err| return err.toZigErr(),
+            };
             defer fd.close();
             var buffer_writer = JSPrinter.BufferWriter.init(bun.default_allocator);
             buffer_writer.append_newline = true;
@@ -801,10 +846,9 @@ while (true) : (__loop_limit_1 += 1) {
                 }
 
                 if (fields.entry_point.len > 0 and !exists(fields.entry_point)) {
-                    const cwd = std.c.AT.FDCWD;
                     if (std.fs.path.dirname(fields.entry_point)) |dirname| {
                         if (!strings.eqlComptime(dirname, ".")) {
-                            cwd.makePath(dirname) catch {};
+                            bun.makePath(bun.FD.cwd().stdDir(), dirname) catch {};
                         }
                     }
 
@@ -849,17 +893,21 @@ while (true) : (__loop_limit_1 += 1) {
 
                 if (existsZ("package.json") and need_run_bun_install) {
                     Output.prettyln("", .{});
-                    var process = std.process.Child.init(
-                        &.{
-                            try bun.selfExePath(),
-                            "install",
-                        },
-                        alloc,
-                    );
-                    process.stderr_behavior = .Inherit;
-                    process.stdin_behavior = .Inherit;
-                    process.stdout_behavior = .Inherit;
-                    _ = try process.spawnAndWait();
+                    const argv = &.{
+                        try bun.selfExePath(),
+                        "install",
+                    };
+                    const spawn_opts = bun.spawn.sync.Options{
+                        .argv = argv,
+                        .envp = null,
+                        .stderr = .inherit,
+                        .stdin = .inherit,
+                        .stdout = .inherit,
+                    };
+                    _ = switch (try bun.spawnSync(&spawn_opts)) {
+                        .err => |err| Output.warn("Failed to run bun install: {}", .{err}),
+                        .result => |result| result.deinit(),
+                    };
                 }
             },
             else => {},
@@ -1185,6 +1233,7 @@ const Template = enum {
 
     pub fn @"write files and run `bun dev`"(comptime this: Template, allocator: std.mem.Allocator) !void {
         Template.createAgentRule();
+        _ = allocator;
 
         inline for (comptime this.files()) |file| {
             const path = file.path;
@@ -1211,18 +1260,25 @@ const Template = enum {
         Output.pretty("\n", .{});
         Output.flush();
 
-        var install = std.process.Child.init(
-            &.{
-                try bun.selfExePath(),
-                "install",
+        const argv = &.{
+            try bun.selfExePath(),
+            "install",
+        };
+        const spawn_options = bun.spawn.sync.Options{
+            .argv = argv,
+            .envp = null,
+            .stderr = .inherit,
+            .stdin = .ignore,
+            .stdout = .inherit,
+        };
+        _ = switch (bun.spawnSync(&spawn_options) catch return) {
+            .err => |err| {
+                Output.warn("Failed to run bun install: {}", .{err});
             },
-            allocator,
-        );
-        install.stderr_behavior = .Inherit;
-        install.stdin_behavior = .Ignore;
-        install.stdout_behavior = .Inherit;
-
-        _ = try install.spawnAndWait();
+            .result => |result| {
+                defer result.deinit();
+            },
+        };
 
         Output.prettyln(
             \\

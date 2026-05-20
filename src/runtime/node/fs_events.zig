@@ -652,7 +652,28 @@ const string = []const u8;
 
 const std = @import("std");
 const EventType = @import("./path_watcher.zig").PathWatcher.EventType;
-const Semaphore = std.Thread.Semaphore;
+const Semaphore = struct {
+    // Stub for Zig 0.16 compatibility
+    mutex: bun.Mutex = .{},
+    cond: bun.threading.Condition = .{},
+    count: usize = 0,
+
+    pub fn wait(self: *Semaphore) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        while (self.count == 0) {
+            self.cond.wait(&self.mutex);
+        }
+        self.count -= 1;
+    }
+
+    pub fn post(self: *Semaphore) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        self.count += 1;
+        self.cond.signal();
+    }
+};
 
 const bun = @import("bun");
 const Mutex = bun.Mutex;

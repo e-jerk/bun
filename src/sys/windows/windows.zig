@@ -3820,9 +3820,9 @@ pub fn spawnWatcherChild(
             .wShowWindow = 0,
             .cbReserved2 = 0,
             .lpReserved2 = null,
-            .hStdInput = std.fs.File.stdin().handle,
-            .hStdOutput = std.fs.File.stdout().handle,
-            .hStdError = std.fs.File.stderr().handle,
+            .hStdInput = @import("std-fs-compat").File.stdin().handle,
+            .hStdOutput = @import("std-fs-compat").File.stdout().handle,
+            .hStdError = @import("std-fs-compat").File.stderr().handle,
         },
         .lpAttributeList = p.ptr,
     };

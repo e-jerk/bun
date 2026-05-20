@@ -99,14 +99,15 @@ pub const UpdateInteractiveCommand = struct {
         const new_package_json_source = try manager.allocator.dupe(u8, package_json_writer.ctx.writtenWithoutTrailingZero());
 
         // Write the updated package.json
-        const write_file = std.c.AT.FDCWD.createFile(package_json_path, .{}) catch |err| {
+        const write_file = std.fs.cwd().createFile(package_json_path, .{}) catch |err| {
             manager.allocator.free(new_package_json_source);
             Output.errGeneric("Failed to write package.json at {s}: {s}", .{ package_json_path, @errorName(err) });
             return err;
         };
         defer write_file.close();
 
-        write_file.writeAll(new_package_json_source) catch |err| {
+        var write_file_bun = bun.sys.File{ .handle = bun.FD.fromSystem(write_file.handle) };
+        write_file_bun.writeAll(new_package_json_source).unwrap() catch |err| {
             manager.allocator.free(new_package_json_source);
             Output.errGeneric("Failed to write package.json at {s}: {s}", .{ package_json_path, @errorName(err) });
             return err;
@@ -530,7 +531,7 @@ pub const UpdateInteractiveCommand = struct {
 
                 // Reset the timer to show actual install time instead of total command time
                 var install_ctx = ctx;
-                install_ctx.start_time = std.time.nanoTimestamp();
+                install_ctx.start_time = @import("std-fs-compat").nanoTimestamp();
 
                 try PackageManager.installWithManager(manager, install_ctx, PackageManager.root_package_json_path, manager.root_dir.dir);
             }
@@ -732,7 +733,7 @@ pub const UpdateInteractiveCommand = struct {
 
         var version_buf = std.array_list.Managed(u8).init(allocator);
         defer version_buf.deinit();
-        const version_writer = version_buf.writer();
+        const version_writer = @import("std-io-compat").writer(&version_buf);
 
         for (workspace_pkg_ids) |workspace_pkg_id| {
             const pkg_deps = pkg_dependencies[workspace_pkg_id];
@@ -1647,7 +1648,7 @@ while (true) : (__loop_limit_1 += 1) {
 
             // Read input
             var reader_buffer: [1]u8 = undefined;
-            var reader_file = std.fs.File.stdin().readerStreaming(&reader_buffer);
+            var reader_file = @import("std-fs-compat").File.stdin().readerStreaming(&reader_buffer);
             const reader = &reader_file.interface;
             const byte = reader.takeByte() catch return state.selected;
 
@@ -1818,6 +1819,7 @@ while (true) : (__loop_limit_1 += 1) {
                 },
             }
         }
+        return &[_]bool{};
     }
 };
 const string = []const u8;

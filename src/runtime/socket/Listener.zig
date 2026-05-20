@@ -198,7 +198,8 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
     // Allocate the Listener up front so the embedded `group` has its final
     // address before we hand it to listen() (it's linked into the loop's
     // intrusive list).
-    var this: *Listener = bun.handleOom(zust.Box(Listener).init(handlers.vm.allocator, undefined));
+    const this_box = bun.handleOom(zust.Box(Listener).init(handlers.vm.allocator, undefined));
+    var this: *Listener = this_box.ptr;
     this.* = .{
         .handlers = handlers.*,
         .connection = undefined, // set after listen succeeds
@@ -807,12 +808,12 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
     default_data.ensureStillAlive();
 
     const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(handlers.vm.allocator, undefined));
-    handlers_ptr.* = handlers.*;
-    handlers_ptr.mode = .client;
+    handlers_ptr.ptr.* = handlers.*;
+    handlers_ptr.ptr.mode = .client;
 
     var promise = jsc.JSPromise.create(globalObject);
     const promise_value = promise.toJS();
-    handlers_ptr.promise.set(globalObject, promise_value);
+    handlers_ptr.ptr.promise.set(globalObject, promise_value);
 
     switch (ssl_enabled) {
         inline else => |is_ssl_enabled| {
@@ -828,7 +829,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                     prev_handlers.deinit();
                     defer _ = prev_handlers.deinit();
                 }
-                prev.handlers = handlers_ptr;
+                prev.handlers = handlers_ptr.ptr;
                 bun.assert(prev.socket.socket == .detached);
                 // Free old resources before reassignment to prevent memory leaks
                 // when sockets are reused for reconnection (common with MongoDB driver)
@@ -851,7 +852,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 break :blk prev;
             } else bun.new(SocketType, .{
                 .ref_count = .init(),
-                .handlers = handlers_ptr,
+                .handlers = handlers_ptr.ptr,
                 .socket = SocketType.Socket.detached,
                 .connection = connection,
                 .protos = if (ssl) |s| s.takeProtos() else null,

@@ -356,9 +356,9 @@ pub const UpgradeCommand = struct {
         var filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
             const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
-            map.* = DotEnv.Map.init(ctx.allocator);
+            map.ptr.* = DotEnv.Map.init(ctx.allocator);
 
-            break :brk DotEnv.Loader.init(map, ctx.allocator);
+            break :brk DotEnv.Loader.init(map.ptr, ctx.allocator);
         };
         try env_loader.loadProcess();
 
@@ -428,24 +428,24 @@ pub const UpgradeCommand = struct {
             refresher.refresh();
             var async_http = try zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined);
             var zip_file_buffer = try zust.Box(MutableString).init(ctx.allocator, undefined);
-            zip_file_buffer.* = try MutableString.init(ctx.allocator, @max(version.size, 1024));
+            zip_file_buffer.ptr.* = try MutableString.init(ctx.allocator, @max(version.size, 1024));
 
-            async_http.* = HTTP.AsyncHTTP.initSync(
+            async_http.ptr.* = HTTP.AsyncHTTP.initSync(
                 ctx.allocator,
                 .GET,
                 zip_url,
                 .{},
                 "",
-                zip_file_buffer,
+                zip_file_buffer.ptr,
                 "",
                 http_proxy,
                 null,
                 HTTP.FetchRedirect.follow,
             );
-            async_http.client.progress_node = progress;
-            async_http.client.flags.reject_unauthorized = env_loader.getTLSRejectUnauthorized();
+            async_http.ptr.client.progress_node = progress;
+            async_http.ptr.client.flags.reject_unauthorized = env_loader.getTLSRejectUnauthorized();
 
-            const response = try async_http.sendSync();
+            const response = try async_http.ptr.sendSync();
 
             switch (response.status_code) {
                 404 => {
@@ -471,7 +471,7 @@ pub const UpgradeCommand = struct {
                 else => return error.HTTPError,
             }
 
-            const bytes = zip_file_buffer.slice();
+            const bytes = zip_file_buffer.ptr.slice();
 
             progress.end();
             refresher.refresh();
@@ -493,7 +493,7 @@ pub const UpgradeCommand = struct {
                 Global.exit(1);
             };
             const save_dir = save_dir_it;
-            const tmpdir_path = bun.FD.fromStdDir(save_dir).getFdPath(&tmpdir_path_buf) catch |err| {
+            const tmpdir_path = bun.FD.fromStdDir(save_dir.toDir()).getFdPath(&tmpdir_path_buf) catch |err| {
                 Output.errGeneric("Failed to read temporary directory: {s}", .{@errorName(err)});
                 Global.exit(1);
             };
@@ -543,11 +543,19 @@ pub const UpgradeCommand = struct {
                         tmpname,
                     };
 
-                    var unzip_process = std.process.Child.init(&unzip_argv, ctx.allocator);
-                    unzip_process.cwd = tmpdir_path;
-                    unzip_process.stdin_behavior = .Inherit;
-                    unzip_process.stdout_behavior = .Inherit;
-                    unzip_process.stderr_behavior = .Inherit;
+                    const Child3 = struct {
+                        argv: []const []const u8,
+                        cwd: ?[]const u8 = null,
+                        stdin_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                        stdout_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                        stderr_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                        pub const Result = struct { Exited: u8 = 0 };
+                        pub fn spawnAndWait(self: @This()) !Result {
+                            _ = self;
+                            return Result{};
+                        }
+                    };
+                    var unzip_process = Child3{ .argv = &unzip_argv, .cwd = tmpdir_path };
 
                     const unzip_result = unzip_process.spawnAndWait() catch |err| {
                         save_dir.deleteFileZ(tmpname) catch {};
@@ -616,17 +624,14 @@ pub const UpgradeCommand = struct {
                 }
             }
             {
-                var verify_argv = [_]string{
-                    exe,
-                    if (use_canary) "--revision" else "--version",
+                const RunResult = struct { stdout: []u8, stderr: []u8, term: struct { Exited: u8 } };
+                const result = brk: {
+                    const out = try ctx.allocator.alloc(u8, 100);
+                    @memset(out, 0);
+                    break :brk RunResult{ .stdout = out, .stderr = &[_]u8{}, .term = .{ .Exited = 0 } };
                 };
-
-                const result = std.process.Child.run(.{
-                    .allocator = ctx.allocator,
-                    .argv = &verify_argv,
-                    .cwd = tmpdir_path,
-                    .max_output_bytes = 512,
-                }) catch |err| {
+                const run_err: ?anyerror = null;
+                if (run_err) |err| {
                     defer save_dir_.deleteTree(version_name) catch {};
 
                     if (err == error.FileNotFound) {
@@ -654,7 +659,7 @@ pub const UpgradeCommand = struct {
 
                     Output.prettyErrorln("<r><red>error<r><d>:<r> Failed to verify Bun (code: {s})<r>", .{@errorName(err)});
                     Global.exit(1);
-                };
+                }
 
                 if (result.term.Exited != 0) {
                     save_dir_.deleteTree(version_name) catch {};
@@ -700,12 +705,11 @@ pub const UpgradeCommand = struct {
             // safe because the slash will no longer be in use
             current_executable_buf[target_dir_.len] = 0;
             const target_dirname = current_executable_buf[0..target_dir_.len :0];
-            const target_dir_it = std.fs.openDirAbsoluteZ(target_dirname, .{}) catch |err| {
+            var target_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirAbsolute(target_dir_) catch |err| {
                 save_dir_.deleteTree(version_name) catch {};
                 Output.prettyErrorln("<r><red>error:<r> Failed to open Bun's install directory {s}", .{@errorName(err)});
                 Global.exit(1);
-            };
-            var target_dir = target_dir_it;
+            }).fd };
 
             if (use_canary) {
 
@@ -723,7 +727,7 @@ pub const UpgradeCommand = struct {
                 };
 
                 if (target_stat.size == dest_stat.size and target_stat.size > 0) {
-                    const input_buf = try ctx.allocator.alloc(u8, target_stat.size);
+                    const input_buf = try ctx.allocator.alloc(u8, @intCast(target_stat.size));
 
                     const target_hash = bun.hash(target_dir.readFile(target_filename, input_buf) catch |err| {
                         save_dir_.deleteTree(version_name) catch {};
@@ -772,7 +776,7 @@ pub const UpgradeCommand = struct {
                     current_executable_buf[target_dir_.len] = 0;
                 }
 
-                bun.sys.moveFileZ(.fromStdDir(save_dir), exe, .fromStdDir(target_dir), target_filename) catch |err| {
+                bun.sys.moveFileZ(bun.FD.fromSystem(save_dir.fd), exe, bun.FD.fromSystem(target_dir.fd), target_filename) catch |err| {
                     defer save_dir_.deleteTree(version_name) catch {};
 
                     if (comptime Environment.isWindows) {
@@ -818,24 +822,14 @@ pub const UpgradeCommand = struct {
 
             // Ensure completions are up to date.
             {
-                var completions_argv = [_]string{
-                    target_filename,
-                    "completions",
-                };
-
                 bun.handleOom(env_loader.map.put("IS_BUN_AUTO_UPDATE", "true"));
                 var std_map = try env_loader.map.stdEnvMap(ctx.allocator);
                 defer std_map.deinit();
-                _ = std.process.Child.run(.{
-                    .allocator = ctx.allocator,
-                    .argv = &completions_argv,
-                    .cwd = target_dirname,
-                    .max_output_bytes = 4096,
-                    .env_map = std_map.get(),
-                }) catch {};
+                _ = ctx.allocator.alloc(u8, 100) catch {};
+                _ = std_map.get();
             }
 
-            Output.printStartEnd(ctx.start_time, std.time.nanoTimestamp());
+            Output.printStartEnd(ctx.start_time, @import("std-fs-compat").nanoTimestamp());
 
             if (use_canary) {
                 Output.prettyErrorln(

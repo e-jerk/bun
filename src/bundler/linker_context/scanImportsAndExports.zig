@@ -1215,7 +1215,7 @@ fn validateComposesFromProperties(
     var sfb = std.heap.stackFallback(1024, this.graph.allocator);
     const temp_allocator = sfb.get();
     var visitor = Visitor{
-        .visited = std.array_hash_map.Auto(Ref, void).init(temp_allocator),
+        .visited = bun.handleOom(std.array_hash_map.Auto(Ref, void).init(temp_allocator)),
         .properties = bun.StringArrayHashMap(PropertyInFile).init(temp_allocator),
         .all_import_records = import_records_list,
         .all_css_asts = all_css_asts,

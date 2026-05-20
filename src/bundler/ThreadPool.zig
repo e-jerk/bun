@@ -7,7 +7,7 @@ pub const ThreadPool = struct {
     io_pool: *ThreadPoolLib,
     worker_pool: *ThreadPoolLib,
     worker_pool_is_owned: bool = false,
-    workers_assignments: std.array_hash_map.Auto(std.Thread.Id, *Worker) = std.array_hash_map.Auto(std.Thread.Id, *Worker).init(bun.default_allocator),
+    workers_assignments: @import("array-hash-map-compat").Auto(std.Thread.Id, *Worker) = @import("array-hash-map-compat").Auto(std.Thread.Id, *Worker).init(bun.default_allocator),
     workers_assignments_lock: bun.Mutex = .{},
     v2: *BundleV2,
 
@@ -188,7 +188,8 @@ pub const ThreadPool = struct {
                 return entry.value_ptr.*;
             }
 
-            worker = zust.Box(Worker).init(bun.default_allocator, undefined) catch unreachable;
+            const box = zust.Box(Worker).init(bun.default_allocator, undefined) catch unreachable;
+            worker = box.ptr;
             entry.value_ptr.* = worker;
         }
 
@@ -293,7 +294,7 @@ pub const ThreadPool = struct {
             this.ast_memory_allocator.reset();
 
             this.data = WorkerData{
-                .log = bun.handleOom(zust.Box(Logger.Log).init(allocator, undefined)),
+                .log = bun.handleOom(zust.Box(Logger.Log).init(allocator, undefined)).ptr,
                 .transpiler = undefined,
             };
             this.data.log.* = Logger.Log.init(allocator);

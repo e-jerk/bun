@@ -1,4 +1,4 @@
-// This is copied from std.fs.Dir.Iterator
+// This is copied from @import("std-fs-compat").FsDir.Iterator
 // The differences are:
 // - it returns errors in the expected format
 // - doesn't mark BADF as unreachable
@@ -60,7 +60,7 @@ pub fn NewIterator(comptime use_windows_ospath: bool) type {
             fn nextDarwin(self: *Self) Result {
 var __loop_limit_1: usize = 0;
 start_over: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+    if (__loop_limit_1 > 1_000_000) return .{ .result = null };
                     if (self.index >= self.end_index) {
                         if (self.received_eof) {
                             return .{ .result = null };
@@ -572,4 +572,4 @@ const Entry = jsc.Node.Dirent;
 const std = @import("std");
 const mem = std.mem;
 const posix = std.posix;
-const Dir = std.fs.Dir;
+const Dir = @import("std-fs-compat").FsDir;

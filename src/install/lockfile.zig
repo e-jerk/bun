@@ -66,12 +66,12 @@ pub const Scripts = struct {
 
     const RunCommand = @import("../cli/run_command.zig").RunCommand;
 
-    preinstall: Entries = .{},
-    install: Entries = .{},
-    postinstall: Entries = .{},
-    preprepare: Entries = .{},
-    prepare: Entries = .{},
-    postprepare: Entries = .{},
+    preinstall: Entries = .empty,
+    install: Entries = .empty,
+    postinstall: Entries = .empty,
+    preprepare: Entries = .empty,
+    prepare: Entries = .empty,
+    postprepare: Entries = .empty,
 
     pub fn hasAny(this: *Scripts) bool {
         inline for (Scripts.names) |hook| {
@@ -642,9 +642,9 @@ pub fn cleanWithLogger(
     exact_versions: bool,
     log_level: PackageManager.Options.LogLevel,
 ) !*Lockfile {
-    var timer: std.time.Timer = undefined;
+    var timer: @import("std-fs-compat").Timer = undefined;
     if (log_level.isVerbose()) {
-        timer = try std.time.Timer.start();
+        timer = try @import("std-fs-compat").Timer.start();
     }
 
     const old_trusted_dependencies = old.trusted_dependencies;
@@ -860,7 +860,7 @@ pub const Cloner = struct {
     lockfile: *Lockfile,
     old: *Lockfile,
     mapping: []PackageID,
-    trees: Tree.List = Tree.List{},
+    trees: Tree.List = Tree.List.empty,
     trees_count: u32 = 1,
     log: *logger.Log,
     old_preinstall_state: std.ArrayListUnmanaged(Install.PreinstallState),

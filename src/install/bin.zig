@@ -394,8 +394,9 @@ pub const Bin = extern struct {
         i: usize = 0,
         done: bool = false,
         dir_iterator: ?std.fs.Dir.Iterator = null,
+        child_dir: ?std.fs.Dir = null,
         package_name: String,
-        destination_node_modules: std.fs.Dir = bun.invalid_fd.stdDir(),
+        destination_node_modules: std.fs.Dir = std.fs.cwd(),
         buf: bun.PathBuffer = undefined,
         string_buffer: []const u8,
         extern_string_buf: []const ExternalString,
@@ -415,6 +416,7 @@ pub const Bin = extern struct {
                 this.buf[joined.len] = 0;
                 const joined_: [:0]u8 = this.buf[0..joined.len :0];
                 var child_dir = try bun.openDir(dir, joined_);
+                this.child_dir = child_dir;
                 this.dir_iterator = child_dir.iterate();
             }
 
@@ -424,7 +426,10 @@ pub const Bin = extern struct {
                 return entry.name;
             } else {
                 this.done = true;
-                this.dir_iterator.?.dir.close();
+                if (this.child_dir) |*cd| {
+                    cd.close();
+                    this.child_dir = null;
+                }
                 this.dir_iterator = null;
                 return null;
             }
@@ -822,7 +827,7 @@ pub const Bin = extern struct {
 
                         const node_modules_path_save = this.node_modules_path.save();
                         this.node_modules_path.append(".bin");
-                        bun.makePath(std.c.AT.FDCWD, this.node_modules_path.slice()) catch {};
+                        bun.makePath(std.fs.cwd(), this.node_modules_path.slice()) catch {};
                         node_modules_path_save.restore();
 
                         switch (bun.sys.symlinkRunningExecutable(rel_target, abs_dest)) {
@@ -846,7 +851,7 @@ pub const Bin = extern struct {
             }
 
             // delete and try again
-            std.fs.deleteTreeAbsolute(abs_dest) catch {};
+            _ = bun.sys.unlink(abs_dest);
             bun.sys.symlinkRunningExecutable(rel_target, abs_dest).unwrap() catch |err| {
                 this.err = err;
             };

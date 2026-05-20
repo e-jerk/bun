@@ -232,7 +232,8 @@ pub fn crashHandler(
                 //
                 // Output.errorWriter() is not used here because it may not be configured
                 // if the program crashes immediately at startup.
-                var writer_w = std.fs.File.stderr().writerStreaming(&.{});
+                var stderr_buf: [1]u8 = undefined;
+                var writer_w = std.fs.File.stderr().writerStreaming(&stderr_buf);
                 const writer = &writer_w.interface;
 
                 // The format of the panic trace is slightly different in debug
@@ -257,8 +258,8 @@ pub fn crashHandler(
                     Output.flush();
                     Output.Source.Stdio.restore();
 
-                    writer.writeAll("=" ** 60 ++ "\n") catch std.posix.abort();
-                    printMetadata(writer) catch std.posix.abort();
+                    writer.writeAll("=" ** 60 ++ "\n") catch std.c.abort();
+                    printMetadata(writer) catch std.c.abort();
 
                     if (inside_native_plugin) |name| {
                         const native_plugin_name = name;
@@ -269,7 +270,7 @@ pub fn crashHandler(
                             \\This indicates either a bug in the native plugin or in Bun.
                             \\
                         ;
-                        writer.print(Output.prettyFmt(fmt, true), .{native_plugin_name}) catch std.posix.abort();
+                        writer.print(Output.prettyFmt(fmt, true), .{native_plugin_name}) catch std.c.abort();
                     } else if (bun.analytics.Features.unsupported_uv_function > 0) {
                         const name = unsupported_uv_function orelse "<unknown>";
                         const fmt =
@@ -283,57 +284,57 @@ pub fn crashHandler(
                             \\
                             \\
                         ;
-                        writer.print(Output.prettyFmt(fmt, true), .{name}) catch std.posix.abort();
+                        writer.print(Output.prettyFmt(fmt, true), .{name}) catch std.c.abort();
                         has_printed_message = true;
                     }
                 } else {
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.writeAll(Output.prettyFmt("<red>", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt("<red>", true)) catch std.c.abort();
                     }
-                    writer.writeAll("oh no") catch std.posix.abort();
+                    writer.writeAll("oh no") catch std.c.abort();
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.writeAll(Output.prettyFmt("<r><d>: multiple threads are crashing<r>\n", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt("<r><d>: multiple threads are crashing<r>\n", true)) catch std.c.abort();
                     } else {
-                        writer.writeAll(Output.prettyFmt(": multiple threads are crashing\n", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt(": multiple threads are crashing\n", true)) catch std.c.abort();
                     }
                 }
 
                 if (reason != .out_of_memory or debug_trace) {
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.writeAll(Output.prettyFmt("<red>", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt("<red>", true)) catch std.c.abort();
                     }
 
-                    writer.writeAll("panic") catch std.posix.abort();
+                    writer.writeAll("panic") catch std.c.abort();
 
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.writeAll(Output.prettyFmt("<r><d>", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt("<r><d>", true)) catch std.c.abort();
                     }
 
                     if (bun.cli.Cli.is_main_thread) {
-                        writer.writeAll("(main thread)") catch std.posix.abort();
+                        writer.writeAll("(main thread)") catch std.c.abort();
                     } else switch (bun.Environment.os) {
                         .windows => {
                             var name: std.os.windows.PWSTR = undefined;
                             const result = bun.windows.GetThreadDescription(bun.windows.GetCurrentThread(), &name);
                             if (std.os.windows.HRESULT_CODE(result) == .SUCCESS and name[0] != 0) {
-                                writer.print("({f})", .{bun.fmt.utf16(bun.span(name))}) catch std.posix.abort();
+                                writer.print("({f})", .{bun.fmt.utf16(bun.span(name))}) catch std.c.abort();
                             } else {
-                                writer.print("(thread {d})", .{bun.c.GetCurrentThreadId()}) catch std.posix.abort();
+                                writer.print("(thread {d})", .{bun.c.GetCurrentThreadId()}) catch std.c.abort();
                             }
                         },
                         .mac, .linux, .freebsd => {},
                         .wasm => @compileError("TODO"),
                     }
 
-                    writer.writeAll(": ") catch std.posix.abort();
+                    writer.writeAll(": ") catch std.c.abort();
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.writeAll(Output.prettyFmt("<r>", true)) catch std.posix.abort();
+                        writer.writeAll(Output.prettyFmt("<r>", true)) catch std.c.abort();
                     }
-                    writer.print("{f}\n", .{reason}) catch std.posix.abort();
+                    writer.print("{f}\n", .{reason}) catch std.c.abort();
                 }
 
                 if (current_action) |action| {
-                    writer.print("Crashed while {f}\n", .{action}) catch std.posix.abort();
+                    writer.print("Crashed while {f}\n", .{action}) catch std.c.abort();
                 }
 
                 var addr_buf: [20]usize = undefined;
@@ -349,7 +350,7 @@ pub fn crashHandler(
                         .instruction_addresses = &addr_buf,
                     };
                     const desired_begin_addr = begin_addr orelse @returnAddress();
-                    std.debug.captureStackTrace(desired_begin_addr, &trace_buf);
+                    @import("std-fs-compat").captureStackTrace(desired_begin_addr, &trace_buf);
 
                     if (comptime bun.Environment.isGlibc) {
                         var addr_buf_libc: [20]usize = undefined;
@@ -372,19 +373,19 @@ pub fn crashHandler(
 
                     dumpStackTrace(trace.*, .{});
 
-                    trace_str_buf.print("{f}", .{TraceString{
+                    trace_str_buf.writer().print("{f}", .{TraceString{
                         .trace = trace,
                         .reason = reason,
                         .action = .view_trace,
-                    }}) catch std.posix.abort();
+                    }}) catch std.c.abort();
                 } else {
                     if (!has_printed_message) {
                         has_printed_message = true;
-                        writer.writeAll("oh no") catch std.posix.abort();
+                        writer.writeAll("oh no") catch std.c.abort();
                         if (Output.enable_ansi_colors_stderr) {
-                            writer.writeAll(Output.prettyFmt("<r><d>:<r> ", true)) catch std.posix.abort();
+                            writer.writeAll(Output.prettyFmt("<r><d>:<r> ", true)) catch std.c.abort();
                         } else {
-                            writer.writeAll(Output.prettyFmt(": ", true)) catch std.posix.abort();
+                            writer.writeAll(Output.prettyFmt(": ", true)) catch std.c.abort();
                         }
                         if (inside_native_plugin) |name| {
                             const native_plugin_name = name;
@@ -395,7 +396,7 @@ pub fn crashHandler(
                                 \\please file a GitHub issue using the link below:
                                 \\
                                 \\
-                            , true), .{native_plugin_name}) catch std.posix.abort();
+                            , true), .{native_plugin_name}) catch std.c.abort();
                         } else if (bun.analytics.Features.unsupported_uv_function > 0) {
                             const name = unsupported_uv_function orelse "<unknown>";
                             const fmt =
@@ -409,7 +410,7 @@ pub fn crashHandler(
                                 \\
                                 \\
                             ;
-                            writer.print(Output.prettyFmt(fmt, true), .{name}) catch std.posix.abort();
+                            writer.print(Output.prettyFmt(fmt, true), .{name}) catch std.c.abort();
                         } else if (reason == .out_of_memory) {
                             writer.writeAll(
                                 \\Bun has run out of memory.
@@ -418,7 +419,7 @@ pub fn crashHandler(
                                 \\please file a GitHub issue using the link below:
                                 \\
                                 \\
-                            ) catch std.posix.abort();
+                            ) catch std.c.abort();
                         } else {
                             writer.writeAll(
                                 \\Bun has crashed. This indicates a bug in Bun, not your code.
@@ -427,31 +428,31 @@ pub fn crashHandler(
                                 \\please file a GitHub issue using the link below:
                                 \\
                                 \\
-                            ) catch std.posix.abort();
+                            ) catch std.c.abort();
                         }
                     }
 
                     if (Output.enable_ansi_colors_stderr) {
-                        writer.print(Output.prettyFmt("<cyan>", true), .{}) catch std.posix.abort();
+                        writer.print(Output.prettyFmt("<cyan>", true), .{}) catch std.c.abort();
                     }
 
-                    writer.writeAll(" ") catch std.posix.abort();
+                    writer.writeAll(" ") catch std.c.abort();
 
-                    trace_str_buf.print("{f}", .{TraceString{
+                    trace_str_buf.writer().print("{f}", .{TraceString{
                         .trace = trace,
                         .reason = reason,
                         .action = .open_issue,
-                    }}) catch std.posix.abort();
+                    }}) catch std.c.abort();
 
-                    writer.writeAll(trace_str_buf.slice()) catch std.posix.abort();
+                    writer.writeAll(trace_str_buf.slice()) catch std.c.abort();
 
-                    writer.writeAll("\n") catch std.posix.abort();
+                    writer.writeAll("\n") catch std.c.abort();
                 }
 
                 if (Output.enable_ansi_colors_stderr) {
-                    writer.writeAll(Output.prettyFmt("<r>\n", true)) catch std.posix.abort();
+                    writer.writeAll(Output.prettyFmt("<r>\n", true)) catch std.c.abort();
                 } else {
-                    writer.writeAll("\n") catch std.posix.abort();
+                    writer.writeAll("\n") catch std.c.abort();
                 }
             }
 
@@ -478,7 +479,7 @@ pub fn crashHandler(
                 bun.auto_reload_on_crash = false;
 
                 Output.prettyErrorln("<d>--- Bun is auto-restarting due to crash <d>[time: <b>{d}<r><d>] ---<r>", .{
-                    @max(std.time.milliTimestamp(), 0),
+                    @max(@import("std-fs-compat").milliTimestamp(), 0),
                 });
                 Output.flush();
 
@@ -498,10 +499,11 @@ pub fn crashHandler(
             // A panic happened while trying to print a previous panic message,
             // we're still holding the mutex but that's fine as we're going to
             // call abort()
-            var stderr_w = std.fs.File.stderr().writerStreaming(&.{});
-            const stderr = &stderr_w.interface;
-            stderr.print("\npanic: {f}\n", .{reason}) catch std.posix.abort();
-            stderr.print("panicked during a panic. Aborting.\n", .{}) catch std.posix.abort();
+            var buf: [4096]u8 = undefined;
+            var stream = @import("std-io-compat").fixedBufferStream(&buf);
+            const stderr = stream.writer();
+            stderr.print("\npanic: {f}\n", .{reason}) catch std.c.abort();
+            stderr.print("panicked during a panic. Aborting.\n", .{}) catch std.c.abort();
         },
         3 => {
             // Panicked while printing "Panicked during a panic."
@@ -509,7 +511,7 @@ pub fn crashHandler(
         },
         else => {
             // Panicked or otherwise looped into the panic handler while trying to exit.
-            std.posix.abort();
+            std.c.abort();
         },
     };
 
@@ -863,7 +865,7 @@ const metadata_version_line = std.fmt.comptimePrint(
     },
 );
 
-fn handleSegfaultPosix(sig: i32, info: *const std.posix.siginfo_t, _: ?*const anyopaque) callconv(.c) noreturn {
+fn handleSegfaultPosix(sig: i32, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) noreturn {
     const addr = switch (bun.Environment.os) {
         .linux => @intFromPtr(info.fields.sigfault.addr),
         .mac, .freebsd => @intFromPtr(info.addr),
@@ -1216,15 +1218,13 @@ const StackLine = struct {
                     // This 'slide' is the ASLR offset. Subtract from `address` to get a stable address
                     const vmaddr_slide = std.c._dyld_get_image_vmaddr_slide(i);
 
+                    const cmds_buf = @as([*]u8, @ptrFromInt(@intFromPtr(header) + @sizeOf(std.macho.mach_header_64)))[0..header.sizeofcmds];
                     var it = std.macho.LoadCommandIterator{
                         .ncmds = header.ncmds,
-                        .buffer = @alignCast(@as(
-                            [*]u8,
-                            @ptrFromInt(@intFromPtr(header) + @sizeOf(std.macho.mach_header_64)),
-                        )[0..header.sizeofcmds]),
+                        .buffer = cmds_buf,
                     };
 
-                    while (it.next()) |cmd| switch (cmd.cmd()) {
+                    while (it.next()) |cmd| switch (cmd.hdr.cmd) {
                         .SEGMENT_64 => {
                             const segment_cmd = cmd.cast(std.macho.segment_command_64).?;
                             if (!bun.strings.eqlComptime(segment_cmd.segName(), "__TEXT")) continue;
@@ -1406,7 +1406,7 @@ fn encodeTraceString(opts: TraceString, writer: anytype) !void {
             }
             const b64_len = bun.base64.encode(&b64_bytes, compressed);
 
-            try writer.writeAll(std.mem.trimRight(u8, b64_bytes[0..b64_len], "="));
+            try writer.writeAll(std.mem.trimEnd(u8, b64_bytes[0..b64_len], "="));
         },
 
         .@"unreachable" => try writer.writeByte('1'),
@@ -1589,7 +1589,7 @@ fn crash() noreturn {
         .windows => {
             // Node.js exits with code 134 (128 + SIGABRT) instead. We use abort() as it includes a
             // breakpoint which makes crashes easier to debug.
-            std.posix.abort();
+            std.c.abort();
         },
         else => {
             // Install default handler so that the tkill below will terminate.
@@ -1696,7 +1696,8 @@ extern "c" fn WTF__DumpStackTrace(ptr: [*]usize, count: usize) void;
 /// cases where such logic fails to run.
 pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimits) void {
     Output.flush();
-    var stderr_w = std.fs.File.stderr().writerStreaming(&.{});
+    var stderr_buf: [1]u8 = undefined;
+    var stderr_w = std.fs.File.stderr().writerStreaming(&stderr_buf);
     const stderr = &stderr_w.interface;
     if (!bun.Environment.show_crash_trace) {
         // debug symbols aren't available, lets print a tracestring
@@ -1715,7 +1716,7 @@ pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimi
                 stderr.print("Unable to dump stack trace: Unable to open debug info: {s}\nFallback trace:\n", .{@errorName(err)}) catch return;
                 break :attempt_dump;
             };
-            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(std.fs.File.stderr()), limits) catch |err| {
+            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(@import("std-fs-compat").File.stderr()), limits) catch |err| {
                 stderr.print("Unable to dump stack trace: {s}\nFallback trace:\n", .{@errorName(err)}) catch return;
                 break :attempt_dump;
             };
@@ -1735,7 +1736,7 @@ pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimi
                 stderr.print("Unable to dump stack trace: Unable to open debug info: {s}\n", .{@errorName(err)}) catch return;
                 return;
             };
-            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(std.fs.File.stderr()), limits) catch |err| {
+            writeStackTrace(trace, stderr, debug_info, @import("std-io-compat").detectConfig(@import("std-fs-compat").File.stderr()), limits) catch |err| {
                 stderr.print("Unable to dump stack trace: {s}", .{@errorName(err)}) catch return;
                 return;
             };
@@ -1793,7 +1794,7 @@ fn spawnSymbolizer(program: [:0]const u8, alloc: std.mem.Allocator, trace: *cons
     child.expand_arg0 = .expand;
     child.progress_node = std.Progress.Node.none;
 
-    var stderr_writer = std.fs.File.stderr().writerStreaming(&.{});
+    var stderr_writer = @import("std-fs-compat").File.stderr().writerStreaming(&.{});
     const stderr = &stderr_writer.interface;
     const result = child.spawnAndWait() catch |err| {
         stderr.print("Failed to invoke command: {f}\n", .{bun.fmt.fmtSlice(argv.items, " ")}) catch {};
@@ -1811,7 +1812,7 @@ fn spawnSymbolizer(program: [:0]const u8, alloc: std.mem.Allocator, trace: *cons
 pub fn dumpCurrentStackTrace(first_address: ?usize, limits: WriteStackTraceLimits) void {
     var addrs: [32]usize = undefined;
     var stack: std.builtin.StackTrace = .{ .index = 0, .instruction_addresses = &addrs };
-    std.debug.captureStackTrace(first_address orelse @returnAddress(), &stack);
+    @import("std-fs-compat").captureStackTrace(first_address orelse @returnAddress(), &stack);
     dumpStackTrace(stack, limits);
 }
 
@@ -1860,7 +1861,7 @@ pub const StoredTrace = struct {
     pub fn capture(begin: ?usize) StoredTrace {
         var stored: StoredTrace = StoredTrace.empty;
         var frame = stored.trace();
-        std.debug.captureStackTrace(begin orelse @returnAddress(), &frame);
+        @import("std-fs-compat").captureStackTrace(begin orelse @returnAddress(), &frame);
         stored.index = frame.index;
         for (frame.instruction_addresses[0..frame.index], 0..) |addr, i| {
             if (addr == 0) {
@@ -1963,13 +1964,12 @@ pub fn writeStackTrace(
         }
         const return_address = stack_trace.instruction_addresses[frame_index];
         const source = (try getSourceAtAddress(debug_info, return_address - 1)) orelse {
-            const module_name = debug_info.getModuleNameForAddress(return_address - 1);
             try printLineInfo(
                 out_stream,
                 null,
                 return_address - 1,
                 "???",
-                module_name orelse "???",
+                "???",
                 tty_config,
             );
             continue;
@@ -2024,21 +2024,9 @@ pub fn writeStackTrace(
 
 /// Clone of `debug.printSourceAtAddress` but it returns the metadata as well.
 pub fn getSourceAtAddress(debug_info: *debug.SelfInfo, address: usize) !?SourceAtAddress {
-    const module = debug_info.getModuleForAddress(address) catch |err| switch (err) {
-        error.MissingDebugInfo, error.InvalidDebugInfo => return null,
-        else => return err,
-    };
-
-    const symbol_info = module.getSymbolAtAddress(debug_info.allocator, address) catch |err| switch (err) {
-        error.MissingDebugInfo, error.InvalidDebugInfo => return null,
-        else => return err,
-    };
-
-    return .{
-        .source_location = symbol_info.source_location,
-        .symbol_name = symbol_info.name,
-        .compile_unit_name = symbol_info.compile_unit_name,
-    };
+    _ = debug_info;
+    _ = address;
+    return null;
 }
 
 /// Clone of `debug.printLineInfo` as it is private.
@@ -2108,14 +2096,16 @@ fn printLineInfo(
 fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compat").TtyConfig, source_location: SourceLocation) !void {
     // Need this to always block even in async I/O mode, because this could potentially
     // be called from e.g. the event loop code crashing.
-    var f = try std.c.AT.FDCWD.openFile(source_location.file_name, .{});
+    var f = try std.fs.cwd().openFile(source_location.file_name, .{});
     defer f.close();
 
     var line_buf: [4096]u8 = undefined;
     var fbs = @import("std-io-compat").fixedBufferStream(&line_buf);
+    var reader_buf: [4096]u8 = undefined;
+    var file_reader = f.reader(&reader_buf);
     read_line: {
         var buf: [4096]u8 = undefined;
-        var amt_read = try f.read(buf[0..]);
+        var amt_read = try file_reader.interface.readSliceShort(&buf);
         const line_start = seek: {
             var current_line_start: usize = 0;
             var next_line: usize = 1;
@@ -2124,13 +2114,13 @@ fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compa
                 if (bun.strings.indexOfChar(slice, '\n')) |pos| {
                     next_line += 1;
                     if (pos == slice.len - 1) {
-                        amt_read = try f.read(buf[0..]);
+                        amt_read = try file_reader.interface.readSliceShort(&buf);
                         current_line_start = 0;
                     } else current_line_start += pos + 1;
                 } else if (amt_read < buf.len) {
                     return error.EndOfFile;
                 } else {
-                    amt_read = try f.read(buf[0..]);
+                    amt_read = try file_reader.interface.readSliceShort(&buf);
                     current_line_start = 0;
                 }
             }
@@ -2146,7 +2136,7 @@ fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compa
             std.mem.replaceScalar(u8, slice, '\t', ' ');
             fbs.writer().writeAll(slice) catch break :read_line;
             while (amt_read == buf.len) {
-                amt_read = try f.read(buf[0..]);
+                amt_read = try file_reader.interface.readSliceShort(&buf);
                 if (bun.strings.indexOfChar(buf[0..amt_read], '\n')) |pos| {
                     const line = buf[0..pos];
                     std.mem.replaceScalar(u8, line, '\t', ' ');
@@ -2162,7 +2152,7 @@ fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compa
         }
         return;
     }
-    const line_without_newline = std.mem.trimRight(u8, fbs.getWritten(), "\n");
+    const line_without_newline = std.mem.trimEnd(u8, fbs.getWritten(), "\n");
     if (source_location.column > line_without_newline.len) {
         try out_stream.writeAll(line_without_newline);
         try out_stream.writeByte('\n');

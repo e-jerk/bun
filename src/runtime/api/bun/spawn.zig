@@ -162,7 +162,7 @@ pub const PosixSpawn = struct {
         }
 
         pub fn set(self: *PosixSpawnAttr, flags: u16) !void {
-            switch (errno(system.posix_spawnattr_setflags(&self.attr, @as(c_short, @bitCast(flags))))) {
+            switch (errno(system.posix_spawnattr_setflags(&self.attr, @bitCast(flags)))) {
                 .SUCCESS => return,
                 .INVAL => unreachable,
                 else => |err| return unexpectedErrno(err),
@@ -525,7 +525,7 @@ while (true) : (__loop_limit_1 += 1) {
         var status: PidStatus = 0;
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+    if (__loop_limit_2 > 1_000_000) return .{ .err = bun.sys.Error.fromCode(.LOOP, .waitpid) };
             const rc = system.wait4(pid, &status, @as(c_int, @intCast(flags)), @ptrCast(usage));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){

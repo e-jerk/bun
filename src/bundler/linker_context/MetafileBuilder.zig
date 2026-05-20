@@ -42,7 +42,7 @@ pub fn generateChunkJson(
     var json = std.array_list.Managed(u8).init(allocator);
     errdefer json.deinit();
 
-    const writer = json.writer();
+    const writer = @import("std-io-compat").writer(&json);
     const sources = c.parse_graph.input_files.items(.source);
 
     // Start chunk entry: "path/to/output.js": {
@@ -359,7 +359,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
 
     var md = std.array_list.Managed(u8).init(allocator);
     errdefer md.deinit();
-    const writer = md.writer();
+    const writer = @import("std-io-compat").writer(&md);
 
     // Get inputs and outputs
     const inputs = root.object.get("inputs") orelse return error.InvalidJSON;
@@ -544,7 +544,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                                 if (matched_key) |key| {
                                     const gop = try imported_by.getOrPut(key);
                                     if (!gop.found_existing) {
-                                        gop.value_ptr.* = .{};
+                                        gop.value_ptr.* = std.ArrayListUnmanaged([]const u8).empty;
                                     }
                                     try gop.value_ptr.append(allocator, path);
                                 }

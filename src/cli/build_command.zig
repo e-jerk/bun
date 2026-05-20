@@ -418,7 +418,7 @@ pub const BuildCommand = struct {
 
             break :brk build_result.output_files.items;
         };
-        const bundled_end = std.time.nanoTimestamp();
+        const bundled_end = @import("std-fs-compat").nanoTimestamp();
 
         var had_err = false;
         dump: {
@@ -466,13 +466,15 @@ pub const BuildCommand = struct {
                 root_path = std.fs.path.dirname(ctx.args.entry_points[0]) orelse ".";
 
             const root_dir = if (root_path.len == 0 or strings.eqlComptime(root_path, "."))
-                std.c.AT.FDCWD
-            else
-                std.c.AT.FDCWD.makeOpenPath(root_path, .{}) catch |err| {
+                bun.FD.cwd()
+            else switch (bun.sys.openA(root_path, bun.O.RDWR | bun.O.DIRECTORY | bun.O.CREAT, 0o755)) {
+                .result => |fd| fd,
+                .err => |err| {
                     Output.err(err, "could not open output directory {f}", .{bun.fmt.quote(root_path)});
                     exitOrWatch(1, ctx.debug.hot_reload == .watch);
                     unreachable;
-                };
+                },
+            };
 
             const all_paths = try ctx.allocator.alloc([]const u8, output_files.len);
             var max_path_len: usize = 0;
@@ -514,7 +516,7 @@ pub const BuildCommand = struct {
                     outfile = try std.fmt.allocPrint(allocator, "{s}.exe", .{outfile});
                 } else if (was_renamed_from_index and !bun.strings.eqlComptime(outfile, "index")) {
                     // If we're going to fail due to EISDIR, we should instead pick a different name.
-                    if (bun.sys.directoryExistsAt(bun.FD.fromStdDir(root_dir), outfile).asValue() orelse false) {
+                    if (bun.sys.directoryExistsAt(root_dir, outfile).asValue() orelse false) {
                         outfile = "index";
                     }
                 }
@@ -523,7 +525,7 @@ pub const BuildCommand = struct {
                     compile_target,
                     allocator,
                     output_files,
-                    root_dir,
+                    @import("std-fs-compat").FsDir{ .fd = root_dir.value.as_system },
                     this_transpiler.options.public_path,
                     outfile,
                     this_transpiler.env,
@@ -582,7 +584,10 @@ pub const BuildCommand = struct {
                                         },
                                     } },
                                     .encoding = .buffer,
-                                    .dirfd = .fromStdDir(root_dir),
+                                    .dirfd = brk: {
+                                        const fs_dir = @import("std-fs-compat").FsDir{ .fd = root_dir.value.as_system };
+                                        break :brk .fromStdDir(fs_dir.toDir());
+                                    },
                                     .file = .{ .path = .{
                                         .string = bun.PathString.init(map_basename),
                                     } },
@@ -598,7 +603,7 @@ pub const BuildCommand = struct {
                     }
                 }
 
-                const compiled_elapsed = @divTrunc(@as(i64, @truncate(std.time.nanoTimestamp() - bundled_end)), @as(i64, std.time.ns_per_ms));
+                const compiled_elapsed = @divTrunc(@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bundled_end)), @as(i64, std.time.ns_per_ms));
                 const compiled_elapsed_digit_count: isize = switch (compiled_elapsed) {
                     0...9 => 3,
                     10...99 => 2,
@@ -629,13 +634,13 @@ pub const BuildCommand = struct {
             if (log.errors == 0) {
                 if (this_transpiler.options.transform_only) {
                     Output.prettyln("<green>Transpiled file in {d}ms<r>", .{
-                        @divFloor(std.time.nanoTimestamp() - bun.cli.start_time, std.time.ns_per_ms),
+                        @divFloor(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time, std.time.ns_per_ms),
                     });
                 } else {
                     Output.prettyln("<green>Bundled {d} module{s} in {d}ms<r>", .{
                         reachable_file_count,
                         if (reachable_file_count == 1) "" else "s",
-                        @divFloor(std.time.nanoTimestamp() - bun.cli.start_time, std.time.ns_per_ms),
+                        @divFloor(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time, std.time.ns_per_ms),
                     });
                 }
                 Output.prettyln("\n", .{});
@@ -647,7 +652,7 @@ pub const BuildCommand = struct {
             }
 
             for (output_files) |f| {
-                f.writeToDisk(root_dir, from_path) catch |err| {
+                f.writeToDisk(@import("std-fs-compat").FsDir{ .fd = root_dir.value.as_system }, from_path) catch |err| {
                     Output.err(err, "failed to write file '{f}'", .{bun.fmt.quote(f.dest_path)});
                     had_err = true;
                     continue;
@@ -719,7 +724,7 @@ pub const BuildCommand = struct {
 fn exitOrWatch(code: u8, watch: bool) noreturn {
     if (watch) {
         // the watcher thread will exit the process
-        std.Thread.sleep(std.math.maxInt(u64) - 1);
+        @import("std-fs-compat").sleep(std.math.maxInt(u64) - 1);
     }
     Global.exit(code);
 }

@@ -73,7 +73,7 @@ pub fn watcherAcquireEvent(self: *Self) *HotReloadEvent {
 
     // Initialize the timer if it is empty.
     if (ev.isEmpty())
-        ev.timer = std.time.Timer.start() catch unreachable;
+        ev.timer = @import("std-fs-compat").Timer.start() catch unreachable;
 
     ev.owner.bun_watcher.thread_lock.assertLocked();
 

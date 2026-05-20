@@ -777,7 +777,7 @@ fn restoreTerminal(self: *Repl) void {
 /// Global pointer for signal handler to access the VM
 var sigint_vm: ?*jsc.VM = null;
 
-fn sigintHandler(_: c_int) callconv(.c) void {
+fn sigintHandler(_: i32) callconv(.c) void {
     if (sigint_vm) |vm| {
         vm.setExecutionForbidden(true);
     }
@@ -828,14 +828,14 @@ fn write(_: *Repl, data: []const u8) void {
 }
 
 fn print(_: *Repl, comptime format: []const u8, args: anytype) void {
-    Output.print(format, args) catch {};
+    Output.print(format, args);
 }
 
 fn printError(self: *Repl, comptime format: []const u8, args: anytype) void {
     if (self.use_colors) {
-        Output.print(Color.red ++ format ++ Color.reset, args) catch {};
+        Output.print(Color.red ++ format ++ Color.reset, args);
     } else {
-        Output.print(format, args) catch {};
+        Output.print(format, args);
     }
 }
 

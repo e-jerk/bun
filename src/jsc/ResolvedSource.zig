@@ -19,7 +19,7 @@ pub const ResolvedSource = extern struct {
 
     jsvalue_for_export: JSValue = .zero,
 
-    tag: Tag = .javascript,
+    tag: u32 = @intFromEnum(Tag.javascript),
 
     /// This is for source_code
     source_code_needs_deref: bool = true,

@@ -38,7 +38,7 @@ pub const Snapshots = struct {
 
     const File = struct {
         id: TestRunner.File.ID,
-        file: std.fs.File,
+        file: @import("std-fs-compat").File,
     };
 
     /// Reset per-run snapshot counters to 0. Keys stay owned by the map until
@@ -196,11 +196,10 @@ pub const Snapshots = struct {
 
     pub fn writeSnapshotFile(this: *Snapshots) !void {
         if (this._current_file) |_file| {
-            var file = _file;
-            file.file.writeAll(this.file_buf.items) catch {
-                return error.FailedToWriteSnapshotFile;
-            };
-            file.file.close();
+            const file = _file;
+            _ = std.c.write(file.file.handle, this.file_buf.items.ptr, this.file_buf.items.len);
+            // TODO: handle write error
+            _ = std.c.close(file.file.handle);
             this.file_buf.clearAndFree();
 
             var value_itr = this.values.valueIterator();
@@ -218,7 +217,7 @@ pub const Snapshots = struct {
     }
 
     pub fn addInlineSnapshotToWrite(self: *Snapshots, file_id: TestRunner.File.ID, value: InlineSnapshotToWrite) !void {
-        const gpres = try self.inline_snapshots_to_write.getOrPut(file_id);
+            const gpres = try self.inline_snapshots_to_write.getOrPut(file_id);
         if (!gpres.found_existing) {
             gpres.value_ptr.* = std.array_list.Managed(InlineSnapshotToWrite).init(self.allocator);
         }
@@ -262,7 +261,7 @@ pub const Snapshots = struct {
                 .id = file_id,
                 .file = fd.stdFile(),
             };
-            errdefer file.file.close();
+            errdefer _ = std.c.close(file.file.handle);
 
             const file_text = try file.file.readToEndAlloc(arena, std.math.maxInt(usize));
 
@@ -453,7 +452,7 @@ pub const Snapshots = struct {
                 } else ils.value;
 
                 if (needs_pre_comma) try result_text.appendSlice(", ");
-                const result_text_writer = result_text.writer();
+                const result_text_writer = @import("std-io-compat").allocatingWriterFromArrayList(result_text.allocator, &result_text);
                 try result_text.appendSlice("`");
                 try bun.js_printer.writePreQuotedString(re_indented, @TypeOf(result_text_writer), result_text_writer, '`', false, false, .utf8);
                 try result_text.appendSlice("`");
@@ -535,12 +534,14 @@ pub const Snapshots = struct {
                 .id = file_id,
                 .file = fd.stdFile(),
             };
-            errdefer file.file.close();
+            errdefer _ = std.c.close(file.file.handle);
 
             if (this.update_snapshots) {
                 try this.file_buf.appendSlice(file_header);
             } else {
-                const length = try file.file.getEndPos();
+                const length_raw = std.c.lseek(file.file.handle, 0, std.c.SEEK.END);
+                if (length_raw < 0) return error.Unexpected;
+                const length = @as(usize, @intCast(length_raw));
                 if (length == 0) {
                     try this.file_buf.appendSlice(file_header);
                 } else {

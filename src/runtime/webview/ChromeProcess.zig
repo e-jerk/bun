@@ -93,9 +93,10 @@ fn findChrome(alloc: std.mem.Allocator, explicitPath: ?[*:0]const u8) !?[:0]cons
     if (explicitPath) |p| {
         return try alloc.dupeZ(u8, std.mem.span(p));
     }
-    if (std.process.getEnvVarOwned(alloc, "BUN_CHROME_PATH")) |p| {
+    if (try @import("std-fs-compat").getEnvVarOwned(alloc, "BUN_CHROME_PATH")) |p| {
+        defer alloc.free(p);
         return try alloc.dupeZ(u8, p);
-    } else |_| {}
+    }
 
     const buf = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(buf);
@@ -438,7 +439,8 @@ fn readDevToolsActivePort(out_buf: *std.ArrayListUnmanaged(u8)) ?void {
         if (port == 0 or ws_path.len == 0 or ws_path[0] != '/') continue;
 
         out_buf.clearRetainingCapacity();
-        out_buf.writer(bun.default_allocator).print("ws://127.0.0.1:{d}{s}", .{ port, ws_path }) catch return null;
+        var writer = @import("std-io-compat").arrayListWriter(out_buf);
+        writer.print("ws://127.0.0.1:{d}{s}", .{ port, ws_path }) catch return null;
         return;
     }
     return null;

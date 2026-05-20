@@ -18,6 +18,9 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
             const ctx = that.wrapped;
             @field(Ptr, fieldName)(ctx, extra);
         }
+        pub fn deinit(this: *@This()) void {
+            bun.default_allocator.destroy(this);
+        }
     };
     const task = bun.handleOom(bun.default_allocator.create(Wrapper));
     task.* = Wrapper{
@@ -57,7 +60,7 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
                 bun.callmod_inline,
                 Callback,
                 .{
-                    @as(*Type, @ptrCast(@alignCast(this.*.?))),
+                    @as(*Type, @ptrCast(@alignCast(this.?))),
                     @as(*ContextType, @ptrCast(@alignCast(extra.?))),
                 },
             );

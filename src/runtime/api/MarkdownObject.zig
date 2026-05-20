@@ -692,7 +692,7 @@ const ParseRenderer = struct {
                 }
             } else if (len > 1) {
                 // Multiple children — concatenate string parts
-                var alt_buf = std.ArrayListUnmanaged(u8){};
+                var alt_buf = std.ArrayListUnmanaged(u8).empty;
                 defer alt_buf.deinit(bun.default_allocator);
                 for (0..len) |i| {
                     const child = try entry.children.getIndex(g, @truncate(i));

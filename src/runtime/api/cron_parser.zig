@@ -286,7 +286,7 @@ fn formatBitfield(w: anytype, comptime T: type, bits: T, min: u8, max: u8) void 
     for (min..max + 1) |i| {
         if ((bits >> @intCast(i)) & 1 != 0) {
             if (!first) w.writeByte(',') catch unreachable;
-            std.fmt.format(w, "{d}", .{i}) catch unreachable;
+            w.print("{d}", .{i}) catch unreachable;
             first = false;
         }
     }

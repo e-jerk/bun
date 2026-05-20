@@ -55,25 +55,37 @@ pub fn TagTypeEnumWithTypeMap(comptime Types: anytype) struct {
     tag_type: type,
     ty_map: TypeMap(Types),
 } {
+    @setEvalBranchQuota(20000);
     var typeMap: TypeMap(Types) = undefined;
     @memset(&typeMap, TypeMapT{ .value = 0, .ty = void, .name = "" });
 
-    var enum_names: [Types.len][]const u8 = undefined;
+    var enum_names: [Types.len][:0]const u8 = undefined;
     var enum_values: [Types.len]TaggedPointer.Tag = undefined;
     inline for (Types, 0..) |field, i| {
         const name = comptime @typeName(field);
-        enum_names[i] = name;
+        enum_names[i] = std.fmt.comptimePrint("{s}\x00", .{name});
         enum_values[i] = 1024 - i;
         typeMap[i] = .{ .value = 1024 - i, .ty = field, .name = name };
     }
 
     return .{
-        .tag_type = @Enum(
-            TaggedPointer.Tag,
-            .nonexhaustive,
-            &enum_names,
-            &enum_values,
-        ),
+        .tag_type = @Type(.{
+            .@"enum" = .{
+                .tag_type = TaggedPointer.Tag,
+                .fields = blk: {
+                    var enum_fields: [Types.len]std.builtin.Type.EnumField = undefined;
+                    for (0..Types.len) |i| {
+                        enum_fields[i] = .{
+                            .name = enum_names[i],
+                            .value = enum_values[i],
+                        };
+                    }
+                    break :blk &enum_fields;
+                },
+                .decls = &.{},
+                .is_exhaustive = false,
+            },
+        }),
         .ty_map = typeMap,
     };
 }

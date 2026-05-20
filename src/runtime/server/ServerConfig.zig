@@ -309,7 +309,7 @@ pub fn deinit(this: *ServerConfig) void {
 
 pub fn computeID(this: *const ServerConfig, allocator: std.mem.Allocator) []const u8 {
     var arraylist = std.array_list.Managed(u8).init(allocator);
-    var writer = arraylist.writer();
+    var writer = @import("std-io-compat").writer(&arraylist);
 
     writer.writeAll("[http]-") catch {};
     switch (this.address) {
@@ -735,8 +735,7 @@ pub fn fromJS(
                     init_ctx.arena.deinit();
                 }
             } else {
-                bun.debugAssert(init_ctx.arena.state.end_index == 0 and
-                    init_ctx.arena.state.buffer_list.first == null);
+                bun.debugAssert(init_ctx.arena.state.buffer_list.first == null);
                 init_ctx.arena.deinit();
             }
         }
@@ -952,7 +951,7 @@ pub fn fromJS(
                         if (args.ssl_config == null) {
                             args.ssl_config = ssl_config;
                         } else {
-                            if ((ssl_config.server_name orelse "")[0] == 0) {
+                            if (ssl_config.server_name == null or ssl_config.server_name.?[0] == 0) {
                                 defer ssl_config.deinit();
                                 return global.throwInvalidArguments("SNI tls object must have a serverName", .{});
                             }

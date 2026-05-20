@@ -108,8 +108,8 @@ pub fn addrInfoToJSArray(addr_info: *c_ares.AddrInfo, globalThis: *jsc.JSGlobalO
                 try GetAddrInfo.Result.toJS(
                     &.{
                         .address = switch (this_node.family) {
-                            c_ares.AF.INET => @import("std-net-shim").Address{ .in = .{ .sa = bun.cast(*const std.posix.sockaddr.in, this_node.addr.?).* } },
-                            c_ares.AF.INET6 => @import("std-net-shim").Address{ .in6 = .{ .sa = bun.cast(*const std.posix.sockaddr.in6, this_node.addr.?).* } },
+                            c_ares.AF.INET => @import("std-net-shim").Address{ .in = bun.cast(*const std.posix.sockaddr.in, this_node.addr.?).* },
+                            c_ares.AF.INET6 => @import("std-net-shim").Address{ .in6 = bun.cast(*const std.posix.sockaddr.in6, this_node.addr.?).* },
                             else => unreachable,
                         },
                         .ttl = this_node.ttl,

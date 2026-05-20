@@ -36,7 +36,7 @@ pub const SubscriptionCtx = struct {
     pub fn channelsSubscribedToCount(this: *Self, globalObject: *jsc.JSGlobalObject) bun.JSError!u32 {
         const count = try this.subscriptionCallbackMap().size(globalObject);
 
-        return count;
+        return @intCast(count);
     }
 
     /// Test whether this context has any subscriptions. It is mandatory to

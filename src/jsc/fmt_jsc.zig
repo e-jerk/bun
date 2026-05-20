@@ -17,12 +17,14 @@ pub const js_bindings = struct {
                     .enable_colors = true,
                     .check_for_unhighlighted_write = false,
                 });
-                writer.print("{f}", .{formatter}) catch |err| {
+                var w = bun.MutableString.BufferedWriter.Writer{ .context = &writer };
+                w.print("{f}", .{formatter}) catch |err| {
                     return global.throwError(err, "while formatting");
                 };
             },
             .escape_powershell => {
-                writer.print("{f}", .{bun.fmt.escapePowershell(code)}) catch |err| {
+                var w = bun.MutableString.BufferedWriter.Writer{ .context = &writer };
+                w.print("{f}", .{bun.fmt.escapePowershell(code)}) catch |err| {
                     return global.throwError(err, "while formatting");
                 };
             },

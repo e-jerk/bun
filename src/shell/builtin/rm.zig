@@ -1064,7 +1064,7 @@ pub const ShellRmTask = struct {
         };
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+    if (__loop_limit_1 > 1_000_000) return .{ .result = false };
             if (state.treat_as_dir) {
                 log("rmdirat({f}, {s})", .{ dirfd, dir_task.path });
                 switch (ShellSyscall.rmdirat(dirfd, dir_task.path)) {
@@ -1138,7 +1138,7 @@ while (true) : (__loop_limit_1 += 1) {
                         switch (builtin.os.tag) {
                             // non-Linux POSIX systems and Windows return EPERM when trying to delete a directory, so
                             // we need to handle that case specifically and translate the error
-                            .macos, .ios, .freebsd, .netbsd, .dragonfly, .openbsd, .solaris, .illumos, .windows => {
+                            .macos, .ios, .freebsd, .netbsd, .dragonfly, .openbsd, .illumos, .windows => {
                                 // If we are allowed to delete directories then we can call `unlink`.
                                 // If `path` points to a directory, then it is deleted (if empty) or we handle it as a directory
                                 // If it's actually a file, we get an error so we don't need to call `stat` to check that.

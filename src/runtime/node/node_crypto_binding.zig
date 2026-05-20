@@ -258,7 +258,8 @@ const random = struct {
             return global.ERR(.OUT_OF_RANGE, "The value of \"max\" is out of range. It must be <= {d}. Received {d}", .{ max_range, max - min }).throw();
         }
 
-        const res = std.crypto.random.intRangeLessThan(i64, min, max);
+        var prng = std.Random.DefaultPrng.init(bun.fastRandom());
+        const res = prng.random().intRangeLessThan(i64, min, max);
 
         if (!callback.isUndefined()) {
             try callback.callNextTick(global, [2]JSValue{ .js_undefined, JSValue.jsNumber(res) });

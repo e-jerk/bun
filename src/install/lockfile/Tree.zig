@@ -251,7 +251,7 @@ pub fn Builder(comptime method: BuilderMethod) type {
         // builder.resolutions[peer.dep_id] to the resolved pkg_id. A dependency ID set is used because there
         // can be multiple instances of the same package in the tree, so the same unresolved dependency ID
         // could be visited multiple times before it's resolved.
-        pending_optional_peers: std.array_hash_map.Auto(PackageNameHash, std.array_hash_map.Auto(DependencyID, void)),
+        pending_optional_peers: @import("array-hash-map-compat").Auto(PackageNameHash, @import("array-hash-map-compat").Auto(DependencyID, void)),
         manager: if (method == .filter) *const PackageManager else void,
         sort_buf: std.ArrayListUnmanaged(DependencyID) = .empty,
         workspace_filters: if (method == .filter) []const WorkspaceFilter else void = if (method == .filter) &.{},
@@ -470,7 +470,7 @@ pub fn processSubtree(
             .id = @as(Id, @truncate(builder.list.len)),
             .dependency_id = dependency_id,
         },
-        .dependencies = .{},
+        .dependencies = .empty,
     });
 
     const list_slice = builder.list.slice();

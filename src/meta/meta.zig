@@ -172,7 +172,24 @@ pub inline fn ConcatArgs4(
 
 // Copied from std.meta
 fn CreateUniqueTuple(comptime N: comptime_int, comptime types: [N]type) type {
-    return @Tuple(&types);
+    var fields: [N]std.builtin.Type.StructField = undefined;
+    for (0..N) |i| {
+        fields[i] = .{
+            .name = std.fmt.comptimePrint("{d}", .{i}),
+            .type = types[i],
+            .default_value_ptr = null,
+            .is_comptime = false,
+            .alignment = 0,
+        };
+    }
+    return @Type(.{
+        .@"struct" = .{
+            .layout = .auto,
+            .fields = &fields,
+            .decls = &.{},
+            .is_tuple = true,
+        },
+    });
 }
 
 pub const TaggedUnion = @import("./tagged_union.zig").TaggedUnion;
@@ -300,15 +317,22 @@ pub fn looksLikeListContainerType(comptime T: type) ?struct { list: ListContaine
 
 pub fn Tagged(comptime U: type, comptime T: type) type {
     const info = @typeInfo(U).@"union";
-    var names: [info.fields.len][]const u8 = undefined;
-    var types: [info.fields.len]type = undefined;
-    var attrs: [info.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
+    var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
     for (info.fields, 0..) |field, i| {
-        names[i] = field.name;
-        types[i] = field.type;
-        attrs[i] = .{ .@"align" = field.alignment };
+        fields[i] = .{
+            .name = field.name,
+            .type = field.type,
+            .alignment = field.alignment,
+        };
     }
-    return @Union(.auto, T, &names, &types, &attrs);
+    return @Type(.{
+        .@"union" = .{
+            .layout = .auto,
+            .fields = &fields,
+            .decls = &.{},
+            .tag_type = T,
+        },
+    });
 }
 
 pub fn SliceChild(comptime T: type) type {
@@ -324,15 +348,25 @@ pub fn useAllFields(comptime T: type, _: VoidFields(T)) void {}
 
 fn VoidFields(comptime T: type) type {
     const fields = @typeInfo(T).@"struct".fields;
-    var names: [fields.len][]const u8 = undefined;
-    var types: [fields.len]type = undefined;
-    var attrs: [fields.len]std.builtin.Type.StructField.Attributes = undefined;
+    var void_fields: [fields.len]std.builtin.Type.StructField = undefined;
     for (fields, 0..) |field, i| {
-        names[i] = field.name;
-        types[i] = void;
-        attrs[i] = .{};
+        void_fields[i] = .{
+            .name = field.name,
+            .type = void,
+            .default_value_ptr = null,
+            .is_comptime = false,
+            .alignment = 1,
+        };
     }
-    return @Struct(.auto, null, &names, &types, &attrs);
+    return @Type(.{
+        .@"struct" = .{
+            .layout = .auto,
+            .backing_integer = null,
+            .fields = &void_fields,
+            .decls = &.{},
+            .is_tuple = false,
+        },
+    });
 }
 
 pub fn voidFieldTypeDiscardHelper(data: anytype) void {

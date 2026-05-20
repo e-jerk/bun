@@ -595,9 +595,7 @@ pub fn toAST(
             }
         },
         .@"enum" => {
-            _ = std.meta.intToEnum(Type, @intFromEnum(value)) catch {
-                return Expr{ .data = .{ .e_null = .{} }, .loc = logger.Loc{} };
-            };
+            _ = @as(Type, @enumFromInt(@intFromEnum(value)));
 
             return toAST(allocator, string, @as(string, @tagName(value)));
         },

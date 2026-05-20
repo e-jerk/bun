@@ -18,7 +18,7 @@ const Progress = @This();
 
 /// `null` if the current node (and its children) should
 /// not print on update()
-terminal: ?std.fs.File = undefined,
+terminal: ?bun.sys.File = undefined,
 
 /// Is this a windows API terminal (note: this is not the same as being run on windows
 /// because other terminals exist like MSYS/git-bash)
@@ -38,7 +38,7 @@ root: Node = undefined,
 
 /// Keeps track of how much time has passed since the beginning.
 /// Used to compare with `initial_delay_ms` and `refresh_rate_ms`.
-timer: ?std.time.Timer = null,
+timer: ?@import("std-fs-compat").Timer = null,
 
 /// When the previous refresh was written to the terminal.
 /// Used to compare with `refresh_rate_ms`.
@@ -177,9 +177,9 @@ pub const Node = struct {
 /// API to return Progress rather than accept it as a parameter.
 /// `estimated_total_items` value of 0 means unknown.
 pub fn start(self: *Progress, name: []const u8, estimated_total_items: usize) *Node {
-    const stderr = std.fs.File.stderr();
+    const stderr = bun.sys.File{ .handle = bun.FD.fromNative(std.posix.STDERR_FILENO) };
     self.terminal = null;
-    if (stderr.supportsAnsiEscapeCodes()) {
+    if (stderr.isTty()) {
         self.terminal = stderr;
         self.supports_ansi_escape_codes = true;
     } else if (builtin.os.tag == .windows and stderr.isTty()) {
@@ -198,7 +198,7 @@ pub fn start(self: *Progress, name: []const u8, estimated_total_items: usize) *N
     };
     self.columns_written = 0;
     self.prev_refresh_timestamp = 0;
-    self.timer = std.time.Timer.start() catch null;
+    self.timer = @import("std-fs-compat").Timer.start() catch null;
     self.done = false;
     return &self.root;
 }
@@ -212,7 +212,7 @@ pub fn maybeRefresh(self: *Progress) void {
     }
 }
 
-fn maybeRefreshWithHeldLock(self: *Progress, timer: *std.time.Timer) void {
+fn maybeRefreshWithHeldLock(self: *Progress, timer: *@import("std-fs-compat").Timer) void {
     const now = timer.read();
     if (now < self.initial_delay_ns) return;
     // TODO I have observed this to happen sometimes. I think we need to follow Rust's
@@ -349,7 +349,7 @@ fn refreshWithHeldLock(self: *Progress) void {
         }
     }
 
-    _ = file.write(self.output_buffer[0..end]) catch {
+    _ = file.writeAll(self.output_buffer[0..end]).unwrap() catch {
         // stop trying to write to this file
         self.terminal = null;
     };
@@ -363,10 +363,9 @@ pub fn log(self: *Progress, comptime format: []const u8, args: anytype) void {
         (std.debug).print(format, args);
         return;
     };
-    var file_writer = file.writerStreaming(&.{});
-    const writer = &file_writer.interface;
+    var file_writer = file.writer();
     self.refresh();
-    writer.print(format, args) catch {
+    file_writer.print(format, args) catch {
         self.terminal = null;
         return;
     };
@@ -380,7 +379,7 @@ pub fn lock_stderr(p: *Progress) void {
     if (p.terminal) |file| {
         var end: usize = 0;
         clearWithHeldLock(p, &end);
-        _ = file.write(p.output_buffer[0..end]) catch {
+        _ = file.writeAll(p.output_buffer[0..end]).unwrap() catch {
             // stop trying to write to this file
             p.terminal = null;
         };
@@ -437,24 +436,24 @@ test "basic functionality" {
         next_sub_task = (next_sub_task + 1) % sub_task_names.len;
 
         node.completeOne();
-        std.Thread.sleep(5 * speed_factor);
+        @import("std-fs-compat").sleep(5 * speed_factor);
         node.completeOne();
         node.completeOne();
-        std.Thread.sleep(5 * speed_factor);
+        @import("std-fs-compat").sleep(5 * speed_factor);
         node.completeOne();
         node.completeOne();
-        std.Thread.sleep(5 * speed_factor);
+        @import("std-fs-compat").sleep(5 * speed_factor);
 
         node.end();
 
-        std.Thread.sleep(5 * speed_factor);
+        @import("std-fs-compat").sleep(5 * speed_factor);
     }
     {
         var node = root_node.start("this is a really long name designed to activate the truncation code. let's find out if it works", 0);
         node.activate();
-        std.Thread.sleep(10 * speed_factor);
+        @import("std-fs-compat").sleep(10 * speed_factor);
         progress.refresh();
-        std.Thread.sleep(10 * speed_factor);
+        @import("std-fs-compat").sleep(10 * speed_factor);
         node.end();
     }
 }

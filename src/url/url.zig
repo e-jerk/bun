@@ -640,8 +640,8 @@ pub const QueryStringMap = struct {
         // this over-allocates
         // TODO: refactor this to support multiple slices instead of copying the whole thing
         var buf = try std.array_list.Managed(u8).initCapacity(allocator, estimated_str_len);
-        const aw = std.Io.Writer.Allocating.fromArrayList(allocator, &buf);
-        const writer = aw.writer;
+        const aw = @import("std-io-compat").allocatingWriterFromArrayList(allocator, &buf);
+        const writer = aw;
         var buf_writer_pos: u32 = 0;
 
         const Writer = @TypeOf(writer);
@@ -756,8 +756,8 @@ pub const QueryStringMap = struct {
         }
 
         var buf = try std.array_list.Managed(u8).initCapacity(allocator, estimated_str_len);
-        const aw = std.Io.Writer.Allocating.fromArrayList(allocator, &buf);
-        const writer = aw.writer;
+        const aw = @import("std-io-compat").allocatingWriterFromArrayList(allocator, &buf);
+        const writer = aw;
         var buf_writer_pos: u32 = 0;
 
         var list_slice = list.slice();
@@ -1010,7 +1010,7 @@ pub const Scanner = struct {
         // otherwise we'd recursively call the function
 var __loop_limit_1: usize = 0;
 loop: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+    if (__loop_limit_1 > 1_000_000) return null;
             if (this.i >= this.query_string.len) return null;
 
             const slice = this.query_string[this.i..];

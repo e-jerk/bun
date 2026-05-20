@@ -3,7 +3,7 @@ fn isOomOnlyError(comptime ErrorUnionOrSet: type) bool {
     const ErrorSet = switch (@typeInfo(ErrorUnionOrSet)) {
         .error_union => |union_info| union_info.error_set,
         .error_set => ErrorUnionOrSet,
-        else => @compileError("argument must be an error union or error set"),
+        else => return false,
     };
     for (@typeInfo(ErrorSet).error_set orelse return false) |err| {
         if (!std.mem.eql(u8, err.name, "OutOfMemory")) return false;
@@ -40,7 +40,7 @@ pub fn handleOom(error_union_or_set: anytype) return_type: {
         const err = switch (comptime arg_info) {
             .error_union => if (error_union_or_set) |success| break :blk success else |err| err,
             .error_set => error_union_or_set,
-            else => unreachable,
+            else => break :blk error_union_or_set,
         };
         break :blk switch (err) {
             error.OutOfMemory => unreachable,
@@ -52,7 +52,7 @@ pub fn handleOom(error_union_or_set: anytype) return_type: {
     const err = switch (comptime @typeInfo(ArgType)) {
         .error_union => if (error_union_or_set) |success| return success else |err| err,
         .error_set => error_union_or_set,
-        else => unreachable,
+        else => return error_union_or_set,
     };
     return if (comptime isOomOnlyError(ArgType))
         bun.outOfMemory()

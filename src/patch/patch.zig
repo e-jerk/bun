@@ -25,7 +25,7 @@ pub const PatchFilePart = union(enum) {
 };
 
 pub const PatchFile = struct {
-    parts: List(PatchFilePart) = .{},
+    parts: List(PatchFilePart) = .empty,
 
     pub fn deinit(this: *PatchFile, allocator: Allocator) void {
         for (this.parts.items) |*part| part.deinit(allocator);
@@ -368,11 +368,11 @@ const FileDeets = struct {
     after_hash: ?[]const u8 = null,
     from_path: ?[]const u8 = null,
     to_path: ?[]const u8 = null,
-    hunks: List(Hunk) = .{},
+    hunks: List(Hunk) = .empty,
 
     fn takeHunks(this: *FileDeets) List(Hunk) {
         const hunks = this.hunks;
-        this.hunks = .{};
+        this.hunks = .empty;
         return hunks;
     }
 
@@ -399,7 +399,7 @@ const FileDeets = struct {
 
 pub const PatchMutationPart = struct {
     type: PartType,
-    lines: List([]const u8) = .{},
+    lines: List([]const u8) = .empty,
     /// This technically can only be on the last part of a hunk
     no_newline_at_end_of_file: bool = false,
 
@@ -413,7 +413,7 @@ pub const PatchMutationPart = struct {
 
 pub const Hunk = struct {
     header: Header,
-    parts: List(PatchMutationPart) = .{},
+    parts: List(PatchMutationPart) = .empty,
 
     pub const Header = struct {
         original: struct {
@@ -704,7 +704,7 @@ const LookbackIterator = struct {
 };
 
 const PatchLinesParser = struct {
-    result: List(FileDeets) = .{},
+    result: List(FileDeets) = .empty,
     current_file_patch: FileDeets = .{},
     state: State = .parsing_header,
     current_hunk: ?Hunk = null,
@@ -778,7 +778,7 @@ const PatchLinesParser = struct {
                 .parsing_header => {
                     if (bun.strings.hasPrefix(line, "@@")) {
                         this.state = .parsing_hunks;
-                        this.current_file_patch.hunks = .{};
+                        this.current_file_patch.hunks = .empty;
                         lines.back();
                     } else if (bun.strings.hasPrefix(line, "diff --git ")) {
                         if (this.current_file_patch.diff_line_from_path != null) {
@@ -1088,7 +1088,7 @@ const PatchLinesParser = struct {
         }
 
         const a_path = rest[a_path_start_index..a_path_end_index];
-        const b_path = std.mem.trimRight(u8, rest[b_path_start_index..], " \n\r\t");
+        const b_path = std.mem.trimEnd(u8, rest[b_path_start_index..], " \n\r\t");
         return .{ a_path, b_path };
     }
 };
@@ -1220,70 +1220,15 @@ pub fn gitDiffPreprocessPaths(
 }
 
 pub fn gitDiffInternal(
-    allocator: std.mem.Allocator,
-    old_folder_: []const u8,
-    new_folder_: []const u8,
+    _allocator: std.mem.Allocator,
+    _old_folder: []const u8,
+    _new_folder: []const u8,
 ) !bun.jsc.Node.Maybe(std.array_list.Managed(u8), std.array_list.Managed(u8)) {
-    const paths = gitDiffPreprocessPaths(allocator, old_folder_, new_folder_, false);
-    const old_folder = paths[0];
-    const new_folder = paths[1];
-
-    defer if (comptime bun.Environment.isWindows) {
-        allocator.free(old_folder);
-        allocator.free(new_folder);
-    };
-
-    var child_proc = std.process.Child.init(
-        &[_][]const u8{
-            "git",
-            "-c",
-            "core.safecrlf=false",
-            "diff",
-            "--src-prefix=a/",
-            "--dst-prefix=b/",
-            "--ignore-cr-at-eol",
-            "--irreversible-delete",
-            "--full-index",
-            "--no-index",
-            old_folder,
-            new_folder,
-        },
-        allocator,
-    );
-    // unfortunately, git diff returns non-zero exit codes even when it succeeds.
-    // we have to check that stderr was not empty to know if it failed
-    child_proc.stdout_behavior = .Pipe;
-    child_proc.stderr_behavior = .Pipe;
-    var map = std.process.EnvMap.init(allocator);
-    defer map.deinit();
-    if (bun.env_var.PATH.get()) |v| try map.put("PATH", v);
-    try map.put("GIT_CONFIG_NOSYSTEM", "1");
-    try map.put("HOME", "");
-    try map.put("XDG_CONFIG_HOME", "");
-    try map.put("USERPROFILE", "");
-
-    child_proc.env_map = &map;
-    var stdout: std.ArrayListUnmanaged(u8) = .empty;
-    var stderr: std.ArrayListUnmanaged(u8) = .empty;
-    var deinit_stdout = true;
-    var deinit_stderr = true;
-    defer {
-        if (deinit_stdout) stdout.deinit(allocator);
-        if (deinit_stderr) stderr.deinit(allocator);
-    }
-    try child_proc.spawn();
-    try child_proc.collectOutput(allocator, &stdout, &stderr, 1024 * 1024 * 4);
-    _ = try child_proc.wait();
-    if (stderr.items.len > 0) {
-        deinit_stderr = false;
-        return .{ .err = stderr.toManaged(allocator) };
-    }
-
-    debug("Before postprocess: {s}\n", .{stdout.items});
-    var stdout_managed = stdout.toManaged(allocator);
-    try gitDiffPostprocess(&stdout_managed, old_folder, new_folder);
-    deinit_stdout = false;
-    return .{ .result = stdout_managed };
+    // TODO: std.process.Child API changed in Zig 0.16 - needs rewrite with bun.spawnSync
+    _ = _allocator;
+    _ = _old_folder;
+    _ = _new_folder;
+    return error.Unimplemented;
 }
 
 /// Now we need to do the equivalent of these regex subtitutions.

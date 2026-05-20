@@ -1571,7 +1571,7 @@ fn TrimmedPrecisionFormatter(comptime precision: usize) type {
                 var buf: [2 + precision]u8 = undefined;
                 var formatted = std.fmt.bufPrint(&buf, "{d:." ++ std.fmt.comptimePrint("{d}", .{precision}) ++ "}", .{rem}) catch unreachable;
                 formatted = formatted[2..];
-                const trimmed = std.mem.trimRight(u8, formatted, "0");
+                const trimmed = std.mem.trimEnd(u8, formatted, "0");
                 try writer.print(".{s}", .{trimmed});
             }
         }
@@ -1675,7 +1675,7 @@ pub const FormatDouble = struct {
     number: f64,
 
     pub fn dtoa(buf: *[124]u8, number: f64) []const u8 {
-        const len = bun.cpp.WTF__dtoa(&buf.ptr[0], number);
+        const len = bun.cpp.WTF__dtoa(@ptrCast(buf.ptr), number);
         return buf[0..len];
     }
 
@@ -1684,7 +1684,7 @@ pub const FormatDouble = struct {
             return "-0";
         }
 
-        const len = bun.cpp.WTF__dtoa(&buf.ptr[0], number);
+        const len = bun.cpp.WTF__dtoa(@ptrCast(buf.ptr), number);
         return buf[0..len];
     }
 

@@ -30,7 +30,7 @@ pub fn notifyServerStarted(this: *HTTPServerAgent, instance: jsc.API.AnyServer) 
 
 pub fn notifyServerStopped(this: *const HTTPServerAgent, server: jsc.API.AnyServer) void {
     if (this.agent) |agent| {
-        agent.notifyServerStopped(server.inspectorServerID(), @floatFromInt(std.time.milliTimestamp()));
+        agent.notifyServerStopped(server.inspectorServerID(), @floatFromInt(@import("std-fs-compat").milliTimestamp()));
     }
 }
 
@@ -149,7 +149,7 @@ pub const InspectorHTTPServerAgent = opaque {
     }
 
     pub fn notifyServerRoutesUpdated(agent: *InspectorHTTPServerAgent, serverId: ServerId, hotReloadId: HotReloadId, routes: []Route) void {
-        bun.cpp.Bun__HTTPServerAgent__notifyServerRoutesUpdated(agent, serverId, hotReloadId, routes.ptr, routes.len);
+        bun.cpp.Bun__HTTPServerAgent__notifyServerRoutesUpdated(agent, serverId, hotReloadId, @ptrCast(routes.ptr), routes.len);
     }
 };
 

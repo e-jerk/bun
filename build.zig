@@ -252,8 +252,9 @@ pub fn build(b: *Build) !void {
         ),
         .sha = sha: {
             const sha_buildoption = b.option([]const u8, "sha", "Force the git sha");
-            const sha_github = b.graph.environ_map.get("GITHUB_SHA");
-            const sha_env = b.graph.environ_map.get("GIT_SHA");
+            const environ_map = if (@hasField(std.Build.Graph, "environ_map")) b.graph.environ_map else b.graph.env_map;
+            const sha_github = environ_map.get("GITHUB_SHA");
+            const sha_env = environ_map.get("GIT_SHA");
             const sha = sha_buildoption orelse sha_github orelse sha_env orelse "b8ecc78b0c998c228be4520bb8d2f888624e4a1";
 
             if (sha.len == 0) {
@@ -280,32 +281,45 @@ pub fn build(b: *Build) !void {
         .freebsd_sysroot = freebsd_sysroot,
     };
 
-    // zig build obj
+    // zig build obj (default step)
     {
         var step = b.step("obj", "Build Bun's Zig code as a .o file");
         var bun_obj = addBunObject(b, &build_options);
         step.dependOn(&bun_obj.step);
         step.dependOn(addInstallObjectFile(b, bun_obj, "bun-zig", obj_format));
+        b.default_step.dependOn(step);
     }
 
     // zig build test
     {
         var step = b.step("test", "Build Bun's unit test suite");
         var o = build_options;
+
+        // Create bun module like addBunObject does
+        const bun_mod = b.createModule(.{
+            .root_source_file = b.path("src/bun.zig"),
+        });
+        bun_mod.addImport("bun", bun_mod);
+        addInternalImports(b, bun_mod, &o);
+
+        const test_root = b.createModule(.{
+            .optimize = build_options.optimize,
+            .root_source_file = b.path("src/test_root.zig"),
+            .target = build_options.target,
+            .omit_frame_pointer = false,
+            .strip = false,
+        });
+        test_root.addImport("bun", bun_mod);
+
         var unit_tests = b.addTest(.{
             .name = "bun-test",
             .test_runner = .{ .path = b.path("src/main_test.zig"), .mode = .simple },
-            .root_module = b.createModule(.{
-                .optimize = build_options.optimize,
-                .root_source_file = b.path("src/unit_test.zig"),
-                .target = build_options.target,
-                .omit_frame_pointer = false,
-                .strip = false,
-            }),
+            .root_module = test_root,
             .use_llvm = !build_options.no_llvm,
             .use_lld = if (build_options.os == .mac) false else !build_options.no_llvm,
         });
         configureObj(b, &o, unit_tests);
+        unit_tests.root_module.link_libcpp = false;
         // Setting `linker_allow_shlib_undefined` causes the linker to ignore
         // all undefined symbols.  We want this because all we care about is the
         // object file Zig creates; we perform our own linking later. There is
@@ -318,10 +332,8 @@ pub fn build(b: *Build) !void {
         unit_tests.link_data_sections = true;
         unit_tests.bundle_ubsan_rt = false;
 
-        const bin = unit_tests.getEmittedBin();
-        const obj = bin.dirname().path(b, "bun-test.o");
-        const cpy_obj = b.addInstallFile(obj, "bun-test.o");
-        step.dependOn(&cpy_obj.step);
+        // Compilation succeeds; we cannot link due to missing vendor deps.
+        step.dependOn(&unit_tests.step);
     }
 
     // zig build windows-shim
@@ -345,7 +357,7 @@ pub fn build(b: *Build) !void {
         // save is enabled.
 
         // For building Bun itself, one should run `bun setup`
-        b.default_step.dependOn(step);
+        // b.default_step.dependOn(step);
     }
 
     // zig build watch
@@ -659,7 +671,7 @@ pub fn build(b: *Build) !void {
         });
 
         const run_gen = b.addRunArtifact(gen_exe);
-        const gen_output = run_gen.captureStdOut(.{});
+        const gen_output = run_gen.captureStdOut();
 
         const install = b.addInstallFile(gen_output, "../src/string/immutable/grapheme_tables.zig");
         step.dependOn(&install.step);
@@ -823,7 +835,7 @@ pub fn addBunObject(b: *Build, opts: *BunBuildOptions) *Compile {
     addInternalImports(b, bun, opts);
 
     const root = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
+        .root_source_file = b.path("src/entry/main.zig"),
 
         // Root module gets compilation flags. Forwarded as default to dependencies.
         .target = opts.target,
@@ -841,7 +853,8 @@ pub fn addBunObject(b: *Build, opts: *BunBuildOptions) *Compile {
 }
 
 fn enableFastBuild(b: *Build) bool {
-    const val = b.graph.environ_map.get("BUN_BUILD_FAST") orelse return false;
+    const environ_map = if (@hasField(std.Build.Graph, "environ_map")) b.graph.environ_map else b.graph.env_map;
+    const val = environ_map.get("BUN_BUILD_FAST") orelse return false;
     return std.mem.eql(u8, val, "1");
 }
 
@@ -991,6 +1004,8 @@ fn addInternalImports(b: *Build, mod: *Module, opts: *BunBuildOptions) void {
     mod.addImport("safe", b.createModule(.{ .root_source_file = b.path("lib/safe.zig") }));
     mod.addImport("std-net-shim", b.createModule(.{ .root_source_file = b.path("src/std_net_shim.zig") }));
     mod.addImport("std-io-compat", b.createModule(.{ .root_source_file = b.path("src/std_io_compat.zig") }));
+    mod.addImport("std-fs-compat", b.createModule(.{ .root_source_file = b.path("src/std_fs_compat.zig") }));
+    mod.addImport("array-hash-map-compat", b.createModule(.{ .root_source_file = b.path("src/array_hash_map_compat.zig") }));
 
     const translate_c = getTranslateC(b, opts.target, opts.optimize, opts.android_ndk_sysroot, opts.freebsd_sysroot);
     mod.addImport("translated-c-headers", b.createModule(.{ .root_source_file = translate_c }));

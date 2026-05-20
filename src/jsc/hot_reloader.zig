@@ -491,10 +491,10 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
                                     for (parents, 0..) |parent_hash, entry_id| {
                                         if (parent_hash == current_hash) {
                                             const affected_path = file_paths[entry_id];
-                                            const was_deleted = check: {
-                                                std.posix.access(affected_path, std.posix.F_OK) catch break :check true;
-                                                break :check false;
-                                            };
+                                            var path_buf: [std.fs.max_path_bytes]u8 = undefined;
+                                            @memcpy(path_buf[0..affected_path.len], affected_path);
+                                            path_buf[affected_path.len] = 0;
+                                            const was_deleted = std.c.faccessat(std.c.AT.FDCWD, @as([*:0]u8, @ptrCast(&path_buf)), std.c.F_OK, 0) != 0;
                                             if (!was_deleted) continue;
 
                                             affected_buf[affected_i] = affected_path[file_path.len..];
@@ -567,7 +567,7 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
 
                                             break :brk path_string.slice();
                                         } else {
-                                            const file_path_without_trailing_slash = std.mem.trimRight(u8, file_path, std.fs.path.sep_str);
+                                            const file_path_without_trailing_slash = std.mem.trimEnd(u8, file_path, std.fs.path.sep_str);
                                             @memcpy(_on_file_update_path_buf[0..file_path_without_trailing_slash.len], file_path_without_trailing_slash);
                                             _on_file_update_path_buf[file_path_without_trailing_slash.len] = std.fs.path.sep;
 

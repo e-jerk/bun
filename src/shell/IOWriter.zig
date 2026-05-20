@@ -669,7 +669,7 @@ pub fn enqueueFmt(
     comptime fmt: []const u8,
     args: anytype,
 ) Yield {
-    var buf_writer = this.buf.writer(bun.default_allocator);
+    var buf_writer = @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.buf);
     const start = this.buf.items.len;
     bun.handleOom(buf_writer.print(fmt, args));
 

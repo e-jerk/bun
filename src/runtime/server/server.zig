@@ -231,7 +231,7 @@ pub const AnyRoute = union(enum) {
             const FrameworkRouter = bun.bake.FrameworkRouter;
             if (try argument.getOptional(global, "dir", bun.String.Slice)) |dir| {
                 var alloc = init_ctx.js_string_allocations;
-                const relative_root = alloc.track(dir);
+                const relative_root = alloc.track(dir.slice());
 
                 var style: FrameworkRouter.Style = if (try argument.get(global, "style")) |style|
                     try FrameworkRouter.Style.fromJS(style, global)

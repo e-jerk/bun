@@ -293,9 +293,9 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
 
 pub fn printDiff(T: type, diffs: std.array_list.Managed(Diff(T))) !void {
     const stdout = if (builtin.is_test)
-        std.fs.File.stderr().writer()
+        @import("std-fs-compat").File.stderr().writer()
     else
-        std.fs.File.stdout().writer();
+        @import("std-fs-compat").File.stdout().writer();
 
     const specifier = switch (T) {
         u8 => "c",
@@ -608,7 +608,7 @@ pub fn split(
     //
     // thing
     var it = std.mem.splitScalar(T, s, newline);
-    var lines = std.ArrayListUnmanaged([]const T){};
+    var lines = std.ArrayListUnmanaged([]const T).empty;
     try lines.ensureUnusedCapacity(alloc, s.len >> 4);
     errdefer lines.deinit(alloc);
     while (it.next()) |l| {

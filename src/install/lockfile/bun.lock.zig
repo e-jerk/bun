@@ -45,7 +45,7 @@ pub const Stringifier = struct {
 
         var temp_buf: std.ArrayListUnmanaged(u8) = .empty;
         defer temp_buf.deinit(allocator);
-        const temp_writer = temp_buf.writer(allocator);
+        const temp_writer = @import("std-io-compat").writer(&temp_buf);
 
         var found_trusted_dependencies: std.AutoHashMapUnmanaged(u64, String) = .{};
         defer found_trusted_dependencies.deinit(allocator);

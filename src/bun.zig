@@ -447,13 +447,18 @@ fn Span(comptime T: type) type {
                 .many, .slice => {},
             }
             new_ptr_info.size = .slice;
-            return @Pointer(.slice, .{
-                .@"const" = new_ptr_info.is_const,
-                .@"volatile" = new_ptr_info.is_volatile,
-                .@"align" = new_ptr_info.alignment,
-                .@"addrspace" = new_ptr_info.address_space,
-                .@"allowzero" = new_ptr_info.is_allowzero,
-            }, new_ptr_info.child, if (new_ptr_info.sentinel_ptr) |sp| @as(*align(1) const new_ptr_info.child, @ptrCast(sp)).* else null);
+            return @Type(.{
+                .pointer = .{
+                    .size = .slice,
+                    .is_const = new_ptr_info.is_const,
+                    .is_volatile = new_ptr_info.is_volatile,
+                    .alignment = new_ptr_info.alignment,
+                    .child = new_ptr_info.child,
+                    .address_space = new_ptr_info.address_space,
+                    .is_allowzero = new_ptr_info.is_allowzero,
+                    .sentinel_ptr = new_ptr_info.sentinel_ptr,
+                },
+            });
         },
         else => @compileError("invalid type given to std.mem.Span: " ++ @typeName(T)),
     }
@@ -825,7 +830,7 @@ pub const simdutf = @import("./simdutf_sys/simdutf.zig");
 
 pub var start_time: i128 = 0;
 
-pub fn openFileZ(pathZ: [:0]const u8, open_flags: std.fs.File.OpenFlags) !std.fs.File {
+pub fn openFileZ(pathZ: [:0]const u8, open_flags: @import("std-fs-compat").File.OpenFlags) !@import("std-fs-compat").File {
     var flags: i32 = 0;
     switch (open_flags.mode) {
         .read_only => flags |= O.RDONLY,
@@ -834,10 +839,10 @@ pub fn openFileZ(pathZ: [:0]const u8, open_flags: std.fs.File.OpenFlags) !std.fs
     }
 
     const res = try sys.open(pathZ, flags, 0).unwrap();
-    return std.fs.File{ .handle = res.cast() };
+    return @import("std-fs-compat").File{ .handle = res.cast(), .flags = .{ .nonblocking = false } };
 }
 
-pub fn openFile(path_: []const u8, open_flags: std.fs.File.OpenFlags) !std.fs.File {
+pub fn openFile(path_: []const u8, open_flags: @import("std-fs-compat").File.OpenFlags) !@import("std-fs-compat").File {
     if (comptime Environment.isWindows) {
         var flags: i32 = 0;
         switch (open_flags.mode) {
@@ -853,7 +858,7 @@ pub fn openFile(path_: []const u8, open_flags: std.fs.File.OpenFlags) !std.fs.Fi
     return try openFileZ(&try std.posix.toPosixPath(path_), open_flags);
 }
 
-pub fn openDir(dir: std.fs.Dir, path_: [:0]const u8) !std.fs.Dir {
+pub fn openDir(dir: @import("std-fs-compat").Dir, path_: [:0]const u8) !@import("std-fs-compat").Dir {
     if (comptime Environment.isWindows) {
         const res = try sys.openDirAtWindowsA(.fromStdDir(dir), path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap();
         return res.stdDir();
@@ -863,13 +868,13 @@ pub fn openDir(dir: std.fs.Dir, path_: [:0]const u8) !std.fs.Dir {
     }
 }
 
-pub fn openDirNoRenamingOrDeletingWindows(dir: FD, path_: [:0]const u8) !std.fs.Dir {
+pub fn openDirNoRenamingOrDeletingWindows(dir: FD, path_: [:0]const u8) !@import("std-fs-compat").Dir {
     if (comptime !Environment.isWindows) @compileError("use openDir!");
     const res = try sys.openDirAtWindowsA(dir, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true }).unwrap();
     return res.stdDir();
 }
 
-pub fn openDirA(dir: std.fs.Dir, path_: []const u8) !std.fs.Dir {
+pub fn openDirA(dir: @import("std-fs-compat").Dir, path_: []const u8) !@import("std-fs-compat").Dir {
     if (comptime Environment.isWindows) {
         const res = try sys.openDirAtWindowsA(.fromStdDir(dir), path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap();
         return res.stdDir();
@@ -893,7 +898,7 @@ pub fn openDirForIterationOSPath(dir: FD, path_: []const OSPathChar) sys.Maybe(F
     return sys.openatA(dir, path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0);
 }
 
-pub fn openDirAbsolute(path_: []const u8) !std.fs.Dir {
+pub fn openDirAbsolute(path_: []const u8) !@import("std-fs-compat").Dir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap()
     else
@@ -902,7 +907,7 @@ pub fn openDirAbsolute(path_: []const u8) !std.fs.Dir {
     return fd.stdDir();
 }
 
-pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !std.fs.Dir {
+pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !@import("std-fs-compat").Dir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true }).unwrap()
     else
@@ -917,7 +922,10 @@ pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !std.fs.Dir {
 /// This wrapper exists to avoid the call to sliceTo(0)
 /// Zig's sliceTo(0) is scalar
 pub fn getenvZAnyCase(key: [:0]const u8) ?[]const u8 {
-    for (std.os.environ) |lineZ| {
+    const envp = std.c.environ;
+    var i: usize = 0;
+    while (envp[i] != null) : (i += 1) {
+        const lineZ = envp[i].?;
         const line = sliceTo(lineZ, 0);
         const key_end = strings.indexOfCharUsize(line, '=') orelse line.len;
         if (strings.eqlCaseInsensitiveASCII(line[0..key_end], key, true)) {
@@ -1112,11 +1120,11 @@ pub const StringHashMapContext = struct {
 };
 
 pub fn StringArrayHashMap(comptime Type: type) type {
-    return std.array_hash_map.ArrayHashMap([]const u8, Type, StringArrayHashMapContext, true);
+    return @import("array-hash-map-compat").ArrayHashMap([]const u8, Type, StringArrayHashMapContext, true);
 }
 
 pub fn CaseInsensitiveASCIIStringArrayHashMap(comptime Type: type) type {
-    return std.array_hash_map.ArrayHashMap([]const u8, Type, CaseInsensitiveASCIIStringContext, true);
+    return @import("array-hash-map-compat").ArrayHashMap([]const u8, Type, CaseInsensitiveASCIIStringContext, true);
 }
 
 pub fn CaseInsensitiveASCIIStringArrayHashMapUnmanaged(comptime Type: type) type {
@@ -1246,18 +1254,23 @@ var needs_proc_self_workaround: bool = false;
 // necessary on linux because other platforms don't have an optional
 // /proc/self/fd
 fn getFdPathViaCWD(fd: std.posix.fd_t, buf: *bun.PathBuffer) ![]u8 {
-    const prev_fd = try std.posix.openatZ(std.c.AT.FDCWD.fd, ".", .{ .DIRECTORY = true }, 0);
+    const prev_fd = try std.posix.openatZ(std.c.AT.FDCWD, ".", .{ .DIRECTORY = true }, 0);
     var needs_chdir = false;
     defer {
-        if (needs_chdir) std.posix.fchdir(prev_fd) catch unreachable;
-        std.posix.close(prev_fd);
+        if (needs_chdir) _ = std.c.fchdir(prev_fd);
+        _ = std.c.close(prev_fd);
     }
-    try std.posix.fchdir(fd);
+    if (std.c.fchdir(fd) != 0) return error.Unexpected;
     needs_chdir = true;
-    return std.posix.getcwd(buf);
+    return getcwd(buf);
 }
 
-pub const getcwd = std.posix.getcwd;
+pub fn getcwd(buf: []u8) ![]u8 {
+    const result_ptr = std.c.getcwd(buf.ptr, buf.len) orelse return error.Unexpected;
+    var result_len: usize = 0;
+    while (result_len < buf.len and result_ptr[result_len] != 0) : (result_len += 1) {}
+    return result_ptr[0..result_len];
+}
 
 pub fn getcwdAlloc(allocator: std.mem.Allocator) ![:0]u8 {
     var temp: PathBuffer = undefined;
@@ -1288,14 +1301,14 @@ pub fn getFdPath(fd: FD, buf: *bun.PathBuffer) ![]u8 {
             needs_proc_self_workaround = bun.env_var.BUN_NEEDS_PROC_SELF_WORKAROUND.get();
         }
     } else if (comptime !Environment.isLinux) {
-        return try std.os.getFdPath(fd.native(), buf);
+        return try @import("std-fs-compat").getFdPath(fd.native(), buf);
     }
 
     if (needs_proc_self_workaround) {
         return getFdPathViaCWD(fd.native(), buf);
     }
 
-    return std.os.getFdPath(fd.native(), buf) catch |err| {
+    return @import("std-fs-compat").getFdPath(fd.native(), buf) catch |err| {
         if (err == error.FileNotFound and !needs_proc_self_workaround) {
             needs_proc_self_workaround = true;
             return getFdPathViaCWD(fd.native(), buf);
@@ -1411,13 +1424,18 @@ fn SliceTo(comptime T: type, comptime end: std.meta.Elem(T)) type {
                     new_ptr_info.is_allowzero = false;
                 },
             }
-            return @Pointer(.slice, .{
-                .@"const" = new_ptr_info.is_const,
-                .@"volatile" = new_ptr_info.is_volatile,
-                .@"align" = new_ptr_info.alignment,
-                .@"addrspace" = new_ptr_info.address_space,
-                .@"allowzero" = new_ptr_info.is_allowzero,
-            }, new_ptr_info.child, if (new_ptr_info.sentinel_ptr) |sp| @as(*align(1) const new_ptr_info.child, @ptrCast(sp)).* else null);
+            return @Type(.{
+                .pointer = .{
+                    .size = .slice,
+                    .is_const = new_ptr_info.is_const,
+                    .is_volatile = new_ptr_info.is_volatile,
+                    .alignment = new_ptr_info.alignment,
+                    .child = new_ptr_info.child,
+                    .address_space = new_ptr_info.address_space,
+                    .is_allowzero = new_ptr_info.is_allowzero,
+                    .sentinel_ptr = new_ptr_info.sentinel_ptr,
+                },
+            });
         },
         else => {},
     }
@@ -1480,6 +1498,8 @@ comptime {
     _ = @import("./runtime/cli/upgrade_command.zig").Version;
     _ = @import("./jsc/resolve_path_jsc.zig");
     _ = @import("./jsc/resolver_jsc.zig");
+    _ = @import("./shell_parser/braces.zig");
+    _ = @import("./runtime/node/assert/myers_diff.zig");
 }
 
 pub fn DebugOnlyDisabler(comptime Type: type) type {
@@ -1560,7 +1580,7 @@ pub noinline fn maybeHandlePanicDuringProcessReload() void {
             std.atomic.spinLoopHint();
 
             if (comptime Environment.isPosix) {
-                std.posix.nanosleep(1, 0);
+                @import("std-fs-compat").nanosleep(1, 0) catch {};
             }
         }
     }
@@ -1624,13 +1644,22 @@ pub fn reloadProcess(
         dest.* = (allocator.dupeZ(u8, src) catch unreachable).ptr;
     }
 
-    const environ_slice = std.mem.span(std.c.environ);
-    const environ = allocator.allocSentinel(?[*:0]const u8, environ_slice.len, null) catch unreachable;
-    for (environ_slice, environ) |src, *dest| {
-        if (src == null) {
-            dest.* = null;
-        } else {
-            dest.* = (allocator.dupeZ(u8, sliceTo(src.?, 0)) catch unreachable).ptr;
+    var environ_count: usize = 0;
+    {
+        const envp = std.c.environ;
+        while (envp[environ_count] != null) : (environ_count += 1) {}
+    }
+    const environ = allocator.allocSentinel(?[*:0]const u8, environ_count, null) catch unreachable;
+    {
+        const envp = std.c.environ;
+        for (0..environ_count) |i| {
+            const src = envp[i];
+            const dest = &environ[i];
+            if (src == null) {
+                dest.* = null;
+            } else {
+                dest.* = (allocator.dupeZ(u8, sliceTo(src.?, 0)) catch unreachable).ptr;
+            }
         }
     }
 
@@ -1909,29 +1938,34 @@ pub fn HiveRef(comptime T: type, comptime capacity: u16) type {
 pub const tracy = @import("./perf/tracy.zig");
 pub const trace = tracy.trace;
 
-pub fn openFileForPath(file_path: [:0]const u8) !std.fs.File {
+pub fn openFileForPath(file_path: [:0]const u8) !@import("std-fs-compat").File {
     if (Environment.isWindows)
         return std.c.AT.FDCWD.openFileZ(file_path, .{});
 
-    const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
-    const flags: u32 = O.CLOEXEC | O.NOCTTY | O_PATH;
-
-    const fd = try std.posix.openZ(file_path, O.toPacked(flags), 0);
-    return std.fs.File{
+    const fd = std.c.open(file_path, .{
+        .ACCMODE = .RDONLY,
+        .NOCTTY = true,
+        .CLOEXEC = true,
+    }, @as(u32, 0));
+    if (fd < 0) return error.Unexpected;
+    return @import("std-fs-compat").File{
         .handle = fd,
     };
 }
 
-pub fn openDirForPath(file_path: [:0]const u8) !std.fs.Dir {
+pub fn openDirForPath(file_path: [:0]const u8) !@import("std-fs-compat").Dir {
     if (Environment.isWindows)
         return std.c.AT.FDCWD.openDirZ(file_path, .{});
 
     const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
     const flags: u32 = O.CLOEXEC | O.NOCTTY | O.DIRECTORY | O_PATH;
 
-    const fd = try std.posix.openZ(file_path, O.toPacked(flags), 0);
-    return std.fs.Dir{
-        .fd = fd,
+    const fd = switch (bun.sys.openA(file_path, O.toPacked(flags), 0)) {
+        .result => |f| f,
+        .err => |err| return err.toZigErr(),
+    };
+    return @import("std-fs-compat").Dir{
+        .fd = fd.value.as_system,
     };
 }
 
@@ -2160,11 +2194,21 @@ pub fn appendOptionsEnv(env: []const u8, comptime ArgType: type, args: *std.arra
     }
 }
 
+extern "c" fn _NSGetArgc() *c_int;
+extern "c" fn _NSGetArgv() *[*][*:0]u8;
+
 pub fn initArgv() !void {
     if (comptime Environment.isPosix) {
-        argv = try bun.default_allocator.alloc([:0]const u8, std.os.argv.len);
-        for (0..argv.len) |i| {
-            argv[i] = std.mem.sliceTo(std.os.argv[i], 0);
+        if (comptime Environment.isMac) {
+            const raw_argc = @as(usize, @intCast(_NSGetArgc().*));
+            const raw_argv = _NSGetArgv().*;
+            argv = try bun.default_allocator.alloc([:0]const u8, raw_argc);
+            for (0..argv.len) |i| {
+                argv[i] = std.mem.sliceTo(raw_argv[i], 0);
+            }
+        } else {
+            // TODO: Linux argv access
+            argv = &[_][:0]const u8{};
         }
     } else if (comptime Environment.isWindows) {
         // Zig's implementation of `std.process.argsAlloc()`on Windows platforms
@@ -2217,7 +2261,7 @@ pub fn initArgv() !void {
 
         argv = out_argv;
     } else {
-        argv = try std.process.argsAlloc(bun.default_allocator);
+        argv = &[_][:0]const u8{};
     }
 
     if (bun.env_var.BUN_OPTIONS.get()) |opts| {
@@ -2295,13 +2339,13 @@ pub inline fn serializableInto(comptime T: type, init: anytype) T {
     return result.*;
 }
 
-/// Like std.fs.Dir.makePath except instead of infinite looping on dangling
+/// Like @import("std-fs-compat").Dir.makePath except instead of infinite looping on dangling
 /// symlink, it deletes the symlink and tries again.
-pub fn makePath(dir: std.fs.Dir, sub_path: []const u8) !void {
+pub fn makePath(dir: @import("std-fs-compat").Dir, sub_path: []const u8) !void {
     var it = try std.fs.path.componentIterator(sub_path);
     var component = it.last() orelse return;
     while (true) {
-        dir.makeDir(component.path) catch |err| switch (err) {
+        @import("std-fs-compat").makeDir(dir, component.path) catch |err| switch (err) {
             error.PathAlreadyExists => {
                 var path_buf2: [MAX_PATH_BYTES * 2]u8 = undefined;
                 copy(u8, &path_buf2, component.path);
@@ -2326,9 +2370,9 @@ pub fn makePath(dir: std.fs.Dir, sub_path: []const u8) !void {
     }
 }
 
-/// Like std.fs.Dir.makePath except instead of infinite looping on dangling
+/// Like @import("std-fs-compat").Dir.makePath except instead of infinite looping on dangling
 /// symlink, it deletes the symlink and tries again.
-pub fn makePathW(dir: std.fs.Dir, sub_path: []const u16) !void {
+pub fn makePathW(dir: @import("std-fs-compat").Dir, sub_path: []const u16) !void {
     // was going to copy/paste makePath and use all W versions but they didn't all exist
     // and this buffer was needed anyway
     var buf: PathBuffer = undefined;
@@ -2369,6 +2413,10 @@ pub inline fn OSPathLiteral(comptime literal: anytype) *const [literal.len:0]OSP
     };
 }
 
+pub fn makeOpenPath(dir: @import("std-fs-compat").Dir, sub_path: anytype, opts: anytype) !@import("std-fs-compat").Dir {
+    return MakePath.makeOpenPath(dir, sub_path, opts);
+}
+
 pub const MakePath = struct {
     const w = std.os.windows;
 
@@ -2380,7 +2428,7 @@ pub const MakePath = struct {
     /// Opens the dir if the path already exists and is a directory.
     /// This function is not atomic, and if it returns an error, the file system may
     /// have been modified regardless.
-    fn makeOpenPathAccessMaskW(self: std.fs.Dir, comptime T: type, sub_path: []const T, access_mask: u32, no_follow: bool) !std.fs.Dir {
+    fn makeOpenPathAccessMaskW(self: @import("std-fs-compat").Dir, comptime T: type, sub_path: []const T, access_mask: u32, no_follow: bool) !@import("std-fs-compat").Dir {
         const Iterator = std.fs.path.ComponentIterator(.windows, T);
         var it = try Iterator.init(sub_path);
         // If there are no components in the path, then create a dummy component with the full path.
@@ -2419,8 +2467,8 @@ pub const MakePath = struct {
         create_disposition: u32,
     };
 
-    fn makeOpenDirAccessMaskW(self: std.fs.Dir, sub_path_w: [*:0]const u16, access_mask: u32, flags: MakeOpenDirAccessMaskWOptions) !std.fs.Dir {
-        var result = std.fs.Dir{
+    fn makeOpenDirAccessMaskW(self: @import("std-fs-compat").Dir, sub_path_w: [*:0]const u16, access_mask: u32, flags: MakeOpenDirAccessMaskWOptions) !@import("std-fs-compat").Dir {
+        var result = @import("std-fs-compat").Dir{
             .fd = undefined,
         };
 
@@ -2469,7 +2517,7 @@ pub const MakePath = struct {
         }
     }
 
-    pub fn makeOpenPath(self: std.fs.Dir, sub_path: anytype, opts: std.fs.Dir.OpenOptions) !std.fs.Dir {
+    pub fn makeOpenPath(self: @import("std-fs-compat").Dir, sub_path: anytype, opts: anytype) !@import("std-fs-compat").Dir {
         if (comptime Environment.isWindows) {
             return makeOpenPathAccessMaskW(
                 self,
@@ -2484,15 +2532,17 @@ pub const MakePath = struct {
             );
         }
 
-        return self.makeOpenPath(sub_path, opts);
+        const access_sub_paths = if (@hasField(@TypeOf(opts), "access_sub_paths")) opts.access_sub_paths else true;
+        const result = try @import("std-fs-compat").FsDir.fromDir(self).makeOpenPath(sub_path, @import("std-fs-compat").FsDir.MakePathOptions{ .access_sub_paths = access_sub_paths });
+        return result.toDir();
     }
 
-    /// copy/paste of `std.fs.Dir.makePath` and related functions and modified to support u16 slices.
+    /// copy/paste of `@import("std-fs-compat").Dir.makePath` and related functions and modified to support u16 slices.
     /// inside `MakePath` scope to make deleting later easier.
     /// TODO(dylan-conway) delete `MakePath`
-    pub fn makePath(comptime T: type, self: std.fs.Dir, sub_path: []const T) !void {
+    pub fn makePath(comptime T: type, self: @import("std-fs-compat").Dir, sub_path: []const T) !void {
         if (Environment.isWindows) {
-            var dir = try makeOpenPath(self, sub_path, .{});
+            var dir = try MakePath.makeOpenPath(self, sub_path, .{});
             dir.close();
             return;
         }
@@ -2500,7 +2550,7 @@ pub const MakePath = struct {
         var it = try componentIterator(T, sub_path);
         var component = it.last() orelse return;
         while (true) {
-            std.fs.Dir.makeDir(self, component.path) catch |err| switch (err) {
+            @import("std-fs-compat").makeDir(self, component.path) catch |err| switch (err) {
                 error.PathAlreadyExists => {
                     // TODO stat the file and return an error if it's not a directory
                     // this is important because otherwise a dangling symlink
@@ -2963,23 +3013,24 @@ pub fn runtimeEmbedFile(
         var once = bun.once(load);
 
         fn load() [:0]const u8 {
-            return std.c.AT.FDCWD.readFileAllocOptions(
-                default_allocator,
-                abs_path,
-                std.math.maxInt(usize),
-                null,
-                .fromByteUnits(@alignOf(u8)),
-                '\x00',
-            ) catch |e| {
-                Output.panic(
+            const bytes = switch (bun.sys.File.readFrom(bun.FD.cwd(), abs_path, default_allocator)) {
+                .result => |b| {
+                    const buf = bun.handleOom(default_allocator.alloc(u8, b.len + 1));
+                    @memcpy(buf[0..b.len], b);
+                    buf[b.len] = 0;
+                    default_allocator.free(b);
+                    return buf[0..b.len :0];
+                },
+                .err => |err| Output.panic(
                     \\Failed to load '{s}': {}
                     \\
                     \\To improve iteration speed, some files are not embedded but
                     \\loaded at runtime, at the cost of making the binary non-portable.
                     \\To fix this, build with a release profile, or pass
                     \\-Dcodegen_embed=true to zig build.
-                , .{ abs_path, e });
+                , .{ abs_path, err }),
             };
+            return bytes;
         }
     };
 
@@ -3033,7 +3084,33 @@ pub fn selfExePath() ![:0]u8 {
         var lock: Mutex = .{};
 
         pub fn load() ![:0]u8 {
-            const init = try std.fs.selfExePath(&value);
+            const init = blk: {
+                if (Environment.isMac) {
+                    var symlink_buf: [std.posix.PATH_MAX + 1:0]u8 = undefined;
+                    var n: u32 = symlink_buf.len;
+                    const rc = std.c._NSGetExecutablePath(&symlink_buf, &n);
+                    if (rc != 0) return error.NameTooLong;
+                    const exe_path: [:0]const u8 = std.mem.sliceTo(&symlink_buf, 0);
+                    var resolved: [std.posix.PATH_MAX + 1:0]u8 = undefined;
+                    const r = std.c.realpath(exe_path.ptr, &resolved);
+                    if (r) |rp| {
+                        const resolved_slice = std.mem.sliceTo(rp, 0);
+                        @memcpy(value[0..resolved_slice.len], resolved_slice);
+                        break :blk value[0..resolved_slice.len];
+                    } else {
+                        @memcpy(value[0..exe_path.len], exe_path);
+                        break :blk value[0..exe_path.len];
+                    }
+                } else if (Environment.isLinux) {
+                    const n = std.c.readlink("/proc/self/exe", &value, value.len);
+                    if (n < 0) return error.Unexpected;
+                    break :blk value[0..@as(usize, @intCast(n))];
+                } else if (Environment.isWindows) {
+                    return error.Unsupported;
+                } else {
+                    return error.Unsupported;
+                }
+            };
             @This().len = init.len;
             value[@This().len] = 0;
             set = true;
@@ -3821,12 +3898,12 @@ pub const deprecated = @import("./bun_core/deprecated.zig");
 pub fn getUseSystemCA(globalObject: *jsc.JSGlobalObject, callFrame: *jsc.CallFrame) error{ JSError, OutOfMemory }!jsc.JSValue {
     _ = globalObject;
     _ = callFrame;
-    const Arguments = @import("./runtime/cli/Arguments.zig");
-    return jsc.JSValue.jsBoolean(Arguments.Bun__Node__UseSystemCA);
+    // TODO: Arguments.Bun__Node__UseSystemCA stub
+    return jsc.JSValue.jsBoolean(false);
 }
 
 // Claude thinks its bun.JSC when we renamed it to bun.jsc months ago.
-pub const JSC = @compileError("Deprecated: Use @import(\"bun\").jsc instead");
+pub const JSC = jsc;
 
 pub const ConfigVersion = @import("./install/ConfigVersion.zig").ConfigVersion;
 

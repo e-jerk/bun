@@ -11,7 +11,7 @@ pub fn clone(self: *MutableString) Allocator.Error!MutableString {
     return MutableString.initCopy(self.allocator, self.list.items);
 }
 
-pub const Writer = std.Io.GenericWriter(*@This(), Allocator.Error, MutableString.writeAll);
+pub const Writer = @import("std-io-compat").MakeGenericWriter(*@This(), Allocator.Error, MutableString.writeAll);
 pub fn writer(self: *MutableString) Writer {
     return Writer{
         .context = self,
@@ -66,12 +66,12 @@ pub fn init(allocator: Allocator, capacity: usize) Allocator.Error!MutableString
         .list = if (capacity > 0)
             try std.ArrayListUnmanaged(u8).initCapacity(allocator, capacity)
         else
-            std.ArrayListUnmanaged(u8){},
+            std.ArrayListUnmanaged(u8).empty,
     };
 }
 
 pub fn initEmpty(allocator: Allocator) MutableString {
-    return MutableString{ .allocator = allocator, .list = .{} };
+    return MutableString{ .allocator = allocator, .list = .empty };
 }
 
 pub const ensureUnusedCapacity = growIfNeeded;
@@ -242,7 +242,7 @@ pub inline fn lenI(self: *MutableString) i32 {
 
 pub fn takeSlice(self: *MutableString) []u8 {
     const out = self.list.items;
-    self.list = .{};
+    self.list = .empty;
     return out;
 }
 
@@ -319,7 +319,7 @@ pub const BufferedWriter = struct {
 
     const max = 2048;
 
-    pub const Writer = std.Io.GenericWriter(*BufferedWriter, Allocator.Error, BufferedWriter.writeAll);
+    pub const Writer = @import("std-io-compat").MakeGenericWriter(*BufferedWriter, Allocator.Error, BufferedWriter.writeAll);
 
     inline fn remain(this: *BufferedWriter) []u8 {
         return this.buffer[this.pos..];

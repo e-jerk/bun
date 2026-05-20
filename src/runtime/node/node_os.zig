@@ -195,25 +195,25 @@ fn cpusImplLinux(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
 fn cpusImplFreeBSD(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
     var ncpu: c_uint = 0;
     var ncpu_len: usize = @sizeOf(c_uint);
-    try std.posix.sysctlbynameZ("hw.ncpu", &ncpu, &ncpu_len, null, 0);
+    if (std.c.sysctlbyname("hw.ncpu", &ncpu, &ncpu_len, null, 0) != 0) return error.Unexpected;
     if (ncpu == 0) return error.no_processor_info;
 
     var model_buf: [512]u8 = undefined;
     var model_len: usize = model_buf.len;
-    const model = if (std.posix.sysctlbynameZ("hw.model", &model_buf, &model_len, null, 0)) |_|
+    const model = if (std.c.sysctlbyname("hw.model", &model_buf, &model_len, null, 0) == 0)
         jsc.ZigString.init(std.mem.sliceTo(&model_buf, 0)).withEncoding().toJS(globalThis)
-    else |_|
+    else
         jsc.ZigString.static("unknown").withEncoding().toJS(globalThis);
 
     var speed_mhz: c_uint = 0;
     var speed_len: usize = @sizeOf(c_uint);
-    _ = std.posix.sysctlbynameZ("hw.clockrate", &speed_mhz, &speed_len, null, 0) catch {};
+    _ = std.c.sysctlbyname("hw.clockrate", &speed_mhz, &speed_len, null, 0);
 
     const cpu_states = 5; // user, nice, sys, intr, idle
     const times_buf = try bun.default_allocator.alloc(c_long, @as(usize, ncpu) * cpu_states);
     defer bun.default_allocator.free(times_buf);
     var times_len: usize = times_buf.len * @sizeOf(c_long);
-    try std.posix.sysctlbynameZ("kern.cp_times", times_buf.ptr, &times_len, null, 0);
+    if (std.c.sysctlbyname("kern.cp_times", times_buf.ptr, &times_len, null, 0) != 0) return error.Unexpected;
 
     const ticks: i64 = bun_sysconf__SC_CLK_TCK();
     const mult: u64 = if (ticks > 0) 1000 / @as(u64, @intCast(ticks)) else 1;
@@ -481,15 +481,13 @@ pub fn loadavg(global: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
             var avg: c.struct_loadavg = undefined;
             var size: usize = @sizeOf(@TypeOf(avg));
 
-            std.posix.sysctlbynameZ(
+            if (std.c.sysctlbyname(
                 "vm.loadavg",
                 &avg,
                 &size,
                 null,
                 0,
-            ) catch |err| switch (err) {
-                else => break :loadavg [3]f64{ 0, 0, 0 },
-            };
+            ) != 0) break :loadavg [3]f64{ 0, 0, 0 };
 
             const scale: f64 = @floatFromInt(avg.fscale);
             break :loadavg .{
@@ -614,8 +612,8 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
             // Compute the CIDR suffix; returns null if the netmask cannot
             //  be converted to a CIDR suffix
             const maybe_suffix: ?u8 = switch (addr.any.family) {
-                std.posix.AF.INET => netmaskToCIDRSuffix(netmask.in.sa.addr),
-                std.posix.AF.INET6 => netmaskToCIDRSuffix(@as(u128, @bitCast(netmask.in6.sa.addr))),
+                std.posix.AF.INET => netmaskToCIDRSuffix(netmask.in.addr),
+                std.posix.AF.INET6 => netmaskToCIDRSuffix(@as(u128, @bitCast(netmask.in6.addr))),
                 else => null,
             };
 
@@ -701,7 +699,7 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
 
         // scopeid <number> The numeric IPv6 scope ID (only specified when family is IPv6)
         if (addr.any.family == std.posix.AF.INET6) {
-            interface.put(globalThis, jsc.ZigString.static("scopeid"), jsc.JSValue.jsNumber(addr.in6.sa.scope_id));
+            interface.put(globalThis, jsc.ZigString.static("scopeid"), jsc.JSValue.jsNumber(addr.in6.scope_id));
         }
 
         // Does this entry already exist?
@@ -945,15 +943,13 @@ pub fn totalmem() u64 {
             var memory_: [32]c_ulonglong = undefined;
             var size: usize = memory_.len;
 
-            std.posix.sysctlbynameZ(
+            if (std.c.sysctlbyname(
                 "hw.memsize",
                 &memory_,
                 &size,
                 null,
                 0,
-            ) catch |err| switch (err) {
-                else => return 0,
-            };
+            ) != 0) return 0;
 
             return memory_[0];
         },
@@ -965,7 +961,7 @@ pub fn totalmem() u64 {
         .freebsd => {
             var physmem: u64 = 0;
             var size: usize = @sizeOf(u64);
-            std.posix.sysctlbynameZ("hw.physmem", &physmem, &size, null, 0) catch return 0;
+            if (std.c.sysctlbyname("hw.physmem", &physmem, &size, null, 0) != 0) return 0;
             return physmem;
         },
         .windows => {
@@ -995,17 +991,15 @@ pub fn uptime(global: *jsc.JSGlobalObject) bun.JSError!f64 {
             var boot_time: std.posix.timeval = undefined;
             var size: usize = @sizeOf(@TypeOf(boot_time));
 
-            std.posix.sysctlbynameZ(
+            if (std.c.sysctlbyname(
                 "kern.boottime",
                 &boot_time,
                 &size,
                 null,
                 0,
-            ) catch |err| switch (err) {
-                else => return 0,
-            };
+            ) != 0) return 0;
 
-            return @floatFromInt(std.time.timestamp() - boot_time.sec);
+            return @floatFromInt(@import("std-fs-compat").timestamp() - boot_time.sec);
         },
         .linux => {
             var info: c.struct_sysinfo = undefined;

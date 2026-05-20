@@ -42,14 +42,15 @@ fn install(ctx: Command.Context) !void {
             .cli = &cli,
         };
 
-        var fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
+        const fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
             .ctx = &analyzer,
             .entry_points = cli.positionals[1..],
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
 
-        try bun.cli.BuildCommand.exec(bun.cli.Command.get(), &fetcher);
-        return;
+        // TODO: BuildCommand stub
+        _ = fetcher;
+        return error.Unimplemented;
     }
 
     return installWithCLI(ctx, cli);

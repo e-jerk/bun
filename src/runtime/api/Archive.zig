@@ -202,7 +202,7 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
     const entry = lib.Archive.Entry.new();
     defer entry.free();
 
-    const now_secs: isize = @intCast(@divTrunc(std.time.milliTimestamp(), 1000));
+    const now_secs: isize = @intCast(@divTrunc(@import("std-fs-compat").milliTimestamp(), 1000));
 
     // Iterate over object properties and write directly to archive
     const PropIterator = jsc.JSPropertyIterator(.{

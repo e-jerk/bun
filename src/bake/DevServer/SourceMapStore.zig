@@ -191,7 +191,7 @@ pub const Entry = struct {
 
         if (bun.FeatureFlags.bake_debugging_features) if (dev.dump_dir) |dump_dir| {
             const rel_path_escaped = if (side == .client) "latest_chunk.js.map" else "latest_hmr.js.map";
-            dumpBundle(dump_dir, if (side == .client) .client else .server, rel_path_escaped, json_bytes, false) catch |err| {
+            dumpBundle(@import("std-fs-compat").FsDir{ .fd = dump_dir.fd }, if (side == .client) .client else .server, rel_path_escaped, json_bytes, false) catch |err| {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 Output.warn("Could not dump bundle: {}", .{err});
             };
@@ -210,7 +210,7 @@ pub const Entry = struct {
             return bun.strings.percentEncodeWrite(utf8_input, array_list);
         }
 
-        const writer = array_list.writer();
+        const writer = @import("std-io-compat").writer(&array_list);
         try bun.js_printer.writePreQuotedString(utf8_input, @TypeOf(writer), writer, '"', false, true, .utf8);
     }
 
@@ -563,5 +563,5 @@ const dumpBundle = DevServer.dumpBundle;
 const mapLog = DevServer.mapLog;
 
 const std = @import("std");
-const AutoArrayHashMapUnmanaged = std.array_hash_map.Auto;
+const AutoArrayHashMapUnmanaged = std.array_hash_map.AutoArrayHashMapUnmanaged;
 const Allocator = std.mem.Allocator;

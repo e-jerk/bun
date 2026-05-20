@@ -8,6 +8,8 @@ const Context = if (builtin.os.tag == .windows)
     std.os.windows.CONTEXT
 else if (builtin.os.tag == .linux and builtin.abi == .musl)
     musl.jmp_buf
+else if (builtin.os.tag == .macos)
+    struct { dummy: u8 = 0 }
 else
     std.c.ucontext_t;
 
@@ -94,6 +96,8 @@ inline fn getContext(ctx: *Context) void {
         std.os.windows.ntdll.RtlCaptureContext(ctx);
     } else if (builtin.os.tag == .linux and builtin.abi == .musl) {
         _ = musl.setjmp(ctx);
+    } else if (builtin.os.tag == .macos) {
+        // no-op: panic recovery not supported on macOS in Zig 0.16
     } else {
         _ = std.debug.getContext(ctx);
     }
@@ -104,6 +108,10 @@ inline fn setContext(ctx: *const Context) noreturn {
         RtlRestoreContext(ctx, null);
     } else if (builtin.os.tag == .linux and builtin.abi == .musl) {
         musl.longjmp(ctx, 1);
+    } else if (builtin.os.tag == .macos) {
+        // no-op: panic recovery not supported on macOS in Zig 0.16
+        std.mem.doNotOptimizeAway(ctx);
+        std.process.exit(1);
     } else {
         setcontext(ctx);
     }

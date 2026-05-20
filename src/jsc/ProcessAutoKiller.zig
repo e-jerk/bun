@@ -2,7 +2,7 @@ const ProcessAutoKiller = @This();
 
 const log = bun.Output.scoped(.AutoKiller, .hidden);
 
-processes: std.array_hash_map.Auto(*bun.spawn.Process, void) = .{},
+processes: std.array_hash_map.AutoArrayHashMapUnmanaged(*bun.spawn.Process, void) = .{},
 enabled: bool = false,
 ever_enabled: bool = false,
 

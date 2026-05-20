@@ -237,6 +237,7 @@ while (true) : (__loop_limit_1 += 1) {
                 },
             }
         }
+        return null;
     }
 
     fn initWalker(self: *PackageFilterIterator) !void {
@@ -274,6 +275,7 @@ while (true) : (__loop_limit_2 += 1) {
                 self.deinitWalker();
             }
         }
+        return null;
     }
 };
 

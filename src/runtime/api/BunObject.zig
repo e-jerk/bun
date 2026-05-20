@@ -742,7 +742,7 @@ pub fn getPublicPathWithAssetPrefix(
             ) catch return;
         }
     } else {
-        writer.writeAll(std.mem.trimLeft(u8, relative_path, "/")) catch unreachable;
+        writer.writeAll(@import("std-fs-compat").trimLeft(u8, relative_path, "/")) catch unreachable;
     }
 }
 
@@ -767,7 +767,7 @@ pub fn sleepSync(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) b
         return globalObject.throwInvalidArguments("argument to sleepSync must not be negative, got {d}", .{milliseconds});
     }
 
-    std.Thread.sleep(@as(u64, @intCast(milliseconds)) * std.time.ns_per_ms);
+    @import("std-fs-compat").sleep(@as(u64, @intCast(milliseconds)) * std.time.ns_per_ms);
     return .js_undefined;
 }
 
@@ -1689,8 +1689,7 @@ pub const JSZlib = struct {
                     defer reader.deinit();
                     return globalThis.throwValue(ZigString.init(reader.errorMessage() orelse "Zlib returned an error").toErrorInstance(globalThis));
                 };
-                reader.list = .{ .items = reader.list.items };
-                reader.list.capacity = reader.list.items.len;
+                reader.list = .{ .items = reader.list.items, .capacity = reader.list.items.len };
                 reader.list_ptr = &reader.list;
 
                 var array_buffer = jsc.ArrayBuffer.fromBytes(reader.list.items, .Uint8Array);
@@ -1798,8 +1797,8 @@ while (true) : (__loop_limit_1 += 1) {
                     defer reader.deinit();
                     return globalThis.throwValue(ZigString.init(reader.errorMessage() orelse "Zlib returned an error").toErrorInstance(globalThis));
                 };
-                reader.list = .{ .items = bun.handleOom(reader.list.toOwnedSlice(allocator)) };
-                reader.list.capacity = reader.list.items.len;
+                const new_items = bun.handleOom(reader.list.toOwnedSlice(allocator));
+                reader.list = .{ .items = new_items, .capacity = new_items.len };
                 reader.list_ptr = &reader.list;
 
                 var array_buffer = jsc.ArrayBuffer.fromBytes(reader.list.items, .Uint8Array);

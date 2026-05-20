@@ -7,7 +7,7 @@ pub fn writeOutputFilesToDisk(
 ) !void {
     const trace = bun.perf.trace("Bundler.writeOutputFilesToDisk");
     defer trace.end();
-    var root_dir = std.c.AT.FDCWD.makeOpenPath(root_path, .{}) catch |err| {
+    var root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), root_path, .{}) catch |err| {
         if (err == error.NotDir) {
             c.log.addErrorFmt(null, Logger.Loc.Empty, bun.default_allocator, "Failed to create output directory {f} is a file. Please choose a different outdir or delete {f}", .{
                 bun.fmt.quote(root_path),
@@ -73,7 +73,7 @@ pub fn writeOutputFilesToDisk(
         const rel_path = chunk.final_rel_path;
         if (std.fs.path.dirnamePosix(rel_path)) |rel_parent| {
             if (rel_parent.len > 0) {
-                root_dir.makePath(rel_parent) catch |err| {
+                    bun.makePath(root_dir, rel_parent) catch |err| {
                     c.log.addErrorFmt(null, Logger.Loc.Empty, bun.default_allocator, "{s} creating outdir {f} while saving chunk {f}", .{
                         @errorName(err),
                         bun.fmt.quote(rel_parent),
@@ -404,7 +404,7 @@ pub fn writeOutputFilesToDisk(
 
             if (std.fs.path.dirname(src.dest_path)) |rel_parent| {
                 if (rel_parent.len > 0) {
-                    root_dir.makePath(rel_parent) catch |err| {
+                bun.makePath(root_dir, rel_parent) catch |err| {
                         c.log.addErrorFmt(null, Logger.Loc.Empty, bun.default_allocator, "{s} creating outdir {f} while saving file {f}", .{
                             @errorName(err),
                             bun.fmt.quote(rel_parent),

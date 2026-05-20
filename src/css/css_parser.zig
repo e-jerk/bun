@@ -325,20 +325,20 @@ pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, 
             // const all_fields_set = std.StaticBitSet(std.meta.fields(T).len).initFull();
 
             // // Loop through each property in `decls.declarations` and then `decls.important_declarations`
-            // // The inline for loop is so we can share the code for both
+            // // The for loop is so we can share the code for both
             // const DECL_FIELDS = &.{ "declarations", "important_declarations" };
-            // inline for (DECL_FIELDS) |decl_field_name| {
+            // for (DECL_FIELDS) |decl_field_name| {
             //     const decl_list: *const ArrayList(css_properties.Property) = &@field(decls, decl_field_name);
             //     const important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
 
             //     // Now loop through each property in the list
             //     main_loop: for (decl_list.items) |*property| {
             //         // The property field map maps each field in `T` to a tag of `Property`
-            //         // Here we do `inline for` to basically switch on the tag of `property` to see
+            //         // Here we do `for` to basically switch on the tag of `property` to see
             //         // if it matches a field in `T` which maps to the same tag
             //         //
             //         // Basically, check that `@as(PropertyIdTag, property.*)` equals `T.PropertyFieldMap[field.name]`
-            //         inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //         for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
             //             const tag: PropertyIdTag = @as(?*const PropertyIdTag, field.default_value).?.*;
 
             //             if (@intFromEnum(@as(PropertyIdTag, property.*)) == tag) {
@@ -373,7 +373,7 @@ pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, 
             //         // If `property` matches none of the tags in `T.PropertyFieldMap` then let's try
             //         // if it matches the tag specified by `property_name`
             //         if (@as(PropertyIdTag, property.*) == property_name) {
-            //             inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //             for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
             //                 if (@hasField(T.VendorPrefixMap, field.name)) {
             //                     @field(this, field.name) = if (@hasDecl(@TypeOf(@field(property, field.name)[0]), "clone"))
             //                         @field(property, field.name)[0].deepClone(allocator)
@@ -396,7 +396,7 @@ pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, 
             //         }
 
             //         // Otherwise, try to convert to te fields using `.longhand()`
-            //         inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            //         for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
             //             const property_id = @unionInit(
             //                 PropertyId,
             //                 field.name,
@@ -457,7 +457,7 @@ pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, 
             _ = this; // autofix
             _ = allocator; // autofix
             _ = property_id; // autofix
-            // inline for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
+            // for (std.meta.fields(@TypeOf(T.PropertyFieldMap))) |field| {
             //     if (@as(PropertyIdTag, property_id.*) == @field(T.PropertyFieldMap, field.name)) {
             //         const val = if (@hasDecl(@TypeOf(@field(T, field.namee)), "clone"))
             //             @field(this, field.name).deepClone(allocator)
@@ -482,7 +482,7 @@ pub fn DefineShorthand(comptime T: type, comptime property_name: PropertyIdTag, 
             _ = this; // autofix
             _ = allocator; // autofix
             _ = property; // autofix
-            // inline for (std.meta.fields(T.PropertyFieldMap)) |field| {
+            // for (std.meta.fields(T.PropertyFieldMap)) |field| {
             //     if (@as(PropertyIdTag, property.*) == @field(T.PropertyFieldMap, field.name)) {
             //         const val = if (@hasDecl(@TypeOf(@field(T, field.name)), "clone"))
             //             @field(this, field.name).deepClone(allocator)
@@ -652,6 +652,7 @@ pub fn DeriveParse(comptime T: type) type {
             comptime void_count: usize,
             comptime payload_count: usize,
         ) Result(T) {
+            const first_void_index = comptime if (maybe_first_void_index) |v| v else 0;
             const last_payload_index = first_payload_index + payload_count - 1;
             if (comptime maybe_first_void_index == null) {
                 inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
@@ -666,10 +667,6 @@ pub fn DeriveParse(comptime T: type) type {
                     }
                 }
             }
-
-            const first_void_index = maybe_first_void_index.?;
-
-            const void_fields = bun.meta.EnumFields(T)[first_void_index .. first_void_index + void_count];
 
             if (comptime void_count == 1) {
                 const void_field = enum_type.@"enum".fields[first_void_index];
@@ -716,7 +713,8 @@ pub fn DeriveParse(comptime T: type) type {
                 const state = input.state();
                 if (input.tryParse(Parser.expectIdent, .{}).asValue()) |ident| {
                     if (Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) |matched| {
-                        inline for (void_fields) |field| {
+                        inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
+                            if (field_i < first_void_index or field_i >= first_void_index + void_count) continue;
                             if (field.value == @intFromEnum(matched)) {
                                 if (comptime is_union_enum) return .{ .result = @unionInit(T, field.name, {}) };
                                 return .{ .result = @enumFromInt(field.value) };
@@ -739,8 +737,8 @@ pub fn DeriveParse(comptime T: type) type {
                     }
                 }
             } else if (comptime first_void_index > first_payload_index) {
-                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
-                    if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
+                    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                        if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
                         return .{ .result = switch (generic.parseFor(field.type)(input)) {
                             .result => |v| @unionInit(T, field.name, v),
                             .err => |e| return .{ .err = e },
@@ -757,7 +755,8 @@ pub fn DeriveParse(comptime T: type) type {
                     .err => |e| return .{ .err = e },
                 };
                 if (Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) |matched| {
-                    inline for (void_fields) |field| {
+                    inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
+                        if (field_i < first_void_index or field_i >= first_void_index + void_count) continue;
                         if (field.value == @intFromEnum(matched)) {
                             if (comptime is_union_enum) return .{ .result = @unionInit(T, field.name, {}) };
                             return .{ .result = @enumFromInt(field.value) };
@@ -777,7 +776,7 @@ pub fn DeriveParse(comptime T: type) type {
         //     comptime payload_count: usize,
         // ) Result(T) {
         //     const last_payload_index = first_payload_index + payload_count - 1;
-        //     inline for (tyinfo.@"union".fields[first_payload_index..], first_payload_index..) |field, i| {
+        //     for (tyinfo.@"union".fields[first_payload_index..], first_payload_index..) |field, i| {
         //         if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
         //             return generic.parseFor(field.type)(input);
         //         }
@@ -858,7 +857,7 @@ pub fn DeriveToCss(comptime T: type) type {
 pub const enum_property_util = struct {
     pub fn asStr(comptime T: type, this: *const T) []const u8 {
         const tag = @intFromEnum(this.*);
-        inline for (bun.meta.EnumFields(T)) |field| {
+        inline for (comptime bun.meta.EnumFields(T)) |field| {
             if (tag == field.value) return field.name;
         }
         unreachable;
@@ -873,7 +872,7 @@ pub const enum_property_util = struct {
 
         const Map = comptime bun.ComptimeEnumMap(T);
         if (Map.getASCIIICaseInsensitive(ident)) |x| return .{ .result = x };
-        // inline for (std.meta.fields(T)) |field| {
+        // for (std.meta.fields(T)) |field| {
         //     if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(ident, field.name)) return .{ .result = @enumFromInt(field.value) };
         // }
 
@@ -927,7 +926,7 @@ pub fn DeriveValueType(comptime T: type, comptime ValueTypeMap: anytype) type {
     const field_values: []const MediaFeatureType = field_values: {
         const fields = std.meta.fields(T);
         var mapping: [fields.len]MediaFeatureType = undefined;
-        for (fields, 0..) |field, i| {
+        inline for (fields, 0..) |field, i| {
             // Check that it exists in the type map
             mapping[i] = @field(ValueTypeMap, field.name);
         }
@@ -1930,8 +1929,8 @@ pub fn TopLevelRuleParser(comptime AtRuleParserT: type) type {
             return NestedRuleParser(AtRuleParserT){
                 .options = this.options,
                 .at_rule_parser = this.at_rule_parser,
-                .declarations = DeclarationList{},
-                .important_declarations = DeclarationList{},
+                .declarations = DeclarationList.empty,
+                .important_declarations = DeclarationList.empty,
                 .rules = this.rules,
                 .is_in_style_rule = false,
                 .allow_declarations = false,
@@ -2071,7 +2070,7 @@ pub fn NestedRuleParser(comptime T: type) type {
                             };
                             const selectors = switch (input.tryParse(Fn.parsefn, .{})) {
                                 .result => |v| v,
-                                .err => ArrayList(css_rules.page.PageSelector){},
+                                .err => ArrayList(css_rules.page.PageSelector).empty,
                             };
                             break :brk .{ .page = selectors };
                         },
@@ -2207,7 +2206,7 @@ pub fn NestedRuleParser(comptime T: type) type {
                         var decl_parser = css_rules.font_face.FontFaceDeclarationParser{};
                         var parser = RuleBodyParser(css_rules.font_face.FontFaceDeclarationParser).new(input, &decl_parser);
                         // todo_stuff.think_mem_mgmt
-                        var properties: ArrayList(css_rules.font_face.FontFaceProperty) = .{};
+                        var properties: ArrayList(css_rules.font_face.FontFaceProperty) = .empty;
 
                         while (parser.next()) |result| {
                             if (result.asValue()) |decl| {
@@ -2344,7 +2343,7 @@ pub fn NestedRuleParser(comptime T: type) type {
                         var parser = css_rules.keyframes.KeyframesListParser{};
                         var iter = RuleBodyParser(css_rules.keyframes.KeyframesListParser).new(input, &parser);
                         // todo_stuff.think_mem_mgmt
-                        var keyframes = ArrayList(css_rules.keyframes.Keyframe){};
+                        var keyframes = ArrayList(css_rules.keyframes.Keyframe).empty;
 
                         while (iter.next()) |result| {
                             if (result.asValue()) |keyframe| {
@@ -2700,8 +2699,8 @@ pub fn NestedRuleParser(comptime T: type) type {
                 .allocator = input.allocator(),
                 .options = this.options,
                 .at_rule_parser = this.at_rule_parser,
-                .declarations = DeclarationList{},
-                .important_declarations = DeclarationList{},
+                .declarations = DeclarationList.empty,
+                .important_declarations = DeclarationList.empty,
                 .rules = &rules,
                 .is_in_style_rule = this.is_in_style_rule or is_style_rule,
                 .allow_declarations = this.allow_declarations or this.is_in_style_rule or is_style_rule,
@@ -2717,7 +2716,7 @@ pub fn NestedRuleParser(comptime T: type) type {
 
             const parse_declarations = This.RuleBodyItemParser.parseDeclarations(&nested_parser);
             // TODO: think about memory management
-            var errors = ArrayList(ParseError(ParserError)){};
+            var errors = ArrayList(ParseError(ParserError)).empty;
             var iter = RuleBodyParser(This).new(input, &nested_parser);
 
             while (iter.next()) |result| {
@@ -2995,9 +2994,9 @@ pub const LocalScope = bun.StringArrayHashMapUnmanaged(LocalEntry);
 pub const LocalsResultsMap = bun.bundle_v2.MangledProps;
 /// Using `compose` and having conflicting properties is undefined behavior according
 /// to the css modules spec. We should warn the user about this.
-pub const LocalPropertyUsage = std.array_hash_map.Auto(bun.bundle_v2.Ref, PropertyUsage);
+pub const LocalPropertyUsage = std.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, PropertyUsage);
 pub const Composes = css_properties.css_modules.Composes;
-pub const ComposesMap = std.array_hash_map.Auto(bun.bundle_v2.Ref, ComposesEntry);
+pub const ComposesMap = std.array_hash_map.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, ComposesEntry);
 
 pub const ComposesEntry = struct {
     composes: bun.BabyList(Composes) = .{},
@@ -3080,11 +3079,11 @@ pub fn StyleSheet(comptime AtRule: type) type {
         pub fn empty(allocator: Allocator) This {
             return This{
                 .rules = .{},
-                .sources = .{},
-                .source_map_urls = .{},
-                .license_comments = .{},
+                .sources = .empty,
+                .source_map_urls = .empty,
+                .license_comments = .empty,
                 .options = ParserOptions.default(allocator, null),
-                .composes = .{},
+                .composes = .empty,
             };
         }
 
@@ -3274,7 +3273,7 @@ pub fn StyleSheet(comptime AtRule: type) type {
                 &parser_extra,
             );
 
-            var license_comments = ArrayList([]const u8){};
+            var license_comments = ArrayList([]const u8).empty;
             var state = parser.state();
             while (switch (parser.nextIncludingWhitespaceAndComments()) {
                 .result => |v| v,
@@ -3309,9 +3308,9 @@ pub fn StyleSheet(comptime AtRule: type) type {
                 }
             }
 
-            var sources = ArrayList([]const u8){};
+            var sources = ArrayList([]const u8).empty;
             bun.handleOom(sources.append(allocator, options.filename));
-            var source_map_urls = ArrayList(?[]const u8){};
+            var source_map_urls = ArrayList(?[]const u8).empty;
             bun.handleOom(source_map_urls.append(allocator, parser.currentSourceMapUrl()));
 
             return .{
@@ -3341,7 +3340,7 @@ pub fn StyleSheet(comptime AtRule: type) type {
             _ = layer_names_field_len; // autofix
             var actual_layer_rules_len: usize = 0;
 
-            for (this.rules.v.items) |*rule| {
+            inline for (this.rules.v.items) |*rule| {
                 switch (rule.*) {
                     .layer_block => {
                         actual_layer_rules_len += 1;
@@ -3355,7 +3354,7 @@ pub fn StyleSheet(comptime AtRule: type) type {
         pub fn containsTailwindDirectives(this: *const @This()) bool {
             if (comptime AtRule != BundlerAtRule) @compileError("Expected BundlerAtRule for this function.");
             var found_import: bool = false;
-            for (this.rules.v.items) |*rule| {
+            inline for (this.rules.v.items) |*rule| {
                 switch (rule.*) {
                     .custom => {
                         return true;
@@ -7103,24 +7102,24 @@ pub inline fn copysign(self: f32, sign: f32) f32 {
     return @as(f32, @bitCast(result_bits));
 }
 
-pub fn deepClone(comptime V: type, allocator: Allocator, list: *const ArrayList(V)) ArrayList(V) {
-    var newlist = bun.handleOom(ArrayList(V).initCapacity(allocator, list.items.len));
+    pub fn deepClone(comptime V: type, allocator: Allocator, list: *const ArrayList(V)) ArrayList(V) {
+        var newlist = bun.handleOom(ArrayList(V).initCapacity(allocator, list.items.len));
 
-    for (list.items) |*item| {
-        newlist.appendAssumeCapacity(generic.deepClone(V, item, allocator));
+        for (list.items) |*item| {
+            newlist.appendAssumeCapacity(generic.deepClone(V, item, allocator));
+        }
+
+        return newlist;
     }
 
-    return newlist;
-}
+    pub fn deepDeinit(comptime V: type, allocator: Allocator, list: *ArrayList(V)) void {
+        if (comptime !@hasDecl(V, "deinit")) return;
+        for (list.items) |*item| {
+            item.deinit(allocator);
+        }
 
-pub fn deepDeinit(comptime V: type, allocator: Allocator, list: *ArrayList(V)) void {
-    if (comptime !@hasDecl(V, "deinit")) return;
-    for (list.items) |*item| {
-        item.deinit(allocator);
+        list.deinit(allocator);
     }
-
-    list.deinit(allocator);
-}
 
 const Notation = struct {
     decimal_point: bool,

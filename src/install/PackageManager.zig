@@ -1,4 +1,4 @@
-cache_directory_: ?std.fs.Dir = null,
+cache_directory_: ?@import("std-fs-compat").FsDir = null,
 cache_directory_path: stringZ = "",
 root_dir: *Fs.FileSystem.DirEntry,
 allocator: std.mem.Allocator,
@@ -31,7 +31,7 @@ update_requests: []UpdateRequest = &[_]UpdateRequest{},
 /// Only set in `bun pm`
 root_package_json_name_at_time_of_init: []const u8 = "",
 
-root_package_json_file: std.fs.File,
+root_package_json_file: @import("std-fs-compat").File,
 
 /// The package id corresponding to the workspace the install is happening in. Could be root, or
 /// could be any of the workspaces.
@@ -91,8 +91,8 @@ options: Options,
 preinstall_state: std.ArrayListUnmanaged(PreinstallState) = .empty,
 postinstall_optimizer: PostinstallOptimizer.List = .{},
 
-global_link_dir: ?std.fs.Dir = null,
-global_dir: ?std.fs.Dir = null,
+global_link_dir: ?@import("std-fs-compat").FsDir = null,
+global_dir: ?@import("std-fs-compat").FsDir = null,
 global_link_dir_path: string = "",
 
 onWake: WakeHandler = .{},
@@ -626,34 +626,35 @@ pub fn init(
                 package_json_path_buf[this_cwd.len + "/package.json".len] = 0;
                 const package_json_path = package_json_path_buf[0 .. this_cwd.len + "/package.json".len :0];
 
-                break :child std.c.AT.FDCWD.openFileZ(
-                    package_json_path,
-                    .{ .mode = if (need_write) .read_write else .read_only },
-                ) catch |err| switch (err) {
-                    error.FileNotFound => {
-                        if (std.fs.path.dirname(this_cwd)) |parent| {
-                            this_cwd = strings.withoutTrailingSlash(parent);
-                            continue;
-                        } else {
-                            break;
-                        }
-                    },
-                    error.AccessDenied => {
-                        Output.err("EACCES", "Permission denied while opening \"{s}\"", .{
-                            package_json_path,
-                        });
-                        if (need_write) {
-                            Output.note("package.json must be writable to add packages", .{});
-                        } else {
-                            Output.note("package.json is missing read permissions, or is owned by another user", .{});
-                        }
-                        Global.crash();
-                    },
-                    else => {
-                        Output.err(err, "could not open \"{s}\"", .{
-                            package_json_path,
-                        });
-                        return err;
+                const flags: i32 = if (need_write) @intCast(bun.O.RDWR) else @intCast(bun.O.RDONLY);
+                break :child switch (bun.sys.openA(package_json_path, flags, 0)) {
+                    .result => |fd| @import("std-fs-compat").File{ .handle = fd.value.as_system, .flags = .{ .nonblocking = false } },
+                    .err => |err| switch (err.getErrno()) {
+                        .NOENT => {
+                            if (std.fs.path.dirname(this_cwd)) |parent| {
+                                this_cwd = strings.withoutTrailingSlash(parent);
+                                continue;
+                            } else {
+                                break;
+                            }
+                        },
+                        .ACCES => {
+                            Output.err("EACCES", "Permission denied while opening \"{s}\"", .{
+                                package_json_path,
+                            });
+                            if (need_write) {
+                                Output.note("package.json must be writable to add packages", .{});
+                            } else {
+                                Output.note("package.json is missing read permissions, or is owned by another user", .{});
+                            }
+                            Global.crash();
+                        },
+                        else => {
+                            Output.err(err, "could not open \"{s}\"", .{
+                                package_json_path,
+                            });
+                            return err.toZigErr();
+                        },
                     },
                 };
             }
@@ -693,11 +694,9 @@ pub fn init(
                     parent_path_buf[parent_without_trailing_slash.len..parent_path_buf.len][0.."/package.json".len].* = "/package.json".*;
                     parent_path_buf[parent_without_trailing_slash.len + "/package.json".len] = 0;
 
-                    const json_file = std.c.AT.FDCWD.openFileZ(
-                        parent_path_buf[0 .. parent_without_trailing_slash.len + "/package.json".len :0].ptr,
-                        .{ .mode = .read_write },
-                    ) catch {
-                        continue;
+                    const json_file = switch (bun.sys.openA(parent_path_buf[0 .. parent_without_trailing_slash.len + "/package.json".len :0], bun.O.RDWR, 0)) {
+                        .result => |fd| @import("std-fs-compat").File{ .handle = fd.value.as_system, .flags = .{ .nonblocking = false } },
+                        .err => continue,
                     };
                     defer if (!found) json_file.close();
                     const json_stat_size = try json_file.getEndPos();
@@ -970,7 +969,7 @@ pub fn init(
             }
         }
 
-        break :brk @truncate(@as(u64, @intCast(@max(std.time.timestamp(), 0))));
+        break :brk @truncate(@as(u64, @intCast(@max(@import("std-fs-compat").timestamp(), 0))));
     };
     return .{
         manager,
@@ -1100,7 +1099,7 @@ pub fn initWithRuntimeOnce(
         @truncate(@as(
             u64,
             @intCast(@max(
-                std.time.timestamp(),
+                @import("std-fs-compat").timestamp(),
                 0,
             )),
         )),

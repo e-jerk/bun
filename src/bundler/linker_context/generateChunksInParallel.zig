@@ -258,7 +258,7 @@ pub fn generateChunksInParallel(
             var chunk_naming: ?[]const u8 = null;
             var asset_naming: ?[]const u8 = null;
 
-            const writer = msg.writer();
+            const writer = @import("std-io-compat").writer(&msg);
             try writer.print("Multiple files share the same output path\n", .{});
 
             const kinds = c.graph.files.items(.entry_point_kind);

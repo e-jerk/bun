@@ -779,6 +779,7 @@ outer: while (true) : (__loop_limit_1 += 1) {
 
             break :brk new_route_index;
         }
+        break :brk root_route;
     };
 
     const file_id = try ctx.vtable.getFileIdForRouter(ctx.opaque_ctx, file_path, new_route_index, file_kind);
@@ -1206,8 +1207,8 @@ pub const JSFrameworkRouter = struct {
 
         const jsfr = bun.new(JSFrameworkRouter, .{
             .router = try FrameworkRouter.initEmpty(abs_root, types, bun.default_allocator),
-            .files = .{},
-            .stored_parse_errors = .{},
+            .files = .empty,
+            .stored_parse_errors = .empty,
         });
 
         try jsfr.router.scan(
@@ -1340,7 +1341,7 @@ pub const JSFrameworkRouter = struct {
             return .null;
 
         var rendered = try std.array_list.Managed(u8).initCapacity(alloc, filepath.slice().len);
-        for (parsed.parts) |part| try part.toStringForInternalUse(rendered.writer());
+        for (parsed.parts) |part| try part.toStringForInternalUse(@import("std-io-compat").writer(&rendered));
 
         var out = bun.String.init(rendered.items);
         const obj = JSValue.createEmptyObject(global, 2);
@@ -1361,8 +1362,8 @@ pub const JSFrameworkRouter = struct {
     fn partToJS(global: *JSGlobalObject, part: Part, temp_allocator: Allocator) !JSValue {
         var rendered = std.array_list.Managed(u8).init(temp_allocator);
         defer rendered.deinit();
-        const aw = std.Io.Writer.Allocating.fromArrayList(temp_allocator, &rendered);
-        try part.toStringForInternalUse(aw.writer);
+        const aw = @import("std-io-compat").allocatingWriterFromArrayList(temp_allocator, &rendered);
+        try part.toStringForInternalUse(aw);
         var str = bun.String.cloneUTF8(rendered.items);
         return try str.transferToJS(global);
     }

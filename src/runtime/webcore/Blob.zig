@@ -454,7 +454,7 @@ pub fn onStructuredCloneSerialize(
 ) void {
     _ = globalThis;
 
-    const Writer = std.Io.GenericWriter(StructuredCloneWriter, StructuredCloneWriter.WriteError, StructuredCloneWriter.write);
+    const Writer = @import("std-io-compat").MakeGenericWriter(StructuredCloneWriter, StructuredCloneWriter.WriteError, StructuredCloneWriter.write);
     const writer = Writer{
         .context = .{
             .ctx = ctx,
@@ -673,7 +673,7 @@ pub fn onStructuredCloneDeserialize(globalThis: *jsc.JSGlobalObject, ptr: *[*]u8
     const reader = buffer_stream.reader();
 
     const result = _onStructuredCloneDeserialize(globalThis, @TypeOf(reader), reader) catch |err| switch (err) {
-        error.EndOfStream, error.TooSmall, error.InvalidValue => {
+        error.EndOfStream, error.TooSmall => {
             return globalThis.throw("Blob.onStructuredCloneDeserialize failed", .{});
         },
         error.OutOfMemory => {
@@ -2013,7 +2013,7 @@ pub fn JSDOMFile__construct_(globalThis: *jsc.JSGlobalObject, callframe: *jsc.Ca
     if (!set_last_modified) {
         // `lastModified` should be the current date in milliseconds if unspecified.
         // https://developer.mozilla.org/en-US/docs/Web/API/File/lastModified
-        blob.last_modified = @floatFromInt(std.time.milliTimestamp());
+        blob.last_modified = @floatFromInt(@import("std-fs-compat").milliTimestamp());
     }
 
     if (blob.content_type.len == 0) {

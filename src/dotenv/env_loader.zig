@@ -570,18 +570,27 @@ pub const Loader = struct {
     pub fn loadProcess(this: *Loader) OOM!void {
         if (this.did_load_process) return;
 
-        try this.map.map.ensureTotalCapacity(std.os.environ.len);
-        for (std.os.environ) |_env| {
-            var env = bun.span(_env);
-            if (strings.indexOfChar(env, '=')) |i| {
-                const key = env[0..i];
-                const value = env[i + 1 ..];
-                if (key.len > 0) {
-                    try this.map.put(key, value);
-                }
-            } else {
-                if (env.len > 0) {
-                    try this.map.put(env, "");
+        var count: usize = 0;
+        {
+            const envp = std.c.environ;
+            while (envp[count] != null) : (count += 1) {}
+        }
+        try this.map.map.ensureTotalCapacity(count);
+        {
+            const envp = std.c.environ;
+            var i: usize = 0;
+            while (envp[i] != null) : (i += 1) {
+                var env = bun.span(envp[i].?);
+                if (strings.indexOfChar(env, '=')) |j| {
+                    const key = env[0..j];
+                    const value = env[j + 1 ..];
+                    if (key.len > 0) {
+                        try this.map.put(key, value);
+                    }
+                } else {
+                    if (env.len > 0) {
+                        try this.map.put(env, "");
+                    }
                 }
             }
         }
@@ -604,7 +613,7 @@ pub const Loader = struct {
         comptime suffix: DotEnvFileSuffix,
         skip_default_env: bool,
     ) !void {
-        const start = std.time.nanoTimestamp();
+        const start = @import("std-fs-compat").nanoTimestamp();
 
         // Create a reusable buffer with stack fallback for parsing multiple files
         var stack_fallback = std.heap.stackFallback(4096, this.allocator);
@@ -659,7 +668,7 @@ pub const Loader = struct {
         comptime suffix: DotEnvFileSuffix,
         value_buffer: *std.array_list.Managed(u8),
     ) !void {
-        const dir_handle: std.fs.Dir = std.c.AT.FDCWD;
+        const dir_handle: @import("std-fs-compat").FsDir = .{ .fd = std.c.AT.FDCWD };
 
         switch (comptime suffix) {
             .development => {
@@ -729,7 +738,7 @@ pub const Loader = struct {
             this.custom_files_loaded.count();
 
         if (count == 0) return;
-        const elapsed = @as(f64, @floatFromInt((std.time.nanoTimestamp() - start))) / std.time.ns_per_ms;
+        const elapsed = @as(f64, @floatFromInt((@import("std-fs-compat").nanoTimestamp() - start))) / std.time.ns_per_ms;
 
         const all = [_]string{
             ".env.development.local",
@@ -783,7 +792,7 @@ pub const Loader = struct {
 
     pub fn loadEnvFile(
         this: *Loader,
-        dir: std.fs.Dir,
+        dir: @import("std-fs-compat").FsDir,
         comptime base: string,
         comptime override: bool,
         value_buffer: *std.array_list.Managed(u8),
@@ -792,7 +801,7 @@ pub const Loader = struct {
             return;
         }
 
-        var file = dir.openFile(base, .{ .mode = .read_only }) catch |err| {
+        var file = dir.openFile(base, .{ .mode = .{ .ACCMODE = .RDONLY } }) catch |err| {
             switch (err) {
                 error.IsDir, error.FileNotFound => {
                     // prevent retrying
@@ -839,7 +848,7 @@ pub const Loader = struct {
         var buf = try this.allocator.alloc(u8, end + 1);
         errdefer this.allocator.free(buf);
         const amount_read = file.readAll(buf[0..end]) catch |err| switch (err) {
-            error.Unexpected, error.SystemResources, error.OperationAborted, error.BrokenPipe, error.AccessDenied, error.IsDir => {
+            error.Unexpected, error.ReadFailed => {
                 if (!this.quiet) {
                     Output.prettyErrorln("<r><red>{s}<r> error loading {s} file", .{ @errorName(err), base });
                 }
@@ -847,9 +856,6 @@ pub const Loader = struct {
                 // prevent retrying
                 @field(this, base) = logger.Source.initPathString(base, "");
                 return;
-            },
-            else => {
-                return err;
             },
         };
 
@@ -912,7 +918,7 @@ pub const Loader = struct {
         var buf = try this.allocator.alloc(u8, end + 1);
         errdefer this.allocator.free(buf);
         const amount_read = file.readAll(buf[0..end]) catch |err| switch (err) {
-            error.Unexpected, error.SystemResources, error.OperationAborted, error.BrokenPipe, error.AccessDenied, error.IsDir => {
+            error.Unexpected, error.ReadFailed => {
                 if (!this.quiet) {
                     Output.prettyErrorln("<r><red>{s}<r> error loading {s} file", .{ @errorName(err), file_path });
                 }
@@ -920,9 +926,6 @@ pub const Loader = struct {
                 // prevent retrying
                 try this.custom_files_loaded.put(file_path, logger.Source.initPathString(file_path, ""));
                 return;
-            },
-            else => {
-                return err;
             },
         };
 
@@ -1225,6 +1228,7 @@ pub const Map = struct {
     const GetOrPutResult = HashTable.GetOrPutResult;
 
     map: HashTable,
+    allocator: std.mem.Allocator,
 
     pub fn createNullDelimitedEnvMap(this: *Map, arena: std.mem.Allocator) OOM![:null]?[*:0]const u8 {
         var env_map = &this.map;
@@ -1251,25 +1255,25 @@ pub const Map = struct {
     ///
     /// To prevent
     pub fn stdEnvMap(this: *Map, allocator: std.mem.Allocator) OOM!StdEnvMapWrapper {
-        var env_map = std.process.EnvMap.init(allocator);
+        var env_map = std.StringHashMap([]const u8).init(allocator);
 
         var iter = this.map.iterator();
         while (iter.next()) |entry| {
-            try env_map.hash_map.put(entry.key_ptr.*, entry.value_ptr.value);
+            try env_map.put(entry.key_ptr.*, entry.value_ptr.value);
         }
 
         return .{ .unsafe_map = env_map };
     }
 
     pub const StdEnvMapWrapper = struct {
-        unsafe_map: std.process.EnvMap,
+        unsafe_map: std.StringHashMap([]const u8),
 
-        pub fn get(this: *const StdEnvMapWrapper) *const std.process.EnvMap {
+        pub fn get(this: *const StdEnvMapWrapper) *const std.StringHashMap([]const u8) {
             return &this.unsafe_map;
         }
 
         pub fn deinit(this: *StdEnvMapWrapper) void {
-            this.unsafe_map.hash_map.deinit();
+            this.unsafe_map.deinit();
         }
     };
 
@@ -1305,7 +1309,7 @@ pub const Map = struct {
     }
 
     pub inline fn init(allocator: std.mem.Allocator) Map {
-        return Map{ .map = HashTable.init(allocator) };
+        return Map{ .map = HashTable.init(allocator), .allocator = allocator };
     }
 
     pub inline fn put(this: *Map, key: string, value: string) OOM!void {
@@ -1400,8 +1404,15 @@ pub const Map = struct {
         });
     }
 
-    pub inline fn getOrPut(this: *Map, key: string, value: string) OOM!void {
+    pub inline fn putConditional(this: *Map, key: string, value: string) OOM!void {
         _ = try this.map.getOrPutValue(key, .{
+            .value = value,
+            .conditional = true,
+        });
+    }
+
+    pub inline fn getOrPut(this: *Map, key: string, value: string) OOM!void {
+        _ = try this.map.getOrPutValue(this.allocator, key, .{
             .value = value,
             .conditional = false,
         });
@@ -1412,7 +1423,7 @@ pub const Map = struct {
     }
 
     pub fn cloneWithAllocator(this: *const Map, new_allocator: std.mem.Allocator) OOM!Map {
-        return .{ .map = try this.map.cloneWithAllocator(new_allocator) };
+        return .{ .map = try this.map.cloneWithAllocator(new_allocator), .allocator = new_allocator };
     }
 };
 

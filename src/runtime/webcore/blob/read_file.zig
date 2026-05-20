@@ -378,7 +378,7 @@ while (true) : (__loop_limit_1 += 1) {
         // Special files might report a size of > 0, and be wrong.
         // so we should check specifically that its a regular file before trusting the size.
         if (this.size == 0 and bun.isRegularFile(this.file_store.mode)) {
-            this.buffer = .{};
+            this.buffer = .empty;
             this.byte_store = ByteStore.init(this.buffer.items, bun.default_allocator);
 
             this.onFinish();

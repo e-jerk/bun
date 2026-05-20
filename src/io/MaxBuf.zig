@@ -14,19 +14,19 @@ pub fn createForSubprocess(owner: *Subprocess, ptr: *?*MaxBuf, initial: ?i64) vo
         return;
     }
     const maxbuf = bun.handleOom(zust.Box(MaxBuf).init(bun.default_allocator, undefined));
-    maxbuf.* = .{
+    maxbuf.ptr.* = .{
         .owned_by_subprocess = owner,
         .owned_by_reader = false,
         .remaining_bytes = initial.?,
     };
-    ptr.* = maxbuf;
+    ptr.* = maxbuf.ptr;
 }
 fn disowned(this: *MaxBuf) bool {
     return this.owned_by_subprocess == null and this.owned_by_reader == false;
 }
 fn destroy(this: *MaxBuf) void {
     bun.assert(this.disowned());
-    _ = this.deinit();
+    bun.default_allocator.destroy(this);
 }
 pub fn removeFromSubprocess(ptr: *?*MaxBuf) void {
     if (ptr.* == null) return;

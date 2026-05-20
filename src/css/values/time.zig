@@ -18,6 +18,8 @@ pub const Time = union(Tag) {
     /// A time in milliseconds.
     milliseconds: CSSNumber,
 
+    pub fn deinit(_: Time) void {}
+
     const Tag = enum(u8) { seconds = 1, milliseconds = 2 };
 
     pub fn deepClone(this: *const @This(), allocator: std.mem.Allocator) @This() {

@@ -931,7 +931,7 @@ pub const FilePoll = struct {
                         // we set 0 here so that if we get an error on
                         // registration, it becomes errno
                         0,
-                        .{ .ERROR_EVENTS = true },
+                        0x0001,
                         &timeout,
                     );
 
@@ -1164,7 +1164,7 @@ pub const FilePoll = struct {
                 // The same array may be used for the changelist and eventlist.
                 &changelist,
                 nchanges,
-                .{ .ERROR_EVENTS = true },
+                0x0001,
                 &timeout,
             );
 
@@ -1353,7 +1353,9 @@ pub const KEventWaker = struct {
     extern fn io_darwin_schedule_wakeup(bun.mach_port) bool;
 
     pub fn init() !Waker {
-        return initWithFileDescriptor(bun.default_allocator, try std.posix.kqueue());
+        const kq = std.c.kqueue();
+        if (kq == -1) return error.SystemResources;
+        return initWithFileDescriptor(bun.default_allocator, kq);
     }
 
     pub fn initWithFileDescriptor(allocator: std.mem.Allocator, kq: i32) !Waker {

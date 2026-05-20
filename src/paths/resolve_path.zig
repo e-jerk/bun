@@ -1271,7 +1271,13 @@ pub fn joinStringBufT(comptime T: type, buf: []T, parts: anytype, comptime platf
     }
 
     var count: usize = 0;
-    for (parts) |part| {
+    const parts_slice = if (@typeInfo(@TypeOf(parts)) == .pointer and @typeInfo(@TypeOf(parts)).pointer.size == .slice)
+        parts
+    else if (@typeInfo(@TypeOf(parts)) == .array)
+        &parts
+    else
+        parts;
+    for (parts_slice) |part| {
         if (part.len == 0) continue;
         count += part.len + 1;
     }

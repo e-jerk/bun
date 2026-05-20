@@ -121,7 +121,7 @@ pub fn DMP(comptime Unit: type) type {
             const deadline = if (dmp.config.diff_timeout == 0)
                 std.math.maxInt(u64)
             else
-                @as(u64, @intCast(std.time.milliTimestamp())) + dmp.config.diff_timeout;
+                @as(u64, @intCast(@import("std-fs-compat").milliTimestamp())) + dmp.config.diff_timeout;
             return dmp.diffInternal(allocator, before, after, check_lines, deadline);
         }
 
@@ -565,7 +565,7 @@ pub fn DMP(comptime Unit: type) type {
             var d: isize = 0;
             while (d < max_d) : (d += 1) {
                 // Bail out if deadline is reached.
-                if (@as(u64, @intCast(std.time.milliTimestamp())) > deadline) {
+                if (@as(u64, @intCast(@import("std-fs-compat").milliTimestamp())) > deadline) {
                     break;
                 }
 
@@ -1538,6 +1538,7 @@ while (true) : (__loop_limit_1 += 1) {
                     length += 1;
                 }
             }
+            return best;
         }
 
         // DONE [✅]: Allocate all text in diffs to
@@ -2532,12 +2533,12 @@ while (true) : (__loop_limit_1 += 1) {
                     .config = .{ .diff_timeout = 100 }, // 100ms
                 };
 
-                const start_time = std.time.milliTimestamp();
+                const start_time = @import("std-fs-compat").milliTimestamp();
                 {
                     var time_diff = try with_timout.diff(allocator, a, b, false);
                     defer deinitDiffList(allocator, &time_diff);
                 }
-                const end_time = std.time.milliTimestamp();
+                const end_time = @import("std-fs-compat").milliTimestamp();
 
                 // Test that we took at least the timeout period.
                 try testing.expect(with_timout.config.diff_timeout <= end_time - start_time); // diff: Timeout min.

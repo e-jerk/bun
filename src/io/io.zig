@@ -326,7 +326,9 @@ pub const Loop = struct {
             timespec.sec = @intCast(sec);
             timespec.nsec = @intCast(nsec);
         } else {
-            const updated = std.posix.clock_gettime(std.posix.CLOCK.MONOTONIC) catch return;
+            var updated: std.posix.timespec = undefined;
+            _ = std.c.clock_gettime(std.c.CLOCK.MONOTONIC, &updated);
+            timespec.* = updated;
             timespec.* = updated;
         }
     }

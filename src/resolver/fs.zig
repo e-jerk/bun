@@ -23,7 +23,7 @@ pub const FileSystem = struct {
     dirname_store: *DirnameStore,
     filename_store: *FilenameStore,
 
-    threadlocal var tmpdir_handle: ?std.fs.Dir = null;
+    threadlocal var tmpdir_handle: ?@import("std-fs-compat").FsDir = null;
 
     pub fn topLevelDirWithoutTrailingSlash(this: *const FileSystem) []const u8 {
         if (this.top_level_dir.len > 1 and this.top_level_dir[this.top_level_dir.len - 1] == std.fs.path.sep) {
@@ -33,7 +33,7 @@ pub const FileSystem = struct {
         }
     }
 
-    pub fn tmpdir(fs: *FileSystem) !std.fs.Dir {
+    pub fn tmpdir(fs: *FileSystem) !@import("std-fs-compat").FsDir {
         if (tmpdir_handle == null) {
             tmpdir_handle = try fs.fs.openTmpDir();
         }
@@ -49,7 +49,7 @@ pub const FileSystem = struct {
 
     var tmpname_id_number = std.atomic.Value(u32).init(0);
     pub fn tmpname(extname: string, buf: []u8, hash: u64) std.fmt.BufPrintError![:0]u8 {
-        const hex_value = @as(u64, @truncate(@as(u128, @intCast(hash)) | @as(u128, @intCast(std.time.nanoTimestamp()))));
+        const hex_value = @as(u64, @truncate(@as(u128, @intCast(hash)) | @as(u128, @intCast(@import("std-fs-compat").nanoTimestamp()))));
 
         return try std.fmt.bufPrintZ(buf, ".{f}-{f}.{s}", .{
             bun.fmt.hexIntLower(hex_value),
@@ -598,17 +598,17 @@ pub const FileSystem = struct {
             return bun.env_var.BUN_TMPDIR.getNotEmpty() orelse platformTempDir();
         }
 
-        pub fn openTmpDir(_: *const RealFS) !std.fs.Dir {
+        pub fn openTmpDir(_: *const RealFS) !@import("std-fs-compat").FsDir {
             if (comptime Environment.isWindows) {
-                return (try bun.sys.openDirAtWindowsA(bun.invalid_fd, tmpdirPath(), .{
+                return @import("std-fs-compat").FsDir.fromDir((try bun.sys.openDirAtWindowsA(bun.invalid_fd, tmpdirPath(), .{
                     .iterable = true,
                     // we will not delete the temp directory
                     .can_rename_or_delete = false,
                     .read_only = true,
-                }).unwrap()).stdDir();
+                }).unwrap()).stdDir());
             }
 
-            return try bun.openDirAbsolute(tmpdirPath());
+            return @import("std-fs-compat").FsDir.fromDir(try bun.openDirAbsolute(tmpdirPath()));
         }
 
         pub fn entriesAt(this: *RealFS, index: allocators.IndexType, generation: bun.Generation) ?*EntriesOption {
@@ -627,7 +627,7 @@ pub const FileSystem = struct {
                         &existing.entries.data,
                         existing.entries.dir,
                         generation,
-                        handle.stdDir(),
+                        @import("std-fs-compat").FsDir.fromDir(handle.stdDir()),
 
                         void,
                         void{},
@@ -651,11 +651,11 @@ pub const FileSystem = struct {
             fd: bun.FD = bun.invalid_fd,
             dir_fd: bun.FD = bun.invalid_fd,
 
-            pub inline fn dir(this: *TmpfilePosix) std.fs.Dir {
+            pub inline fn dir(this: *TmpfilePosix) @import("std-fs-compat").FsDir {
                 return this.dir_fd.stdDir();
             }
 
-            pub inline fn file(this: *TmpfilePosix) std.fs.File {
+            pub inline fn file(this: *TmpfilePosix) @import("std-fs-compat").File {
                 return this.fd.stdFile();
             }
 
@@ -695,11 +695,11 @@ pub const FileSystem = struct {
             fd: bun.FD = bun.invalid_fd,
             existing_path: []const u8 = "",
 
-            pub inline fn dir(_: *TmpfileWindows) std.fs.Dir {
+            pub inline fn dir(_: *TmpfileWindows) @import("std-fs-compat").FsDir {
                 return Fs.FileSystem.instance.tmpdir();
             }
 
-            pub inline fn file(this: *TmpfileWindows) std.fs.File {
+            pub inline fn file(this: *TmpfileWindows) @import("std-fs-compat").File {
                 return this.fd.stdFile();
             }
 
@@ -843,10 +843,10 @@ pub const FileSystem = struct {
             Unusable,
         };
         pub const ModKey = struct {
-            inode: std.fs.File.INode = 0,
+            inode: @import("std-fs-compat").File.INode = 0,
             size: u64 = 0,
             mtime: i128 = 0,
-            mode: std.fs.File.Mode = 0,
+            mode: std.posix.mode_t = 0,
 
             threadlocal var hash_name_buf: [1024]u8 = undefined;
 
@@ -885,10 +885,10 @@ pub const FileSystem = struct {
                 return bun.hash(&hash_bytes);
             }
 
-            pub fn generate(_: *RealFS, _: string, file: std.fs.File) anyerror!ModKey {
+            pub fn generate(_: *RealFS, _: string, file: @import("std-fs-compat").File) anyerror!ModKey {
                 const stat = try file.stat();
 
-                const seconds = @divTrunc(stat.mtime, @as(@TypeOf(stat.mtime), std.time.ns_per_s));
+                const seconds = @divTrunc(stat.mtime.nanoseconds, std.time.ns_per_s);
 
                 // We can't detect changes if the file system zeros out the modification time
                 if (seconds == 0 and std.time.ns_per_s == 0) {
@@ -896,17 +896,17 @@ pub const FileSystem = struct {
                 }
 
                 // Don't generate a modification key if the file is too new
-                const now = std.time.nanoTimestamp();
+                const now = @import("std-fs-compat").nanoTimestamp();
                 const now_seconds = @divTrunc(now, std.time.ns_per_s);
-                if (seconds > seconds or (seconds == now_seconds and stat.mtime > now)) {
+                if (seconds > seconds or (seconds == now_seconds and stat.mtime.nanoseconds > now)) {
                     return error.Unusable;
                 }
 
                 return ModKey{
                     .inode = stat.inode,
                     .size = stat.size,
-                    .mtime = stat.mtime,
-                    .mode = stat.mode,
+                    .mtime = stat.mtime.nanoseconds,
+                    .mode = stat.permissions.mode,
                     // .uid = stat.
                 };
             }
@@ -918,7 +918,7 @@ pub const FileSystem = struct {
         }
 
         pub fn modKey(fs: *RealFS, path: string) anyerror!ModKey {
-            var file = try std.c.AT.FDCWD.openFile(path, std.fs.File.OpenFlags{ .mode = .read_only });
+            var file = try std.c.AT.FDCWD.openFile(path, @import("std-fs-compat").File.OpenFlags{ .mode = .read_only });
             defer {
                 if (fs.needToCloseFiles()) {
                     file.close();
@@ -942,7 +942,7 @@ pub const FileSystem = struct {
             pub const Map = allocators.BSSMap(EntriesOption, Preallocate.Counts.dir_entry, false, 256, true);
         };
 
-        pub fn openDir(_: *RealFS, unsafe_dir_string: string) !std.fs.Dir {
+        pub fn openDir(_: *RealFS, unsafe_dir_string: string) !@import("std-fs-compat").FsDir {
             const dirfd = if (Environment.isWindows)
                 bun.sys.openDirAtWindowsA(bun.invalid_fd, unsafe_dir_string, .{ .iterable = true, .no_follow = false, .read_only = true })
             else
@@ -952,7 +952,7 @@ pub const FileSystem = struct {
                     0,
                 );
             const fd = try dirfd.unwrap();
-            return fd.stdDir();
+            return @import("std-fs-compat").FsDir.fromDir(fd.stdDir());
         }
 
         fn readdir(
@@ -961,20 +961,20 @@ pub const FileSystem = struct {
             prev_map: ?*DirEntry.EntryMap,
             _dir: string,
             generation: bun.Generation,
-            handle: std.fs.Dir,
+            handle: @import("std-fs-compat").FsDir,
             comptime Iterator: type,
             iterator: Iterator,
         ) !DirEntry {
             _ = fs;
 
-            var iter = bun.iterateDir(.fromStdDir(handle));
+            var iter = bun.iterateDir(.fromStdDir(handle.toDir()));
             var dir = DirEntry.init(_dir, generation);
             const allocator = bun.default_allocator;
             errdefer dir.deinit(allocator);
 
             if (store_fd) {
                 FileSystem.setMaxFd(handle.fd);
-                dir.fd = .fromStdDir(handle);
+                dir.fd = .fromStdDir(handle.toDir());
             }
 
             while (try iter.next().unwrap()) |*_entry| {
@@ -1020,7 +1020,7 @@ pub const FileSystem = struct {
         pub fn readDirectory(
             fs: *RealFS,
             _dir: string,
-            _handle: ?std.fs.Dir,
+            _handle: ?@import("std-fs-compat").FsDir,
             generation: bun.Generation,
             store_fd: bool,
         ) !*EntriesOption {
@@ -1040,7 +1040,7 @@ pub const FileSystem = struct {
         pub fn readDirectoryWithIterator(
             fs: *RealFS,
             dir_maybe_trail_slash: string,
-            maybe_handle: ?std.fs.Dir,
+            maybe_handle: ?@import("std-fs-compat").FsDir,
             generation: bun.Generation,
             store_fd: bool,
             comptime Iterator: type,
@@ -1113,12 +1113,12 @@ pub const FileSystem = struct {
             };
 
             if (comptime FeatureFlags.enable_entry_cache) {
-                const entries_ptr = in_place orelse bun.handleOom(zust.Box(DirEntry).init(bun.default_allocator, undefined));
+                const entries_ptr = in_place orelse bun.handleOom(zust.Box(DirEntry).init(bun.default_allocator, undefined)).ptr;
                 if (in_place) |original| {
                     original.data.clearAndFree(bun.default_allocator);
                 }
                 if (store_fd and !entries.fd.isValid())
-                    entries.fd = .fromStdDir(handle);
+                    entries.fd = .fromStdDir(handle.toDir());
 
                 entries_ptr.* = entries;
                 const result = EntriesOption{
@@ -1141,7 +1141,7 @@ pub const FileSystem = struct {
             fs: *RealFS,
             path: string,
             _size: ?usize,
-            file: std.fs.File,
+            file: @import("std-fs-compat").File,
             comptime use_shared_buffer: bool,
             shared_buffer: *MutableString,
             comptime stream: bool,
@@ -1163,7 +1163,7 @@ pub const FileSystem = struct {
             allocator: std.mem.Allocator,
             path: string,
             size_hint: ?usize,
-            std_file: std.fs.File,
+            std_file: @import("std-fs-compat").File,
             comptime use_shared_buffer: bool,
             shared_buffer: *MutableString,
             comptime stream: bool,
@@ -1315,7 +1315,7 @@ pub const FileSystem = struct {
             var outpath: bun.PathBuffer = undefined;
 
             const stat = try bun.sys.lstat_absolute(absolute_path);
-            const is_symlink = stat.kind == std.fs.File.Kind.SymLink;
+            const is_symlink = stat.kind == @import("std-fs-compat").File.Kind.SymLink;
             var _kind = stat.kind;
             var cache = Entry.Cache{
                 .kind = Entry.Kind.file,
@@ -1325,7 +1325,7 @@ pub const FileSystem = struct {
 
             if (is_symlink) {
                 var file = try if (existing_fd != 0)
-                    std.fs.File{ .handle = existing_fd }
+                    @import("std-fs-compat").File{ .handle = existing_fd }
                 else if (store_fd)
                     std.fs.openFileAbsoluteZ(absolute_path, .{ .mode = .read_only })
                 else
@@ -1448,7 +1448,7 @@ pub const FileSystem = struct {
             }
 
             const stat = try bun.sys.lstat_absolute(absolute_path_c);
-            const is_symlink = stat.kind == std.fs.File.Kind.sym_link;
+            const is_symlink = stat.kind == @import("std-fs-compat").File.Kind.sym_link;
             var file_kind = stat.kind;
 
             var symlink: []const u8 = "";
@@ -1457,7 +1457,7 @@ pub const FileSystem = struct {
                 var file: bun.FD = if (existing_fd.unwrapValid()) |valid|
                     valid
                 else if (store_fd)
-                    .fromStdFile(try std.fs.openFileAbsoluteZ(absolute_path_c, .{ .mode = .read_only }))
+                    .fromStdFile(try bun.openFileForPath(absolute_path_c))
                 else
                     .fromStdFile(try bun.openFileForPath(absolute_path_c));
                 setMaxFd(file.native());

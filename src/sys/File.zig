@@ -1,4 +1,4 @@
-//! This is a similar API to std.fs.File, except it:
+//! This is a similar API to @import("std-fs-compat").File, except it:
 //! - Preserves errors from the operating system
 //! - Supports normalizing BOM to UTF-8
 //! - Has several optimizations somewhat specific to Bun
@@ -7,7 +7,7 @@
 
 const File = @This();
 
-// "handle" matches std.fs.File
+// "handle" matches @import("std-fs-compat").File
 handle: bun.FD,
 
 pub fn openat(dir: bun.FD, path: [:0]const u8, flags: i32, mode: bun.Mode) Maybe(File) {
@@ -66,12 +66,16 @@ pub fn from(other: anytype) File {
         return .{ .handle = other };
     }
 
-    if (T == std.fs.File) {
+    if (T == @import("std-fs-compat").File) {
+        return .{ .handle = .fromNative(other.handle) };
+    }
+
+    if (T == @import("std-fs-compat").File) {
         return .{ .handle = .fromStdFile(other) };
     }
 
-    if (T == std.fs.Dir) {
-        return File{ .handle = .fromStdDir(other) };
+    if (T == @import("std-fs-compat").FsDir) {
+        return File{ .handle = .fromStdDir(other.toDir()) };
     }
 
     if (comptime Environment.isLinux) {
@@ -80,7 +84,15 @@ pub fn from(other: anytype) File {
         }
     }
 
-    @compileError("Unsupported type " ++ bun.meta.typeName(T));
+    if (T == std.fs.File) {
+        return File{ .handle = .fromNative(other.handle) };
+    }
+
+    if (T == comptime_int or @typeInfo(T) == .int) {
+        return File{ .handle = .fromNative(@intCast(other)) };
+    }
+
+    @compileError("Unsupported type " ++ @typeName(T));
 }
 
 pub fn write(self: File, buf: []const u8) Maybe(usize) {
@@ -165,7 +177,7 @@ fn stdIoRead(this: File, buf: []u8) ReadError!usize {
     return try this.read(buf).unwrap();
 }
 
-pub const Reader = std.Io.GenericReader(File, anyerror, stdIoRead);
+pub const Reader = @import("std-io-compat").MakeGenericReader(File, anyerror, stdIoRead);
 
 pub fn reader(self: File) Reader {
     return Reader{ .context = self };
@@ -186,8 +198,8 @@ fn stdIoWriteQuietDebug(this: File, bytes: []const u8) WriteError!usize {
     return bytes.len;
 }
 
-pub const Writer = std.Io.GenericWriter(File, anyerror, stdIoWrite);
-pub const QuietWriter = if (Environment.isDebug) std.Io.GenericWriter(File, anyerror, stdIoWriteQuietDebug) else Writer;
+pub const Writer = @import("std-io-compat").MakeGenericWriter(File, anyerror, stdIoWrite);
+pub const QuietWriter = if (Environment.isDebug) @import("std-io-compat").MakeGenericWriter(File, anyerror, stdIoWriteQuietDebug) else Writer;
 
 pub fn writer(self: File) Writer {
     return Writer{ .context = self };
@@ -198,7 +210,7 @@ pub fn quietWriter(self: File) QuietWriter {
 }
 
 pub fn isTty(self: File) bool {
-    return std.posix.isatty(self.handle.cast());
+    return @import("std-fs-compat").isatty(self.handle.cast());
 }
 
 /// Asserts in debug that this File object is valid
@@ -217,7 +229,7 @@ pub fn stat(self: File) Maybe(bun.Stat) {
 /// Be careful about using this on Linux or macOS.
 ///
 /// File calls stat() internally.
-pub fn kind(self: File) Maybe(std.fs.File.Kind) {
+pub fn kind(self: File) Maybe(@import("std-fs-compat").File.Kind) {
     if (Environment.isWindows) {
         const rt = windows.GetFileType(self.handle.cast());
         if (rt == windows.FILE_TYPE_UNKNOWN) {

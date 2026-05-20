@@ -318,7 +318,7 @@ pub fn Writer(comptime WritableStream: type) type {
 }
 
 pub const ByteWriter = Writer(*@import("std-io-compat").FixedBufferStream([]u8));
-pub const FileWriter = Writer(std.fs.File);
+pub const FileWriter = Writer(@import("std-fs-compat").File);
 
 pub const api = struct {
     // these are in sync with BunLoaderType in headers-handwritten.h

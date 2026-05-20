@@ -97,10 +97,10 @@ pub const Lazy = union(enum) {
 
         if (comptime Environment.isPosix) {
             if ((file.is_atty orelse false) or
-                (fd.stdioTag() != null and std.posix.isatty(fd.cast())) or
+                (fd.stdioTag() != null and @import("std-fs-compat").isatty(fd.cast())) or
                 (file.pathlike == .fd and
                     file.pathlike.fd.stdioTag() != null and
-                    std.posix.isatty(file.pathlike.fd.cast())))
+                    @import("std-fs-compat").isatty(file.pathlike.fd.cast())))
             {
                 // var termios = std.mem.zeroes(std.posix.termios);
                 // _ = std.c.tcgetattr(fd.cast(), &termios);
@@ -433,7 +433,7 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
 
         bun.assert_eql(buf.ptr, this.buffered.items.ptr);
         var buffered = this.buffered;
-        this.buffered = .{};
+        this.buffered = .empty;
         buffered.shrinkRetainingCapacity(buf.len);
 
         this.pending.result = if (this.reader.isDone())
@@ -596,7 +596,7 @@ pub fn onReaderDone(this: *FileReader) void {
             } else {
                 this.pending.result = .{ .done = {} };
             }
-            this.buffered = .{};
+        this.buffered = .empty;
             this.pending.run();
         }
         // Don't handle buffered data here - it will be returned on the next onPull
@@ -617,7 +617,7 @@ pub fn onReaderError(this: *FileReader, err: bun.sys.Error) void {
     this.consumeReaderBuffer();
     if (this.buffered.capacity > 0 and this.buffered.items.len == 0) {
         this.buffered.deinit(bun.default_allocator);
-        this.buffered = .{};
+        this.buffered = .empty;
     }
 
     this.pending.result = .{ .err = .{ .Error = err } };

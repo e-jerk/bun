@@ -429,7 +429,7 @@ pub fn asPropertyStringMap(expr: *const Expr, name: string, allocator: std.mem.A
         map.putAssumeCapacity(key, value);
     }
 
-    const ptr = zust.Box(bun.StringArrayHashMap(string).init(allocator, undefined)) catch unreachable;
+    const ptr = allocator.create(bun.StringArrayHashMap(string)) catch unreachable;
     ptr.* = map;
     return ptr;
 }
@@ -722,7 +722,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_array = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -734,7 +734,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_class = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -746,7 +746,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_unary = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -758,7 +758,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_binary = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -810,7 +810,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_new = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -830,7 +830,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_function = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -850,7 +850,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_call = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -862,7 +862,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_dot = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -874,7 +874,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_index = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -886,7 +886,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_arrow = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -941,7 +941,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_jsx_element = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -964,7 +964,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_big_int = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -976,7 +976,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_object = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -988,7 +988,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_spread = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1006,7 +1006,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_string = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1019,7 +1019,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_template = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1031,7 +1031,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_reg_exp = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1043,7 +1043,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_await = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1055,7 +1055,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_yield = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1067,7 +1067,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_if = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1087,7 +1087,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_import = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                        const item = allocator.create(Type) catch unreachable;
                         item.* = st;
                         break :brk item;
                     },
@@ -1107,8 +1107,8 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .loc = loc,
                 .data = Data{
                     .e_string = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
-                        item.* = st.*;
+                        const item = zust.Box(Type).initDefault(allocator) catch unreachable;
+            item.ptr.* = st.*;
                         break :brk item;
                     },
                 },
@@ -2197,112 +2197,112 @@ pub const Data = union(Tag) {
     pub fn clone(this: Expr.Data, allocator: std.mem.Allocator) !Data {
         return switch (this) {
             .e_array => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_array).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_array)));
                 item.* = el.*;
                 return .{ .e_array = item };
             },
             .e_unary => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_unary).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_unary)));
                 item.* = el.*;
                 return .{ .e_unary = item };
             },
             .e_binary => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_binary).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_binary)));
                 item.* = el.*;
                 return .{ .e_binary = item };
             },
             .e_class => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_class).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_class)));
                 item.* = el.*;
                 return .{ .e_class = item };
             },
             .e_new => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_new).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_new)));
                 item.* = el.*;
                 return .{ .e_new = item };
             },
             .e_function => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_function).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_function)));
                 item.* = el.*;
                 return .{ .e_function = item };
             },
             .e_call => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_call).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_call)));
                 item.* = el.*;
                 return .{ .e_call = item };
             },
             .e_dot => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_dot).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_dot)));
                 item.* = el.*;
                 return .{ .e_dot = item };
             },
             .e_index => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_index).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_index)));
                 item.* = el.*;
                 return .{ .e_index = item };
             },
             .e_arrow => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_arrow).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_arrow)));
                 item.* = el.*;
                 return .{ .e_arrow = item };
             },
             .e_jsx_element => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_jsx_element).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_jsx_element)));
                 item.* = el.*;
                 return .{ .e_jsx_element = item };
             },
             .e_object => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_object).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_object)));
                 item.* = el.*;
                 return .{ .e_object = item };
             },
             .e_spread => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_spread).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_spread)));
                 item.* = el.*;
                 return .{ .e_spread = item };
             },
             .e_template => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_template).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_template)));
                 item.* = el.*;
                 return .{ .e_template = item };
             },
             .e_reg_exp => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_reg_exp).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_reg_exp)));
                 item.* = el.*;
                 return .{ .e_reg_exp = item };
             },
             .e_await => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_await).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_await)));
                 item.* = el.*;
                 return .{ .e_await = item };
             },
             .e_yield => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_yield).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_yield)));
                 item.* = el.*;
                 return .{ .e_yield = item };
             },
             .e_if => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_if).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_if)));
                 item.* = el.*;
                 return .{ .e_if = item };
             },
             .e_import => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_import).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_import)));
                 item.* = el.*;
                 return .{ .e_import = item };
             },
             .e_big_int => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_big_int).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_big_int)));
                 item.* = el.*;
                 return .{ .e_big_int = item };
             },
             .e_string => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_string).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_string)));
                 item.* = el.*;
                 return .{ .e_string = item };
             },
             .e_inlined_enum => |el| {
-                const item = try zust.Box(std.meta.Child(@TypeOf(this.e_inlined_enum).init(allocator, undefined)));
+                const item = try allocator.create(std.meta.Child(@TypeOf(this.e_inlined_enum)));
                 item.* = el.*;
                 return .{ .e_inlined_enum = item };
             },

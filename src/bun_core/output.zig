@@ -23,7 +23,7 @@ pub const Source = struct {
             break :brk @import("std-io-compat").FixedBufferStream([]u8);
         } else {
             break :brk File;
-            // var stdout = std.fs.File.stdout();
+            // var stdout = @import("std-fs-compat").File.stdout();
             // return @TypeOf(bun.deprecated.bufferedWriter(stdout.writer()));
         }
     };
@@ -1153,12 +1153,12 @@ pub inline fn printError(comptime fmt: string, args: anytype) void {
 }
 
 pub const DebugTimer = struct {
-    timer: bun.DebugOnly(std.time.Timer) = undefined,
+    timer: bun.DebugOnly(@import("std-fs-compat").Timer) = undefined,
 
     pub inline fn start() DebugTimer {
         if (comptime Environment.isDebug) {
             return DebugTimer{
-                .timer = std.time.Timer.start() catch unreachable,
+                .timer = @import("std-fs-compat").Timer.start() catch unreachable,
             };
         } else {
             return .{};
@@ -1293,7 +1293,7 @@ pub fn initScopedDebugWriterAtStartup() void {
     if (bun.env_var.BUN_DEBUG.get()) |path| {
         if (path.len > 0 and !strings.eql(path, "0") and !strings.eql(path, "false")) {
             if (std.fs.path.dirname(path)) |dir| {
-                std.c.AT.FDCWD.makePath(dir) catch {};
+                bun.makePath(std.fs.cwd(), dir) catch {};
             }
 
             // do not use libuv through this code path, since it might not be initialized yet.
@@ -1303,11 +1303,10 @@ pub fn initScopedDebugWriterAtStartup() void {
             const path_fmt = std.mem.replaceOwned(u8, bun.default_allocator, path, "{pid}", pid) catch @panic("failed to allocate path");
             defer bun.default_allocator.free(path_fmt);
 
-            const fd: bun.FD = .fromStdFile(std.c.AT.FDCWD.createFile(path_fmt, .{
-                .mode = if (Environment.isPosix) 0o644 else 0,
-            }) catch |open_err| {
-                panic("Failed to open file for debug output: {s} ({s})", .{ @errorName(open_err), path });
-            });
+            const fd = switch (bun.sys.openA(path_fmt, bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC, if (Environment.isPosix) 0o644 else 0)) {
+                .result => |f| f,
+                .err => |e| panic("Failed to open file for debug output: {s} ({s})", .{ path, e.name() }),
+            };
             _ = fd.truncate(0); // windows
             ScopedDebugWriter.scoped_file_writer = fd.quietWriter();
             return;

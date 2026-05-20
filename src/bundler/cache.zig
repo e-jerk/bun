@@ -99,8 +99,8 @@ pub const Fs = struct {
     ) !Entry {
         var rfs = _fs.fs;
 
-        const file_handle: std.fs.File = if (cached_file_descriptor) |fd| handle: {
-            const handle = std.fs.File{ .handle = fd };
+        const file_handle: @import("std-fs-compat").File = if (cached_file_descriptor) |fd| handle: {
+            const handle = @import("std-fs-compat").File{ .handle = fd };
             try handle.seekTo(0);
             break :handle handle;
         } else try std.fs.openFileAbsoluteZ(path, .{ .mode = .read_only });
@@ -154,7 +154,7 @@ pub const Fs = struct {
     ) !Entry {
         var rfs = _fs.fs;
 
-        var file_handle: std.fs.File = if (_file_handle) |__file| __file.stdFile() else undefined;
+        var file_handle: @import("std-fs-compat").File = if (_file_handle) |__file| __file.stdFile() else undefined;
 
         if (_file_handle == null) {
             if (FeatureFlags.store_file_descriptors and dirname_fd.isValid()) {

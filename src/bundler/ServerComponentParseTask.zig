@@ -32,7 +32,7 @@ fn taskCallbackWrap(thread_pool_task: *ThreadPoolLib.Task) void {
     defer worker.unget();
     var log = Logger.Log.init(worker.allocator);
 
-    const result = bun.handleOom(zust.Box(ParseTask.Result).init(bun.default_allocator, undefined));
+    const result = bun.handleOom(zust.Box(ParseTask.Result).init(bun.default_allocator, undefined)).ptr;
     result.* = .{
         .ctx = task.ctx,
         .task = undefined,

@@ -19,7 +19,7 @@ fn NewTimer() type {
         };
     }
 
-    return std.time.Timer;
+    return @import("std-fs-compat").Timer;
 }
 pub const Timer = NewTimer();
 

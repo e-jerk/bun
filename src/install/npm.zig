@@ -25,7 +25,7 @@ pub fn whoami(allocator: std.mem.Allocator, manager: *PackageManager) WhoamiErro
 
     var print_buf = std.array_list.Managed(u8).init(allocator);
     defer print_buf.deinit();
-    var print_writer = print_buf.writer();
+    var print_writer = @import("std-io-compat").writer(&print_buf);
 
     var headers: http.HeaderBuilder = .{};
 
@@ -446,7 +446,7 @@ pub const Registry = struct {
             package_name,
             newly_last_modified,
             new_etag,
-            @as(u32, @truncate(@as(u64, @intCast(@max(0, std.time.timestamp()))))) + 300,
+            @as(u32, @truncate(@as(u64, @intCast(@max(0, @import("std-fs-compat").timestamp()))))) + 300,
             is_extended_manifest,
         )) |package| {
             if (package_manager.options.enable.manifest_cache) {
@@ -1005,18 +1005,19 @@ pub const PackageManifest = struct {
             this: *const PackageManifest,
             scope: *const Registry.Scope,
             tmp_path: [:0]const u8,
-            tmpdir: std.fs.Dir,
-            cache_dir_std: std.fs.Dir,
+            tmpdir: @import("std-fs-compat").FsDir,
+            cache_dir_std: @import("std-fs-compat").FsDir,
             outpath: [:0]const u8,
         ) !void {
-            const cache_dir: bun.FD = .fromStdDir(cache_dir_std);
+            const cache_dir: bun.FD = .fromStdDir(cache_dir_std.toDir());
             // 64 KB sounds like a lot but when you consider that this is only about 6 levels deep in the stack, it's not that much.
             var stack_fallback = std.heap.stackFallback(64 * 1024, bun.default_allocator);
 
             const allocator = stack_fallback.get();
             var buffer = try std.array_list.Managed(u8).initCapacity(allocator, this.byteLength(scope) + 64);
             defer buffer.deinit();
-            const writer = &buffer.writer();
+            var w = @import("std-io-compat").arrayListWriter(&buffer);
+            const writer = &w;
             try Serializer.write(this, scope, @TypeOf(writer), writer);
             // --- Perf Improvement #1 ----
             // Do not forget to buffer writes!
@@ -1081,7 +1082,7 @@ pub const PackageManifest = struct {
                 }
 
                 break :brk try bun.sys.File.openat(
-                    .fromStdDir(tmpdir),
+                    .fromStdDir(tmpdir.toDir()),
                     path_to_use_for_opening_file,
                     flags | bun.O.CREAT | bun.O.TRUNC,
                     if (Environment.isPosix) 0o664 else 0,
@@ -1115,14 +1116,14 @@ pub const PackageManifest = struct {
             } else {
                 defer file.close();
                 // Attempt #1. Rename the file.
-                const rc = bun.sys.renameat(.fromStdDir(tmpdir), tmp_path, cache_dir, outpath);
+                const rc = bun.sys.renameat(.fromStdDir(tmpdir.toDir()), tmp_path, cache_dir, outpath);
 
                 switch (rc) {
                     .err => |err| {
                         // Fallback path: atomically swap from <tmp>/*.npm -> <cache>/*.npm, then unlink the temporary file.
                         defer {
                             // If atomically swapping fails, then we should still unlink the temporary file as a courtesy.
-                            bun.sys.unlinkat(.fromStdDir(tmpdir), tmp_path).unwrap() catch {};
+                            bun.sys.unlinkat(bun.FD.fromStdDir(tmpdir.toDir()), tmp_path).unwrap() catch {};
                         }
 
                         if (switch (err.getErrno()) {
@@ -1132,7 +1133,7 @@ pub const PackageManifest = struct {
 
                             // Atomically swap the old file with the new file.
                             try bun.sys.renameat2(
-                                .fromStdDir(tmpdir),
+                                .fromStdDir(tmpdir.toDir()),
                                 tmp_path,
                                 cache_dir,
                                 outpath,
@@ -1158,12 +1159,12 @@ pub const PackageManifest = struct {
         /// Therefore, we choose to not increment the pending task count or wake up the main thread.
         ///
         /// This might leave temporary files in the temporary directory that will never be moved to the cache directory. We'll see if anyone asks about that.
-        pub fn saveAsync(this: *const PackageManifest, scope: *const Registry.Scope, tmpdir: std.fs.Dir, cache_dir: std.fs.Dir) void {
+        pub fn saveAsync(this: *const PackageManifest, scope: *const Registry.Scope, tmpdir: @import("std-fs-compat").FsDir, cache_dir: @import("std-fs-compat").FsDir) void {
             const SaveTask = struct {
                 manifest: PackageManifest,
                 scope: *const Registry.Scope,
-                tmpdir: std.fs.Dir,
-                cache_dir: std.fs.Dir,
+                tmpdir: @import("std-fs-compat").FsDir,
+                cache_dir: @import("std-fs-compat").FsDir,
 
                 task: bun.ThreadPool.Task = .{ .callback = &run },
                 pub const new = bun.TrivialNew(@This());
@@ -1203,14 +1204,14 @@ pub const PackageManifest = struct {
                 try std.fmt.bufPrintZ(buf, "{f}-{f}.npm", .{ file_id_hex_fmt, bun.fmt.hexIntLower(scope.url_hash) });
         }
 
-        pub fn save(this: *const PackageManifest, scope: *const Registry.Scope, tmpdir: std.fs.Dir, cache_dir: std.fs.Dir) !void {
+        pub fn save(this: *const PackageManifest, scope: *const Registry.Scope, tmpdir: @import("std-fs-compat").FsDir, cache_dir: @import("std-fs-compat").FsDir) !void {
             const file_id = bun.Wyhash11.hash(0, this.name());
             var dest_path_buf: [512 + 64]u8 = undefined;
             var out_path_buf: [("18446744073709551615".len * 2) + "_".len + ".npm".len + 1]u8 = undefined;
             var dest_path_stream = @import("std-io-compat").fixedBufferStream(&dest_path_buf);
             var dest_path_stream_writer = dest_path_stream.writer();
             const file_id_hex_fmt = bun.fmt.hexIntLower(file_id);
-            const hex_timestamp: usize = @intCast(@max(std.time.milliTimestamp(), 0));
+            const hex_timestamp: usize = @intCast(@max(@import("std-fs-compat").milliTimestamp(), 0));
             const hex_timestamp_fmt = bun.fmt.hexIntLower(hex_timestamp);
             try dest_path_stream_writer.print("{f}.npm-{f}", .{ file_id_hex_fmt, hex_timestamp_fmt });
             try dest_path_stream_writer.writeByte(0);
@@ -1219,10 +1220,10 @@ pub const PackageManifest = struct {
             try writeFile(this, scope, tmp_path, tmpdir, cache_dir, out_path);
         }
 
-        pub fn loadByFileID(allocator: std.mem.Allocator, scope: *const Registry.Scope, cache_dir: std.fs.Dir, file_id: u64) !?PackageManifest {
+        pub fn loadByFileID(allocator: std.mem.Allocator, scope: *const Registry.Scope, cache_dir: @import("std-fs-compat").FsDir, file_id: u64) !?PackageManifest {
             var file_path_buf: [512 + 64]u8 = undefined;
             const file_name = try manifestFileName(&file_path_buf, file_id, scope);
-            const cache_file = File.openat(.fromStdDir(cache_dir), file_name, bun.O.RDONLY, 0).unwrap() catch return null;
+            const cache_file = File.openat(.fromStdDir(cache_dir.toDir()), file_name, bun.O.RDONLY, 0).unwrap() catch return null;
             defer cache_file.close();
 
             delete: {
@@ -1230,7 +1231,7 @@ pub const PackageManifest = struct {
             }
 
             // delete the outdated/invalid manifest
-            try bun.sys.unlinkat(.fromStdDir(cache_dir), file_name).unwrap();
+            try bun.sys.unlinkat(.fromStdDir(cache_dir.toDir()), file_name).unwrap();
             return null;
         }
 

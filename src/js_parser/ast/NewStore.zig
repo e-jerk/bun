@@ -80,9 +80,9 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
             log("init", .{});
             // Avoid initializing the entire struct.
             const prealloc = bun.handleOom(zust.Box(PreAlloc).init(backing_allocator, undefined));
-            prealloc.zero();
+            @memset(std.mem.asBytes(prealloc.ptr), 0);
 
-            return &prealloc.metadata;
+            return &prealloc.ptr.metadata;
         }
 
         pub fn deinit(store: *Store) void {
@@ -131,9 +131,9 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
             } else brk: {
                 const new_block = zust.Box(Block).init(backing_allocator, undefined) catch
                     bun.outOfMemory();
-                new_block.zero();
-                store.current.next = new_block;
-                break :brk new_block;
+                @memset(std.mem.asBytes(new_block.ptr), 0);
+                store.current.next = new_block.ptr;
+                break :brk new_block.ptr;
             };
 
             store.current = next_block;

@@ -6,7 +6,7 @@ pub var default_arena: Arena = undefined;
 pub var http_thread: HTTPThread = undefined;
 
 //TODO: this needs to be freed when Worker Threads are implemented
-pub var socket_async_http_abort_tracker = std.array_hash_map.Auto(u32, uws.AnySocket).init(bun.default_allocator);
+pub var socket_async_http_abort_tracker = @import("array-hash-map-compat").Auto(u32, uws.AnySocket).init(bun.default_allocator);
 pub var async_http_id_monotonic: std.atomic.Value(u32) = std.atomic.Value(u32).init(0);
 
 /// Set once at startup from `--experimental-http2-fetch` (before the HTTP
@@ -1427,7 +1427,7 @@ noinline fn sendInitialRequestPayload(this: *HTTPClient, comptime is_first_call:
     var temporary_send_buffer = request_body_buffer.toArrayList();
     defer temporary_send_buffer.deinit();
 
-    const writer = &temporary_send_buffer.writer();
+    const writer = &@import("std-io-compat").arrayListWriter(&temporary_send_buffer);
 
     const request = this.buildRequest(this.state.original_request_body.len());
 
@@ -1777,7 +1777,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                 var temporary_send_buffer = std.array_list.Managed(u8).fromOwnedSlice(allocator, &stack_buffer.buffer);
                 temporary_send_buffer.items.len = 0;
                 defer temporary_send_buffer.deinit();
-                const writer = &temporary_send_buffer.writer();
+                const writer = &@import("std-io-compat").arrayListWriter(&temporary_send_buffer);
 
                 const request = this.buildRequest(this.state.request_body.len);
                 writeRequest(

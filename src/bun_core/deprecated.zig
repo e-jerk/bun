@@ -6,7 +6,7 @@ pub fn BufferedReader(comptime buffer_size: usize, comptime ReaderType: type) ty
         end: usize = 0,
 
         pub const Error = ReaderType.Error;
-        pub const Reader = std.Io.GenericReader(*Self, Error, read);
+        pub const Reader = @import("std-io-compat").MakeGenericReader(*Self, Error, read);
 
         const Self = @This();
 

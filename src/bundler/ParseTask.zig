@@ -72,6 +72,10 @@ pub const Result = struct {
         };
     };
 
+    pub fn deinit(this: *Result) void {
+        _ = this;
+    }
+
     pub const Success = struct {
         ast: JSAst,
         source: Logger.Source,
@@ -1491,6 +1495,10 @@ const BundleV2 = bundler.BundleV2;
 const ContentHasher = bundler.ContentHasher;
 const UseDirective = bundler.UseDirective;
 const targetFromHashbang = bundler.targetFromHashbang;
+
+pub fn deinit(this: *ParseTask) void {
+    _ = this;
+}
 
 const jsc = bun.jsc;
 const EventLoop = bun.jsc.AnyEventLoop;

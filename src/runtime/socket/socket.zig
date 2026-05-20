@@ -1598,13 +1598,13 @@ pub fn NewSocket(comptime ssl: bool) type {
 
             const vm = handlers.vm;
             const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(vm.allocator, undefined));
-            handlers_ptr.* = handlers;
+            handlers_ptr.ptr.* = handlers;
             handlers_consumed = true;
 
             const cfg = if (ssl_opts) |*c| c else null;
             var tls = bun.new(TLSSocket, .{
                 .ref_count = .init(),
-                .handlers = handlers_ptr,
+                .handlers = handlers_ptr.ptr,
                 .socket = TLSSocket.Socket.detached,
                 .connection = if (this.connection) |c| c.clone() else null,
                 .protos = if (cfg) |c| if (c.protos) |p|
@@ -1627,7 +1627,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                 defer if (err != 0) BoringSSL.ERR_clear_error();
                 // tls.deinit drops the owned_ctx ref
                 tls.deref();
-                handlers_ptr.deinit();
+                _ = handlers_ptr.deinit();
                 defer _ = handlers_ptr.deinit();
                 if (err != 0 and !globalObject.hasException()) {
                     return globalObject.throwValue(bun.BoringSSL.ERR_toJS(globalObject, err));
@@ -2103,14 +2103,14 @@ pub fn jsUpgradeDuplexToTLS(globalObject: *jsc.JSGlobalObject, callframe: *jsc.C
     }
 
     const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(handlers.vm.allocator, undefined));
-    handlers_ptr.* = handlers;
+    handlers_ptr.ptr.* = handlers;
     handlers_consumed = true;
     // Set mode to duplex_server so TLSSocket.isServer() returns true for ALPN server mode
     // without affecting markInactive lifecycle (which requires a Listener parent).
-    handlers_ptr.mode = if (is_server) .duplex_server else .client;
+    handlers_ptr.ptr.mode = if (is_server) .duplex_server else .client;
     var tls = bun.new(TLSSocket, .{
         .ref_count = .init(),
-        .handlers = handlers_ptr,
+        .handlers = handlers_ptr.ptr,
         .socket = TLSSocket.Socket.detached,
         .connection = null,
         .protos = if (socket_config) |cfg| if (cfg.protos) |p|

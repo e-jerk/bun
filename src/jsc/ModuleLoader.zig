@@ -44,7 +44,7 @@ pub fn resolveEmbeddedFile(vm: *VirtualMachine, path_buf: *bun.PathBuffer, input
     defer bun.path_buffer_pool.put(tmpname_buf);
     const tmpfilename = bun.fs.FileSystem.tmpname(extname, tmpname_buf, bun.hash(file.name)) catch return null;
 
-    const tmpdir: bun.FD = .fromStdDir(bun.fs.FileSystem.instance.tmpdir() catch return null);
+    const tmpdir: bun.FD = .fromStdDir((bun.fs.FileSystem.instance.tmpdir() catch return null).toDir());
 
     // First we open the tmpfile, to avoid any other work in the event of failure.
     const tmpfile = bun.Tmpfile.create(tmpdir, tmpfilename).unwrap() catch return null;
@@ -346,7 +346,7 @@ pub fn transpileSourceCode(
                     .source_code = bun.String.cloneUTF8(source.contents),
                     .specifier = input_specifier,
                     .source_url = input_specifier.createIfDifferent(path.text),
-                    .tag = ResolvedSource.Tag.json_for_object_loader,
+                    .tag = @as(u32, @intFromEnum(ResolvedSource.Tag.json_for_object_loader)),
                 };
             }
 
@@ -370,7 +370,7 @@ pub fn transpileSourceCode(
                         .specifier = input_specifier,
                         .source_url = input_specifier.createIfDifferent(path.text),
                         .jsvalue_for_export = JSValue.createEmptyObject(jsc_vm.global, 0),
-                        .tag = .exports_object,
+                        .tag = @intFromEnum(ResolvedSource.Tag.exports_object),
                     };
                 }
 
@@ -379,7 +379,7 @@ pub fn transpileSourceCode(
                     .specifier = input_specifier,
                     .source_url = input_specifier.createIfDifferent(path.text),
                     .jsvalue_for_export = parse_result.ast.parts.at(0).stmts[0].data.s_expr.value.toJS(allocator, globalObject orelse jsc_vm.global) catch |e| panic("Unexpected JS error: {s}", .{@errorName(e)}),
-                    .tag = .exports_object,
+                    .tag = @intFromEnum(ResolvedSource.Tag.exports_object),
                 };
             }
 
@@ -409,7 +409,7 @@ pub fn transpileSourceCode(
                         .specifier = input_specifier,
                         .source_url = input_specifier.createIfDifferent(path.text),
                         .is_commonjs_module = true,
-                        .tag = .javascript,
+                        .tag = @intFromEnum(ResolvedSource.Tag.javascript),
                     };
                 }
             }
@@ -450,17 +450,17 @@ pub fn transpileSourceCode(
                             const actual_package_json: *PackageJSON = package_json orelse brk2: {
                                 // this should already be cached virtually always so it's fine to do this
                                 const dir_info = (jsc_vm.transpiler.resolver.readDirInfo(source.path.name.dir) catch null) orelse
-                                    break :brk .javascript;
+                                    break :brk @intFromEnum(ResolvedSource.Tag.javascript);
 
                                 break :brk2 dir_info.package_json orelse dir_info.enclosing_package_json;
-                            } orelse break :brk .javascript;
+                            } orelse break :brk @intFromEnum(ResolvedSource.Tag.javascript);
 
                             if (actual_package_json.module_type == .esm) {
-                                break :brk ResolvedSource.Tag.package_json_type_module;
+                                break :brk @intFromEnum(ResolvedSource.Tag.package_json_type_module);
                             }
                         }
 
-                        break :brk ResolvedSource.Tag.javascript;
+                        break :brk @intFromEnum(ResolvedSource.Tag.javascript);
                     },
                 };
             }
@@ -588,7 +588,7 @@ pub fn transpileSourceCode(
                 .source_url = input_specifier.createIfDifferent(path.text),
                 .is_commonjs_module = is_commonjs_module,
                 .module_info = module_info_deserialized,
-                .tag = tag,
+                .tag = @intFromEnum(tag),
             };
         },
         // provideFetch() should be called
@@ -654,7 +654,7 @@ pub fn transpileSourceCode(
                     .source_code = bun.String.static(@embedFile("../js/wasi-runner.js")),
                     .specifier = input_specifier,
                     .source_url = input_specifier.createIfDifferent(path.text),
-                    .tag = .esm,
+                    .tag = @intFromEnum(ResolvedSource.Tag.esm),
                 };
             }
 
@@ -678,7 +678,7 @@ pub fn transpileSourceCode(
         .sqlite_embedded, .sqlite => {
             const sqlite_module_source_code_string = brk: {
                 if (jsc_vm.hot_reload == .hot) {
-                    break :brk 
+                    break :brk
                     \\// Generated code
                     \\import {Database} from 'bun:sqlite';
                     \\const {path} = import.meta;
@@ -698,7 +698,7 @@ pub fn transpileSourceCode(
                     ;
                 }
 
-                break :brk 
+                break :brk
                 \\// Generated code
                 \\import {Database} from 'bun:sqlite';
                 \\export const db = new Database(import.meta.path);
@@ -713,7 +713,7 @@ pub fn transpileSourceCode(
                 .source_code = bun.String.cloneUTF8(sqlite_module_source_code_string),
                 .specifier = input_specifier,
                 .source_url = input_specifier.createIfDifferent(path.text),
-                .tag = .esm,
+                .tag = @intFromEnum(ResolvedSource.Tag.esm),
             };
         },
 
@@ -724,7 +724,7 @@ pub fn transpileSourceCode(
                     .source_code = bun.String.empty,
                     .specifier = input_specifier,
                     .source_url = input_specifier.createIfDifferent(path.text),
-                    .tag = .esm,
+                    .tag = @intFromEnum(ResolvedSource.Tag.esm),
                 };
             }
 
@@ -738,7 +738,7 @@ pub fn transpileSourceCode(
                 .jsvalue_for_export = html_bundle.toJS(globalObject.?),
                 .specifier = input_specifier,
                 .source_url = input_specifier.createIfDifferent(path.text),
-                .tag = .export_default_object,
+                .tag = @intFromEnum(ResolvedSource.Tag.export_default_object),
             };
         },
 
@@ -749,7 +749,7 @@ pub fn transpileSourceCode(
                     .source_code = bun.String.empty,
                     .specifier = input_specifier,
                     .source_url = input_specifier.createIfDifferent(path.text),
-                    .tag = .esm,
+                    .tag = @intFromEnum(ResolvedSource.Tag.esm),
                 };
             }
 
@@ -819,7 +819,7 @@ pub fn transpileSourceCode(
                 .jsvalue_for_export = value,
                 .specifier = input_specifier,
                 .source_url = input_specifier.createIfDifferent(path.text),
-                .tag = .export_default_object,
+                .tag = @intFromEnum(ResolvedSource.Tag.export_default_object),
             };
         },
     }
@@ -930,7 +930,7 @@ pub export fn Bun__transpileFile(
                         .specifier = .empty,
                         .source_url = .empty,
                         .cjs_custom_extension_index = strong.get(),
-                        .tag = .common_js_custom_extension,
+                        .tag = @intFromEnum(ResolvedSource.Tag.common_js_custom_extension),
                     });
                     return null;
                 },
@@ -1055,7 +1055,7 @@ pub export fn Bun__transpileFile(
                                     .specifier = .empty,
                                     .source_url = .empty,
                                     .cjs_custom_extension_index = strong.get(),
-                                    .tag = .common_js_custom_extension,
+                                    .tag = @intFromEnum(ResolvedSource.Tag.common_js_custom_extension),
                                 });
                                 return null;
                             },
@@ -1150,7 +1150,7 @@ fn getHardcodedModule(jsc_vm: *VirtualMachine, specifier: bun.String, hardcoded:
             .source_code = bun.String.cloneUTF8(jsc_vm.entry_point.contents),
             .specifier = specifier,
             .source_url = specifier,
-            .tag = .esm,
+            .tag = @intFromEnum(ResolvedSource.Tag.esm),
             .source_code_needs_deref = true,
         } else null,
         .@"bun:internal-for-testing" => {
@@ -1158,7 +1158,7 @@ fn getHardcodedModule(jsc_vm: *VirtualMachine, specifier: bun.String, hardcoded:
                 if (!is_allowed_to_use_internal_testing_apis)
                     return null;
             }
-            return jsSyntheticModule(.@"bun:internal-for-testing", specifier);
+            return jsSyntheticModule(ResolvedSource.Tag.@"bun:internal-for-testing", specifier);
         },
         .@"bun:wrap" => .{
             .allocator = null,
@@ -1166,7 +1166,15 @@ fn getHardcodedModule(jsc_vm: *VirtualMachine, specifier: bun.String, hardcoded:
             .specifier = specifier,
             .source_url = specifier,
         },
-        inline else => |tag| jsSyntheticModule(@field(ResolvedSource.Tag, @tagName(tag)), specifier),
+        .bun => jsSyntheticModule(ResolvedSource.Tag.@"bun", specifier),
+        inline else => |tag| {
+            const tag_name = @tagName(tag);
+            if (@hasField(ResolvedSource.Tag, tag_name)) {
+                return jsSyntheticModule(@field(ResolvedSource.Tag, tag_name), specifier);
+            } else {
+                return jsSyntheticModule(ResolvedSource.Tag.javascript, specifier);
+            }
+        },
     };
 }
 
@@ -1309,7 +1317,7 @@ inline fn jsSyntheticModule(name: ResolvedSource.Tag, specifier: String) Resolve
         .source_code = bun.String.empty,
         .specifier = specifier,
         .source_url = bun.String.static(@tagName(name)),
-        .tag = name,
+        .tag = @as(u32, @intFromEnum(name)),
         .source_code_needs_deref = false,
     };
 }

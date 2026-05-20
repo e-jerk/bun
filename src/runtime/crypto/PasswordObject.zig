@@ -232,7 +232,6 @@ pub const PasswordObject = struct {
                         .rounds_log = cost,
                         .silently_truncate_password = true,
                     },
-                    .allocator = allocator,
                     .encoding = .crypt,
                 };
                 const out_bytes = try pwhash.bcrypt.strHash(password_to_use, hash_options, outbuf_slice);

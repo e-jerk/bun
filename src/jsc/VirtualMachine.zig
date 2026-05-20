@@ -86,7 +86,7 @@ resolved_count: usize = 0,
 had_errors: bool = false,
 
 macros: MacroMap,
-macro_entry_points: std.array_hash_map.Auto(i32, *MacroEntryPoint),
+macro_entry_points: @import("array-hash-map-compat").Auto(i32, *MacroEntryPoint),
 macro_mode: bool = false,
 no_macros: bool = false,
 auto_killer: ProcessAutoKiller = .{ .enabled = false },
@@ -121,7 +121,7 @@ remap_stack_frames_mutex: bun.Mutex = .{},
 ///          []
 argv: []const []const u8 = &[_][]const u8{},
 
-origin_timer: std.time.Timer = undefined,
+origin_timer: @import("std-fs-compat").Timer = undefined,
 origin_timestamp: u64 = 0,
 /// For fake timers: override performance.now() with a specific value (in nanoseconds)
 /// When null, use the real timer. When set, return this value instead.
@@ -948,7 +948,7 @@ pub fn onExit(this: *VirtualMachine) void {
     while (rare_data.cleanup_hooks.items.len > 0) {
         var hooks = rare_data.cleanup_hooks;
         defer hooks.deinit(bun.default_allocator);
-        rare_data.cleanup_hooks = .{};
+        rare_data.cleanup_hooks = .empty;
         for (hooks.items) |hook| {
             hook.execute();
         }
@@ -1049,7 +1049,7 @@ pub fn waitForTasks(this: *VirtualMachine) void {
     }
 }
 
-pub const MacroMap = std.array_hash_map.Auto(i32, jsc.C.JSObjectRef);
+pub const MacroMap = @import("array-hash-map-compat").Auto(i32, jsc.C.JSObjectRef);
 
 pub fn enableMacroMode(this: *VirtualMachine) void {
     jsc.markBinding(@src());
@@ -1094,7 +1094,7 @@ fn getOriginTimestamp() u64 {
             u128,
             // handle if they set their system clock to be before epoch
             @intCast(@max(
-                std.time.nanoTimestamp(),
+                @import("std-fs-compat").nanoTimestamp(),
                 origin_relative_epoch,
             )),
         ) - origin_relative_epoch),
@@ -1135,7 +1135,7 @@ pub fn initWithModuleGraph(
         .source_mappings = undefined,
         .macros = MacroMap.init(allocator),
         .macro_entry_points = @TypeOf(vm.macro_entry_points).init(allocator),
-        .origin_timer = std.time.Timer.start() catch @panic("Timers are not supported on this system."),
+        .origin_timer = @import("std-fs-compat").Timer.start() catch @panic("Timers are not supported on this system."),
         .origin_timestamp = getOriginTimestamp(),
         .ref_strings = jsc.RefString.Map.init(allocator),
         .ref_strings_mutex = .{},
@@ -1264,7 +1264,7 @@ pub fn init(opts: Options) !*VirtualMachine {
         .source_mappings = undefined,
         .macros = MacroMap.init(allocator),
         .macro_entry_points = @TypeOf(vm.macro_entry_points).init(allocator),
-        .origin_timer = std.time.Timer.start() catch @panic("Please don't mess with timers."),
+        .origin_timer = @import("std-fs-compat").Timer.start() catch @panic("Please don't mess with timers."),
         .origin_timestamp = getOriginTimestamp(),
         .ref_strings = jsc.RefString.Map.init(allocator),
         .ref_strings_mutex = .{},
@@ -1432,7 +1432,7 @@ pub fn initWorker(
         .source_mappings = undefined,
         .macros = MacroMap.init(allocator),
         .macro_entry_points = @TypeOf(vm.macro_entry_points).init(allocator),
-        .origin_timer = std.time.Timer.start() catch @panic("Please don't mess with timers."),
+        .origin_timer = @import("std-fs-compat").Timer.start() catch @panic("Please don't mess with timers."),
         .origin_timestamp = getOriginTimestamp(),
         .ref_strings = jsc.RefString.Map.init(allocator),
         .ref_strings_mutex = .{},
@@ -1528,7 +1528,7 @@ pub fn initBake(opts: Options) anyerror!*VirtualMachine {
         .source_mappings = undefined,
         .macros = MacroMap.init(allocator),
         .macro_entry_points = @TypeOf(vm.macro_entry_points).init(allocator),
-        .origin_timer = std.time.Timer.start() catch @panic("Please don't mess with timers."),
+        .origin_timer = @import("std-fs-compat").Timer.start() catch @panic("Please don't mess with timers."),
         .origin_timestamp = getOriginTimestamp(),
         .ref_strings = jsc.RefString.Map.init(allocator),
         .ref_strings_mutex = .{},
@@ -3034,8 +3034,8 @@ pub fn remapZigException(
     must_reset_parser_arena_later: *bool,
     source_code_slice: *?ZigString.Slice,
     allow_source_code_preview: bool,
-) void {
-    error_instance.toZigException(this.global, exception);
+) bun.JSError!void {
+    try error_instance.toZigException(this.global, exception);
     var enable_source_code_preview = allow_source_code_preview and
         !(bun.feature_flag.BUN_DISABLE_SOURCE_CODE_PREVIEW.get() or
             bun.feature_flag.BUN_DISABLE_TRANSPILED_SOURCE_CODE_PREVIEW.get());
@@ -3311,7 +3311,7 @@ fn printErrorInstance(
     defer if (source_code_slice) |slice| slice.deinit();
 
     if (mode == .js) {
-        this.remapZigException(
+        try this.remapZigException(
             exception,
             error_instance,
             exception_list,
@@ -3354,7 +3354,7 @@ fn printErrorInstance(
         last_pad = pad;
         try writer.splatByteAll(' ', pad);
 
-        const trimmed = std.mem.trimRight(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
+        const trimmed = std.mem.trimEnd(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
         const clamped = trimmed[0..@min(trimmed.len, max_line_length)];
 
         if (clamped.len != trimmed.len) {
@@ -3418,7 +3418,7 @@ fn printErrorInstance(
         if (top_frame == null or top_frame.?.position.isInvalid()) {
             defer did_print_name = true;
             defer source.text.deinit();
-            const trimmed = std.mem.trimRight(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
+        const trimmed = std.mem.trimEnd(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
 
             const text = trimmed[0..@min(trimmed.len, max_line_length)];
 
@@ -3450,7 +3450,7 @@ fn printErrorInstance(
             try writer.splatByteAll(' ', pad);
             defer source.text.deinit();
             const text = source.text.slice();
-            const trimmed = std.mem.trimRight(u8, std.mem.trim(u8, text, "\n"), "\t ");
+            const trimmed = std.mem.trimEnd(u8, std.mem.trim(u8, text, "\n"), "\t ");
 
             // TODO: preserve the divot position and possibly use stringWidth() to figure out where to put the divot
             const clamped = trimmed[0..@min(trimmed.len, max_line_length)];

@@ -207,7 +207,7 @@ pub const DirEntryAccessor = struct {
 
         const IterResult = struct {
             name: NameWrapper,
-            kind: std.fs.File.Kind,
+            kind: @import("std-fs-compat").File.Kind,
 
             const NameWrapper = struct {
                 value: []const u8,
@@ -224,8 +224,8 @@ pub const DirEntryAccessor = struct {
                 const name = nextval.key_ptr.*;
                 const kind = nextval.value_ptr.*.kind(&FS.instance.fs, true);
                 const fskind = switch (kind) {
-                    .file => std.fs.File.Kind.file,
-                    .dir => std.fs.File.Kind.directory,
+                    .file => @import("std-fs-compat").File.Kind.file,
+                    .dir => @import("std-fs-compat").File.Kind.directory,
                 };
                 return .{
                     .result = .{
@@ -341,8 +341,8 @@ pub fn GlobWalker_(
         end_byte_of_basename_excluding_special_syntax: u32 = 0,
         basename_excluding_special_syntax_component_idx: u32 = 0,
 
-        patternComponents: ArrayList(Component) = .{},
-        matchedPaths: MatchedMap = .{},
+        patternComponents: ArrayList(Component) = .empty,
+        matchedPaths: MatchedMap = .empty,
         i: u32 = 0,
 
         dot: bool = false,
@@ -355,7 +355,7 @@ pub fn GlobWalker_(
 
         pathBuf: bun.PathBuffer = undefined,
         // iteration state
-        workbuf: ArrayList(WorkItem) = ArrayList(WorkItem){},
+        workbuf: ArrayList(WorkItem) = .empty,
 
         /// Array hashmap used as a set (values are the keys)
         /// to store matched paths and prevent duplicates
@@ -1000,6 +1000,7 @@ pub fn GlobWalker_(
                         },
                     }
                 }
+                return .{ .err = Syscall.Error.fromCode(.LOOP, .open) };
             }
         };
 

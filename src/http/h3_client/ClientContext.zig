@@ -32,9 +32,9 @@ pub fn getOrCreate(loop: *uws.Loop) ?*ClientContext {
     callbacks.register(qctx);
 
     const self = bun.handleOom(zust.Box(ClientContext).init(bun.default_allocator, undefined));
-    self.* = .{ .qctx = qctx };
-    instance = self;
-    return self;
+    self.ptr.* = .{ .qctx = qctx };
+    instance = self.ptr;
+    return self.ptr;
 }
 
 /// Find or open a connection to `hostname:port` and queue `client` on it.

@@ -200,7 +200,7 @@ pub const Routes = struct {
     }
 
     fn match(this: *Routes, allocator: std.mem.Allocator, pathname_: string, comptime MatchContext: type, ctx: MatchContext) ?*Route {
-        const pathname = std.mem.trimLeft(u8, pathname_, "/");
+        const pathname = @import("std-fs-compat").trimLeft(u8, pathname_, "/");
 
         if (pathname.len == 0) {
             return this.index;
@@ -226,7 +226,7 @@ const RouteLoader = struct {
     pub fn appendRoute(this: *RouteLoader, route: Route) void {
         // /index.js
         if (route.full_hash == index_route_hash) {
-            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
+            const new_route = (zust.Box(Route).init(this.allocator, undefined) catch unreachable).ptr;
             this.index = new_route;
             new_route.* = route;
             this.all_routes.append(this.allocator, new_route) catch unreachable;
@@ -249,7 +249,7 @@ const RouteLoader = struct {
                 return;
             }
 
-            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
+            const new_route = (zust.Box(Route).init(this.allocator, undefined) catch unreachable).ptr;
             new_route.* = route;
 
             // Handle static routes with uppercase characters by ensuring exact case still matches
@@ -299,7 +299,7 @@ const RouteLoader = struct {
         }
 
         {
-            const new_route = zust.Box(Route).init(this.allocator, undefined) catch unreachable;
+            const new_route = (zust.Box(Route).init(this.allocator, undefined) catch unreachable).ptr;
             new_route.* = route;
             this.all_routes.append(this.allocator, new_route) catch unreachable;
         }
@@ -327,8 +327,8 @@ const RouteLoader = struct {
             .fs = resolver.fs,
             .config = config,
             .static_list = bun.StringHashMap(*Route).init(allocator),
-            .dedupe_dynamic = std.array_hash_map.Auto(u32, string).init(allocator),
-            .all_routes = .{},
+            .dedupe_dynamic = bun.handleOom(std.array_hash_map.Auto(u32, string).init(allocator)),
+            .all_routes = .empty,
             .route_dirname_len = route_dirname_len,
         };
         defer this.dedupe_dynamic.deinit();
@@ -691,7 +691,7 @@ pub const Route = struct {
             name = name[0 .. name.len - 6];
         }
 
-        name = std.mem.trimRight(u8, name, "/");
+        name = std.mem.trimEnd(u8, name, "/");
 
         var match_name: string = name;
 
@@ -733,7 +733,7 @@ pub const Route = struct {
         }
 
         if (abs_path_str.len == 0) {
-            var file: std.fs.File = undefined;
+            var file: @import("std-fs-compat").File = undefined;
             var needs_close = true;
             defer if (needs_close) file.close();
             if (entry.cache.fd.unwrapValid()) |valid| {
@@ -744,11 +744,14 @@ pub const Route = struct {
                 abs_path_str = FileSystem.instance.absBuf(&parts, route_file_buf);
                 route_file_buf[abs_path_str.len] = 0;
                 const buf = route_file_buf[0..abs_path_str.len :0];
-                file = std.fs.openFileAbsoluteZ(buf, .{ .mode = .read_only }) catch |err| {
+                const fd = std.c.open(buf, std.c.O{ .ACCMODE = .RDONLY }, @as(std.posix.mode_t, 0));
+                if (fd < 0) {
                     needs_close = false;
-                    log.addErrorFmt(null, Logger.Loc.Empty, allocator, "{s} opening route: {s}", .{ @errorName(err), abs_path_str }) catch unreachable;
+                    const errno = std.posix.errno(fd);
+                    log.addErrorFmt(null, Logger.Loc.Empty, allocator, "{s} opening route: {s}", .{ @tagName(errno), abs_path_str }) catch unreachable;
                     return null;
-                };
+                }
+                file = .{ .handle = fd };
                 FileSystem.setMaxFd(file.handle);
             }
 
@@ -878,7 +881,7 @@ pub const Match = struct {
     }
 
     pub fn pathnameWithoutLeadingSlash(this: *const Match) string {
-        return std.mem.trimLeft(u8, this.pathname, "/");
+        return @import("std-fs-compat").trimLeft(u8, this.pathname, "/");
     }
 };
 

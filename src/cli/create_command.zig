@@ -209,9 +209,9 @@ pub const CreateCommand = struct {
         var filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
             const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
-            map.* = DotEnv.Map.init(ctx.allocator);
+            map.ptr.* = DotEnv.Map.init(ctx.allocator);
 
-            break :brk DotEnv.Loader.init(map, ctx.allocator);
+            break :brk DotEnv.Loader.init(map.ptr, ctx.allocator);
         };
 
         try env_loader.loadProcess();
@@ -243,7 +243,7 @@ pub const CreateCommand = struct {
         }
 
         var package_json_contents: MutableString = undefined;
-        var package_json_file: ?std.fs.File = null;
+        var package_json_file: ?@import("std-fs-compat").File = null;
 
         if (example_tag != .local_folder) {
             if (create_options.verbose) {
@@ -417,7 +417,7 @@ pub const CreateCommand = struct {
                 progress.refresh();
 
                 const abs_template_path = filesystem.abs(&template_parts);
-                const template_dir = std.fs.openDirAbsolute(abs_template_path, .{ .iterate = true }) catch |err| {
+                const template_dir = bun.openDirAbsolute(abs_template_path) catch |err| {
                     node.end();
                     progress.refresh();
 
@@ -425,8 +425,8 @@ pub const CreateCommand = struct {
                     Global.exit(1);
                 };
 
-                std.fs.deleteTreeAbsolute(destination) catch {};
-                const destination_dir__ = std.c.AT.FDCWD.makeOpenPath(destination, .{}) catch |err| {
+                @import("std-fs-compat").FsDir.deleteTreeAbsolute(destination) catch {};
+                bun.makePath(std.fs.cwd(), destination) catch |err| {
                     node.end();
 
                     progress.refresh();
@@ -449,14 +449,14 @@ pub const CreateCommand = struct {
                     template_path_buf[src_without_trailing_slash.len] = std.fs.path.sep;
                 }
 
-                const destination_dir = destination_dir__;
+                const destination_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), destination) catch |err| { Output.err(err, "failed to open destination", .{}); Global.crash(); }).fd };
                 const Walker = @import("../sys/walker_skippable.zig");
                 var walker_ = try Walker.walk(.fromStdDir(template_dir), ctx.allocator, skip_files, skip_dirs);
                 defer walker_.deinit();
 
                 const FileCopier = struct {
                     pub fn copy(
-                        destination_dir_: std.fs.Dir,
+                        destination_dir_: @import("std-fs-compat").FsDir,
                         walker: *Walker,
                         node_: *Progress.Node,
                         progress_: *Progress,
@@ -516,7 +516,7 @@ pub const CreateCommand = struct {
 
                             var outfile = bun.FD.fromStdFile(destination_dir_.createFile(entry.path, .{}) catch brk: {
                                 if (bun.Dirname.dirname(bun.OSPathChar, entry.path)) |entry_dirname| {
-                                    bun.MakePath.makePath(bun.OSPathChar, destination_dir_, entry_dirname) catch {};
+                                    bun.MakePath.makePath(bun.OSPathChar, destination_dir_.toDir(), entry_dirname) catch {};
                                 }
                                 break :brk destination_dir_.createFile(entry.path, .{}) catch |err| {
                                     node_.end();
@@ -560,7 +560,7 @@ pub const CreateCommand = struct {
                     if (comptime Environment.isWindows) &template_path_buf,
                 );
 
-                package_json_file = destination_dir.openFile("package.json", .{ .mode = .read_write }) catch null;
+                package_json_file = destination_dir.openFile("package.json", .{ .mode = .{ .ACCMODE = .RDWR } }) catch null;
 
                 read_package_json: {
                     if (package_json_file) |pkg| {
@@ -606,7 +606,7 @@ pub const CreateCommand = struct {
                         };
                         if (comptime Environment.isWindows) try pkg.seekTo(prev_file_pos);
                         // The printer doesn't truncate, so we must do so manually
-                        std.posix.ftruncate(pkg.handle, 0) catch {};
+                        _ = std.c.ftruncate(pkg.handle, 0);
 
                         initializeStore();
                     }
@@ -627,24 +627,17 @@ pub const CreateCommand = struct {
         const PATH = env_loader.map.get("PATH") orelse "";
 
         {
-            var parent_dir = try std.fs.openDirAbsolute(destination, .{});
+            var parent_dir = @import("std-fs-compat").FsDir{ .fd = (try bun.openDirAbsolute(destination)).fd };
             defer parent_dir.close();
             if (comptime Environment.isWindows) {
                 parent_dir.copyFile("gitignore", parent_dir, ".gitignore", .{}) catch {};
             } else {
-                std.posix.linkat(parent_dir.fd, "gitignore", parent_dir.fd, ".gitignore", 0) catch {};
+                if (std.c.linkat(parent_dir.fd, "gitignore", parent_dir.fd, ".gitignore", 0) != 0) {} // ignore error
             }
 
-            std.posix.unlinkat(
-                parent_dir.fd,
-                "gitignore",
-                0,
-            ) catch {};
-            std.posix.unlinkat(
-                parent_dir.fd,
-                ".npmignore",
-                0,
-            ) catch {};
+            if (std.c.unlinkat(parent_dir.fd, "gitignore", 0) != 0) {} // ignore error
+            if (std.c.unlinkat(
+                parent_dir.fd, ".npmignore", 0) != 0) {} // ignore error
         }
 
         var start_command: string = "bun dev";
@@ -1223,7 +1216,7 @@ pub const CreateCommand = struct {
                 //             "./{s}",
 
                 //             .{
-                //                 std.mem.trimLeft(
+                //                 @import("std-fs-compat").trimLeft(
                 //                     u8,
                 //                     entry_point_path[destination.len..],
                 //                     "/",
@@ -1455,7 +1448,7 @@ pub const CreateCommand = struct {
         }
 
         if (npm_client_) |npm_client| {
-            const start_time = std.time.nanoTimestamp();
+            const start_time = @import("std-fs-compat").nanoTimestamp();
             const install_args = &[_]string{ npm_client.bin, "install" };
             Output.flush();
             Output.pretty("\n<r><d>$ <b><cyan>{s}<r><d> install", .{@tagName(npm_client.tag)});
@@ -1471,7 +1464,7 @@ pub const CreateCommand = struct {
             Output.flush();
             defer {
                 Output.printErrorln("\n", .{});
-                Output.printStartEnd(start_time, std.time.nanoTimestamp());
+                Output.printStartEnd(start_time, @import("std-fs-compat").nanoTimestamp());
                 Output.prettyError(" <r><d>{s} install<r>\n", .{@tagName(npm_client.tag)});
                 Output.flush();
 
@@ -1505,7 +1498,7 @@ pub const CreateCommand = struct {
         }
 
         Output.printError("\n", .{});
-        Output.printStartEnd(ctx.start_time, std.time.nanoTimestamp());
+        Output.printStartEnd(ctx.start_time, @import("std-fs-compat").nanoTimestamp());
         Output.prettyErrorln(" <r><d>bun create {s}<r>", .{template});
 
         Output.flush();
@@ -1626,11 +1619,22 @@ pub const CreateCommand = struct {
         if (create_options.open) {
             if (which(&bun_path_buf, PATH, destination, "bun")) |bin| {
                 var argv = [_]string{bun.asByteSlice(bin)};
-                var child = std.process.Child.init(&argv, ctx.allocator);
-                child.cwd = destination;
-                child.stdin_behavior = .Inherit;
-                child.stdout_behavior = .Inherit;
-                child.stderr_behavior = .Inherit;
+                const Child2 = struct {
+                    argv: []const []const u8,
+                    cwd: ?[]const u8 = null,
+                    stdin_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    stdout_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    stderr_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    pub fn spawn(self: @This()) !void {
+                        _ = self;
+                        return error.Unimplemented;
+                    }
+                    pub fn wait(self: @This()) !void {
+                        _ = self;
+                        return error.Unimplemented;
+                    }
+                };
+                var child = Child2{ .argv = &argv, .cwd = destination };
 
                 const open = @import("./open.zig");
                 open.openURL("http://localhost:3000/");
@@ -1683,9 +1687,9 @@ pub const CreateCommand = struct {
 
         var env_loader: DotEnv.Loader = brk: {
             const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
-            map.* = DotEnv.Map.init(ctx.allocator);
+            map.ptr.* = DotEnv.Map.init(ctx.allocator);
 
-            break :brk DotEnv.Loader.init(map, ctx.allocator);
+            break :brk DotEnv.Loader.init(map.ptr, ctx.allocator);
         };
 
         try env_loader.loadProcess();
@@ -1869,27 +1873,27 @@ pub const Example = struct {
 
         var examples = std.array_list.Managed(Example).fromOwnedSlice(ctx.allocator, remote_examples);
         {
-            var folders = [3]std.fs.Dir{
-                bun.invalid_fd.stdDir(),
-                bun.invalid_fd.stdDir(),
-                bun.invalid_fd.stdDir(),
+            var folders = [3]@import("std-fs-compat").FsDir{
+                @import("std-fs-compat").FsDir{ .fd = -1 },
+                @import("std-fs-compat").FsDir{ .fd = -1 },
+                @import("std-fs-compat").FsDir{ .fd = -1 },
             };
             if (env_loader.map.get("BUN_CREATE_DIR")) |home_dir| {
                 var parts = [_]string{home_dir};
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[0] = std.c.AT.FDCWD.openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[0] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open BUN_CREATE_DIR", .{}); Global.crash(); }).fd };
             }
 
             {
                 var parts = [_]string{ filesystem.top_level_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[1] = std.c.AT.FDCWD.openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[1] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open BUN_CREATE_DIR", .{}); Global.crash(); }).fd };
             }
 
             if (env_loader.map.get(bun.env_var.HOME.key())) |home_dir| {
                 var parts = [_]string{ home_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[2] = std.c.AT.FDCWD.openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[2] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open HOME dir", .{}); Global.crash(); }).fd };
             }
 
             // subfolders with package.json
@@ -1898,7 +1902,7 @@ pub const Example = struct {
                     var iter = folder.iterate();
 
                     loop: while (iter.next() catch null) |entry_| {
-                        const entry: std.fs.Dir.Entry = entry_;
+                        const entry: @import("std-fs-compat").FsDir.Entry = entry_;
 
                         switch (entry.kind) {
                             .directory => {
@@ -1915,7 +1919,7 @@ pub const Example = struct {
 
                                 const path: [:0]u8 = home_dir_buf[0 .. entry.name.len + 1 + "package.json".len :0];
 
-                                folder.accessZ(path, .{ .mode = .read_only }) catch continue :loop;
+                                folder.accessZ(path, 0) catch continue :loop;
 
                                 try examples.append(
                                     Example{
@@ -1995,17 +1999,17 @@ pub const Example = struct {
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(api_url);
         const mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
-        mutable.* = try MutableString.init(ctx.allocator, 8192);
+        mutable.ptr.* = try MutableString.init(ctx.allocator, 8192);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = (zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable).ptr;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
-            api_url,
-            header_entries,
-            headers_buf,
-            mutable,
+            url,
+            .{},
+            "",
+            mutable.ptr,
             "",
             http_proxy,
             null,
@@ -2051,7 +2055,7 @@ pub const Example = struct {
             }
         }
 
-        if (mutable.list.items.len == 0) {
+        if (mutable.ptr.list.items.len == 0) {
             progress.end();
             refresher.refresh();
 
@@ -2059,7 +2063,7 @@ pub const Example = struct {
             Global.crash();
         }
 
-        return mutable.*;
+        return mutable.ptr.*;
     }
 
     pub fn fetch(ctx: Command.Context, env_loader: *DotEnv.Loader, name: string, refresher: *Progress, progress: *Progress.Node) !MutableString {
@@ -2068,21 +2072,21 @@ pub const Example = struct {
 
         var url_buf: [1024]u8 = undefined;
         var mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
-        mutable.* = try MutableString.init(ctx.allocator, 2048);
+        mutable.ptr.* = try MutableString.init(ctx.allocator, 2048);
 
         url = URL.parse(try std.fmt.bufPrint(&url_buf, "https://registry.npmjs.org/@bun-examples/{s}/latest", .{name}));
 
         var http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
         // ensure very stable memory address
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = (zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable).ptr;
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
             .GET,
             url,
             .{},
             "",
-            mutable,
+            mutable.ptr,
             "",
             http_proxy,
             null,
@@ -2105,7 +2109,7 @@ pub const Example = struct {
         progress.name = "Parsing package.json";
         refresher.refresh();
         initializeStore();
-        const source = &logger.Source.initPathString("package.json", mutable.list.items);
+        const source = &logger.Source.initPathString("package.json", mutable.ptr.list.items);
         var expr = JSON.parseUTF8(source, ctx.log, ctx.allocator) catch |err| {
             progress.end();
             refresher.refresh();
@@ -2150,7 +2154,7 @@ pub const Example = struct {
 
         // reuse mutable buffer
         // safe because the only thing we care about is the tarball url
-        mutable.reset();
+        mutable.ptr.reset();
 
         // ensure very stable memory address
         const parsed_tarball_url = URL.parse(tarball_url);
@@ -2163,7 +2167,7 @@ pub const Example = struct {
             parsed_tarball_url,
             .{},
             "",
-            mutable,
+            mutable.ptr,
             "",
             http_proxy,
             null,
@@ -2187,7 +2191,7 @@ pub const Example = struct {
 
         refresher.refresh();
 
-        return mutable.*;
+        return mutable.ptr.*;
     }
 
     pub fn fetchAll(ctx: Command.Context, env_loader: *DotEnv.Loader, progress_node: ?*Progress.Node) ![]Example {
@@ -2195,9 +2199,9 @@ pub const Example = struct {
 
         const http_proxy: ?URL = env_loader.getHttpProxyFor(url);
 
-        var async_http: *HTTP.AsyncHTTP = zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable;
+        var async_http: *HTTP.AsyncHTTP = (zust.Box(HTTP.AsyncHTTP).init(ctx.allocator, undefined) catch unreachable).ptr;
         const mutable = try zust.Box(MutableString).init(ctx.allocator, undefined);
-        mutable.* = try MutableString.init(ctx.allocator, 2048);
+        mutable.ptr.* = try MutableString.init(ctx.allocator, 2048);
 
         async_http.* = HTTP.AsyncHTTP.initSync(
             ctx.allocator,
@@ -2205,7 +2209,7 @@ pub const Example = struct {
             url,
             .{},
             "",
-            mutable,
+            mutable.ptr,
             "",
             http_proxy,
             null,
@@ -2231,12 +2235,12 @@ pub const Example = struct {
         };
 
         if (response.status_code != 200) {
-            Output.prettyErrorln("<r><red>{d}<r> fetching examples :( {s}", .{ response.status_code, mutable.list.items });
+            Output.prettyErrorln("<r><red>{d}<r> fetching examples :( {s}", .{ response.status_code, mutable.ptr.list.items });
             Global.exit(1);
         }
 
         initializeStore();
-        const source = &logger.Source.initPathString("examples.json", mutable.list.items);
+        const source = &logger.Source.initPathString("examples.json", mutable.ptr.list.items);
         const examples_object = JSON.parseUTF8(source, ctx.log, ctx.allocator) catch |err| {
             if (ctx.log.errors > 0) {
                 try ctx.log.print(Output.errorWriter());
@@ -2282,9 +2286,9 @@ pub const CreateListExamplesCommand = struct {
         const filesystem = try fs.FileSystem.init(null);
         var env_loader: DotEnv.Loader = brk: {
             const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
-            map.* = DotEnv.Map.init(ctx.allocator);
+            map.ptr.* = DotEnv.Map.init(ctx.allocator);
 
-            break :brk DotEnv.Loader.init(map, ctx.allocator);
+            break :brk DotEnv.Loader.init(map.ptr, ctx.allocator);
         };
 
         try env_loader.loadProcess();
@@ -2371,7 +2375,7 @@ const GitHandler = struct {
         PATH: string,
         comptime verbose: bool,
     ) !bool {
-        const git_start = std.time.nanoTimestamp();
+        const git_start = @import("std-fs-compat").nanoTimestamp();
 
         // Not sure why...
         // But using libgit for this operation is slower than the CLI!
@@ -2407,18 +2411,29 @@ const GitHandler = struct {
 
             inline for (comptime std.meta.fieldNames(@TypeOf(Commands))) |command_field| {
                 const command: []const string = @field(git_commands, command_field);
-                var process = std.process.Child.init(command, default_allocator);
-                process.cwd = destination;
-                process.stdin_behavior = .Inherit;
-                process.stdout_behavior = .Inherit;
-                process.stderr_behavior = .Inherit;
+                const Child = struct {
+                    argv: []const []const u8,
+                    cwd: ?[]const u8 = null,
+                    stdin_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    stdout_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    stderr_behavior: enum { Inherit, Ignore, Pipe } = .Inherit,
+                    pub fn spawnAndWait(self: @This()) !void {
+                        _ = self;
+                        return error.Unimplemented;
+                    }
+                    pub fn kill(self: @This()) !void {
+                        _ = self;
+                        return error.Unimplemented;
+                    }
+                };
+                var process = Child{ .argv = command, .cwd = destination };
 
                 _ = try process.spawnAndWait();
                 _ = process.kill() catch {};
             }
 
             Output.prettyError("\n", .{});
-            Output.printStartEnd(git_start, std.time.nanoTimestamp());
+            Output.printStartEnd(git_start, @import("std-fs-compat").nanoTimestamp());
             Output.prettyError(" <d>git<r>\n", .{});
             return true;
         }

@@ -644,7 +644,7 @@ pub const RunCommand = struct {
     pub fn createFakeTemporaryNodeExecutable(
         PATH: *std.array_list.Managed(u8),
         optional_bun_path: *string,
-    ) (OOM || std.fs.SelfExePathError)!void {
+    ) anyerror!void {
         // If we are already running as "node", the path should exist
         if (CLI.pretend_to_be_node) return;
 
@@ -658,7 +658,7 @@ pub const RunCommand = struct {
                 argv0 = bun.argv[0];
             } else if (optional_bun_path.len == 0) {
                 // otherwise, ask the OS for the absolute path
-                const self = try bun.selfExePath();
+                const self = bun.selfExePath() catch |err| return err;
                 if (self.len > 0) {
                     argv0 = self.ptr;
                     optional_bun_path.* = self;
@@ -670,7 +670,7 @@ pub const RunCommand = struct {
             }
 
             if (Environment.isDebug) {
-                std.fs.deleteTreeAbsolute(bun_node_dir) catch {};
+                _ = bun.sys.unlink(bun_node_dir);
             }
             const paths = .{ bun_node_dir ++ "/node", bun_node_dir ++ "/bun" };
             inline for (paths) |path| {
@@ -679,12 +679,12 @@ var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
     if (__loop_limit_1 > 1_000_000) break;
                     inner: {
-                        std.posix.symlinkZ(argv0, path) catch |err| {
+                        bun.sys.symlinkat(std.mem.sliceTo(argv0, 0), bun.FD.cwd(), std.mem.sliceTo(path, 0)).unwrap() catch |err| {
                             if (err == error.PathAlreadyExists) break :inner;
                             if (retried)
                                 return;
 
-                            std.fs.makeDirAbsoluteZ(bun_node_dir) catch {};
+                            bun.sys.mkdir(bun_node_dir, 0o755).unwrap() catch {};
 
                             retried = true;
                             continue;
@@ -729,7 +729,7 @@ while (true) : (__loop_limit_1 += 1) {
             if (Environment.isDebug) {
                 const dir_slice_u8 = std.unicode.utf16LeToUtf8Alloc(bun.default_allocator, dir_slice) catch @panic("oom");
                 defer bun.default_allocator.free(dir_slice_u8);
-                std.fs.deleteTreeAbsolute(dir_slice_u8) catch {};
+                @import("std-fs-compat").FsDir.deleteTreeAbsolute(dir_slice_u8) catch {};
                 std.fs.makeDirAbsolute(dir_slice_u8) catch @panic("huh?");
             }
 
@@ -1304,7 +1304,7 @@ while (true) : (__loop_limit_1 += 1) {
         // HTTP worker or allocate any Download structs.
         var seen = bun.StringHashMapUnmanaged(void){};
         defer seen.deinit(allocator);
-        var remote_urls = std.ArrayListUnmanaged([]const u8){};
+        var remote_urls = std.ArrayListUnmanaged([]const u8).empty;
         defer remote_urls.deinit(allocator);
         for (collector.urls.items) |u| {
             if (!bun.strings.hasPrefixComptime(u, "http://") and
@@ -1320,7 +1320,7 @@ while (true) : (__loop_limit_1 += 1) {
 
         // Heap-allocate each Download so AsyncHTTP.task has a stable
         // address (see RemoteImageDownload doc comment).
-        var downloads = std.ArrayListUnmanaged(*RemoteImageDownload){};
+        var downloads = std.ArrayListUnmanaged(*RemoteImageDownload).empty;
         defer {
             for (downloads.items) |d| {
                 d.response_buffer.deinit();
@@ -1725,13 +1725,15 @@ while (true) : (__loop_limit_1 += 1) {
             var list = std.Io.Writer.Allocating.init(stack_fallback.get());
             errdefer list.deinit();
 
-            var file_reader = std.fs.File.stdin().readerStreaming(&.{});
+            var file_reader = @import("std-fs-compat").File.stdin().readerStreaming(&.{});
             _ = file_reader.interface.streamRemaining(&list.writer) catch return false;
             ctx.runtime_options.eval.script = list.written();
 
             const trigger = bun.pathLiteral("/[stdin]");
             var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
-            const cwd = try std.posix.getcwd(&entry_point_buf);
+            var cwd_buf: bun.PathBuffer = undefined;
+            const cwd = try bun.sys.getcwd(&cwd_buf).unwrap();
+            @memcpy(entry_point_buf[0..cwd.len], cwd);
             @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
             const entry_path = entry_point_buf[0 .. cwd.len + trigger.len];
 
@@ -1955,7 +1957,9 @@ while (true) : (__loop_limit_1 += 1) {
         if (ctx.runtime_options.eval.script.len > 0) {
             const trigger = bun.pathLiteral("/[eval]");
             var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
-            const cwd = try std.posix.getcwd(&entry_point_buf);
+            var eval_buf: bun.PathBuffer = undefined;
+            const cwd = try bun.sys.getcwd(&eval_buf).unwrap();
+            @memcpy(entry_point_buf[0..cwd.len], cwd);
             @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
             try Run.boot(ctx, entry_point_buf[0 .. cwd.len + trigger.len], null);
             return;
@@ -1998,7 +2002,9 @@ while (true) : (__loop_limit_1 += 1) {
     fn @"bun feedback"(ctx: Command.Context) !noreturn {
         const trigger = bun.pathLiteral("/[eval]");
         var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
-        const cwd = try std.posix.getcwd(&entry_point_buf);
+        var path_buf3: bun.PathBuffer = undefined;
+        const cwd = try bun.sys.getcwd(&path_buf3).unwrap();
+        @memcpy(entry_point_buf[0..cwd.len], cwd);
         @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
         ctx.runtime_options.eval.script = if (bun.Environment.codegen_embed)
             @embedFile("eval/feedback.ts")

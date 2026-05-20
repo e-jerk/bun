@@ -513,7 +513,8 @@ pub const Bunfig = struct {
             if (comptime cmd.isNPMRelated() or cmd == .RunCommand or cmd == .AutoCommand or cmd == .TestCommand) {
                 if (json.getObject("install")) |install_obj| {
                     var install: *api.BunInstall = this.ctx.install orelse brk: {
-                        const install = try zust.Box(api.BunInstall).init(this.allocator, undefined);
+                        const install_box = try zust.Box(api.BunInstall).init(this.allocator, undefined);
+                        const install = install_box.ptr;
                         install.* = std.mem.zeroes(api.BunInstall);
                         this.ctx.install = install;
                         break :brk install;

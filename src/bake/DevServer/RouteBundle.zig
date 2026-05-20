@@ -124,7 +124,9 @@ pub fn invalidateClientBundle(rb: *RouteBundle, dev: *DevServer) void {
         bundle.deref();
         rb.client_bundle = null;
     }
-    rb.client_script_generation = std.crypto.random.int(u32);
+    var gen_buf: [4]u8 = undefined;
+    std.c.arc4random_buf(&gen_buf, 4);
+    rb.client_script_generation = std.mem.readInt(u32, &gen_buf, .little);
     switch (rb.data) {
         .framework => |*fw| fw.cached_client_bundle_url.clearWithoutDeallocation(),
         .html => |*html| if (html.cached_response) |cached_response| {

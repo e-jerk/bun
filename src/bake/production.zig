@@ -316,7 +316,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
             .framework = framework.*,
             .client_transpiler = &client_transpiler,
             .ssr_transpiler = if (separate_ssr_graph) &ssr_transpiler else &server_transpiler,
-            .plugins = options.bundler_options.plugin,
+            .plugins = @ptrCast(options.bundler_options.plugin),
         },
         allocator,
         .{ .js = vm.event_loop },
@@ -331,8 +331,12 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     Output.prettyErrorln("Rendering routes", .{});
     Output.flush();
 
-    var root_dir = try std.c.AT.FDCWD.makeOpenPath("dist", .{});
-    defer root_dir.close();
+    var root_dir_fd = switch (bun.sys.openA("dist", bun.O.RDWR | bun.O.DIRECTORY | bun.O.CREAT, 0o755)) {
+        .result => |fd| fd,
+        .err => |err| return err.toZigErr(),
+    };
+    defer root_dir_fd.close();
+    const root_dir = @import("std-fs-compat").FsDir{ .fd = root_dir_fd.value.as_system };
 
     var maybe_runtime_file_index: ?u32 = null;
 

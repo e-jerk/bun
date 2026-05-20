@@ -290,7 +290,7 @@ pub const JSBundleCompletionTask = struct {
 
         if (Environment.isPosix and !(dirname.len == 0 or strings.eqlComptime(dirname, "."))) {
             // On POSIX, makeOpenPath and change root_dir
-            root_dir = root_dir.makeOpenPath(dirname, .{}) catch |err| {
+            bun.makePath(root_dir, dirname) catch |err| {
                 return bun.StandaloneModuleGraph.CompileResult.failFmt("Failed to open output directory {s}: {s}", .{ dirname, @errorName(err) });
             };
         } else if (Environment.isWindows and !(dirname.len == 0 or strings.eqlComptime(dirname, "."))) {
@@ -307,7 +307,7 @@ pub const JSBundleCompletionTask = struct {
             &compile_options.compile_target,
             bun.default_allocator,
             output_files.items,
-            root_dir,
+            @import("std-fs-compat").FsDir{ .fd = root_dir.fd },
             module_prefix,
             outfile_for_executable,
             this.env,

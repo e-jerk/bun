@@ -243,7 +243,7 @@ pub fn addressToString(address: *const @import("std-net-shim").Address) bun.OOM!
     switch (address.any.family) {
         std.posix.AF.INET => {
             var self = address.in;
-            const bytes = @as(*const [4]u8, @ptrCast(&self.sa.addr));
+            const bytes = @as(*const [4]u8, @ptrCast(&self.addr));
             return String.createFormat("{}.{}.{}.{}", .{
                 bytes[0],
                 bytes[1],
@@ -259,7 +259,7 @@ pub fn addressToString(address: *const @import("std-net-shim").Address) bun.OOM!
             // TODO: this is a hack, fix it
             // This removes [.*]:port
             //              ^  ^^^^^^
-            return String.cloneLatin1(out[1 .. out.len - 1 - std.fmt.count("{d}", .{address.in6.getPort()}) - 1]);
+            return String.cloneLatin1(out[1 .. out.len - 1 - std.fmt.count("{d}", .{std.mem.bigToNative(u16, address.in6.port)}) - 1]);
         },
         std.posix.AF.UNIX => {
             if (comptime @import("std-net-shim").has_unix_sockets) {

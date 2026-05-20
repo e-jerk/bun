@@ -19,7 +19,7 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
     this.packages = try this.packages.clone(z_allocator);
     old_packages_list.deinit(this.allocator);
 
-    var writer = bytes.writer();
+    var writer = @import("std-io-compat").writer(bytes);
     try writer.writeAll(header_bytes);
     try writer.writeInt(u32, @intFromEnum(this.format), .little);
 

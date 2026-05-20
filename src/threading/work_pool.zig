@@ -38,17 +38,17 @@ pub const WorkPool = struct {
             pub fn callback(task: *Task) void {
                 var this_task: *@This() = @fieldParentPtr("task", task);
                 function(this_task.context);
-                this_task._ = this_task.deinit();
+                this_task.allocator.destroy(this_task);
             }
         };
 
-        var task_ = try try zust.Box(TaskType).init(allocator, undefined);
-        task_.* = .{
+        var task_ = try zust.Box(TaskType).init(allocator, undefined);
+        task_.ptr.* = .{
             .task = .{ .callback = TaskType.callback },
             .context = context,
             .allocator = allocator,
         };
-        schedule(&task_.task);
+        schedule(&task_.ptr.task);
     }
 };
 

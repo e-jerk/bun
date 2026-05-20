@@ -1,5 +1,7 @@
 //! Private utilities used in smart pointer implementations.
 
+const std = @import("std");
+
 pub const PointerInfo = struct {
     const Self = @This();
 
@@ -65,7 +67,8 @@ pub const PointerInfo = struct {
         if (pointer_info.is_volatile) {
             @compileError("volatile pointers not supported");
         }
-        if (pointer_info.alignment != @alignOf(Child)) {
+        const expected_alignment = @alignOf(Child);
+        if (pointer_info.alignment != expected_alignment) {
             @compileError("non-default alignment not supported");
         }
         if (pointer_info.is_allowzero) {
@@ -88,14 +91,18 @@ pub fn AddConst(Pointer: type) type {
     switch (type_info) {
         .pointer => |*ptr| {
             ptr.is_const = true;
-            const sentinel = if (ptr.sentinel_ptr) |sp| @as(*align(1) const ptr.child, @ptrCast(sp)).* else null;
-            return @Pointer(ptr.size, .{
-                .@"const" = ptr.is_const,
-                .@"volatile" = ptr.is_volatile,
-                .@"align" = ptr.alignment,
-                .@"addrspace" = ptr.address_space,
-                .@"allowzero" = ptr.is_allowzero,
-            }, ptr.child, sentinel);
+            return @Type(.{
+                .pointer = .{
+                    .size = ptr.size,
+                    .is_const = ptr.is_const,
+                    .is_volatile = ptr.is_volatile,
+                    .alignment = ptr.alignment,
+                    .address_space = ptr.address_space,
+                    .child = ptr.child,
+                    .is_allowzero = ptr.is_allowzero,
+                    .sentinel_ptr = ptr.sentinel_ptr,
+                },
+            });
         },
         .optional => |*opt| {
             return ?AddConst(opt.child);

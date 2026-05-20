@@ -47,15 +47,11 @@ fn alert(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSErr
     bun.Output.flush();
 
     // 7. Optionally, pause while waiting for the user to acknowledge the message.
-    var stdin = std.fs.File.stdin();
     var stdin_buf: [1]u8 = undefined;
-    var stdin_reader = stdin.readerStreaming(&stdin_buf);
-    const reader = &stdin_reader.interface;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
-        const byte = reader.takeByte() catch break;
-        if (byte == '\n') break;
+    while (true) {
+        const n = std.c.read(0, &stdin_buf, 1);
+        if (n <= 0) break;
+        if (stdin_buf[0] == '\n') break;
     }
 
     // 8. Invoke WebDriver BiDi user prompt closed with this and true.
@@ -99,13 +95,12 @@ fn confirm(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
     bun.Output.flush();
 
     // 6. Pause until the user responds either positively or negatively.
-    var stdin = std.fs.File.stdin();
-    var stdin_buf: [1024]u8 = undefined;
-    var stdin_reader = stdin.readerStreaming(&stdin_buf);
-    const reader = &stdin_reader.interface;
+    var stdin_buf: [1]u8 = undefined;
 
-    const first_byte = reader.takeByte() catch {
-        return .false;
+    const first_byte = blk: {
+        const n = std.c.read(0, &stdin_buf, 1);
+        if (n <= 0) return .false;
+        break :blk stdin_buf[0];
     };
 
     // 7. Invoke WebDriver BiDi user prompt closed with this, and true if
@@ -115,19 +110,17 @@ fn confirm(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
     switch (first_byte) {
         '\n' => return .false,
         '\r' => {
-            const next_byte = reader.takeByte() catch {
-                // They may have said yes, but the stdin is invalid.
-                return .false;
-            };
-            if (next_byte == '\n') {
+            const n = std.c.read(0, &stdin_buf, 1);
+            if (n <= 0) return .false;
+            if (stdin_buf[0] == '\n') {
                 return .false;
             }
         },
         'y', 'Y' => {
-            const next_byte = reader.takeByte() catch {
-                // They may have said yes, but the stdin is invalid.
-
-                return .false;
+            const next_byte = blk: {
+                const n = std.c.read(0, &stdin_buf, 1);
+                if (n <= 0) return .false;
+                break :blk stdin_buf[0];
             };
 
             if (next_byte == '\n') {
@@ -136,10 +129,9 @@ fn confirm(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
                 return .true;
             } else if (next_byte == '\r') {
                 //Check Windows style
-                const second_byte = reader.takeByte() catch {
-                    return .false;
-                };
-                if (second_byte == '\n') {
+                const n = std.c.read(0, &stdin_buf, 1);
+                if (n <= 0) return .false;
+                if (stdin_buf[0] == '\n') {
                     return .true;
                 }
             }
@@ -147,9 +139,12 @@ fn confirm(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
         else => {},
     }
 
-    while (reader.takeByte()) |b| {
-        if (b == '\n' or b == '\r') break;
-    } else |_| {}
+    var discard_buf: [1]u8 = undefined;
+    while (true) {
+        const n = std.c.read(0, &discard_buf, 1);
+        if (n <= 0) break;
+        if (discard_buf[0] == '\n' or discard_buf[0] == '\r') break;
+    }
 
     // 8. If the user responded positively, return true; otherwise, the user
     //    responded negatively: return false.

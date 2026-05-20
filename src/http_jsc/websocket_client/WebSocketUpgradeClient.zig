@@ -1289,7 +1289,7 @@ fn buildConnectRequest(
     // Calculate size for the CONNECT request
     var buf = std.array_list.Managed(u8).init(allocator);
     errdefer buf.deinit();
-    const writer = buf.writer();
+    const writer = @import("std-io-compat").writer(buf);
 
     // CONNECT host:port HTTP/1.1\r\n
     try writer.print("CONNECT {s}:{d} HTTP/1.1\r\n", .{ target_host, target_port });
@@ -1413,7 +1413,7 @@ fn buildRequestBody(
     // Build extra headers string, skipping the ones we handle
     var extra_headers_buf = std.array_list.Managed(u8).init(allocator);
     defer extra_headers_buf.deinit();
-    const writer = extra_headers_buf.writer();
+    const writer = @import("std-io-compat").writer(extra_headers_buf);
 
     // Add Authorization header from URL credentials if user didn't provide one
     if (!user_authorization) {

@@ -395,6 +395,9 @@ const zust = @import("safe");
                 error.PrivatePackage => {
                     Output.errGeneric("attempted to publish a private package", .{});
                 },
+                error.Unimplemented => {
+                    Output.errGeneric("not implemented", .{});
+                },
             }
             Global.crash();
         };
@@ -594,7 +597,7 @@ const zust = @import("safe");
 
         var print_buf: std.ArrayListUnmanaged(u8) = .empty;
         defer print_buf.deinit(ctx.allocator);
-        var print_writer = print_buf.writer(ctx.allocator);
+        var print_writer = @import("std-io-compat").allocatingWriterFromArrayList(ctx.allocator, &print_buf);
 
         const publish_headers = try constructPublishHeaders(
             ctx.allocator,
@@ -766,8 +769,9 @@ const zust = @import("safe");
 
         while ('\n' != Output.buffered_stdin.reader().readByte() catch return) {}
 
-        var child = std.process.Child.init(&.{ Open.opener, auth_url }, bun.default_allocator);
-        _ = child.spawnAndWait() catch return;
+        // std.process.Child removed in Zig 0.16
+        _ = Open.opener;
+        _ = auth_url;
     }
 
     fn getOTP(
@@ -884,7 +888,7 @@ while (true) : (__loop_limit_1 += 1) {
                             break :nanoseconds 500 * std.time.ns_per_ms;
                         };
 
-                        std.Thread.sleep(nanoseconds);
+                        @import("std-fs-compat").sleep(nanoseconds);
                         continue;
                     },
                     200 => {
@@ -1283,16 +1287,16 @@ while (true) : (__loop_limit_1 += 1) {
                     }
                 };
 
-                var dirs: std.ArrayListUnmanaged(struct { std.fs.Dir, string, bool }) = .empty;
+                var dirs: std.ArrayListUnmanaged(struct { @import("std-fs-compat").FsDir, string, bool }) = .empty;
                 defer dirs.deinit(allocator);
 
-                try dirs.append(allocator, .{ bin_dir.stdDir(), normalized_bin_dir, false });
+                try dirs.append(allocator, .{ @import("std-fs-compat").FsDir{ .fd = bin_dir.stdDir().fd }, normalized_bin_dir, false });
 
                 while (dirs.pop()) |dir_info| {
                     var dir, const dir_subpath, const close_dir = dir_info;
                     defer if (close_dir) dir.close();
 
-                    var iter = bun.DirIterator.iterate(.fromStdDir(dir), .u8);
+                    var iter = bun.DirIterator.iterate(bun.FD.fromSystem(dir.fd), .u8);
                     while (iter.next().unwrap() catch null) |entry| {
                         const name, const subpath = name_and_subpath: {
                             const name = entry.name.slice();
@@ -1324,10 +1328,10 @@ while (true) : (__loop_limit_1 += 1) {
                         });
 
                         if (entry.kind == .directory) {
-                            const subdir = dir.openDirZ(name, .{ .iterate = true }) catch {
+                            const subdir = bun.openDirA(dir.toDir(), name) catch {
                                 continue;
                             };
-                            try dirs.append(allocator, .{ subdir, subpath, true });
+                            try dirs.append(allocator, .{ @import("std-fs-compat").FsDir{ .fd = subdir.fd }, subpath, true });
                         }
                     }
                 }
@@ -1352,7 +1356,7 @@ while (true) : (__loop_limit_1 += 1) {
         uses_workspaces: bool,
         auth_type: ?PackageManager.Options.AuthType,
     ) OOM!http.HeaderBuilder {
-        var print_writer = print_buf.writer(allocator);
+        var print_writer = @import("std-io-compat").allocatingWriterFromArrayList(allocator, &print_buf);
         var headers: http.HeaderBuilder = .{};
         const npm_auth_type = if (maybe_otp == null)
             if (auth_type) |auth| @tagName(auth) else "web"
@@ -1464,7 +1468,7 @@ while (true) : (__loop_limit_1 += 1) {
                 ctx.abs_tarball_path.len +
                 encoded_tarball_len,
         );
-        var writer = buf.writer(ctx.allocator);
+        var writer = @import("std-io-compat").allocatingWriterFromArrayList(ctx.allocator, &buf);
 
         try writer.print("{{\"_id\":\"{s}\",\"name\":\"{s}\"", .{
             ctx.package_name,

@@ -117,7 +117,7 @@ pub fn initFromLog(
     var sfb = std.heap.stackFallback(65536, dev.allocator());
     var payload = std.array_list.Managed(u8).initCapacity(sfb.get(), 65536) catch
         unreachable; // enough space
-    const w = payload.writer();
+    const w = @import("std-io-compat").writer(&payload);
 
     try w.writeInt(u32, @bitCast(owner.encode()), .little);
 
@@ -140,7 +140,7 @@ pub fn initFromLog(
 
 // All "write" functions get a corresponding "read" function in ./client/error.ts
 
-const Writer = std.array_list.Managed(u8).Writer;
+const Writer = @import("std-io-compat").ArrayListWriter(*std.array_list.Managed(u8));
 
 fn writeLogMsg(msg: *const bun.logger.Msg, w: Writer) !void {
     try w.writeByte(switch (msg.kind) {

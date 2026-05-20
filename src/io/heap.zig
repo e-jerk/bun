@@ -195,6 +195,7 @@ pub fn Intrusive(
                     b = self.meld(a, b);
                     a = b.heap.next orelse break :root b;
                 }
+                break :root a;
             };
 
             // Merge pairs left
@@ -204,6 +205,7 @@ pub fn Intrusive(
                 b.heap.next = null;
                 root = self.meld(b, root);
             }
+            return root;
         }
     };
 }

@@ -355,40 +355,38 @@ pub const Repository = extern struct {
         _env: DotEnv.Map,
         argv: []const string,
     ) !string {
-        var env = _env;
-        var std_map = try env.stdEnvMap(allocator);
+        _ = _env;
+        const spawn_result = bun.spawnSync(&.{
+            .argv = argv,
+            .stdout = .buffer,
+            .stderr = .buffer,
+            .stdin = .ignore,
+            .envp = null,
+        }) catch return error.InstallFailed;
 
-        defer std_map.deinit();
-
-        const result = if (comptime Environment.isWindows)
-            try std.process.Child.run(.{
-                .allocator = allocator,
-                .argv = argv,
-                .env_map = std_map.get(),
-            })
-        else
-            try std.process.Child.run(.{
-                .allocator = allocator,
-                .argv = argv,
-                .env_map = std_map.get(),
-            });
-
-        switch (result.term) {
-            .Exited => |sig| if (sig == 0) return result.stdout else if (
-            // remote: The page could not be found <-- for non git
-            // remote: Repository not found. <-- for git
-            // remote: fatal repository '<url>' does not exist <-- for git
-            (strings.containsComptime(result.stderr, "remote:") and
-                strings.containsComptime(result.stderr, "not") and
-                strings.containsComptime(result.stderr, "found")) or
-                strings.containsComptime(result.stderr, "does not exist"))
-            {
-                return error.RepositoryNotFound;
+        switch (spawn_result) {
+            .err => return error.InstallFailed,
+            .result => |result| {
+                defer result.deinit();
+                switch (result.status) {
+                    .exited => |exit| if (exit.code == 0) {
+                        return try allocator.dupe(u8, result.stdout.items);
+                    } else if (
+                    // remote: The page could not be found <-- for non git
+                    // remote: Repository not found. <-- for git
+                    // remote: fatal repository '<url>' does not exist <-- for git
+                    (strings.containsComptime(result.stderr.items, "remote:") and
+                        strings.containsComptime(result.stderr.items, "not") and
+                        strings.containsComptime(result.stderr.items, "found")) or
+                        strings.containsComptime(result.stderr.items, "does not exist"))
+                    {
+                        return error.RepositoryNotFound;
+                    },
+                    else => {},
+                }
+                return error.InstallFailed;
             },
-            else => {},
         }
-
-        return error.InstallFailed;
     }
 
     pub fn trySSH(url: string) ?string {
@@ -497,18 +495,18 @@ pub const Repository = extern struct {
         allocator: std.mem.Allocator,
         env: DotEnv.Map,
         log: *logger.Log,
-        cache_dir: std.fs.Dir,
+        cache_dir: @import("std-fs-compat").FsDir,
         task_id: Install.Task.Id,
         name: string,
         url: string,
         attempt: u8,
-    ) !std.fs.Dir {
+    ) !@import("std-fs-compat").FsDir {
         bun.analytics.Features.git_dependencies += 1;
         const folder_name = try std.fmt.bufPrintZ(&tl_bufs.get().folder_name_buf, "{f}.git", .{
             bun.fmt.hexIntLower(task_id.get()),
         });
 
-        return if (cache_dir.openDirZ(folder_name, .{})) |dir| fetch: {
+        return if (cache_dir.openDir(folder_name, .{})) |dir| fetch: {
             const path = Path.joinAbsString(PackageManager.get().cache_directory_path, &.{folder_name}, .auto);
 
             _ = exec(
@@ -553,7 +551,7 @@ pub const Repository = extern struct {
                 return err;
             };
 
-            break :clone try cache_dir.openDirZ(folder_name, .{});
+            break :clone try cache_dir.openDir(folder_name, .{});
         };
     }
 
@@ -561,7 +559,7 @@ pub const Repository = extern struct {
         allocator: std.mem.Allocator,
         env: *DotEnv.Loader,
         log: *logger.Log,
-        repo_dir: std.fs.Dir,
+        repo_dir: @import("std-fs-compat").Dir,
         name: string,
         committish: string,
         task_id: Install.Task.Id,
@@ -595,8 +593,8 @@ pub const Repository = extern struct {
         allocator: std.mem.Allocator,
         env: DotEnv.Map,
         log: *logger.Log,
-        cache_dir: std.fs.Dir,
-        repo_dir: std.fs.Dir,
+        cache_dir: @import("std-fs-compat").FsDir,
+        repo_dir: @import("std-fs-compat").FsDir,
         name: string,
         url: string,
         resolved: string,
@@ -605,7 +603,7 @@ pub const Repository = extern struct {
         const bufs = tl_bufs.get();
         const folder_name = PackageManager.cachedGitFolderNamePrint(&bufs.folder_name_buf, resolved, null);
 
-        var package_dir = bun.openDir(cache_dir, folder_name) catch |not_found| brk: {
+        var package_dir = cache_dir.openDir(folder_name, .{}) catch |not_found| brk: {
             if (not_found != error.ENOENT) return not_found;
 
             const target = Path.joinAbsString(PackageManager.get().cache_directory_path, &.{folder_name}, .auto);
@@ -617,7 +615,7 @@ pub const Repository = extern struct {
                 "core.longpaths=true",
                 "--quiet",
                 "--no-checkout",
-                try bun.getFdPath(.fromStdDir(repo_dir), &bufs.final_path_buf),
+                try bun.getFdPath(.fromStdDir(repo_dir.toDir()), &bufs.final_path_buf),
                 target,
             }) catch |err| {
                 log.addErrorFmt(
@@ -642,7 +640,7 @@ pub const Repository = extern struct {
                 ) catch unreachable;
                 return err;
             };
-            var dir = try bun.openDir(cache_dir, folder_name);
+            var dir = @import("std-fs-compat").FsDir.fromDir(try bun.openDir(cache_dir.toDir(), folder_name));
             dir.deleteTree(".git") catch {};
 
             if (resolved.len > 0) insert_tag: {

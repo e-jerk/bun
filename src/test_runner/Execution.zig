@@ -312,9 +312,10 @@ pub fn stepGroup(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalO
             this.group_index += 1;
         }
     }
+    return .complete;
 }
 const AdvanceStatus = union(enum) { done, execute: struct { timeout: bun.timespec = .epoch } };
-fn stepGroupOne(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, now: *bun.timespec) !AdvanceStatus {
+fn stepGroupOne(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, now: *bun.timespec) bun.JSError!AdvanceStatus {
     const buntest = buntest_strong.get();
     const this = &buntest.execution;
     var final_status: AdvanceStatus = .done;
@@ -346,15 +347,16 @@ const AdvanceSequenceStatus = union(enum) {
         timeout: bun.timespec = .epoch,
     },
 };
-fn stepSequence(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) !AdvanceSequenceStatus {
+fn stepSequence(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) bun.JSError!AdvanceSequenceStatus {
     var __loop_limit_2: usize = 0;
     while (true) : (__loop_limit_2 += 1) {
-        if (__loop_limit_2 > 1_000_000) break;
+        if (__loop_limit_2 > 1_000_000) return error.OutOfMemory;
         return try stepSequenceOne(buntest_strong, globalThis, group, sequence_index, now) orelse continue;
     }
+    return error.OutOfMemory;
 }
 /// returns null if the while loop should continue
-fn stepSequenceOne(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) !?AdvanceSequenceStatus {
+fn stepSequenceOne(buntest_strong: bun_test.BunTestPtr, globalThis: *jsc.JSGlobalObject, group: *ConcurrentGroup, sequence_index: usize, now: *bun.timespec) bun.JSError!?AdvanceSequenceStatus {
     groupLog.begin(@src());
     defer groupLog.end();
     const buntest = buntest_strong.get();

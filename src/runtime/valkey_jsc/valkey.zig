@@ -1161,7 +1161,7 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     /// Get a writer for the connected socket
-    pub fn writer(this: *ValkeyClient) std.Io.GenericWriter(*ValkeyClient, protocol.RedisError, write) {
+    pub fn writer(this: *ValkeyClient) @import("std-io-compat").MakeGenericWriter(*ValkeyClient, protocol.RedisError, write) {
         return .{ .context = this };
     }
 

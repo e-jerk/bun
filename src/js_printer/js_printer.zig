@@ -1247,7 +1247,7 @@ fn NewPrinter(
                     {
                         // Reset the temporary bindings array early on
                         var temp_bindings = p.temporary_bindings;
-                        p.temporary_bindings = .{};
+                        p.temporary_bindings = .empty;
                         defer {
                             if (p.temporary_bindings.capacity > 0) {
                                 temp_bindings.deinit(bun.default_allocator);
@@ -5634,7 +5634,7 @@ pub fn NewWriter(
             };
         }
 
-        pub fn stdWriter(self: *Self) std.Io.GenericWriter(*Self, error{}, stdWriterWrite) {
+        pub fn stdWriter(self: *Self) @import("std-io-compat").MakeGenericWriter(*Self, error{}, stdWriterWrite) {
             return .{ .context = self };
         }
         pub fn stdWriterWrite(self: *Self, bytes: []const u8) error{}!usize {
@@ -6101,7 +6101,10 @@ pub fn printAst(
     if (opts.runtime_transpiler_cache) |cache| {
         var srlz_res = std.array_list.Managed(u8).init(bun.default_allocator);
         defer srlz_res.deinit();
-        if (have_module_info) try opts.module_info.?.asDeserialized().serialize(srlz_res.writer());
+        if (have_module_info) {
+            const w = @import("std-io-compat").arrayListWriter(&srlz_res);
+            try opts.module_info.?.asDeserialized().serialize(w);
+        }
         cache.put(printer.writer.ctx.getWritten(), if (source_maps_chunk) |chunk| chunk.buffer.list.items else "", srlz_res.items);
     }
 
@@ -6374,7 +6377,8 @@ pub fn serializeModuleInfo(module_info: ?*analyze_transpiled_module.ModuleInfo) 
     const deserialized = mi.asDeserialized();
     var buf: std.ArrayList(u8) = .empty;
     defer buf.deinit(bun.default_allocator);
-    deserialized.serialize(buf.writer(bun.default_allocator)) catch return null;
+    const w = @import("std-io-compat").writer(&buf);
+    deserialized.serialize(w) catch return null;
     return buf.toOwnedSlice(bun.default_allocator) catch null;
 }
 

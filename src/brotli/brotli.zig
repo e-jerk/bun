@@ -246,7 +246,7 @@ pub const BrotliCompressionStream = struct {
 
             const Self = @This();
             pub const WriteError = error{BrotliCompressionError} || InputWriter.Error;
-            pub const Writer = std.Io.GenericWriter(@This(), WriteError, Self.write);
+            pub const Writer = @import("std-io-compat").MakeGenericWriter(@This(), WriteError, Self.write);
 
             pub fn init(compressor: *BrotliCompressionStream, input_writer: InputWriter) Self {
                 return Self{

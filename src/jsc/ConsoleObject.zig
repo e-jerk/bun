@@ -243,7 +243,7 @@ fn messageWithTypeAndLevel_(
         writer.writeAll("undefined\n") catch {};
 
     if (message_type == .Trace) {
-        writeTrace(Writer, writer, global);
+        try writeTrace(Writer, writer, global);
         writer.flush() catch {};
     }
 }
@@ -310,7 +310,7 @@ pub const TablePrinter = struct {
 
         pub const WriteError = error{};
 
-        pub const Writer = std.Io.GenericWriter(
+        pub const Writer = @import("std-io-compat").MakeGenericWriter(
             VisibleCharacterCounter,
             VisibleCharacterCounter.WriteError,
             VisibleCharacterCounter.write,
@@ -670,7 +670,7 @@ pub const TablePrinter = struct {
     }
 };
 
-pub fn writeTrace(comptime Writer: type, writer: Writer, global: *JSGlobalObject) void {
+pub fn writeTrace(comptime Writer: type, writer: Writer, global: *JSGlobalObject) bun.JSError!void {
     var holder = ZigException.Holder.init();
     var vm = VirtualMachine.get();
     defer holder.deinit(vm);
@@ -680,8 +680,8 @@ pub fn writeTrace(comptime Writer: type, writer: Writer, global: *JSGlobalObject
     defer if (source_code_slice) |slice| slice.deinit();
 
     var err = ZigString.init("trace output").toErrorInstance(global);
-    err.toZigException(global, exception);
-    vm.remapZigException(
+    try err.toZigException(global, exception);
+    try vm.remapZigException(
         exception,
         err,
         null,
@@ -3619,7 +3619,7 @@ pub fn countReset(
     entry.value_ptr.* = 0;
 }
 
-const PendingTimers = std.AutoHashMap(u64, ?std.time.Timer);
+const PendingTimers = std.AutoHashMap(u64, ?@import("std-fs-compat").Timer);
 threadlocal var pending_time_logs: PendingTimers = undefined;
 threadlocal var pending_time_logs_loaded = false;
 
@@ -3640,7 +3640,7 @@ pub fn time(
     const result = pending_time_logs.getOrPut(id) catch unreachable;
 
     if (!result.found_existing or (result.found_existing and result.value_ptr.* == null)) {
-        result.value_ptr.* = std.time.Timer.start() catch unreachable;
+        result.value_ptr.* = @import("std-fs-compat").Timer.start() catch unreachable;
     }
 }
 pub fn timeEnd(
@@ -3657,7 +3657,7 @@ pub fn timeEnd(
 
     const id = bun.hash(chars[0..len]);
     const result = (pending_time_logs.fetchPut(id, null) catch null) orelse return;
-    var value: std.time.Timer = result.value orelse return;
+    var value: @import("std-fs-compat").Timer = result.value orelse return;
     // get the duration in microseconds
     // then display it in milliseconds
     Output.printElapsed(@as(f64, @floatFromInt(value.read() / std.time.ns_per_us)) / std.time.us_per_ms);
@@ -3687,7 +3687,7 @@ pub fn timeLog(
     }
 
     const id = bun.hash(chars[0..len]);
-    var value: std.time.Timer = (pending_time_logs.get(id) orelse return) orelse return;
+    var value: @import("std-fs-compat").Timer = (pending_time_logs.get(id) orelse return) orelse return;
     // get the duration in microseconds
     // then display it in milliseconds
     Output.printElapsed(@as(f64, @floatFromInt(value.read() / std.time.ns_per_us)) / std.time.us_per_ms);

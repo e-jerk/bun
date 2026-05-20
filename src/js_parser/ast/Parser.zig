@@ -301,7 +301,7 @@ pub const Parser = struct {
                         return data.len;
                     }
                 };
-                const writer = std.Io.GenericWriter(fakeWriter, anyerror, fakeWriter.writeAll){
+                const writer = @import("std-io-compat").MakeGenericWriter(fakeWriter, anyerror, fakeWriter.writeAll){
                     .context = fakeWriter{},
                 };
                 var buffered_writer = bun.deprecated.bufferedWriter(writer);

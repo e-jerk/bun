@@ -98,7 +98,7 @@ pub const JunitReporter = struct {
             };
 
             var arraylist_writer = std.array_list.Managed(u8).init(bun.default_allocator);
-            escapeXml(hostname, arraylist_writer.writer()) catch {
+            escapeXml(hostname, @import("std-io-compat").arrayListWriter(&arraylist_writer)) catch {
                 this.hostname_value = "";
                 return null;
             };
@@ -144,7 +144,7 @@ pub const JunitReporter = struct {
 
     pub fn init() *JunitReporter {
         return JunitReporter.new(
-            .{ .contents = .{}, .total_metrics = .{}, .suite_stack = .{} },
+            .{ .contents = .empty, .total_metrics = .{}, .suite_stack = .empty },
         );
     }
 
@@ -230,7 +230,7 @@ pub const JunitReporter = struct {
         }
 
         var buffer = std.array_list.Managed(u8).init(bun.default_allocator);
-        var writer = buffer.writer();
+        var writer = @import("std-io-compat").arrayListWriter(&buffer);
 
         try writer.writeAll(
             \\    <properties>
@@ -283,21 +283,21 @@ pub const JunitReporter = struct {
         const indent = getIndent(this.current_depth);
         try this.contents.appendSlice(bun.default_allocator, indent);
         try this.contents.appendSlice(bun.default_allocator, "<testsuite name=\"");
-        try escapeXml(name, this.contents.writer(bun.default_allocator));
+        try escapeXml(name, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
         try this.contents.appendSlice(bun.default_allocator, "\"");
 
         if (is_file_suite) {
             try this.contents.appendSlice(bun.default_allocator, " file=\"");
-            try escapeXml(name, this.contents.writer(bun.default_allocator));
+            try escapeXml(name, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
             try this.contents.appendSlice(bun.default_allocator, "\"");
         } else if (this.current_file.len > 0) {
             try this.contents.appendSlice(bun.default_allocator, " file=\"");
-            try escapeXml(this.current_file, this.contents.writer(bun.default_allocator));
+            try escapeXml(this.current_file, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
             try this.contents.appendSlice(bun.default_allocator, "\"");
         }
 
         if (line_number > 0) {
-            try this.contents.writer(bun.default_allocator).print(" line=\"{d}\"", .{line_number});
+            try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(" line=\"{d}\"", .{line_number});
         }
 
         try this.contents.appendSlice(bun.default_allocator, " ");
@@ -394,23 +394,23 @@ pub const JunitReporter = struct {
         try this.contents.appendSlice(bun.default_allocator, indent);
         try this.contents.appendSlice(bun.default_allocator, "<testcase");
         try this.contents.appendSlice(bun.default_allocator, " name=\"");
-        try escapeXml(name, this.contents.writer(bun.default_allocator));
+        try escapeXml(name, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
         try this.contents.appendSlice(bun.default_allocator, "\" classname=\"");
-        try escapeXml(class_name, this.contents.writer(bun.default_allocator));
+        try escapeXml(class_name, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
         try this.contents.appendSlice(bun.default_allocator, "\"");
 
         const elapsed_seconds = elapsed_ms / std.time.ms_per_s;
-        try this.contents.writer(bun.default_allocator).print(" time=\"{f}\"", .{bun.fmt.trimmedPrecision(elapsed_seconds, 6)});
+        try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(" time=\"{f}\"", .{bun.fmt.trimmedPrecision(elapsed_seconds, 6)});
 
         try this.contents.appendSlice(bun.default_allocator, " file=\"");
-        try escapeXml(file, this.contents.writer(bun.default_allocator));
+        try escapeXml(file, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
         try this.contents.appendSlice(bun.default_allocator, "\"");
 
         if (line_number > 0) {
-            try this.contents.writer(bun.default_allocator).print(" line=\"{d}\"", .{line_number});
+            try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(" line=\"{d}\"", .{line_number});
         }
 
-        try this.contents.writer(bun.default_allocator).print(" assertions=\"{d}\"", .{assertions});
+        try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(" assertions=\"{d}\"", .{assertions});
 
         switch (status) {
             .pass => {
@@ -423,7 +423,7 @@ pub const JunitReporter = struct {
                 // TODO: add the failure message
                 // if (failure_message) |msg| {
                 //     try this.contents.appendSlice(bun.default_allocator, " message=\"");
-                //     try escapeXml(msg, this.contents.writer(bun.default_allocator));
+                //     try escapeXml(msg, @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents));
                 //     try this.contents.appendSlice(bun.default_allocator, "\"");
                 // }
                 try this.contents.appendSlice(bun.default_allocator, ">\n");
@@ -438,7 +438,7 @@ pub const JunitReporter = struct {
                 }
                 try this.contents.appendSlice(bun.default_allocator, ">\n");
                 try this.contents.appendSlice(bun.default_allocator, indent);
-                try this.contents.writer(bun.default_allocator).print(
+                try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(
                     \\  <failure message="test marked with .failing() did not throw" type="AssertionError"/>
                     \\
                 , .{});
@@ -451,7 +451,7 @@ pub const JunitReporter = struct {
                 }
                 try this.contents.appendSlice(bun.default_allocator, ">\n");
                 try this.contents.appendSlice(bun.default_allocator, indent);
-                try this.contents.writer(bun.default_allocator).print(
+                try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(
                     \\  <failure message="Expected more assertions, but only received {d}" type="AssertionError"/>
                     \\
                 , .{assertions});
@@ -464,7 +464,7 @@ pub const JunitReporter = struct {
                 }
                 try this.contents.appendSlice(bun.default_allocator, ">\n");
                 try this.contents.appendSlice(bun.default_allocator, indent);
-                try this.contents.writer(bun.default_allocator).print(
+                try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(
                     \\  <failure message="TODO passed" type="AssertionError"/>
                     \\
                 , .{});
@@ -477,7 +477,7 @@ pub const JunitReporter = struct {
                 }
                 try this.contents.appendSlice(bun.default_allocator, ">\n");
                 try this.contents.appendSlice(bun.default_allocator, indent);
-                try this.contents.writer(bun.default_allocator).print(
+                try @import("std-io-compat").allocatingWriterFromArrayList(bun.default_allocator, &this.contents).print(
                     \\  <failure message="Expected to have assertions, but none were run" type="AssertionError"/>
                     \\
                 , .{});
@@ -531,7 +531,7 @@ pub const JunitReporter = struct {
             var stack_fallback_allocator = std.heap.stackFallback(4096, arena.allocator());
             const allocator = stack_fallback_allocator.get();
             const metrics = this.total_metrics;
-            const elapsed_time = @as(f64, @floatFromInt(std.time.nanoTimestamp() - bun.start_time)) / std.time.ns_per_s;
+            const elapsed_time = @as(f64, @floatFromInt(@import("std-fs-compat").nanoTimestamp() - bun.start_time)) / std.time.ns_per_s;
             const summary = try std.fmt.allocPrint(allocator,
                 \\tests="{d}" assertions="{d}" failures="{d}" skipped="{d}" time="{d}"
             , .{
@@ -856,7 +856,7 @@ pub const CommandLineReporter = struct {
                                     bun.handleOom(concatenated_describe_scopes.appendSlice(" &gt; "));
                                 }
 
-                                bun.handleOom(escapeXml(name, concatenated_describe_scopes.writer()));
+                                bun.handleOom(escapeXml(name, @import("std-io-compat").arrayListWriter(&concatenated_describe_scopes)));
                             };
                         }
                     }
@@ -879,7 +879,7 @@ pub const CommandLineReporter = struct {
         defer output_buf.deinit(buntest.gpa);
 
         const initial_length = output_buf.items.len;
-        const base_writer = output_buf.writer(buntest.gpa);
+        const base_writer = @import("std-io-compat").allocatingWriterFromArrayList(buntest.gpa, &output_buf);
         var writer = base_writer;
 
         switch (sequence.result) {
@@ -979,7 +979,7 @@ pub const CommandLineReporter = struct {
             if (files == 1) "" else "s",
         });
 
-        Output.printStartEnd(bun.start_time, std.time.nanoTimestamp());
+        Output.printStartEnd(bun.start_time, @import("std-fs-compat").nanoTimestamp());
     }
 
     /// Writes the JUnit reporter output file if a JUnit reporter is active and
@@ -1389,10 +1389,10 @@ pub const TestCommand = struct {
 
         var env_loader = brk: {
             const map = try zust.Box(DotEnv.Map).init(ctx.allocator, undefined);
-            map.* = DotEnv.Map.init(ctx.allocator);
+            map.ptr.* = DotEnv.Map.init(ctx.allocator);
 
             const loader = try zust.Box(DotEnv.Loader).init(ctx.allocator, undefined);
-            loader.* = DotEnv.Loader.init(map, ctx.allocator);
+            loader.ptr.* = DotEnv.Loader.init(map.ptr, ctx.allocator);
             break :brk loader;
         };
         bun.jsc.initialize(false);
@@ -1410,16 +1410,16 @@ pub const TestCommand = struct {
         var snapshot_file_buf = std.array_list.Managed(u8).init(ctx.allocator);
         var snapshot_values = Snapshots.ValuesHashMap.init(ctx.allocator);
         var snapshot_counts = bun.StringHashMap(usize).init(ctx.allocator);
-        var inline_snapshots_to_write = std.array_hash_map.Auto(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator);
+        var inline_snapshots_to_write = bun.handleOom(std.array_hash_map.Auto(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator));
         jsc.VirtualMachine.isBunTest = true;
 
         var reporter = try zust.Box(CommandLineReporter).init(ctx.allocator, undefined);
         defer {
-            if (reporter.reporters.junit) |file_reporter| {
+            if (reporter.ptr.reporters.junit) |file_reporter| {
                 file_reporter.deinit();
             }
         }
-        reporter.* = CommandLineReporter{
+        reporter.ptr.* = CommandLineReporter{
             .jest = TestRunner{
                 .allocator = ctx.allocator,
                 .default_timeout_ms = ctx.test_options.default_timeout_ms,
@@ -1443,20 +1443,20 @@ pub const TestCommand = struct {
                 .bun_test_root = .init(ctx.allocator),
             },
         };
-        reporter.repeat_count = @max(ctx.test_options.repeat_count, 1);
-        jest.Jest.runner = &reporter.jest;
-        reporter.jest.test_options = &ctx.test_options;
+        reporter.ptr.repeat_count = @max(ctx.test_options.repeat_count, 1);
+        jest.Jest.runner = &reporter.ptr.jest;
+        reporter.ptr.jest.test_options = &ctx.test_options;
 
         if (ctx.test_options.reporters.junit) {
-            reporter.reporters.junit = JunitReporter.init();
+            reporter.ptr.reporters.junit = JunitReporter.init();
         }
         if (ctx.test_options.reporters.dots) {
-            reporter.reporters.dots = true;
+            reporter.ptr.reporters.dots = true;
         }
         if (ctx.test_options.reporters.only_failures) {
-            reporter.reporters.only_failures = true;
+            reporter.ptr.reporters.only_failures = true;
         } else if (Output.isAIAgent()) {
-            reporter.reporters.only_failures = true; // only-failures defaults to true for ai agents
+            reporter.ptr.reporters.only_failures = true; // only-failures defaults to true for ai agents
         }
 
         js_ast.Expr.Data.Store.create();
@@ -1466,7 +1466,7 @@ pub const TestCommand = struct {
                 .allocator = ctx.allocator,
                 .args = ctx.args,
                 .log = ctx.log,
-                .env_loader = env_loader,
+                .env_loader = env_loader.ptr,
                 // we must store file descriptors because we reuse them for
                 // iterating through the directory tree recursively
                 //
@@ -1485,11 +1485,11 @@ pub const TestCommand = struct {
         bun.http.experimental_http3_client_from_cli = ctx.runtime_options.experimental_http3_fetch;
         vm.transpiler.options.env.behavior = .load_all_without_inlining;
 
-        const node_env_entry = try env_loader.map.getOrPutWithoutValue("NODE_ENV");
+        const node_env_entry = try env_loader.ptr.map.getOrPutWithoutValue("NODE_ENV");
         if (!node_env_entry.found_existing) {
-            node_env_entry.key_ptr.* = try env_loader.allocator.dupe(u8, node_env_entry.key_ptr.*);
+            node_env_entry.key_ptr.* = try env_loader.ptr.allocator.dupe(u8, node_env_entry.key_ptr.*);
             node_env_entry.value_ptr.* = .{
-                .value = try env_loader.allocator.dupe(u8, "test"),
+                .value = try env_loader.ptr.allocator.dupe(u8, "test"),
                 .conditional = false,
             };
         }
@@ -1531,7 +1531,7 @@ pub const TestCommand = struct {
         if (ctx.test_options.test_worker) {
             // Worker mode: skip discovery; files arrive over stdin and
             // results go out over fd 3. Never returns.
-            try ParallelRunner.runAsWorker(reporter, vm, ctx);
+            try ParallelRunner.runAsWorker(reporter.ptr, vm, ctx);
         }
 
         // Start the debugger before we scan for files
@@ -1745,9 +1745,9 @@ pub const TestCommand = struct {
             }
 
             if (ctx.test_options.parallel > 0) {
-                ran_parallel = try ParallelRunner.runAsCoordinator(reporter, vm, test_files, ctx, &coverage_options);
+                ran_parallel = try ParallelRunner.runAsCoordinator(reporter.ptr, vm, test_files, ctx, &coverage_options);
             } else {
-                runAllTests(reporter, vm, test_files, ctx.allocator);
+                runAllTests(reporter.ptr, vm, test_files, ctx.allocator);
             }
         }
 
@@ -1775,37 +1775,37 @@ pub const TestCommand = struct {
 
         const write_snapshots_success = try jest.Jest.runner.?.snapshots.writeInlineSnapshots();
         try jest.Jest.runner.?.snapshots.writeSnapshotFile();
-        if (reporter.summary().pass > 20 and !Output.isAIAgent() and !reporter.reporters.dots and !reporter.reporters.only_failures) {
-            if (reporter.summary().skip > 0) {
-                Output.prettyError("\n<r><d>{d} tests skipped:<r>\n", .{reporter.summary().skip});
+        if (reporter.ptr.summary().pass > 20 and !Output.isAIAgent() and !reporter.ptr.reporters.dots and !reporter.ptr.reporters.only_failures) {
+            if (reporter.ptr.summary().skip > 0) {
+                Output.prettyError("\n<r><d>{d} tests skipped:<r>\n", .{reporter.ptr.summary().skip});
                 Output.flush();
 
                 var error_writer = Output.errorWriter();
-                error_writer.writeAll(reporter.skips_to_repeat_buf.items) catch {};
+                error_writer.writeAll(reporter.ptr.skips_to_repeat_buf.items) catch {};
             }
 
-            if (reporter.summary().todo > 0) {
-                if (reporter.summary().skip > 0) {
+            if (reporter.ptr.summary().todo > 0) {
+                if (reporter.ptr.summary().skip > 0) {
                     Output.prettyError("\n", .{});
                 }
 
-                Output.prettyError("\n<r><d>{d} tests todo:<r>\n", .{reporter.summary().todo});
+                Output.prettyError("\n<r><d>{d} tests todo:<r>\n", .{reporter.ptr.summary().todo});
                 Output.flush();
 
                 var error_writer = Output.errorWriter();
-                error_writer.writeAll(reporter.todos_to_repeat_buf.items) catch {};
+                error_writer.writeAll(reporter.ptr.todos_to_repeat_buf.items) catch {};
             }
 
-            if (reporter.summary().fail > 0) {
-                if (reporter.summary().skip > 0 or reporter.summary().todo > 0) {
+            if (reporter.ptr.summary().fail > 0) {
+                if (reporter.ptr.summary().skip > 0 or reporter.ptr.summary().todo > 0) {
                     Output.prettyError("\n", .{});
                 }
 
-                Output.prettyError("\n<r><d>{d} tests failed:<r>\n", .{reporter.summary().fail});
+                Output.prettyError("\n<r><d>{d} tests failed:<r>\n", .{reporter.ptr.summary().fail});
                 Output.flush();
 
                 var error_writer = Output.errorWriter();
-                error_writer.writeAll(reporter.failures_to_repeat_buf.items) catch {};
+                error_writer.writeAll(reporter.ptr.failures_to_repeat_buf.items) catch {};
             }
         }
 
@@ -1852,7 +1852,7 @@ pub const TestCommand = struct {
                 }
                 if (search_count > 0) {
                     Output.prettyError("\n{d} files were searched ", .{search_count});
-                    Output.printStartEnd(ctx.start_time, std.time.nanoTimestamp());
+                    Output.printStartEnd(ctx.start_time, @import("std-fs-compat").nanoTimestamp());
                 }
 
                 Output.prettyErrorln(
@@ -1882,15 +1882,15 @@ pub const TestCommand = struct {
                     inline else => |colors| switch (coverage_options.reporters.text) {
                         inline else => |console| switch (coverage_options.reporters.lcov) {
                             inline else => |lcov| {
-                                try reporter.generateCodeCoverage(vm, &coverage_options, .{ .text = console, .lcov = lcov }, colors);
+                                try reporter.ptr.generateCodeCoverage(vm, &coverage_options, .{ .text = console, .lcov = lcov }, colors);
                             },
                         },
                     },
                 }
             }
 
-            const summary = reporter.summary();
-            const did_label_filter_out_all_tests = summary.didLabelFilterOutAllTests() and reporter.jest.unhandled_errors_between_tests == 0;
+            const summary = reporter.ptr.summary();
+            const did_label_filter_out_all_tests = summary.didLabelFilterOutAllTests() and reporter.ptr.jest.unhandled_errors_between_tests == 0;
 
             if (!did_label_filter_out_all_tests) {
                 const DotIndenter = struct {
@@ -1936,20 +1936,20 @@ pub const TestCommand = struct {
                 }
 
                 Output.prettyError("{f}{d:5>} fail<r>\n", .{ indenter, summary.fail });
-                if (reporter.jest.unhandled_errors_between_tests > 0) {
-                    Output.prettyError("{f}<r><red>{d:5>} error{s}<r>\n", .{ indenter, reporter.jest.unhandled_errors_between_tests, if (reporter.jest.unhandled_errors_between_tests > 1) "s" else "" });
+                if (reporter.ptr.jest.unhandled_errors_between_tests > 0) {
+                    Output.prettyError("{f}<r><red>{d:5>} error{s}<r>\n", .{ indenter, reporter.ptr.jest.unhandled_errors_between_tests, if (reporter.ptr.jest.unhandled_errors_between_tests > 1) "s" else "" });
                 }
 
-                var print_expect_calls = reporter.summary().expectations > 0;
-                if (reporter.jest.snapshots.total > 0) {
-                    const passed = reporter.jest.snapshots.passed;
-                    const failed = reporter.jest.snapshots.failed;
-                    const added = reporter.jest.snapshots.added;
+                var print_expect_calls = reporter.ptr.summary().expectations > 0;
+                if (reporter.ptr.jest.snapshots.total > 0) {
+                    const passed = reporter.ptr.jest.snapshots.passed;
+                    const failed = reporter.ptr.jest.snapshots.failed;
+                    const added = reporter.ptr.jest.snapshots.added;
 
                     var first = true;
                     if (print_expect_calls and added == 0 and failed == 0) {
                         print_expect_calls = false;
-                        Output.prettyError("{f}{d:5>} snapshots, {d:5>} expect() calls", .{ indenter, reporter.jest.snapshots.total, reporter.summary().expectations });
+                        Output.prettyError("{f}{d:5>} snapshots, {d:5>} expect() calls", .{ indenter, reporter.ptr.jest.snapshots.total, reporter.ptr.summary().expectations });
                     } else {
                         Output.prettyError("<d>snapshots:<r> ", .{});
 
@@ -1981,10 +1981,10 @@ pub const TestCommand = struct {
                 }
 
                 if (print_expect_calls) {
-                    Output.prettyError("{f}{d:5>} expect() calls\n", .{ indenter, reporter.summary().expectations });
+                    Output.prettyError("{f}{d:5>} expect() calls\n", .{ indenter, reporter.ptr.summary().expectations });
                 }
 
-                reporter.printSummary();
+                reporter.ptr.printSummary();
             } else {
                 Output.prettyError("<red>error<r><d>:<r> regex <b>{f}<r> matched 0 tests. Searched {d} file{s} (skipping {d} test{s}) ", .{
                     bun.fmt.quote(ctx.test_options.test_filter_pattern.?),
@@ -1993,24 +1993,24 @@ pub const TestCommand = struct {
                     summary.skipped_because_label,
                     if (summary.skipped_because_label == 1) "" else "s",
                 });
-                Output.printStartEnd(ctx.start_time, std.time.nanoTimestamp());
+                Output.printStartEnd(ctx.start_time, @import("std-fs-compat").nanoTimestamp());
             }
         }
 
         Output.prettyError("\n", .{});
         Output.flush();
 
-        reporter.writeJUnitReportIfNeeded();
+        reporter.ptr.writeJUnitReportIfNeeded();
 
         if (vm.hot_reload == .watch) {
             vm.runWithAPILock(jsc.VirtualMachine, vm, runEventLoopForWatch);
         }
-        const summary = reporter.summary();
+        const summary = reporter.ptr.summary();
 
         const should_fail_on_no_tests = !ctx.test_options.pass_with_no_tests and (failed_to_find_any_tests or summary.didLabelFilterOutAllTests());
         if (should_fail_on_no_tests or summary.fail > 0 or (coverage_options.enabled and coverage_options.fractions.failing and coverage_options.fail_on_low_coverage) or !write_snapshots_success) {
             vm.exit_handler.exit_code = 1;
-        } else if (reporter.jest.unhandled_errors_between_tests > 0) {
+        } else if (reporter.ptr.jest.unhandled_errors_between_tests > 0) {
             vm.exit_handler.exit_code = 1;
         }
         vm.is_shutting_down = true;
@@ -2156,7 +2156,6 @@ while (true) : (__loop_limit_1 += 1) {
                 .rejected => {
                     vm.unhandledRejection(vm.global, promise.result(vm.global.vm()), promise.toJS());
                     reporter.summary().fail += 1;
-
                     if (reporter.jest.bail == reporter.summary().fail) {
                         reporter.printSummary();
                         Output.prettyError("\nBailed out after {d} failure{s}<r>\n", .{ reporter.jest.bail, if (reporter.jest.bail == 1) "" else "s" });

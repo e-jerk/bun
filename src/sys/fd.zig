@@ -68,7 +68,7 @@ pub const FD = packed struct(backing_int) {
     }
 
     pub fn cwd() FD {
-        return .fromNative(std.c.AT.FDCWD.fd);
+        return .fromNative(std.c.AT.FDCWD);
     }
 
     pub fn stdin() FD {
@@ -92,7 +92,7 @@ pub const FD = packed struct(backing_int) {
         return windows_cached_stderr;
     }
 
-    pub fn fromStdFile(file: std.fs.File) FD {
+    pub fn fromStdFile(file: @import("std-fs-compat").File) FD {
         return .fromNative(file.handle);
     }
 
@@ -100,8 +100,8 @@ pub const FD = packed struct(backing_int) {
         return .fromNative(dir.fd);
     }
 
-    pub fn stdFile(fd: FD) std.fs.File {
-        return .{ .handle = fd.native() };
+    pub fn stdFile(fd: FD) @import("std-fs-compat").File {
+        return .{ .handle = fd.native(), .flags = .{ .nonblocking = false } };
     }
 
     pub fn stdDir(fd: FD) std.fs.Dir {
@@ -416,7 +416,7 @@ pub const FD = packed struct(backing_int) {
                     // support the standard library functions (since they would
                     // likely have run the Zig compiler, and it's not the end of
                     // the world if this fails.
-                    const path = std.os.getFdPath(fd_native, &path_buf) catch |err| switch (err) {
+                    const path = bun.sys.getFdPath(.fromNative(fd_native), &path_buf).unwrap() catch |err| switch (err) {
                         error.FileNotFound => {
                             try writer.writeAll("[BADF]");
                             break :print_with_path;

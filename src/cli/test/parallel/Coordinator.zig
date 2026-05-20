@@ -127,7 +127,7 @@ pub const Coordinator = struct {
     fn maybeScaleUp(this: *Coordinator) void {
         if (this.spawned_count >= this.parallel_limit) return;
         if (this.bailed or !this.hasUndispatchedFiles()) return;
-        const now = std.time.milliTimestamp();
+        const now = @import("std-fs-compat").milliTimestamp();
         for (this.workers[0..this.spawned_count]) |*w| {
             if (!w.alive) continue;
             if (w.inflight == null) return;
@@ -452,7 +452,7 @@ pub const Coordinator = struct {
         var prev_int: if (Environment.isPosix) bun.sys.Sigaction else void = undefined;
         var prev_term: if (Environment.isPosix) bun.sys.Sigaction else void = undefined;
 
-        fn posixHandler(_: i32, _: *const std.posix.siginfo_t, _: ?*const anyopaque) callconv(.c) void {
+        fn posixHandler(_: i32, _: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) void {
             should_abort.store(true, .release);
         }
 

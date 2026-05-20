@@ -13,7 +13,7 @@ pub fn installIsolatedPackages(
     const lockfile = manager.lockfile;
 
     const store: Store = store: {
-        var timer = std.time.Timer.start() catch unreachable;
+        var timer = @import("std-fs-compat").Timer.start() catch unreachable;
         const pkgs = lockfile.packages.slice();
         const pkg_dependency_slices = pkgs.items(.dependencies);
         const pkg_resolutions = pkgs.items(.resolution);
@@ -57,7 +57,7 @@ pub fn installIsolatedPackages(
         // The universe of distinct peer-dependency names is small even in large
         // lockfiles, so each per-package set is a bitset over that universe and the
         // fixpoint is bitwise OR/ANDNOT on a contiguous buffer.
-        var peer_name_idx: std.array_hash_map.Auto(PackageNameHash, void) = .empty;
+        var peer_name_idx: std.array_hash_map.AutoArrayHashMapUnmanaged(PackageNameHash, void) = .empty;
         defer peer_name_idx.deinit(lockfile.allocator);
         for (dependencies) |dep| {
             if (dep.behavior.isPeer()) {
@@ -661,7 +661,7 @@ pub fn installIsolatedPackages(
 
             const dedupe_entry = try dedupe.getOrPut(lockfile.allocator, pkg_id);
             if (!dedupe_entry.found_existing) {
-                dedupe_entry.value_ptr.* = .{};
+                dedupe_entry.value_ptr.* = .empty;
             } else {
                 const curr_peers = node_peers[entry.node_id.get()];
                 const curr_dep_id = node_dep_ids[entry.node_id.get()];
@@ -861,7 +861,7 @@ pub fn installIsolatedPackages(
     const WyhashWriter = struct {
         hasher: *std.hash.Wyhash,
         const E = error{};
-        pub fn writer(self: *@This()) @import("std-io-compat").GenericWriter(*@This(), E, write) {
+        pub fn writer(self: *@This()) @import("std-io-compat").MakeGenericWriter(*@This(), E, write) {
             return .{ .context = self };
         }
         fn write(self: *@This(), bytes: []const u8) E!usize {
@@ -892,7 +892,7 @@ pub fn installIsolatedPackages(
         // lockfile) will have their lifecycle scripts run this install; treat
         // them the same as lockfile-trusted packages for eligibility.
         var trusted_from_update = manager.findTrustedDependenciesFromUpdateRequests();
-        defer trusted_from_update.deinit(manager.allocator);
+        defer trusted_from_update.deinit();
 
         const State = enum { unvisited, in_progress, ineligible, done };
         const states = try manager.allocator.alloc(State, store.entries.len);
@@ -1097,7 +1097,7 @@ pub fn installIsolatedPackages(
             defer scc_stack.deinit(manager.allocator);
             var work: std.ArrayListUnmanaged(struct { v: u32, child: u32 }) = .empty;
             defer work.deinit(manager.allocator);
-            var scc_ext: std.array_hash_map.Auto(u64, void) = .empty;
+            var scc_ext: std.array_hash_map.AutoArrayHashMapUnmanaged(u64, void) = .empty;
             defer scc_ext.deinit(manager.allocator);
 
             var index_counter: u32 = 0;
