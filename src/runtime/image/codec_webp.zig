@@ -94,7 +94,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     if (cw != w or ch != h) return error.DecodeFailed;
     const len: usize = @as(usize, w) * h * 4;
     const out = try bun.default_allocator.dupe(u8, ptr[0..len]);
-    // safe-transpile: free removed (memory owned by safe type);
+    errdefer bun.default_allocator.free(out);
 
     // Extract the ICCP chunk (if any) from the RIFF container. A plain
     // VP8/VP8L WebP with no VP8X wrapper has no ICCP — `WebPDemux` still

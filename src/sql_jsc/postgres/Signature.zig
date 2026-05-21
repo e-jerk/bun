@@ -16,16 +16,16 @@ pub fn empty() Signature {
 
 pub fn deinit(this: *Signature) void {
     if (this.prepared_statement_name.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.prepared_statement_name);
     }
     if (this.name.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.name);
     }
     if (this.fields.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.fields);
     }
     if (this.query.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.query);
     }
 }
 

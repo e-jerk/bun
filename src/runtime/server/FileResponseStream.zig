@@ -155,7 +155,6 @@ fn canSendfile(resp: AnyResponse, file_type: bun.io.FileType, length: ?u64) bool
 
 // ───────────────────────── reader backend ─────────────────────────
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onReadChunk(this: *FileResponseStream, chunk_: []const u8, state_: bun.io.ReadState) bool {
     this.ref();
     defer this.deref();
@@ -240,7 +239,6 @@ var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
     if (__loop_limit_1 > 1_000_000) break;
             const adjusted = @min(this.sendfile.remain, @as(u64, std.math.maxInt(i32)));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             var off: i64 = @intCast(this.sendfile.offset);
             const rc = std.os.linux.sendfile(
                 this.sendfile.socket_fd.cast(),
@@ -249,9 +247,7 @@ while (true) : (__loop_limit_1 += 1) {
                 adjusted,
             );
             const errno = bun.sys.getErrno(rc);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const sent: u64 = @intCast(@max(@as(i64, @intCast(off)) - @as(i64, @intCast(this.sendfile.offset)), 0));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.sendfile.offset = @intCast(off);
             this.sendfile.remain -|= sent;
 
@@ -275,18 +271,15 @@ while (true) : (__loop_limit_1 += 1) {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
     if (__loop_limit_2 > 1_000_000) break;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             var sbytes: std.posix.off_t = @intCast(@min(this.sendfile.remain, @as(u64, std.math.maxInt(i32))));
             const errno = bun.sys.getErrno(std.c.sendfile(
                 this.fd.cast(),
                 this.sendfile.socket_fd.cast(),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @intCast(this.sendfile.offset),
                 &sbytes,
                 null,
                 0,
             ));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const sent: u64 = @intCast(sbytes);
             this.sendfile.offset += sent;
             this.sendfile.remain -|= sent;

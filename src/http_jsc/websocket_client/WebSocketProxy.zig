@@ -59,9 +59,9 @@ pub fn takeWebsocketRequestBuf(self: *WebSocketProxy) []u8 {
 
 /// Clean up all allocated resources
 pub fn deinit(self: *WebSocketProxy) void {
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    bun.default_allocator.free(self._target_host);
     if (self._websocket_request_buf.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(self._websocket_request_buf);
     }
     if (self._tunnel) |tunnel| {
         self._tunnel = null;

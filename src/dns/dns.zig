@@ -258,7 +258,7 @@ pub fn addressToString(address: *const @import("std-net-shim").Address) bun.OOM!
             var stack = std.heap.stackFallback(512, default_allocator);
             const allocator = stack.get();
             var out = try std.fmt.allocPrint(allocator, "{f}", .{address.*});
-            // safe-transpile: free removed (memory owned by safe type);
+            defer allocator.free(out);
             // TODO: this is a hack, fix it
             // This removes [.*]:port
             //              ^  ^^^^^^

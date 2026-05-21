@@ -6,7 +6,7 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
     _ = try reader.int4();
 
     const message = try reader.readZ();
-    this[0] = .{
+    this.* = .{
         .message = message,
     };
 }

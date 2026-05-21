@@ -316,7 +316,7 @@ pub fn toSocketBuffers(self: *MutableString, comptime count: usize, ranges: anyt
     var buffers: [count]std.posix.iovec_const = undefined;
     // safe-transpile: for with index access requires manual review
     inline for (&buffers, ranges) |*b, r| {
-        b[0] = .{
+        b.* = .{
             .iov_base = self.list.items[r[0]..r[1]].ptr,
             .iov_len = self.list.items[r[0]..r[1]].len,
         };

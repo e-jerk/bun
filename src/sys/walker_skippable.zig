@@ -136,7 +136,7 @@ pub fn deinit(self: *Walker) void {
         self.stack.deinit();
     }
 
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    self.name_buffer.allocator.free(self.skip_all);
     self.name_buffer.deinit();
 }
 

@@ -122,12 +122,10 @@ pub const Source = union(enum) {
             _ = uv.uv_fs_close(uv.Loop.get(), &this.fs, this.file, onCloseComplete);
         }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   fs: zust.Box(uv.fs_t)
-        fn onCloseComplete(fs: zust.Box(uv.fs_t)) callconv(.c) void {
+        fn onCloseComplete(fs: *uv.fs_t) callconv(.c) void {
             const file = File.fromFS(fs);
             bun.assert(file.state == .closing);
-            fs.ptr.deinit();
+            fs.deinit();
             _ = file.deinit();
         }
     };
@@ -249,9 +247,7 @@ pub const Source = union(enum) {
             return tty == StdinTTY.value;
         }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   loop: zust.Box(uv.Loop)
-        fn getStdinTTY(loop: zust.Box(uv.Loop)) bun.sys.Maybe(*Source.Tty) {
+        fn getStdinTTY(loop: *uv.Loop) bun.sys.Maybe(*Source.Tty) {
             StdinTTY.lock.lock();
             defer StdinTTY.lock.unlock();
 
@@ -293,7 +289,7 @@ pub const Source = union(enum) {
         log("openFile (fd = {f})", .{fd});
         const file = bun.handleOom(zust.Box(Source.File).init(bun.default_allocator, undefined));
 
-        file[0] = std.mem.zeroes(Source.File);
+        file.* = std.mem.zeroes(Source.File);
         file.file = fd.uv();
         return file;
     }

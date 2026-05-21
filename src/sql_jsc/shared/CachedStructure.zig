@@ -25,7 +25,7 @@ pub fn deinit(this: *@This()) void {
         for (fields) |*name| {
             name.deinit();
         }
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(fields);
     }
 }
 

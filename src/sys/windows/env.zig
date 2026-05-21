@@ -33,7 +33,7 @@ pub fn convertEnvToWTF8() bun.OOM!void {
         }
         break :blk try bun.strings.toUTF8AllocWithType(bun.default_allocator, wtf16_buf[0..len]);
     };
-    // safe-transpile: free removed (memory owned by safe type);
+    errdefer bun.default_allocator.free(wtf8_buf);
     var len: usize = 0;
 
     var envp: bun.collections.ArrayListDefault(?[*:0]u8) = try .initCapacity(num_vars + 1);

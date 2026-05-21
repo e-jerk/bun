@@ -134,7 +134,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     const as, const aw = shiftWidth(h.a_mask);
 
     const out = try bun.default_allocator.alloc(u8, @as(usize, h.width) * h.height * 4);
-    // safe-transpile: free removed (memory owned by safe type);
+    errdefer bun.default_allocator.free(out);
 
     var y: u32 = 0;
     while (y < h.height) : (y += 1) {

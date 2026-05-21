@@ -182,7 +182,7 @@ pub fn toBuffer(this: *PipeReader, globalThis: *jsc.JSGlobalObject) jsc.JSValue 
 
 pub fn onReaderError(this: *PipeReader, err: bun.sys.Error) void {
     if (this.state == .done) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.state.done);
     }
     this.state = .{ .err = err };
     if (this.process) |process| {
@@ -231,7 +231,7 @@ fn deinit(this: *PipeReader) void {
     }
 
     if (this.state == .done) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.state.done);
     }
 
     this.reader.deinit();

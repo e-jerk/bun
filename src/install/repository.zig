@@ -27,7 +27,7 @@ const SloppyGlobalGitConfig = struct {
         const source = File.toSource(config_file_path, allocator, .{ .convert_bom = true }).unwrap() catch {
             return;
         };
-        // safe-transpile: free removed (memory owned by safe type);
+        defer allocator.free(source.contents);
 
         var remaining = bun.strings.split(source.contents, "\n");
         var found_askpass = false;

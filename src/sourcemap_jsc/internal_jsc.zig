@@ -10,7 +10,7 @@ pub const TestingAPIs = struct {
         const blob = InternalSourceMap.fromVLQ(bun.default_allocator, vlq.slice(), 0) catch {
             return globalThis.throw("InternalSourceMap.fromVLQ: invalid VLQ input", .{});
         };
-        // safe-transpile: free removed (memory owned by safe type);
+        defer bun.default_allocator.free(blob);
         return jsc.ArrayBuffer.createUint8Array(globalThis, blob);
     }
 

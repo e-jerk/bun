@@ -10,7 +10,7 @@ pub const ScanCommand = struct {
             }
             return err;
         };
-        // safe-transpile: free removed (memory owned by safe type);
+        defer ctx.allocator.free(cwd);
 
         try execWithManager(ctx, manager, cwd);
     }

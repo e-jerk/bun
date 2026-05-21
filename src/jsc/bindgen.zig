@@ -91,8 +91,8 @@ pub fn BindgenUnion(comptime children: []const type) type {
     var untagged_field_types: [children.len]type = undefined;
     // safe-transpile: for with index access requires manual review
     for (&tagged_field_types, &untagged_field_types, children) |*tagged, *untagged, *child| {
-        tagged[0] = child.ZigType;
-        untagged[0] = child.ExternType;
+        tagged.* = child.ZigType;
+        untagged.* = child.ExternType;
     }
 
     const tagged_field_types_const = tagged_field_types;

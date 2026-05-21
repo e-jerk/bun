@@ -26,7 +26,7 @@ pub fn unregisterFrom(this: *@This(), ctx: *NewHTTPContext(true)) void {
 }
 
 pub fn deinit(this: *@This()) void {
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    bun.default_allocator.free(this.hostname);
     this.waiters.deinit(bun.default_allocator);
     bun.destroy(this);
 }

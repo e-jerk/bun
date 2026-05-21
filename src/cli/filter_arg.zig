@@ -53,7 +53,7 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
             },
             .result => |source| source,
         };
-        // safe-transpile: free removed (memory owned by safe type);
+        defer allocator.free(json_source.contents);
 
         const json = try JSON.parsePackageJSONUTF8(&json_source, log, allocator);
 
@@ -173,10 +173,10 @@ pub const FilterSet = struct {
     pub fn deinit(self: *FilterSet) void {
         for (self.filters) |filter| {
             if (filter.kind == .path) {
-                _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+                self.allocator.free(filter.pattern);
             }
         }
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        self.allocator.free(self.filters);
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String

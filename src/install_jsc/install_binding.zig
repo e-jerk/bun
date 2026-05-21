@@ -52,7 +52,7 @@ pub const bun_install_js_bindings = struct {
             .emit_null_optional_fields = true,
             .emit_nonportable_numbers_as_strings = true,
         })}));
-        // safe-transpile: free removed (memory owned by safe type);
+        defer allocator.free(stringified);
 
         var str = bun.String.cloneUTF8(stringified);
         defer str.deref();

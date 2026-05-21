@@ -45,7 +45,7 @@ pub fn Channel(
 
         pub fn deinit(self: *Self) void {
             self.buffer.deinit();
-            self[0] = undefined;
+            self.* = undefined;
         }
 
         pub fn close(self: *Self) void {

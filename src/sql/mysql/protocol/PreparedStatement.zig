@@ -43,7 +43,7 @@ pub const Execute = struct {
             param.deinit(bun.default_allocator);
         }
         if (this.params.len > 0) {
-            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+            bun.default_allocator.free(this.params);
         }
     }
 

@@ -55,7 +55,7 @@ pub fn deinit(this: *RefString) void {
         onBeforeDeinit(this.ctx.?, this);
     }
 
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    this.allocator.free(this.leak());
     this.allocator.destroy(this);
 }
 

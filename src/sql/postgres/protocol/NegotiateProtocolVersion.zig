@@ -10,7 +10,7 @@ pub fn decodeInternal(
     bun.assert(length >= 4);
 
     const version = try reader.int4();
-    this[0] = .{
+    this.* = .{
         .version = version,
     };
 

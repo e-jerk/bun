@@ -97,8 +97,8 @@ pub fn deinit(this: *PostgresSQLStatement) void {
     for (this.fields) |*field| {
         field.deinit();
     }
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    bun.default_allocator.free(this.fields);
+    bun.default_allocator.free(this.parameters);
     this.cached_structure.deinit();
     if (this.error_response) |err| {
         this.error_response = null;

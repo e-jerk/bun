@@ -92,11 +92,11 @@ pub fn Generator(
             assert(stage3.items.len <= std.math.maxInt(u8));
 
             const stage1_owned = try stage1.toOwnedSlice(alloc);
-            // safe-transpile: free removed (memory owned by safe type);
+            errdefer alloc.free(stage1_owned);
             const stage2_owned = try stage2.toOwnedSlice(alloc);
-            // safe-transpile: free removed (memory owned by safe type);
+            errdefer alloc.free(stage2_owned);
             const stage3_owned = try stage3.toOwnedSlice(alloc);
-            // safe-transpile: free removed (memory owned by safe type);
+            errdefer alloc.free(stage3_owned);
 
             return .{
                 .stage1 = stage1_owned,

@@ -86,7 +86,7 @@ fn runTests() u8 {
     namebuf = safe.Pool.alloc(u8, namebuf_size) catch {
         Output.panic("Failed to allocate name buffer", .{});
     };
-    // safe-transpile: free removed (memory owned by safe type);
+    defer safe.Pool.free(namebuf);
 
     const tests: []const TestFn = builtin.test_functions;
     for (tests) |t| {

@@ -26,7 +26,7 @@ pub fn main() !void {
         defer in.close();
         break :brk try in.readToEndAllocOptions(gpa, std.math.maxInt(u32), null, .fromByteUnits(1), 0);
     };
-    // safe-transpile: free removed (memory owned by safe type);
+    defer gpa.free(in);
 
     var out = try std.array_list.Managed(u8).initCapacity(gpa, in.len);
     defer out.deinit();

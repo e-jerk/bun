@@ -61,7 +61,7 @@ pub fn processInlineContent(self: *Parser, content: []const u8, base_off: OFF) P
         try self.emitText(.normal, content);
         return;
     };
-    // safe-transpile: free removed (memory owned by safe type);
+    defer self.allocator.free(resolved);
 
     // Phase 2: Emit content using resolved emphasis info
     var i: usize = 0;

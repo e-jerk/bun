@@ -121,7 +121,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codec
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     _ = tj3SetCroppingRegion(h, .{ .x = 0, .y = 0, .w = @intCast(w), .h = @intCast(ht) });
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * ht * 4);
-    // safe-transpile: free removed (memory owned by safe type);
+    errdefer bun.default_allocator.free(out);
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (tj3Decompress8(h, bytes.ptr, bytes.len, out.ptr, @intCast(w * 4), TJPF_RGBA) != 0)
         return error.DecodeFailed;

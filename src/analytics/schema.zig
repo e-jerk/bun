@@ -74,7 +74,7 @@ pub const Reader = struct {
             [:0]const u8, []const u8 => {
                 const array = try this.allocator.alloc(T, length);
 // safe-transpile: for loop with pointer capture requires manual review
-                for (array) |*a| a[0] = try this.readArray(u8);
+                for (array) |*a| a.* = try this.readArray(u8);
                 return array;
             },
             else => {
@@ -99,7 +99,7 @@ pub const Reader = struct {
 
                 const array = try this.allocator.alloc(T, length);
 // safe-transpile: for loop with pointer capture requires manual review
-                for (array) |*v| v[0] = try this.readValue(T);
+                for (array) |*v| v.* = try this.readValue(T);
                 return array;
             },
         }

@@ -101,7 +101,7 @@ pub const TestingAPIs = struct {
             var bunstr = dir_js.toBunString(globalThis) catch return .initErr(.js_undefined);
             defer bunstr.deref();
             const path = bunstr.toOwnedSliceZ(bun.default_allocator) catch unreachable;
-            // safe-transpile: free removed (memory owned by safe type);
+            defer bun.default_allocator.free(path);
 
             break :brk switch (bun.sys.open(path, bun.O.DIRECTORY | bun.O.RDONLY, 0)) {
                 .err => |e| {

@@ -569,7 +569,7 @@ pub fn simpleHelp(
         const total_len = flags_len + value_len;
         const num_spaces_after = max_spacing - total_len;
         var spaces_after = default_allocator.alloc(u8, num_spaces_after) catch unreachable;
-        // safe-transpile: free removed (memory owned by safe type);
+        defer default_allocator.free(spaces_after);
         for (0..num_spaces_after) |i| {
             spaces_after[i] = ' ';
         }

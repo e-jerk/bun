@@ -139,7 +139,7 @@ pub inline fn bltn(this: *@This()) *Builtin {
 }
 
 pub fn deinit(this: *@This()) void {
-    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+    this.alloc_scope.allocator().free(this.buffer);
     this.alloc_scope.endScope();
 }
 

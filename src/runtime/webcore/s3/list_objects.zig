@@ -295,7 +295,7 @@ pub fn parseS3ListObjectsResult(xml: []const u8) !S3ListObjectsV2Result {
                                             etag = output[0 .. input.len - len * 5]; // 5 = "&quot;".len - 1 for replacement "
                                             etag_owned = true;
                                         } else {
-                                            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+                                            bun.default_allocator.free(output);
                                             etag = input;
                                         }
 

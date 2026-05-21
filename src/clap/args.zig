@@ -253,18 +253,15 @@ pub const ShellIterator = struct {
         }
     }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   iter: zust.Box(ShellIterator)
-//   list: zust.Box(std.array_list.Managed(u8))
-    fn result(iter: zust.Box(ShellIterator), start: usize, end: usize, list: zust.Box(std.array_list.Managed(u8))) Error!?[]const u8 {
-        const res = iter.ptr.str[start..end];
+    fn result(iter: *ShellIterator, start: usize, end: usize, list: *std.array_list.Managed(u8)) Error!?[]const u8 {
+        const res = iter.str[start..end];
 
         // If we already have something in `list` that means that we could not
         // parse the argument without allocation. We therefor need to just append
         // the rest we have to the list and return that.
-        if (list.ptr.items.len != 0) {
-            try list.ptr.appendSlice(res);
-            return try list.ptr.toOwnedSlice();
+        if (list.items.len != 0) {
+            try list.appendSlice(res);
+            return try list.toOwnedSlice();
         }
         return res;
     }

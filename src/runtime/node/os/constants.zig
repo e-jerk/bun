@@ -33,15 +33,11 @@ fn getDlopenConstant(comptime name: []const u8) ?comptime_int {
         return null;
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn defineConstant(globalObject: zust.Box(jsc.JSGlobalObject), object: jsc.JSValue, comptime ctype: ConstantType, comptime name: string) void {
+fn defineConstant(globalObject: *jsc.JSGlobalObject, object: jsc.JSValue, comptime ctype: ConstantType, comptime name: string) void {
     return __defineConstant(globalObject, object, ctype, name, null);
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn __defineConstant(globalObject: zust.Box(jsc.JSGlobalObject), object: jsc.JSValue, comptime ctype: ConstantType, comptime name: string, comptime value: ?i32) void {
+fn __defineConstant(globalObject: *jsc.JSGlobalObject, object: jsc.JSValue, comptime ctype: ConstantType, comptime name: string, comptime value: ?i32) void {
     switch (ctype) {
         .ERRNO => {
             if (comptime getErrnoConstant(name)) |constant| {
@@ -81,9 +77,7 @@ pub fn create(globalObject: *jsc.JSGlobalObject) jsc.JSValue {
     return object;
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn createErrno(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
+fn createErrno(globalObject: *jsc.JSGlobalObject) jsc.JSValue {
     const object = jsc.JSValue.createEmptyObject(globalObject, 0);
 
     defineConstant(globalObject, object, .ERRNO, "2BIG");
@@ -230,9 +224,7 @@ fn createErrno(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
     return object;
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn createSignals(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
+fn createSignals(globalObject: *jsc.JSGlobalObject) jsc.JSValue {
     const object = jsc.JSValue.createEmptyObject(globalObject, 0);
 
     defineConstant(globalObject, object, .SIG, "HUP");
@@ -276,9 +268,7 @@ fn createSignals(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
     return object;
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn createPriority(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
+fn createPriority(globalObject: *jsc.JSGlobalObject) jsc.JSValue {
     const object = jsc.JSValue.createEmptyObject(globalObject, 6);
 
     __defineConstant(globalObject, object, .OTHER, "PRIORITY_LOW", 19);
@@ -291,9 +281,7 @@ fn createPriority(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
     return object;
 }
 
-// safe-transpile: parameters converted to zust.Box — callers must update
-//   globalObject: zust.Box(jsc.JSGlobalObject)
-fn createDlopen(globalObject: zust.Box(jsc.JSGlobalObject)) jsc.JSValue {
+fn createDlopen(globalObject: *jsc.JSGlobalObject) jsc.JSValue {
     const object = jsc.JSValue.createEmptyObject(globalObject, 5);
 
     defineConstant(globalObject, object, .DLOPEN, "LAZY");

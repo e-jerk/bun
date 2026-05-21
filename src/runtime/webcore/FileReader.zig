@@ -170,7 +170,7 @@ pub fn setup(
     this: *FileReader,
     fd: bun.FD,
 ) void {
-    this[0] = FileReader{
+    this.* = FileReader{
         .reader = .{},
         .done = false,
         .fd = fd,

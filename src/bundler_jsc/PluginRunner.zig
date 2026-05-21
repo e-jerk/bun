@@ -218,14 +218,14 @@ pub const PluginRunner = struct {
         var out_ = bun.String.init(combined_string);
         defer out_.deref();
         const jsval = out_.toJS(this.global_object) catch |err| {
-            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+            this.allocator.free(combined_string);
             return jsc.ErrorableString.err(err, this.global_object.tryTakeException() orelse .js_undefined);
         };
         const out = jsval.toBunString(this.global_object) catch |err| {
-            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+            this.allocator.free(combined_string);
             return jsc.ErrorableString.err(err, this.global_object.tryTakeException() orelse .js_undefined);
         };
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        this.allocator.free(combined_string);
         return jsc.ErrorableString.ok(out);
     }
 };

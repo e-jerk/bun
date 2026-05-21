@@ -53,10 +53,10 @@ pub fn deinit(this: *MySQLStatement) void {
         column.deinit();
     }
     if (this.columns.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.columns);
     }
     if (this.params.len > 0) {
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        bun.default_allocator.free(this.params);
     }
     this.cached_structure.deinit();
     this.error_response.deinit();

@@ -35,7 +35,7 @@ pub fn free(this: *const NullableAllocator, bytes: []const u8) void {
             return;
         }
 
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        allocator.free(bytes);
     }
 }
 

@@ -84,7 +84,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     if (out_len > std.math.maxInt(u32)) return error.TooManyPixels;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const out = try bun.default_allocator.alloc(u8, @intCast(out_len));
-    // safe-transpile: free removed (memory owned by safe type);
+    errdefer bun.default_allocator.free(out);
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if ((if (conv) |v| v else unreachable).vt.CopyPixels((if (conv) |v| v else unreachable), null, @intCast(stride), @intCast(out_len), out.ptr) < 0)
         return error.DecodeFailed;
@@ -486,7 +486,7 @@ pub fn clipboard() error{ BackendUnavailable, OutOfMemory }!?[]u8 {
     for ([_]c_uint{ CF_DIBV5, CF_DIB }) |cf| {
         if (GetClipboardData(cf)) |h| if (try dupGlobal(h, 14)) |buf| {
             if (buf.len < 14 + 40 or buf.len > std.math.maxInt(u32)) {
-                _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+                bun.default_allocator.free(buf);
                 continue;
             }
             // BITMAPFILEHEADER: 'BM' · u32 file-size · 2×u16 reserved ·
@@ -498,7 +498,7 @@ pub fn clipboard() error{ BackendUnavailable, OutOfMemory }!?[]u8 {
             const masks: u64 = if (ih_size == 40 and compression == 3) 12 else 0;
             const off = 14 + ih_size + masks;
             if (ih_size < 40 or off > buf.len) {
-                _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+                bun.default_allocator.free(buf);
                 continue;
             }
             buf[0] = 'B';

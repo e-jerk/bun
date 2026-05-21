@@ -812,7 +812,7 @@ pub const QueryStringMap = struct {
 
     pub fn deinit(this: *QueryStringMap) void {
         if (this.buffer.len > 0) {
-            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+            this.allocator.free(this.buffer);
         }
 
         if (this.list.len > 0) {
@@ -832,7 +832,7 @@ pub const PercentEncoding = struct {
     pub fn decodeAlloc(allocator: std.mem.Allocator, input: string) ![]u8 {
         // Allocate enough space - decoded will be at most input.len bytes
         const buf = try allocator.alloc(u8, input.len);
-        // safe-transpile: free removed (memory owned by safe type);
+        errdefer allocator.free(buf);
 
         var stream = @import("std-io-compat").fixedBufferStream(buf);
         const writer = stream.writer();

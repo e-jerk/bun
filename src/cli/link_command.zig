@@ -14,7 +14,7 @@ fn link(ctx: Command.Context) !void {
 
         return err;
     };
-    // safe-transpile: free removed (memory owned by safe type);
+    defer ctx.allocator.free(original_cwd);
 
     if (manager.options.shouldPrintCommandName()) {
         Output.prettyln("<r><b>bun link <r><d>v" ++ Global.package_json_version_with_sha ++ "<r>\n", .{});

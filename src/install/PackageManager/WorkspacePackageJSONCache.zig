@@ -59,7 +59,7 @@ pub fn getWithPath(
 
     const source = &(bun.sys.File.toSource(key, allocator, .{}).unwrap() catch |err| {
         _ = this.map.remove(key);
-        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
+        allocator.free(key);
         return .{ .read_err = err };
     });
 
