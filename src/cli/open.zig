@@ -233,7 +233,7 @@ pub const Editor = enum(u8) {
         var file_path_buf_stream = @import("std-io-compat").fixedBufferStream(&spawned.ptr.file_path_buf);
         var file_path_buf_writer = file_path_buf_stream.writer();
         var args_buf = &spawned.ptr.buf;
-        errdefer _ = spawned.deinit();
+        defer _ = spawned.deinit();
 
         var i: usize = 0;
 
@@ -327,7 +327,7 @@ pub const Editor = enum(u8) {
     };
 
     fn autoClose(spawned: *SpawnedEditorContext) void {
-        defer bun.default_allocator.destroy(spawned);
+        defer _ = spawned.deinit();
         Global.setThreadName("Open Editor");
         _ = spawned.*;
     }

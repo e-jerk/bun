@@ -116,6 +116,7 @@ pub fn doReadFromS3(this: *Blob, comptime Function: anytype, global: *JSGlobalOb
     debug("doReadFromS3", .{});
 
     const WrappedFn = struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn wrapped(b: *Blob, g: *JSGlobalObject, by: []u8) jsc.JSValue {
             return jsc.toJSHostCall(g, @src(), Function, .{ b, g, by, .clone });
         }
@@ -222,6 +223,7 @@ pub fn readBytesToHandler(this: *Blob, comptime Handler: type, ctx: *Handler, gl
                 Handler.onReadBytes(c, r);
             }
             fn cb(result: S3.S3DownloadResult, opaque_self: *anyopaque) bun.JSTerminated!void {
+// safe-transpile: @alignCast requires manual review
                 const t: *@This() = @ptrCast(@alignCast(opaque_self));
                 switch (result) {
                     // `body` is owned by us (simple_request.zig:20); take the
@@ -246,9 +248,12 @@ pub fn readBytesToHandler(this: *Blob, comptime Handler: type, ctx: *Handler, gl
         const proxy = if (env.getHttpProxy(true, null, null)) |p| p.href else null;
         const payer = t.blob.store.?.data.s3.request_payer;
         if (this.offset > 0 or this.size != Blob.max_size) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const len: ?usize = if (this.size != Blob.max_size) @intCast(this.size) else null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try S3.downloadSlice(cred, path, @intCast(this.offset), len, @ptrCast(&Task.cb), t, proxy, payer);
         } else {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             try S3.download(cred, path, @ptrCast(&Task.cb), t, proxy, payer);
         }
         return;
@@ -398,7 +403,9 @@ const StructuredCloneWriter = struct {
     impl: *const fn (*anyopaque, ptr: [*]const u8, len: u32) callconv(jsc.conv) void,
 
     pub const WriteError = error{};
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(this: StructuredCloneWriter, bytes: []const u8) WriteError!usize {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         this.impl(this.ctx, bytes.ptr, @as(u32, @truncate(bytes.len)));
         return bytes.len;
     }
@@ -411,8 +418,10 @@ fn _onStructuredCloneSerialize(
 ) !void {
     try writer.writeInt(u8, serialization_version, .little);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     try writer.writeInt(u64, @intCast(this.offset), .little);
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     try writer.writeInt(u32, @truncate(this.content_type.len), .little);
     try writer.writeAll(this.content_type);
     try writer.writeInt(u8, @intFromBool(this.content_type_was_set), .little);
@@ -437,6 +446,7 @@ fn _onStructuredCloneSerialize(
         if (this.getNameString()) |name_string| {
             const name_slice = name_string.toUTF8(bun.default_allocator);
             defer name_slice.deinit();
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             try writer.writeInt(u32, @truncate(name_slice.slice().len), .little);
             try writer.writeAll(name_slice.slice());
         } else {
@@ -483,6 +493,7 @@ fn writeFloat(
     comptime Writer: type,
     writer: Writer,
 ) !void {
+// safe-transpile: @bitCast requires manual review
     const bytes: [@sizeOf(FloatType)]u8 = @bitCast(value);
     try writer.writeAll(&bytes);
 }
@@ -499,9 +510,11 @@ fn readFloat(
         const len = try reader.readAll(&bytes_buf);
         if (len < @sizeOf(FloatType)) return error.EndOfStream;
     }
+// safe-transpile: @bitCast requires manual review
     return @bitCast(bytes_buf);
 }
 
+// safe-transpile: function returns small constant slice — consider zust.String
 fn readSlice(
     reader: anytype,
     len: usize,
@@ -645,6 +658,7 @@ fn _onStructuredCloneDeserialize(
     // in ReleaseFast). For bytes stores this also keeps `size` within bounds;
     // file/s3 stores report `max_size` here and are bounded by the filesystem
     // read path instead.
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     blob.offset = @as(SizeType, @truncate(offset));
     if (blob.store) |store| {
         const store_size = store.size();
@@ -973,6 +987,7 @@ const Retry = enum { @"continue", fail, no };
 
 // TODO: move this to bun.sys?
 // we choose not to inline this so that the path buffer is not on the stack unless necessary.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub noinline fn mkdirIfNotExists(this: anytype, err: bun.sys.Error, path_string: [:0]const u8, err_path: []const u8) Retry {
     if (err.getErrno() == .NOENT and this.mkdirp_if_not_exists) {
         if (std.fs.path.dirname(path_string)) |dirname| {
@@ -1032,6 +1047,7 @@ fn writeFileWithEmptySourceToDestination(ctx: *jsc.JSGlobalObject, destination_b
                     // #6336
                     .PERM => {
                         was_eperm = true;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         result.err.errno = @intCast(@intFromEnum(bun.sys.E.NOENT));
                         continue :err .NOENT;
                     },
@@ -1046,6 +1062,7 @@ fn writeFileWithEmptySourceToDestination(ctx: *jsc.JSGlobalObject, destination_b
                                 // exists, so we shouldn't try to mkdir it
                                 // also means PERM is _actually_ a
                                 // permissions issue
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 if (was_eperm) result.err.errno = @intCast(@intFromEnum(bun.sys.E.PERM));
                                 break :err;
                             },
@@ -1106,6 +1123,7 @@ fn writeFileWithEmptySourceToDestination(ctx: *jsc.JSGlobalObject, destination_b
                 pub const new = bun.TrivialNew(@This());
 
                 pub fn resolve(result: S3.S3UploadResult, opaque_this: *anyopaque) bun.JSTerminated!void {
+// safe-transpile: @alignCast requires manual review
                     const this: *@This() = @ptrCast(@alignCast(opaque_this));
                     defer this.deinit();
                     switch (result) {
@@ -1241,6 +1259,7 @@ pub fn writeFileWithSourceDestination(ctx: *jsc.JSGlobalObject, source_blob: *Bl
         if (try jsc.WebCore.ReadableStream.fromJS(try jsc.WebCore.ReadableStream.fromBlobCopyRef(
             ctx,
             source_blob,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             @truncate(s3.options.partSize),
         ), ctx)) |stream| {
             return destination_blob.pipeReadableStreamToBlob(ctx, stream, options.extra_options);
@@ -1275,6 +1294,7 @@ pub fn writeFileWithSourceDestination(ctx: *jsc.JSGlobalObject, source_blob: *Bl
                     if (try jsc.WebCore.ReadableStream.fromJS(try jsc.WebCore.ReadableStream.fromBlobCopyRef(
                         ctx,
                         source_blob,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         @truncate(s3.options.partSize),
                     ), ctx)) |stream| {
                         return S3.uploadStream(
@@ -1305,6 +1325,7 @@ pub fn writeFileWithSourceDestination(ctx: *jsc.JSGlobalObject, source_blob: *Bl
                         pub const new = bun.TrivialNew(@This());
 
                         pub fn resolve(result: S3.S3UploadResult, opaque_self: *anyopaque) bun.JSTerminated!void {
+// safe-transpile: @alignCast requires manual review
                             const this: *@This() = @ptrCast(@alignCast(opaque_self));
                             defer this.deinit();
                             switch (result) {
@@ -1350,6 +1371,7 @@ pub fn writeFileWithSourceDestination(ctx: *jsc.JSGlobalObject, source_blob: *Bl
                 if (try jsc.WebCore.ReadableStream.fromJS(try jsc.WebCore.ReadableStream.fromBlobCopyRef(
                     ctx,
                     source_blob,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     @truncate(s3.options.partSize),
                 ), ctx)) |stream| {
                     return S3.uploadStream(
@@ -1737,6 +1759,7 @@ pub fn writeFile(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun
                     if (mode_int < 0 or mode_int > 0o777) {
                         return globalThis.throwRangeError(mode_int, .{ .field_name = "mode", .min = 0, .max = 0o777 });
                     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     mode = @intCast(mode_int);
                 }
             }
@@ -1795,6 +1818,7 @@ fn writeStringToFileFast(
         // we only truncate if it's a path
         // if it's a file descriptor, we assume they want manual control over that behavior
         if (truncate) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             _ = fd.truncate(@intCast(written));
         }
         if (needs_open) {
@@ -1835,6 +1859,7 @@ fn writeStringToFileFast(
     return jsc.JSPromise.resolvedPromiseValue(globalThis, jsc.JSValue.jsNumber(written));
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeBytesToFileFast(
     globalThis: *jsc.JSGlobalObject,
     pathlike: jsc.Node.PathOrFileDescriptor,
@@ -1915,6 +1940,7 @@ fn writeBytesToFileFast(
         if (Environment.isWindows) {
             _ = std.os.windows.kernel32.SetEndOfFile(fd.cast());
         } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             _ = bun.sys.ftruncate(fd, @as(i64, @intCast(written)));
         }
     }
@@ -2194,6 +2220,7 @@ pub fn getStream(
             return globalThis.throwInvalidArguments("chunkSize must be a number", .{});
         }
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         recommended_chunk_size = @intCast(@max(0, @as(i52, @truncate(recommended_chunk_size_value.toInt64()))));
     }
     const stream = try jsc.WebCore.ReadableStream.fromBlobCopyRef(
@@ -2230,6 +2257,7 @@ pub fn toStreamWithOffset(
     return jsc.WebCore.ReadableStream.fromFileBlobWithOffset(
         globalThis,
         this,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         @intCast(args[0].toInt64()),
     );
 }
@@ -2395,6 +2423,7 @@ const S3BlobDownloadTask = struct {
     pub const new = bun.TrivialNew(S3BlobDownloadTask);
     pub const S3ReadHandler = *const fn (this: *Blob, globalthis: *JSGlobalObject, raw_bytes: []u8) JSValue;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn callHandler(this: *S3BlobDownloadTask, raw_bytes: []u8) JSValue {
         return this.handler(&this.blob, this.globalThis, raw_bytes);
     }
@@ -2404,6 +2433,7 @@ const S3BlobDownloadTask = struct {
             .success => |response| {
                 const bytes = response.body.list.items;
                 if (this.blob.size == Blob.max_size) {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     this.blob.size = @truncate(bytes.len);
                 }
                 try jsc.AnyPromise.wrap(.{ .normal = this.promise.get() }, this.globalThis, S3BlobDownloadTask.callHandler, .{ this, bytes });
@@ -2432,14 +2462,21 @@ const S3BlobDownloadTask = struct {
         this.poll_ref.ref(globalThis.bunVM());
         const s3_store = &this.blob.store.?.data.s3;
         if (blob.offset > 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const len: ?usize = if (blob.size != Blob.max_size) @intCast(blob.size) else null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const offset: usize = @intCast(blob.offset);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             try S3.downloadSlice(credentials, path, offset, len, @ptrCast(&S3BlobDownloadTask.onS3DownloadResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         } else if (blob.size == Blob.max_size) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             try S3.download(credentials, path, @ptrCast(&S3BlobDownloadTask.onS3DownloadResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const len: usize = @intCast(blob.size);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const offset: usize = @intCast(blob.offset);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             try S3.downloadSlice(credentials, path, offset, len, @ptrCast(&S3BlobDownloadTask.onS3DownloadResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         }
         return promise;
@@ -2735,6 +2772,7 @@ pub fn pipeReadableStreamToBlob(this: *Blob, globalThis: *jsc.JSGlobalObject, re
         globalThis,
         readable_stream.value,
         file_sink,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @as(**anyopaque, @ptrCast(&signal.ptr)),
     );
 
@@ -2992,8 +3030,11 @@ pub fn getWriter(
     return sink.toJS(globalThis);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn getSliceFrom(this: *Blob, globalThis: *jsc.JSGlobalObject, relativeStart: i64, relativeEnd: i64, content_type: []const u8, content_type_was_allocated: bool) JSValue {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const offset = this.offset +| @as(SizeType, @intCast(relativeStart));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const len = @as(SizeType, @intCast(@max(relativeEnd -| relativeStart, 0)));
 
     // This copies over the charset field
@@ -3045,6 +3086,7 @@ pub fn getSlice(
     var relativeStart: i64 = 0;
 
     // If the optional end parameter is not used as a parameter when making this call, let relativeEnd be size.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var relativeEnd: i64 = @as(i64, @intCast(this.size));
 
     if (args.ptr[0].isString()) {
@@ -3064,9 +3106,11 @@ pub fn getSlice(
             const start = start_.toInt64();
             if (start < 0) {
                 // If the optional start parameter is negative, let relativeStart be start + size.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 relativeStart = @as(i64, @intCast(@max(start +% @as(i64, @intCast(this.size)), 0)));
             } else {
                 // Otherwise, let relativeStart be start.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 relativeStart = @min(@as(i64, @intCast(start)), @as(i64, @intCast(this.size)));
             }
         }
@@ -3077,9 +3121,11 @@ pub fn getSlice(
             const end = end_.toInt64();
             // If end is negative, let relativeEnd be max((size + end), 0).
             if (end < 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 relativeEnd = @as(i64, @intCast(@max(end +% @as(i64, @intCast(this.size)), 0)));
             } else {
                 // Otherwise, let relativeEnd be min(end, size).
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 relativeEnd = @min(@as(i64, @intCast(end)), @as(i64, @intCast(this.size)));
             }
         }
@@ -3327,7 +3373,9 @@ pub const MmapFreeInterface = if (bun.Environment.isPosix) struct {
     fn alloc(_: *anyopaque, _: usize, _: std.mem.Alignment, _: usize) ?[*]u8 {
         return null;
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn free(_: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
+// safe-transpile: @alignCast requires manual review
         bun.sys.munmap(@ptrCast(@alignCast(buf))).unwrap() catch |err| {
             bun.Output.debugWarn("Blob mmap-store munmap failed: {}", .{err});
         };
@@ -3467,9 +3515,11 @@ fn resolveFileStat(store: *Store) void {
         switch (bun.sys.stat(store.data.file.pathlike.path.sliceZ(&buffer))) {
             .result => |stat| {
                 store.data.file.max_size = if (bun.isRegularFile(stat.mode) or stat.size > 0)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @truncate(@as(u64, @intCast(@max(stat.size, 0))))
                 else
                     Blob.max_size;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 store.data.file.mode = @intCast(stat.mode);
                 store.data.file.seekable = bun.isRegularFile(stat.mode);
                 store.data.file.last_modified = jsc.toJSTime(stat.mtime().sec, stat.mtime().nsec);
@@ -3481,9 +3531,11 @@ fn resolveFileStat(store: *Store) void {
         switch (bun.sys.fstat(store.data.file.pathlike.fd)) {
             .result => |stat| {
                 store.data.file.max_size = if (bun.isRegularFile(stat.mode) or stat.size > 0)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @as(SizeType, @truncate(@as(u64, @intCast(@max(stat.size, 0)))))
                 else
                     Blob.max_size;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 store.data.file.mode = @intCast(stat.mode);
                 store.data.file.seekable = bun.isRegularFile(stat.mode);
                 store.data.file.last_modified = jsc.toJSTime(stat.mtime().sec, stat.mtime().nsec);
@@ -3560,6 +3612,7 @@ pub fn finalize(this: *Blob) void {
     shared.deinit();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn initWithAllASCII(bytes: []u8, allocator: std.mem.Allocator, globalThis: *JSGlobalObject, is_all_ascii: bool) Blob {
     // avoid allocating a Blob.Store if the buffer is actually empty
     var store: ?*Blob.Store = null;
@@ -3568,6 +3621,7 @@ pub fn initWithAllASCII(bytes: []u8, allocator: std.mem.Allocator, globalThis: *
         (store.?).is_all_ascii = is_all_ascii;
     }
     return Blob{
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .size = @as(SizeType, @truncate(bytes.len)),
         .store = store,
         .content_type = "",
@@ -3577,8 +3631,10 @@ pub fn initWithAllASCII(bytes: []u8, allocator: std.mem.Allocator, globalThis: *
 }
 
 /// Takes ownership of `bytes`, which must have been allocated with `allocator`.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn init(bytes: []u8, allocator: std.mem.Allocator, globalThis: *JSGlobalObject) Blob {
     return Blob{
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .size = @as(SizeType, @truncate(bytes.len)),
         .store = if (bytes.len > 0)
             Blob.Store.init(bytes, allocator)
@@ -3589,6 +3645,7 @@ pub fn init(bytes: []u8, allocator: std.mem.Allocator, globalThis: *JSGlobalObje
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn createWithBytesAndAllocator(
     bytes: []u8,
     allocator: std.mem.Allocator,
@@ -3596,6 +3653,7 @@ pub fn createWithBytesAndAllocator(
     was_string: bool,
 ) Blob {
     return Blob{
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .size = @as(SizeType, @truncate(bytes.len)),
         .store = if (bytes.len > 0)
             Blob.Store.init(bytes, allocator)
@@ -3606,6 +3664,7 @@ pub fn createWithBytesAndAllocator(
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn tryCreate(
     bytes_: []const u8,
     allocator_: std.mem.Allocator,
@@ -3640,6 +3699,7 @@ pub fn tryCreate(
     return createWithBytesAndAllocator(try allocator_.dupe(u8, bytes_), allocator_, globalThis, was_string);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn create(
     bytes_: []const u8,
     allocator_: std.mem.Allocator,
@@ -3737,6 +3797,7 @@ pub fn deinit(this: *Blob) void {
     }
 }
 
+// safe-transpile: function returns small constant slice — consider zust.String
 pub fn sharedView(this: *const Blob) []const u8 {
     if (this.size == 0 or this.store == null) return "";
     var slice_ = this.store.?.sharedView();
@@ -3766,6 +3827,7 @@ pub fn needsToReadFile(this: *const Blob) bool {
     return this.store != null and (this.store.?.data == .file);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toStringWithBytes(this: *Blob, global: *JSGlobalObject, raw_bytes: []const u8, comptime lifetime: Lifetime) bun.JSError!JSValue {
     const bom, const buf = strings.BOM.detectAndSplit(raw_bytes);
 
@@ -3881,6 +3943,7 @@ pub fn toJSON(this: *Blob, global: *JSGlobalObject, comptime lifetime: Lifetime)
     return toJSONWithBytes(this, global, view_, lifetime);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toJSONWithBytes(this: *Blob, global: *JSGlobalObject, raw_bytes: []const u8, comptime lifetime: Lifetime) bun.JSError!JSValue {
     const bom, const buf = strings.BOM.detectAndSplit(raw_bytes);
     if (buf.len == 0) {
@@ -3920,6 +3983,7 @@ pub fn toJSONWithBytes(this: *Blob, global: *JSGlobalObject, raw_bytes: []const 
     return ZigString.init(buf).toJSONObject(global);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toFormDataWithBytes(this: *Blob, global: *JSGlobalObject, buf: []u8, comptime _: Lifetime) JSValue {
     var encoder = this.getFormDataEncoding() orelse return {
         return ZigString.init("Invalid encoding").toErrorInstance(global);
@@ -3930,14 +3994,17 @@ pub fn toFormDataWithBytes(this: *Blob, global: *JSGlobalObject, buf: []u8, comp
         global.createErrorInstance("FormData encoding failed: {s}", .{@errorName(err)});
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toArrayBufferWithBytes(this: *Blob, global: *JSGlobalObject, buf: []u8, comptime lifetime: Lifetime) bun.JSError!JSValue {
     return toArrayBufferViewWithBytes(this, global, buf, lifetime, .ArrayBuffer);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toUint8ArrayWithBytes(this: *Blob, global: *JSGlobalObject, buf: []u8, comptime lifetime: Lifetime) bun.JSError!JSValue {
     return toArrayBufferViewWithBytes(this, global, buf, lifetime, .Uint8Array);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn toArrayBufferViewWithBytes(this: *Blob, global: *JSGlobalObject, buf: []u8, comptime lifetime: Lifetime, comptime TypedArrayView: jsc.JSValue.JSType) bun.JSError!JSValue {
     switch (comptime lifetime) {
         .clone => {
@@ -4371,6 +4438,7 @@ pub const Any = union(enum) {
     InternalBlob: Internal,
     WTFStringImpl: bun.WTF.StringImpl,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fromOwnedSlice(allocator: std.mem.Allocator, bytes: []u8) Any {
         return .{ .InternalBlob = .{ .bytes = .fromOwnedSlice(allocator, bytes) } };
     }
@@ -4407,7 +4475,9 @@ pub const Any = union(enum) {
     pub inline fn fastSize(this: *const Any) Blob.SizeType {
         return switch (this.*) {
             .Blob => this.Blob.size,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .WTFStringImpl => @truncate(this.WTFStringImpl.byteLength()),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .InternalBlob => @truncate(this.slice().len),
         };
     }
@@ -4415,7 +4485,9 @@ pub const Any = union(enum) {
     pub inline fn size(this: *const Any) Blob.SizeType {
         return switch (this.*) {
             .Blob => this.Blob.size,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .WTFStringImpl => @truncate(this.WTFStringImpl.utf8ByteLength()),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             else => @truncate(this.slice().len),
         };
     }
@@ -4661,6 +4733,7 @@ pub const Any = union(enum) {
         return null;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn contentType(self: *const @This()) []const u8 {
         return switch (self.*) {
             .Blob => self.Blob.content_type,
@@ -4679,6 +4752,7 @@ pub const Any = union(enum) {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn slice(self: *const @This()) []const u8 {
         return switch (self.*) {
             .Blob => self.Blob.sharedView(),
@@ -4762,6 +4836,7 @@ pub const Internal = struct {
         return json;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn sliceConst(this: *const @This()) []const u8 {
         return this.bytes.items;
     }
@@ -4770,10 +4845,12 @@ pub const Internal = struct {
         this.bytes.clearAndFree();
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn slice(this: @This()) []u8 {
         return this.bytes.items;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn toOwnedSlice(this: *@This()) []u8 {
         const bytes = this.bytes.items;
         const capacity = this.bytes.capacity;
@@ -4792,6 +4869,7 @@ pub const Internal = struct {
         this.bytes.clearAndFree();
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn contentType(self: *const @This()) []const u8 {
         if (self.was_string) {
             return MimeType.text.value;
@@ -4812,6 +4890,7 @@ pub const Inline = extern struct {
     len: IntSize align(1) = 0,
     was_string: bool align(1) = false,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn concat(first: []const u8, second: []const u8) Inline {
         const total = first.len + second.len;
         assert(total <= available_bytes);
@@ -4820,32 +4899,40 @@ pub const Inline = extern struct {
         var bytes_slice = inline_blob.bytes[0..total];
 
         if (first.len > 0)
+// safe-transpile: @memcpy requires manual review
             @memcpy(bytes_slice[0..first.len], first);
 
         if (second.len > 0)
+// safe-transpile: @memcpy requires manual review
             @memcpy(bytes_slice[first.len..][0..second.len], second);
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         inline_blob.len = @as(@TypeOf(inline_blob.len), @truncate(total));
         return inline_blob;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn internalInit(data: []const u8, was_string: bool) Inline {
         assert(data.len <= available_bytes);
 
         var blob = Inline{
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .len = @as(IntSize, @intCast(data.len)),
             .was_string = was_string,
         };
 
         if (data.len > 0)
+// safe-transpile: @memcpy requires manual review
             @memcpy(blob.bytes[0..data.len], data);
         return blob;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(data: []const u8) Inline {
         return internalInit(data, false);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initString(data: []const u8) Inline {
         return internalInit(data, true);
     }
@@ -4866,6 +4953,7 @@ pub const Inline = extern struct {
         return out;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn contentType(self: *const @This()) []const u8 {
         if (self.was_string) {
             return MimeType.text.value;
@@ -4876,14 +4964,17 @@ pub const Inline = extern struct {
 
     pub fn deinit(_: *@This()) void {}
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn slice(this: *@This()) []u8 {
         return this.bytes[0..this.len];
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn sliceConst(this: *const @This()) []const u8 {
         return this.bytes[0..this.len];
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn toOwnedSlice(this: *@This()) []u8 {
         return this.slice();
     }
@@ -4923,6 +5014,7 @@ pub fn FileOpener(comptime This: type) type {
             if (Environment.isWindows) {
                 const WrappedCallback = struct {
                     pub fn callback(req: *libuv.fs_t) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
                         var self: *This = @ptrCast(@alignCast(req.data.?));
                         {
                             defer req.deinit();
@@ -4958,6 +5050,7 @@ pub fn FileOpener(comptime This: type) type {
                     this.opened_fd = invalid_fd;
                     Callback(this, invalid_fd);
                 }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.req.data = @ptrCast(this);
                 return;
             }
@@ -5026,11 +5119,13 @@ pub fn FileOpener(comptime This: type) type {
 pub fn FileCloser(comptime This: type) type {
     return struct {
         fn scheduleClose(request: *io.Request) io.Action {
+// safe-transpile: @alignCast requires manual review
             var this: *This = @alignCast(@fieldParentPtr("io_request", request));
             return io.Action{
                 .close = .{
                     .ctx = this,
                     .fd = this.opened_fd,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     .onDone = @ptrCast(&onIORequestClosed),
                     .poll = &this.io_poll,
                     .tag = This.io_tag,
@@ -5046,6 +5141,7 @@ pub fn FileCloser(comptime This: type) type {
 
         fn onCloseIORequest(task: *jsc.WorkPoolTask) void {
             debug("onCloseIORequest()", .{});
+// safe-transpile: @alignCast requires manual review
             var this: *This = @alignCast(@fieldParentPtr("task", task));
             this.close_after_io = false;
             this.update();

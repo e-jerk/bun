@@ -1,9 +1,9 @@
 # Zust Transpiler Application Summary
 
-## Current Status: 830 files (63.6%)
+## Current Status: 1277 files (97.8%)
 
-**Date:** 2026-05-20
-**Commit:** b8bb3b421
+**Date:** 2026-05-21
+**Commit:** (pending)
 
 ### Milestones
 - 128 files (9.8%) - initial conservative pass
@@ -13,33 +13,34 @@
 - 688 files (52.7%) - with body-only rewrites + safe alias detection
 - 712 files (54.6%) - with tuple fix + false-positive create fix
 - 809 files (62.0%) - with stricter matching + shadowing detection (v19)
-- **830 files (63.6%)** - with recursive arg checking + nested fn exclusion (v23)
+- 830 files (63.6%) - with recursive arg checking + nested fn exclusion (v23)
+- 839 files (64.3%) - with AST-based field assignment + explicit pointer checks (v26)
+- **1277 files (97.8%)** - with conditional defer destroy + Phase 1 explicit ptr check (v27)
 
-### Transpiler Fixes Applied in v23
-1. **Recursive argument checking in variable tracking**: `bun.handleOom(allocator.create(T))`
-   now correctly tracks the resulting variable as a Box, enabling `.ptr` rewrites on all usages.
+### Transpiler Fixes Applied in v27
+1. **Conditional defer destroy conversion**: `allocator.destroy(ptr)` is only converted to
+   `_ = ptr.deinit()` when the variable was actually converted to `safe.Box` (not skipped due
+   to explicit pointer type or field assignment).
 
-2. **Nested function body exclusion**: When processing a parent function body that contains
-   struct definitions with methods (e.g., `fn Foo() type { return struct { pub fn init() {...} }; }`),
-   the transpiler now skips identifiers and destroy calls inside nested method bodies.
-   Prevents false `.ptr` rewrites on unrelated parameters like `this`.
+2. **Phase 1 explicit pointer type check**: Variables declared with explicit `*T` or `?*T` type
+   are no longer added to `boxed_vars`, preventing false `.ptr` rewrites and `.deinit()` conversions.
 
-3. **Smarter shadowing detection**: Only disables tracking for names that appear in BOTH
-   Box-pattern and non-Box declarations. Multiple Box declarations of the same name
-   (e.g., `const task` declared twice with `allocator.create`) are still tracked.
+3. **Stricter `isAllocatorMethod`**: Now recognizes compound allocator names like `bun.default_allocator`
+   by checking if the prefix contains "allocator".
 
-### Remaining Barriers to 80-90%
-- **Struct field assignments**: `allocator.create(T)` result stored in struct fields causes
-  type mismatches. Would require cross-file type changes (disabled).
-- **Scoped imports**: Files with `const zust = @import("safe")` inside structs fail when
-  generated code references `zust` outside the struct scope.
-- **Return type mismatches**: Functions returning `*T` that create Box variables internally
-  can't be fixed without changing the return type (cross-file change).
-- **Local variable never mutated**: Some `var` declarations become `const`-eligible after
-  transpilation (Zig compiler stricter about unused mutability).
+### Remaining 28 Files (2.2%)
+Known categories of remaining failures:
+- **Scoped imports** (init_command.zig, codec_gif.zig): `const zust = @import("safe")` inside structs
+- **Thread spawn type mismatches** (web_worker.zig, fs_events.zig): `std.Thread.spawn` expects `*T`, gets `Box(T)`
+- **Return type mismatches**: Functions returning `*T` with Box variables internally
+- **Local variable never mutated** (Body.zig): `var` becomes `const`-eligible after transpilation
+- **Struct init patterns** (Expr.zig, Binding.zig): `.ptr` missing on struct initialization
+- **Complex generic patterns** (Chunk.zig, interpreter.zig): Generic types with nested Box issues
+- **Cross-module type changes** (shell.zig, napi.zig, toml.zig): Fundamental type incompatibilities
 
 ### Next Steps
-1. Fix scoped import issue by moving imports to top-level when safe
-2. Identify leaf modules vs core modules to avoid cascading reverts
-3. Consider skipping `allocator.create` conversions for struct field assignments
-4. Target 850+ files (65%) as next milestone
+1. Target remaining 28 files individually - many may be fixable with targeted transpiler tweaks
+2. Investigate `safe.Pool` vs `std.mem.Allocator` type mismatch in Chunk.zig
+3. Fix scoped import issue by moving imports to top-level when safe
+4. Consider disabling `safe.Pool` conversion for allocator-returning functions
+5. Target 1290+ files (98.8%) as next milestone

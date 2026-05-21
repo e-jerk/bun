@@ -131,6 +131,7 @@ pub fn resetConnectionTimeout(this: *PostgresSQLConnection) void {
         return;
     }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.timer.next = bun.timespec.msFromNow(.allow_mocked_time, @intCast(interval));
     this.vm.timer.insert(&this.timer);
 }
@@ -194,6 +195,7 @@ fn setupMaxLifetimeTimerIfNecessary(this: *PostgresSQLConnection) void {
     if (this.max_lifetime_interval_ms == 0) return;
     if (this.max_lifetime_timer.state == .ACTIVE) return;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.max_lifetime_timer.next = bun.timespec.msFromNow(.allow_mocked_time, @intCast(this.max_lifetime_interval_ms));
     this.vm.timer.insert(&this.max_lifetime_timer);
 }
@@ -309,7 +311,9 @@ pub fn flushData(this: *PostgresSQLConnection) void {
     this.flags.has_backpressure = wrote < chunk.len;
     debug("flushData: wrote {d}/{d} bytes", .{ wrote, chunk.len });
     if (wrote > 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         SocketMonitor.write(chunk[0..@intCast(wrote)]);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.write_buffer.consume(@intCast(wrote));
     }
 }
@@ -345,6 +349,7 @@ pub fn failWithJSValue(this: *PostgresSQLConnection, value: JSValue) void {
     ) catch |e| this.globalObject.reportActiveExceptionAsUnhandled(e);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn failFmt(this: *PostgresSQLConnection, code: []const u8, comptime fmt: [:0]const u8, args: anytype) void {
     const message = bun.handleOom(std.fmt.allocPrint(bun.default_allocator, fmt, args));
     defer bun.default_allocator.free(message);
@@ -354,6 +359,7 @@ pub fn failFmt(this: *PostgresSQLConnection, code: []const u8, comptime fmt: [:0
     this.failWithJSValue(err);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fail(this: *PostgresSQLConnection, message: []const u8, err: AnyPostgresError) void {
     debug("failed: {s}: {s}", .{ message, @errorName(err) });
 
@@ -410,6 +416,7 @@ fn startTLS(this: *PostgresSQLConnection, socket: uws.AnySocket) void {
     const written = socket.write(ssl_request[offset..]);
     if (written > 0) {
         this.tls_status = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .message_sent = offset + @as(u8, @intCast(written)),
         };
     } else {
@@ -448,6 +455,7 @@ pub fn onHandshake(this: *PostgresSQLConnection, success: i32, ssl_error: uws.us
                         return;
                     }
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr: *BoringSSL.c.SSL = @ptrCast(this.socket.getNativeHandle());
                     if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername| {
                         const hostname = servername[0..bun.len(servername)];
@@ -504,6 +512,7 @@ fn drainInternal(this: *PostgresSQLConnection) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onData(this: *PostgresSQLConnection, data: []const u8) void {
     this.ref();
     this.flags.is_processing_data = true;
@@ -730,8 +739,11 @@ pub fn call(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JS
         .secure = secure,
         .ssl_mode = ssl_mode,
         .tls_status = if (ssl_mode != .disable) .pending else .none,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .idle_timeout_interval_ms = @intCast(idle_timeout),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .connection_timeout_ms = @intCast(connection_timeout),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .max_lifetime_interval_ms = @intCast(max_lifetime),
         .flags = .{
             .use_unnamed_prepared_statements = use_unnamed_prepared_statements,
@@ -835,6 +847,7 @@ pub fn SocketHandler(comptime ssl: bool) type {
             this.onTimeout();
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(this: *PostgresSQLConnection, socket: SocketType, data: []const u8) void {
             _ = socket;
             if (this.vm.isShuttingDown()) {
@@ -1003,12 +1016,15 @@ pub fn canPipeline(this: *PostgresSQLConnection) bool {
 pub const Writer = struct {
     connection: *PostgresSQLConnection,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(this: Writer, data: []const u8) AnyPostgresError!void {
         var buffer = &this.connection.write_buffer;
         try buffer.write(bun.default_allocator, data);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pwrite(this: Writer, data: []const u8, index: usize) AnyPostgresError!void {
+// safe-transpile: @memcpy requires manual review
         @memcpy(this.connection.write_buffer.byte_list.slice()[index..][0..data.len], data);
     }
 
@@ -1034,10 +1050,12 @@ pub const Reader = struct {
 
     pub const ensureLength = ensureCapacity;
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn peek(this: Reader) []const u8 {
         return this.connection.read_buffer.remaining();
     }
     pub fn skip(this: Reader, count: usize) void {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         this.connection.read_buffer.head = @min(this.connection.read_buffer.head + @as(u32, @truncate(count)), this.connection.read_buffer.byte_list.len);
     }
     pub fn ensureCapacity(this: Reader, count: usize) bool {
@@ -1477,6 +1495,7 @@ pub fn on(this: *PostgresSQLConnection, comptime MessageType: anytype, comptime 
             var cells: []DataCell.SQLDataCell = stack_buf[0..@min(statement.fields.len, jsc.JSObject.maxInlineCapacity())];
             var free_cells = false;
             defer {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (cells[0..putter.count]) |*cell| {
                     cell.deinit();
                 }
@@ -1618,6 +1637,7 @@ pub fn on(this: *PostgresSQLConnection, comptime MessageType: anytype, comptime 
             // invalidate state derived from them so the next DataRow builds
             // the correct structure instead of reusing a stale cached one.
             if (statement.fields.len > 0) {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (statement.fields) |*field| {
                     field.deinit();
                 }
@@ -1696,7 +1716,8 @@ pub fn on(this: *PostgresSQLConnection, comptime MessageType: anytype, comptime 
                     const client_key = sasl.clientKey();
                     const client_key_signature = sasl.clientKeySignature(&client_key, auth_string);
                     var client_key_xor_buffer: [32]u8 = undefined;
-                    for (&client_key_xor_buffer, client_key, client_key_signature) |*out, a, b| {
+                    // safe-transpile: for with index access requires manual review
+    for (&client_key_xor_buffer, client_key, client_key_signature) |*out, a, b| {
                         out.* = a ^ b;
                     }
 

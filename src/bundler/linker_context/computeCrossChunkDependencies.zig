@@ -5,7 +5,6 @@ pub fn computeCrossChunkDependencies(c: *LinkerContext, chunks: []Chunk) bun.OOM
     }
 
     const chunk_metas = try c.allocator().alloc(ChunkMeta, chunks.len);
-// safe-transpile: for loop with pointer capture requires manual review
     for (chunk_metas) |*meta| {
         // these must be global allocator
         meta.* = .{
@@ -15,7 +14,6 @@ pub fn computeCrossChunkDependencies(c: *LinkerContext, chunks: []Chunk) bun.OOM
         };
     }
     defer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunk_metas) |*meta| {
             meta.imports.deinit();
             meta.exports.deinit();
@@ -92,7 +90,6 @@ const CrossChunkDependencies = struct {
             const wrapper_ref = deps.wrapper_refs[source_index];
             const _chunks = deps.chunks;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (parts) |*part| {
                 if (!part.is_live)
                     continue;
@@ -118,7 +115,6 @@ const CrossChunkDependencies = struct {
                 // the same name should already be marked as all being in a single
                 // chunk. In that case this will overwrite the same value below which
                 // is fine.
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 deps.symbols.assignChunkIndex(part.declared_symbols, @as(u32, @truncate(chunk_index)));
 
                 const used_refs = part.symbol_uses.keys();
@@ -223,7 +219,6 @@ const CrossChunkDependencies = struct {
 fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chunk, chunk_metas: []ChunkMeta) !void {
 
     // Mark imported symbols as exported in the chunk from which they are declared
-    // safe-transpile: for with index access requires manual review
     for (chunks, chunk_metas, 0..) |*chunk, *chunk_meta, chunk_index| {
         if (chunk.content != .javascript) {
             continue;
@@ -262,14 +257,12 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
         // this entry point, even if there are no imports. We need to make sure
         // these chunks are evaluated for their side effects too.
         if (chunk.entry_point.is_entry_point) {
-            // safe-transpile: for with index access requires manual review
-    for (chunks, 0..) |*other_chunk, other_chunk_index| {
+            for (chunks, 0..) |*other_chunk, other_chunk_index| {
                 if (other_chunk_index == chunk_index or other_chunk.content != .javascript) continue;
 
                 if (other_chunk.entry_bits.isSet(chunk.entry_point.entry_point_id)) {
                     _ = js.imports_from_other_chunks.getOrPutValue(
                         c.allocator(),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         @as(u32, @truncate(other_chunk_index)),
                         CrossChunkImport.Item.List{},
                     ) catch unreachable;
@@ -287,8 +280,7 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
             const new_imports = bun.handleOom(
                 chunk.cross_chunk_imports.writableSlice(c.allocator(), dynamic_chunk_indices.len),
             );
-            // safe-transpile: for with index access requires manual review
-    for (dynamic_chunk_indices, new_imports) |dynamic_chunk_index, *item| {
+            for (dynamic_chunk_indices, new_imports) |dynamic_chunk_index, *item| {
                 item.* = .{
                     .import_kind = .dynamic,
                     .chunk_index = dynamic_chunk_index,
@@ -309,8 +301,7 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
         var stable_ref_list = std.array_list.Managed(StableRef).init(c.allocator());
         defer stable_ref_list.deinit();
 
-        // safe-transpile: for with index access requires manual review
-    for (chunks, chunk_metas) |*chunk, *chunk_meta| {
+        for (chunks, chunk_metas) |*chunk, *chunk_meta| {
             if (chunk.content != .javascript) continue;
 
             var repr = &chunk.content.javascript;
@@ -322,13 +313,11 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
                         &stable_ref_list,
                     );
                     var clause_items = BabyList(js_ast.ClauseItem).initCapacity(c.allocator(), stable_ref_list.items.len) catch unreachable;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     clause_items.len = @as(u32, @truncate(stable_ref_list.items.len));
                     repr.exports_to_other_chunks.ensureUnusedCapacity(c.allocator(), stable_ref_list.items.len) catch unreachable;
                     r.clearRetainingCapacity();
 
-                    // safe-transpile: for with index access requires manual review
-    for (stable_ref_list.items, clause_items.slice()) |stable_ref, *clause_item| {
+                    for (stable_ref_list.items, clause_items.slice()) |stable_ref, *clause_item| {
                         const ref = stable_ref.ref;
                         const alias = if (c.options.minify_identifiers) try r.nextMinifiedName(c.allocator()) else r.nextRenamedName(c.graph.symbols.get(ref).?.original_name);
 
@@ -376,7 +365,6 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
         debug("Generating cross-chunk imports", .{});
         var list = CrossChunkImport.List.init(c.allocator());
         defer list.deinit();
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*chunk| {
             if (chunk.content != .javascript) continue;
             var repr = &chunk.content.javascript;
@@ -388,7 +376,6 @@ fn computeCrossChunkDependenciesWithChunkMetas(c: *LinkerContext, chunks: []Chun
             for (cross_chunk_imports_input) |cross_chunk_import| {
                 switch (c.options.output_format) {
                     .esm => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const import_record_index = @as(u32, @intCast(cross_chunk_imports.len));
 
                         var clauses = std.array_list.Managed(js_ast.ClauseItem).initCapacity(c.allocator(), cross_chunk_import.sorted_import_items.len) catch unreachable;

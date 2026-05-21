@@ -6,12 +6,14 @@ pub fn dumpSource(vm: *VirtualMachine, specifier: string, printer: anytype) void
     dumpSourceString(vm, specifier, printer.ctx.getWritten());
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn dumpSourceString(vm: *VirtualMachine, specifier: string, written: []const u8) void {
     dumpSourceStringFailiable(vm, specifier, written) catch |e| {
         Output.debugWarn("Failed to dump source string: {}", .{e});
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written: []const u8) !void {
     if (!Environment.isDebug) return;
     if (bun.feature_flag.BUN_DEBUG_NO_DUMP.get()) return;
@@ -30,8 +32,10 @@ pub fn dumpSourceStringFailiable(vm: *VirtualMachine, specifier: string, written
             .windows => brk: {
                 const temp = bun.fs.FileSystem.RealFS.platformTempDir();
                 var win_temp_buffer: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(win_temp_buffer[0..temp.len], temp);
                 const suffix = "\\bun-debug-src";
+// safe-transpile: @memcpy requires manual review
                 @memcpy(win_temp_buffer[temp.len .. temp.len + suffix.len], suffix);
                 win_temp_buffer[temp.len + suffix.len] = 0;
                 break :brk win_temp_buffer[0 .. temp.len + suffix.len :0];
@@ -516,6 +520,7 @@ pub const RuntimeTranspilerStore = struct {
                 return;
             }
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (parse_result.ast.import_records.slice()) |*import_record_| {
                 var import_record: *bun.ImportRecord = import_record_;
 
@@ -611,6 +616,7 @@ pub const RuntimeTranspilerStore = struct {
                 .allocator = null,
                 .source_code = source_code,
                 .is_commonjs_module = is_commonjs_module,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .module_info = if (module_info) |mi| @ptrCast(mi.asDeserialized()) else null,
                 .tag = this.resolved_source.tag,
             };

@@ -1,6 +1,7 @@
 // This is split into a separate function to conserve stack space.
 // On Windows, a single path buffer can take 64 KB.
 const zust = @import("safe");
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn getArgv0(globalThis: *jsc.JSGlobalObject, PATH: []const u8, cwd: []const u8, pretend_argv0: ?[*:0]const u8, first_cmd: JSValue, allocator: std.mem.Allocator) bun.JSError!struct {
     argv0: [:0]const u8,
     arg0: [:0]u8,
@@ -50,6 +51,7 @@ fn getArgv0(globalThis: *jsc.JSGlobalObject, PATH: []const u8, cwd: []const u8, 
 }
 
 /// `argv` for `Bun.spawn` & `Bun.spawnSync`
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn getArgv(globalThis: *jsc.JSGlobalObject, args: JSValue, PATH: []const u8, cwd: []const u8, argv0: *?[*:0]const u8, allocator: std.mem.Allocator, argv: *std.array_list.Managed(?[*:0]const u8)) bun.JSError!void {
     if (args.isEmptyOrUndefinedOrNull()) {
         return globalThis.throwInvalidArguments("cmd must be an array of strings", .{});
@@ -318,6 +320,7 @@ pub fn spawnMaybeSync(
                                 },
                             };
                             if (opt == .ipc) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 ipc_channel = @intCast(extra_fds.items.len);
                             }
                             try extra_fds.append(opt);
@@ -376,6 +379,7 @@ pub fn spawnMaybeSync(
 
                     const timeout_int = try globalThis.validateIntegerRange(timeout_value, u64, 0, .{ .min = 0, .field_name = "timeout" });
                     if (timeout_int > 0)
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         timeout = @intCast(@as(u31, @truncate(timeout_int)));
                 }
             }
@@ -497,6 +501,7 @@ pub fn spawnMaybeSync(
         const ipc_fd: i32 = brk: {
             if (ipc_channel == -1) {
                 // If the user didn't specify an IPC channel, we need to add one
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 ipc_channel = @intCast(extra_fds.items.len);
                 var ipc_extra_fd_default = Stdio{ .ipc = {} };
                 const fd: i32 = ipc_channel + 3;
@@ -510,6 +515,7 @@ pub fn spawnMaybeSync(
                 }
                 break :brk fd;
             } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 break :brk @intCast(ipc_channel + 3);
             }
         };
@@ -532,7 +538,9 @@ pub fn spawnMaybeSync(
     try argv.append(null);
 
     if (comptime is_sync) {
-        for (&stdio, 0..) |*io, i| {
+        // safe-transpile: for with index access requires manual review
+    for (&stdio, 0..) |*io, i| {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             io.toSync(@truncate(i));
         }
     }
@@ -621,7 +629,9 @@ pub fn spawnMaybeSync(
 
     var spawned = switch (bun.spawn.spawnProcess(
         &spawn_options,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(argv.items.ptr),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(env_array.items.ptr),
     ) catch |err| switch (err) {
         error.EMFILE, error.ENFILE => {
@@ -681,6 +691,7 @@ pub fn spawnMaybeSync(
     });
 
     const posix_ipc_fd = if (Environment.isPosix and !is_sync and maybe_ipc_mode != null)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         spawned.extra_pipes.items[@intCast(ipc_channel)].fd()
     else
         bun.invalid_fd;
@@ -838,14 +849,17 @@ pub fn spawnMaybeSync(
                 subprocess.ipc_data.?.socket = .{ .open = posix_ipc_info };
             }
             // uws owns the fd now (owns_fd=1); neutralize the slot so finalizeStreams doesn't double-close.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             subprocess.stdio_pipes.items[@intCast(ipc_channel)] = .unavailable;
         } else {
             if (ipc_data.windowsConfigureServer(
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 subprocess.stdio_pipes.items[@intCast(ipc_channel)].buffer,
             ).asErr()) |err| {
                 subprocess.deref();
                 return globalThis.throwValue(try err.toJS(globalThis));
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             subprocess.stdio_pipes.items[@intCast(ipc_channel)] = .unavailable;
         }
         ipc_data.writeVersionPacket(globalThis);
@@ -1130,6 +1144,7 @@ pub fn spawnMaybeSync(
     return sync_value;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn throwCommandNotFound(globalThis: *jsc.JSGlobalObject, command: []const u8) bun.JSError {
     const err = jsc.SystemError{
         .message = bun.handleOom(bun.String.createFormat("Executable not found in $PATH: \"{s}\"", .{command})),

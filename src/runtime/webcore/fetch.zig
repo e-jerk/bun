@@ -1181,6 +1181,7 @@ fn fetchImpl(
                     }
 
                     const original_size = body.AnyBlob.Blob.size;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const stat_size = @as(Blob.SizeType, @intCast(stat.size));
                     const blob_size = if (bun.isRegularFile(stat.mode))
                         stat_size
@@ -1345,6 +1346,7 @@ fn fetchImpl(
                 if (headers) |h| h.getContentEncoding() else null,
                 proxy_url,
                 credentialsWithOptions.request_payer,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(&Wrapper.resolve),
                 s3_stream,
             );

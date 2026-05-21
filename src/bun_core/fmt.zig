@@ -4,44 +4,56 @@ pub const TableSymbols = struct {
     pub const unicode = TableSymbols{ .enable_ansi_colors = true };
     pub const ascii = TableSymbols{ .enable_ansi_colors = false };
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn topLeftSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┌" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn topRightSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┐" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn topColumnSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┬" else "-";
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn bottomLeftSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "└" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn bottomRightSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┘" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn bottomColumnSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┴" else "-";
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn middleLeftSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "├" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn middleRightSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┤" else "|";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn middleColumnSep(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "┼" else "|";
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn horizontalEdge(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "─" else "-";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn verticalEdge(comptime s: TableSymbols) []const u8 {
         return if (s.enable_ansi_colors) "│" else "|";
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn Table(
     comptime column_color: []const u8,
     comptime column_left_pad: usize,
@@ -75,7 +87,8 @@ pub fn Table(
         }
 
         pub fn printLine(this: *const @This(), left_edge_separator: string, right_edge_separator: string, column_separator: string) void {
-            for (this.column_inside_lengths, 0..) |column_inside_length, i| {
+            // safe-transpile: for with index access requires manual review
+    for (this.column_inside_lengths, 0..) |column_inside_length, i| {
                 if (i == 0) {
                     Output.pretty("{s}", .{left_edge_separator});
                 } else {
@@ -91,7 +104,8 @@ pub fn Table(
         }
 
         pub fn printColumnNames(this: *const @This()) void {
-            for (this.column_inside_lengths, 0..) |column_inside_length, i| {
+            // safe-transpile: for with index access requires manual review
+    for (this.column_inside_lengths, 0..) |column_inside_length, i| {
                 Output.pretty("{s}", .{symbols.verticalEdge()});
                 for (0..column_left_pad) |_| Output.pretty(" ", .{});
                 Output.pretty("<b><" ++ column_color ++ ">{s}<r>", .{this.column_names[i]});
@@ -237,15 +251,18 @@ const JSONFormatterUTF8 = struct {
 };
 
 /// Expects latin1
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn formatJSONStringLatin1(text: []const u8) JSONFormatter {
     return .{ .input = text };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn formatJSONStringUTF8(text: []const u8, opts: JSONFormatterUTF8.Options) JSONFormatterUTF8 {
     return .{ .input = text, .opts = opts };
 }
 
 const SharedTempBuffer = [32 * 1024]u8;
+// safe-transpile: function returns small constant slice — consider safe.String
 fn getSharedBuffer() []u8 {
     return std.mem.asBytes(shared_temp_buffer_ptr orelse brk: {
         shared_temp_buffer_ptr = bun.default_allocator.create(SharedTempBuffer) catch unreachable;
@@ -262,9 +279,11 @@ pub fn formatUTF16Type(slice_: []const u16, writer: *std.Io.Writer) !void {
     defer {
         if (shared_temp_buffer_ptr) |existing| {
             if (existing != chunk.ptr) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.default_allocator.destroy(@as(*SharedTempBuffer, @ptrCast(chunk.ptr)));
             }
         } else {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             shared_temp_buffer_ptr = @ptrCast(chunk.ptr);
         }
     }
@@ -288,9 +307,11 @@ pub fn formatUTF16TypeWithPathOptions(slice_: []const u16, writer: *std.Io.Write
     defer {
         if (shared_temp_buffer_ptr) |existing| {
             if (existing != chunk.ptr) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.default_allocator.destroy(@as(*SharedTempBuffer, @ptrCast(chunk.ptr)));
             }
         } else {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             shared_temp_buffer_ptr = @ptrCast(chunk.ptr);
         }
     }
@@ -444,6 +465,7 @@ pub fn fmtPath(
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn formatLatin1(slice_: []const u8, writer: *std.Io.Writer) !void {
     var chunk = getSharedBuffer();
     var slice = slice_;
@@ -453,9 +475,11 @@ pub fn formatLatin1(slice_: []const u8, writer: *std.Io.Writer) !void {
     defer {
         if (shared_temp_buffer_ptr) |existing| {
             if (existing != chunk.ptr) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.default_allocator.destroy(@as(*SharedTempBuffer, @ptrCast(chunk.ptr)));
             }
         } else {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             shared_temp_buffer_ptr = @ptrCast(chunk.ptr);
         }
     }
@@ -621,8 +645,10 @@ pub const FormatValidIdentifier = struct {
 // - Strips ANSI output as it will appear malformed.
 pub fn githubActionWriter(writer: *std.Io.Writer, self: string) !void {
     var offset: usize = 0;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const end = @as(u32, @truncate(self.len));
     while (offset < end) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (strings.indexOfNewlineOrNonASCIIOrANSI(self, @as(u32, @truncate(offset)))) |i| {
             const byte = self[i];
             if (byte > 0x7F) {
@@ -691,6 +717,7 @@ pub const QuotedFormatter = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtJavaScript(text: []const u8, opts: QuickAndDirtyJavaScriptSyntaxHighlighter.Options) QuickAndDirtyJavaScriptSyntaxHighlighter {
     return QuickAndDirtyJavaScriptSyntaxHighlighter{
         .text = text,
@@ -716,6 +743,7 @@ pub const QuickAndDirtyJavaScriptSyntaxHighlighter = struct {
         red,
         pink,
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn color(this: ColorCode) []const u8 {
             return switch (this) {
                 .magenta => "\x1b[35m",
@@ -1329,7 +1357,8 @@ pub fn EnumTagListFormatter(comptime Enum: type, comptime Separator: anytype) ty
         const output = brk: {
             var text: []const u8 = "";
             const names = std.meta.fieldNames(Enum);
-            for (names, 0..) |name, i| {
+            // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name, i| {
                 if (Separator == .list) {
                     if (i > 0) {
                         if (i + 1 == names.len) {
@@ -1358,6 +1387,7 @@ pub fn enumTagList(comptime Enum: type, comptime separator: anytype) EnumTagList
     return EnumTagListFormatter(Enum, separator){};
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn formatIp(address: @import("std-net-shim").Address, into: []u8) ![]u8 {
     // @import("std-net-shim").Address.format includes `:<port>` and square brackets (IPv6)
     //  while Node does neither.  This uses format then strips these to bring
@@ -1474,6 +1504,7 @@ pub fn size(bytes: anytype, opts: SizeFormatter.Options) SizeFormatter {
     return .{
         .value = switch (@TypeOf(bytes)) {
             f64, f32, f128 => @intFromFloat(bytes),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             i64, isize => @intCast(bytes),
             else => bytes,
         },
@@ -1527,8 +1558,10 @@ pub fn HexIntFormatter(comptime Int: type, comptime lower: bool) type {
 
         fn getOutBuf(value: Int) BufType {
             var buf: BufType = std.mem.zeroes(BufType);
-            inline for (&buf, 0..) |*c, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (&buf, 0..) |*c, i| {
                 // value relative to the current nibble
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 c.* = table[@as(u8, @as(u4, @truncate(value >> comptime ((buf.len - i - 1) * 4)))) & 0xF];
             }
             return buf;
@@ -1646,10 +1679,12 @@ pub fn fmtDurationOneDecimal(ns: u64) std.fmt.Alt(FormatDurationData, formatDura
     return .{ .data = FormatDurationData{ .ns = ns } };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtSlice(data: anytype, comptime delim: []const u8) FormatSlice(@TypeOf(data), delim) {
     return .{ .slice = data };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn FormatSlice(comptime T: type, comptime delim: []const u8) type {
     return struct {
         slice: T,
@@ -1674,16 +1709,20 @@ pub fn double(number: f64) FormatDouble {
 pub const FormatDouble = struct {
     number: f64,
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn dtoa(buf: *[124]u8, number: f64) []const u8 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const len = bun.cpp.WTF__dtoa(@ptrCast(buf.ptr), number);
         return buf[0..len];
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn dtoaWithNegativeZero(buf: *[124]u8, number: f64) []const u8 {
         if (std.math.isNegativeZero(number)) {
             return "-0";
         }
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const len = bun.cpp.WTF__dtoa(@ptrCast(buf.ptr), number);
         return buf[0..len];
     }
@@ -1695,6 +1734,7 @@ pub const FormatDouble = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn nullableFallback(value: anytype, null_fallback: []const u8) NullableFallback(@TypeOf(value)) {
     return .{ .value = value, .null_fallback = null_fallback };
 }
@@ -1714,10 +1754,12 @@ pub fn NullableFallback(comptime T: type) type {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn escapePowershell(str: []const u8) std.fmt.Alt([]const u8, escapePowershellImpl) {
     return .{ .data = str };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn escapePowershellImpl(str: []const u8, writer: *std.Io.Writer) !void {
     var remain = str;
     while (bun.strings.indexOfAny(remain, "\"`")) |i| {

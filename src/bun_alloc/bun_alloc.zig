@@ -21,15 +21,19 @@ pub fn isSliceInBufferT(comptime T: type, slice: []const T, buffer: []const T) b
 
 /// Checks if a slice's pointer is contained within another slice.
 /// If you need to make this generic, use isSliceInBufferT.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isSliceInBuffer(slice: []const u8, buffer: []const u8) bool {
     return isSliceInBufferT(u8, slice, buffer);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn sliceRange(slice: []const u8, buffer: []const u8) ?[2]u32 {
     return if (@intFromPtr(buffer.ptr) <= @intFromPtr(slice.ptr) and
         (@intFromPtr(slice.ptr) + slice.len) <= (@intFromPtr(buffer.ptr) + buffer.len))
         [2]u32{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @as(u32, @truncate(@intFromPtr(slice.ptr) - @intFromPtr(buffer.ptr))),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @as(u32, @truncate(slice.len)),
         }
     else
@@ -375,6 +379,7 @@ pub fn BSSStringList(comptime _count: usize, comptime _item_length: usize) type 
             return isSliceInBuffer(value, &self.backing_buf);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn editableSlice(slice: []const u8) []u8 {
             return @constCast(slice);
         }
@@ -384,16 +389,19 @@ pub fn BSSStringList(comptime _count: usize, comptime _item_length: usize) type 
             return @constCast(appended);
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn getMutable(self: *Self, len: usize) ![]u8 {
             return try self.appendMutable(EmptyType, EmptyType{ .len = len });
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn printWithType(self: *Self, comptime fmt: []const u8, comptime Args: type, args: Args) OOM![]const u8 {
             var buf = try self.appendMutable(EmptyType, EmptyType{ .len = std.fmt.count(fmt, args) + 1 });
             buf[buf.len - 1] = 0;
             return std.fmt.bufPrint(buf.ptr[0 .. buf.len - 1], fmt, args) catch unreachable;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn print(self: *Self, comptime fmt: []const u8, args: anytype) OOM![]const u8 {
             return try printWithType(self, fmt, @TypeOf(args), args);
         }
@@ -411,7 +419,8 @@ pub fn BSSStringList(comptime _count: usize, comptime _item_length: usize) type 
             defer self.mutex.unlock();
 
             const lowercase_append_buf = &lowercase_bufs.get().buf;
-            for (_value, 0..) |c, i| {
+            // safe-transpile: for with index access requires manual review
+    for (_value, 0..) |c, i| {
                 lowercase_append_buf[i] = std.ascii.toLower(c);
             }
             const slice = lowercase_append_buf[0.._value.len];
@@ -491,6 +500,7 @@ pub fn BSSStringList(comptime _count: usize, comptime _item_length: usize) type 
             var result = IndexType{ .index = std.math.maxInt(u31), .is_overflow = instance.slice_buf_used > max_index };
 
             if (result.is_overflow) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 result.index = @as(u31, @intCast(self.overflow_list.len()));
             } else {
                 result.index = instance.slice_buf_used;
@@ -558,6 +568,7 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
             return instance.backing_buf_used >= @as(u16, count);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getOrPut(self: *Self, denormalized_key: []const u8) !Result {
             const key = if (comptime remove_trailing_slashes) std.mem.trimEnd(u8, denormalized_key, std.fs.path.sep_str) else denormalized_key;
             const _key = bun.hash(key);
@@ -586,6 +597,7 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(self: *Self, denormalized_key: []const u8) ?*ValueType {
             const key = if (comptime remove_trailing_slashes) std.mem.trimEnd(u8, denormalized_key, std.fs.path.sep_str) else denormalized_key;
             const _key = bun.hash(key);
@@ -644,6 +656,7 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
         }
 
         /// Returns true if the entry was removed
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn remove(self: *Self, denormalized_key: []const u8) bool {
             self.mutex.lock();
             defer self.mutex.unlock();
@@ -721,9 +734,11 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
         pub fn isOverflowing() bool {
             return instance.map.backing_buf_used >= count;
         }
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getOrPut(self: *Self, key: []const u8) !Result {
             return try self.map.getOrPut(key);
         }
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(self: *Self, key: []const u8) ?*ValueType {
             return @call(bun.callmod_inline, BSSMapType.get, .{ self.map, key });
         }
@@ -785,6 +800,7 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
             if (!result.index.is_overflow) {
                 instance.key_list_slices[result.index.index] = slice;
             } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (@as(u31, @intCast(instance.key_list_overflow.items.len)) > result.index.index) {
                     const existing_slice = instance.key_list_overflow.items[result.index.index];
                     if (!isKeyStaticallyAllocated(existing_slice)) {
@@ -803,6 +819,7 @@ pub fn BSSMap(comptime ValueType: type, comptime count: anytype, comptime store_
 
         /// This does not free the keys.
         /// Returns `true` if an entry had previously existed.
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn remove(self: *Self, key: []const u8) bool {
             return self.map.remove(key);
         }
