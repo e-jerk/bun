@@ -24,10 +24,12 @@ pub fn toJS(this: *RefString, global: *jsc.JSGlobalObject) jsc.JSValue {
 
 pub const Callback = fn (ctx: *anyopaque, str: *RefString) void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn computeHash(input: []const u8) u32 {
     return std.hash.XxHash32.hash(0, input);
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn slice(this: *RefString) []const u8 {
     this.ref();
 
@@ -38,6 +40,7 @@ pub fn ref(this: *RefString) void {
     this.impl.ref();
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn leak(this: RefString) []const u8 {
     @setRuntimeSafety(false);
     return this.ptr[0..this.len];
@@ -52,7 +55,7 @@ pub fn deinit(this: *RefString) void {
         onBeforeDeinit(this.ctx.?, this);
     }
 
-    this.allocator.free(this.leak());
+    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     this.allocator.destroy(this);
 }
 

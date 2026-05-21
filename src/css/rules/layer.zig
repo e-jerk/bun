@@ -21,7 +21,8 @@ pub const LayerName = struct {
 
             pub fn eql(_: @This(), a: LayerName, b: LayerName, _: usize) bool {
                 if (a.v.len != b.v.len) return false;
-                for (a.v.items, 0..) |part, i| {
+                // safe-transpile: for with index access requires manual review
+    for (a.v.items, 0..) |part, i| {
                     if (!bun.strings.eql(part, b.v.items[i])) return false;
                 }
                 return true;
@@ -49,7 +50,8 @@ pub const LayerName = struct {
 
     pub fn eql(lhs: *const LayerName, rhs: *const LayerName) bool {
         if (lhs.v.len() != rhs.v.len()) return false;
-        for (lhs.v.slice(), rhs.v.slice()) |l, r| {
+        // safe-transpile: for with index access requires manual review
+    for (lhs.v.slice(), rhs.v.slice()) |l, r| {
             if (!bun.strings.eql(l, r)) return false;
         }
         return true;

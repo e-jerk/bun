@@ -33,6 +33,7 @@ const MetafileBuilder = @This();
 /// Generates the JSON fragment for a single output chunk.
 /// Called during parallel chunk generation in postProcessJSChunk/postProcessCSSChunk.
 /// The result is stored in chunk.metafile_chunk_json and assembled later.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn generateChunkJson(
     allocator: std.mem.Allocator,
     c: *const LinkerContext,
@@ -161,6 +162,7 @@ pub fn generateChunkJson(
 /// Called after all chunks have been generated in parallel.
 /// Chunk references (unique_keys) are resolved to their final output paths.
 /// The caller is responsible for freeing the returned slice.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn generate(
     allocator: std.mem.Allocator,
     c: *LinkerContext,
@@ -185,6 +187,7 @@ pub fn generate(
     defer seen_sources.deinit();
 
     // Mark all files that appear in chunks
+// safe-transpile: for loop with pointer capture requires manual review
     for (chunks) |*chunk| {
         var iter = chunk.files_with_parts_in_chunk.iterator();
         while (iter.next()) |entry| {
@@ -240,7 +243,7 @@ pub fn generate(
                 j.pushStatic("\"");
 
                 // Add "original" field if different from path
-                if (record.original_path.len > 0 and !std.mem.eql(u8, record.original_path, record.path.text)) {
+                if (record.original_path.len > 0 and !safe.SimdUtils.eql(record.original_path, record.path.text)) {
                     j.pushStatic(",\n          \"original\": ");
                     j.push(try std.fmt.allocPrint(allocator, "{f}", .{bun.fmt.formatJSONStringUTF8(record.original_path, .{})}), allocator);
                 }
@@ -302,6 +305,7 @@ pub fn generate(
 
     // Write outputs by joining pre-built chunk JSON fragments
     var first_output = true;
+// safe-transpile: for loop with pointer capture requires manual review
     for (chunks) |*chunk| {
         if (chunk.final_rel_path.len == 0) continue;
 
@@ -322,6 +326,7 @@ pub fn generate(
     }
 
     // Break output into pieces and resolve chunk references to final paths
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var intermediate = try c.breakOutputIntoPieces(allocator, &j, @intCast(chunks.len));
 
     // Get final output with all chunk references resolved
@@ -340,6 +345,7 @@ pub fn generate(
     return code_result.buffer;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeJSONString(writer: anytype, str: []const u8) !void {
     try writer.print("{f}", .{bun.fmt.formatJSONStringUTF8(str, .{})});
 }
@@ -348,6 +354,7 @@ fn writeJSONString(writer: anytype, str: []const u8) !void {
 /// This is a post-processing step that parses the JSON and produces LLM-friendly output.
 /// Designed to help diagnose bundle bloat, dependency chains, and entry point analysis.
 /// The caller is responsible for freeing the returned slice.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8) ![]const u8 {
     const parsed = std.json.parseFromSlice(std.json.Value, allocator, metafile_json, .{}) catch {
         return error.InvalidJSON;
@@ -412,6 +419,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                     if (module_info == .object) {
                         if (module_info.object.get("bytesInOutput")) |bio| {
                             if (bio == .integer) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 const bytes_val: u64 = @intCast(bio.integer);
                                 const gop = try bytes_in_output.getOrPut(module_path);
                                 if (gop.found_existing) {
@@ -456,6 +464,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
         const input = entry.value_ptr.*;
         if (input != .object) continue;
 
+// zust: use safe.String or safe.GuardedSlice for slice operations
         const is_node_modules = std.mem.indexOf(u8, path, "node_modules") != null;
         const module_bytes = bytes_in_output.get(path) orelse 0;
 
@@ -475,11 +484,11 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
         if (input.object.get("format")) |format| {
             if (format == .string) {
                 info.format = format.string;
-                if (std.mem.eql(u8, format.string, "esm")) {
+                if (safe.SimdUtils.eql(format.string, "esm")) {
                     esm_count += 1;
-                } else if (std.mem.eql(u8, format.string, "cjs")) {
+                } else if (safe.SimdUtils.eql(format.string, "cjs")) {
                     cjs_count += 1;
-                } else if (std.mem.eql(u8, format.string, "json")) {
+                } else if (safe.SimdUtils.eql(format.string, "json")) {
                     json_count += 1;
                 }
             }
@@ -488,6 +497,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
         // Build reverse dependency map
         if (input.object.get("imports")) |imps| {
             if (imps == .array) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 info.import_count = @intCast(imps.array.items.len);
                 for (imps.array.items) |imp| {
                     if (imp == .object) {
@@ -525,11 +535,12 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                                         }
                                         // Also check if input_key ends with target (for relative paths)
                                         // e.g., target="../utils/logger.js" might match "src/utils/logger.js"
+// zust: use safe.String or safe.GuardedSlice for slice operations
                                         if (std.mem.indexOf(u8, target, "..") != null) {
                                             // This is a relative path, try matching just the filename parts
                                             const target_base = std.fs.path.basename(target);
                                             const key_base = std.fs.path.basename(input_key);
-                                            if (std.mem.eql(u8, target_base, key_base)) {
+                                            if (safe.SimdUtils.eql(target_base, key_base)) {
                                                 // Check if paths share common suffix
                                                 const target_without_dots = stripParentRefs(target);
                                                 if (std.mem.endsWith(u8, input_key, target_without_dots)) {
@@ -566,6 +577,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
         if (entry.value_ptr.* == .object) {
             if (entry.value_ptr.object.get("bytes")) |bytes| {
                 if (bytes == .integer) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     total_output_bytes += @intCast(bytes.integer);
                 }
             }
@@ -611,6 +623,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
     try writer.writeAll("|--------------|------------|--------|--------|\n");
 
     const max_to_show: usize = 20;
+    // safe-transpile: for with index access requires manual review
     for (input_files.items, 0..) |info, i| {
         if (i >= max_to_show) break;
         if (info.bytes_in_output == 0) break; // Skip modules with no output contribution
@@ -657,6 +670,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
 
         if (output.object.get("bytes")) |bytes| {
             if (bytes == .integer) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try writer.print("**Bundle size**: {f}\n", .{bun.fmt.size(@as(u64, @intCast(bytes.integer)), .{})});
             }
         }
@@ -674,7 +688,8 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                 try writer.writeAll("**Exports**: ");
                 var first = true;
                 const max_exports: usize = 10;
-                for (exports.array.items, 0..) |exp, i| {
+                // safe-transpile: for with index access requires manual review
+    for (exports.array.items, 0..) |exp, i| {
                     if (i >= max_exports) {
                         try writer.print(" ...+{d} more", .{exports.array.items.len - max_exports});
                         break;
@@ -705,6 +720,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                                         if (bytes == .integer) {
                                             try writer.print("- `{s}` ({f}, {s})\n", .{
                                                 path.string,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                                 bun.fmt.size(@as(u64, @intCast(bytes.integer)), .{}),
                                                 kind.string,
                                             });
@@ -739,6 +755,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                     if (module_info == .object) {
                         if (module_info.object.get("bytesInOutput")) |bio| {
                             if (bio == .integer) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 try module_sizes.append(allocator, .{ .path = module_path, .bytes = @intCast(bio.integer) });
                             }
                         }
@@ -752,7 +769,8 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                 }.lessThan);
 
                 const max_modules: usize = 15;
-                for (module_sizes.items, 0..) |ms, i| {
+                // safe-transpile: for with index access requires manual review
+    for (module_sizes.items, 0..) |ms, i| {
                     if (i >= max_modules) break;
                     try writer.print("| {f} | `{s}` |\n", .{ bun.fmt.size(ms.bytes, .{}), ms.path });
                 }
@@ -793,7 +811,8 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
         try writer.writeAll("|--------------|--------|-------------|\n");
 
         const max_common: usize = 15;
-        for (highly_imported.items, 0..) |hi, i| {
+        // safe-transpile: for with index access requires manual review
+    for (highly_imported.items, 0..) |hi, i| {
             if (i >= max_common) break;
             if (hi.count < 2) break; // Only show if imported by 2+ files
 
@@ -802,7 +821,8 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
             // Show first few importers
             if (imported_by.get(hi.path)) |importers| {
                 const max_importers: usize = 3;
-                for (importers.items, 0..) |importer, j| {
+                // safe-transpile: for with index access requires manual review
+    for (importers.items, 0..) |importer, j| {
                     if (j >= max_importers) {
                         try writer.print("+{d} more", .{importers.items.len - max_importers});
                         break;
@@ -1037,6 +1057,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
                 var size: u64 = 0;
                 if (output2.object.get("bytes")) |bytes| {
                     if (bytes == .integer) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         size = @intCast(bytes.integer);
                     }
                 }
@@ -1063,6 +1084,7 @@ pub fn generateMarkdown(allocator: std.mem.Allocator, metafile_json: []const u8)
 
 /// Strips leading "../" sequences from a relative path.
 /// e.g., "../utils/logger.js" -> "utils/logger.js"
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn stripParentRefs(path: []const u8) []const u8 {
     var result = path;
     while (result.len >= 3 and std.mem.startsWith(u8, result, "../")) {

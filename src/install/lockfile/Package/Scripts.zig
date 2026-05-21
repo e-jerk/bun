@@ -23,12 +23,14 @@ pub const Scripts = extern struct {
         cwd: stringZ,
         package_name: string,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn printScripts(
             this: Package.Scripts.List,
             resolution: *const Resolution,
             resolution_buf: []const u8,
             comptime format_type: enum { completed, info, untrusted },
         ) void {
+// zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, this.cwd, std.fs.path.sep_str ++ "node_modules" ++ std.fs.path.sep_str)) |i| {
                 Output.pretty("<d>.{s}{s} @{f}<r>\n", .{
                     std.fs.path.sep_str,
@@ -47,7 +49,8 @@ pub const Scripts = extern struct {
                 .untrusted => " <yellow>»<r> [{s}]<d>:<r> <cyan>{s}<r>\n",
                 .info => " [{s}]<d>:<r> <cyan>{s}<r>\n",
             };
-            for (this.items, 0..) |maybe_script, script_index| {
+            // safe-transpile: for with index access requires manual review
+    for (this.items, 0..) |maybe_script, script_index| {
                 if (maybe_script) |script| {
                     Output.pretty(fmt, .{
                         Lockfile.Scripts.names[script_index],
@@ -75,7 +78,8 @@ pub const Scripts = extern struct {
         // }
 
         pub fn appendToLockfile(this: Package.Scripts.List, lockfile: *Lockfile) void {
-            inline for (this.items, 0..) |maybe_script, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (this.items, 0..) |maybe_script, i| {
                 if (maybe_script) |script| {
                     debug("enqueue({s}, {s}) in {s}", .{ "prepare", this.package_name, this.cwd });
                     bun.handleOom(@field(lockfile.scripts, Lockfile.Scripts.names[i]).append(lockfile.allocator, script));
@@ -84,6 +88,7 @@ pub const Scripts = extern struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(this: *const Package.Scripts, buf: []const u8, comptime Builder: type, builder: Builder) Package.Scripts {
         if (!this.filled) return .{};
         var scripts = Package.Scripts{
@@ -95,6 +100,7 @@ pub const Scripts = extern struct {
         return scripts;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn count(this: *const Package.Scripts, buf: []const u8, comptime Builder: type, builder: Builder) void {
         inline for (Lockfile.Scripts.names) |hook| {
             builder.count(@field(this, hook).slice(buf));
@@ -125,6 +131,7 @@ pub const Scripts = extern struct {
         if (add_node_gyp_rebuild_script) {
             {
                 script_index += 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (first_script_index == -1) first_script_index = @intCast(script_index);
                 scripts[script_index] = allocator.dupe(u8, "node-gyp rebuild") catch unreachable;
                 script_index += 1;
@@ -133,6 +140,7 @@ pub const Scripts = extern struct {
 
             // missing install and preinstall, only need to check postinstall
             if (!this.postinstall.isEmpty()) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (first_script_index == -1) first_script_index = @intCast(script_index);
                 scripts[script_index] = allocator.dupe(u8, this.preinstall.slice(lockfile_buf)) catch unreachable;
                 counter += 1;
@@ -148,6 +156,7 @@ pub const Scripts = extern struct {
             inline for (install_scripts) |hook| {
                 const script = @field(this, hook);
                 if (!script.isEmpty()) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     if (first_script_index == -1) first_script_index = @intCast(script_index);
                     scripts[script_index] = allocator.dupe(u8, script.slice(lockfile_buf)) catch unreachable;
                     counter += 1;
@@ -167,6 +176,7 @@ pub const Scripts = extern struct {
                 inline for (prepare_scripts) |hook| {
                     const script = @field(this, hook);
                     if (!script.isEmpty()) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (first_script_index == -1) first_script_index = @intCast(script_index);
                         scripts[script_index] = allocator.dupe(u8, script.slice(lockfile_buf)) catch unreachable;
                         counter += 1;
@@ -177,6 +187,7 @@ pub const Scripts = extern struct {
             .workspace => {
                 script_index += 1;
                 if (!this.prepare.isEmpty()) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     if (first_script_index == -1) first_script_index = @intCast(script_index);
                     scripts[script_index] = allocator.dupe(u8, this.prepare.slice(lockfile_buf)) catch unreachable;
                     counter += 1;
@@ -189,6 +200,7 @@ pub const Scripts = extern struct {
         return .{ first_script_index, counter, scripts };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createList(
         this: *const Package.Scripts,
         lockfile: *const Lockfile,
@@ -212,6 +224,7 @@ pub const Scripts = extern struct {
 
             return .{
                 .items = scripts,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .first_index = @intCast(first_index),
                 .total = total,
                 .cwd = bun.handleOom(allocator.dupeZ(u8, cwd)),

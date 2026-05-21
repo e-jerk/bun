@@ -54,7 +54,6 @@ pub fn next(this: *ObjectIterator) ?jsc.JSValue {
     }
 
     const value = this.current_row.getOwnByValue(globalObject, property);
-// safe-transpile: optional unwrap requires manual review
     if (value == .zero or (value != null and value.?.isUndefined())) {
         if (!globalObject.hasException())
             return globalObject.throw("Expected a value at index {d} in row {d}", .{ cell_i, row_i }) catch null;

@@ -210,8 +210,8 @@ pub const Tag = enum(short) {
                 // the backing buffer length before calling this.
                 if (this.len <= 0) return &.{};
 
-                var head = @as([*]T, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&this.first_value));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                var head = @as([*]T, @ptrCast(&this.first_value));
                 var current = head;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const len: usize = @intCast(this.len);
@@ -221,11 +221,11 @@ pub const Tag = enum(short) {
 
                     const val = current[0];
                     const Int = std.meta.Int(.unsigned, @bitSizeOf(T));
-                    const swapped = @byteSwap(@as(Int, // safe-transpile: @bitCast requires manual review
-    @bitCast(val)));
+// safe-transpile: @bitCast requires manual review
+                    const swapped = @byteSwap(@as(Int, @bitCast(val)));
 
-                    head[i] = // safe-transpile: @bitCast requires manual review
-    @bitCast(swapped);
+// safe-transpile: @bitCast requires manual review
+                    head[i] = @bitCast(swapped);
 
                     current = current[1..];
                 }
@@ -235,8 +235,8 @@ pub const Tag = enum(short) {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn init(bytes: []const u8) *@This() {
-                const this: *@This() = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(@constCast(bytes.ptr)));
+// safe-transpile: @alignCast requires manual review
+                const this: *@This() = @ptrCast(@alignCast(@constCast(bytes.ptr)));
                 this.ndim = @byteSwap(this.ndim);
                 this.offset_for_data = @byteSwap(this.offset_for_data);
                 this.element_type = @byteSwap(this.element_type);

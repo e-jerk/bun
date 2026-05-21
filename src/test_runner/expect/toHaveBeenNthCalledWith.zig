@@ -23,8 +23,10 @@ pub fn toHaveBeenNthCalledWith(this: *Expect, globalThis: *JSGlobalObject, callf
     if (nthCallNumI32 <= 0) {
         return globalThis.throwInvalidArguments("toHaveBeenNthCalledWith() first argument must be a positive integer", .{});
     }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const nthCallNum: u32 = @intCast(nthCallNumI32);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const totalCalls = @as(u32, @intCast(try calls.getLength(globalThis)));
     var pass = totalCalls >= nthCallNum;
     var nthCallValue: JSValue = .zero;
@@ -60,7 +62,9 @@ pub fn toHaveBeenNthCalledWith(this: *Expect, globalThis: *JSGlobalObject, callf
 
     const expected_args_slice = arguments[1..];
     const expected_args_js_array = try JSValue.createEmptyArray(globalThis, expected_args_slice.len);
+    // safe-transpile: for with index access requires manual review
     for (expected_args_slice, 0..) |arg, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try expected_args_js_array.putIndex(globalThis, @intCast(i), arg);
     }
     expected_args_js_array.ensureStillAlive();

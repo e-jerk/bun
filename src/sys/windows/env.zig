@@ -21,7 +21,7 @@ pub fn convertEnvToWTF8() bun.OOM!void {
     };
 
     var num_vars: usize = 0;
-    const wtf8_buf: []u8 = blk: {
+    const wtf8_buf: safe.Slice(u8) = blk: {
         var wtf16_buf: [*:0]u16 = try bun.windows.GetEnvironmentStringsW();
         defer bun.windows.FreeEnvironmentStringsW(wtf16_buf);
         var len: usize = 0;
@@ -33,7 +33,7 @@ pub fn convertEnvToWTF8() bun.OOM!void {
         }
         break :blk try bun.strings.toUTF8AllocWithType(bun.default_allocator, wtf16_buf[0..len]);
     };
-    errdefer bun.default_allocator.free(wtf8_buf);
+    // safe-transpile: free removed (memory owned by safe type);
     var len: usize = 0;
 
     var envp: bun.collections.ArrayListDefault(?[*:0]u8) = try .initCapacity(num_vars + 1);
@@ -42,12 +42,14 @@ pub fn convertEnvToWTF8() bun.OOM!void {
         const str_len = std.mem.indexOfScalar(u8, wtf8_buf[len..], 0).?;
         defer len += str_len + 1; // each string is null-terminated
         if (str_len == 0) break; // array ends with empty null-terminated string
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const str_ptr: [*:0]u8 = @ptrCast(wtf8_buf[len..].ptr);
         try envp.append(str_ptr);
     }
     try envp.append(null);
 
     const envp_slice: []?[*:0]u8 = try envp.toOwnedSlice();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const envp_nonnull_slice: [][*:0]u8 = @ptrCast(envp_slice[0 .. envp_slice.len - 1]);
     wtf8_env_buf = wtf8_buf;
     orig_environ = std.os.environ;

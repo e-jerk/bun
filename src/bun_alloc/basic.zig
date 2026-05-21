@@ -42,8 +42,8 @@ const MimallocAllocator = struct {
             }
         }
 
-        return @as(?[*]u8, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(ptr));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        return @as(?[*]u8, @ptrCast(ptr));
     }
 
     fn alignedAllocSize(ptr: [*]u8) usize {
@@ -61,8 +61,8 @@ const MimallocAllocator = struct {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn remap_with_default_allocator(_: *anyopaque, buf: []u8, alignment: Alignment, new_len: usize, _: usize) ?[*]u8 {
-        return // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        return @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
     }
 
     const free_with_default_allocator = mimalloc_free;
@@ -98,8 +98,8 @@ const ZAllocator = struct {
             }
         }
 
-        return @as(?[*]u8, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(ptr));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        return @as(?[*]u8, @ptrCast(ptr));
     }
 
     fn alignedAllocSize(ptr: [*]u8) usize {

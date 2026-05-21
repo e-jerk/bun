@@ -19,6 +19,7 @@ pub fn postProcessHTMLChunk(ctx: GenerateChunkCtx, worker: *ThreadPool.Worker, c
     chunk.intermediate_output = c.breakOutputIntoPieces(
         worker.allocator,
         &j,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @as(u32, @truncate(ctx.chunks.len)),
     ) catch |err| bun.handleOom(err);
 

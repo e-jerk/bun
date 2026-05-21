@@ -64,6 +64,7 @@ pub const js_bindings = struct {
     pub fn jsGetFeaturesAsVLQ(global: *jsc.JSGlobalObject, _: *jsc.CallFrame) bun.JSError!jsc.JSValue {
         const bits = bun.analytics.packedFeatures();
         var buf = bun.BoundedArray(u8, 16){};
+// safe-transpile: @bitCast requires manual review
         crash_handler.writeU64AsTwoVLQs(buf.writer(), @bitCast(bits)) catch {
             // there is definitely enough space in the bounded array
             unreachable;
@@ -76,7 +77,9 @@ pub const js_bindings = struct {
         const obj = JSValue.createEmptyObject(global, 5);
         const list = bun.analytics.packed_features_list;
         const array = try JSValue.createEmptyArray(global, list.len);
-        for (list, 0..) |feature, i| {
+        // safe-transpile: for with index access requires manual review
+    for (list, 0..) |feature, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try array.putIndex(global, @intCast(i), try bun.String.static(feature).toJS(global));
         }
         obj.put(global, jsc.ZigString.static("features"), array);

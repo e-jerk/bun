@@ -42,6 +42,7 @@ pub fn scopeForPackageName(this: *const PackageManager, name: string) *const Npm
     ) orelse &this.options.scope;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getInstalledVersionsFromDiskCache(this: *PackageManager, tags_buf: *std.array_list.Managed(u8), package_name: []const u8, allocator: std.mem.Allocator) !std.array_list.Managed(Semver.Version) {
     var list = std.array_list.Managed(Semver.Version).init(allocator);
     var dir = this.getCacheDirectory().openDir(package_name, .{
@@ -77,6 +78,7 @@ pub fn getInstalledVersionsFromDiskCache(this: *PackageManager, tags_buf: *std.a
     return list;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resolveFromDiskCache(this: *PackageManager, package_name: []const u8, version: Dependency.Version) ?PackageID {
     if (version.tag != .npm) {
         // only npm supported right now
@@ -177,13 +179,16 @@ pub fn verifyResolutions(this: *PackageManager, log_level: PackageManager.Option
     const pkg_resolutions = lockfile.packages.items(.resolution);
     const dependencies_buffer = lockfile.buffers.dependencies.items;
     const resolutions_buffer = lockfile.buffers.resolutions.items;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const end: PackageID = @truncate(lockfile.packages.len);
 
     var any_failed = false;
     const string_buf = lockfile.buffers.string_bytes.items;
 
+    // safe-transpile: for with index access requires manual review
     for (resolutions_lists, dependency_lists, 0..) |resolution_list, dependency_list, parent_id| {
-        for (resolution_list.get(resolutions_buffer), dependency_list.get(dependencies_buffer)) |package_id, failed_dep| {
+        // safe-transpile: for with index access requires manual review
+    for (resolution_list.get(resolutions_buffer), dependency_list.get(dependencies_buffer)) |package_id, failed_dep| {
             if (package_id < end) continue;
 
             // TODO lockfile rewrite: remove this and make non-optional peer dependencies error if they did not resolve.

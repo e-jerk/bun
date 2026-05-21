@@ -209,7 +209,7 @@ pub fn jsonStringify(self: *const @This(), writer: anytype) !void {
     return try writer.write(self.text);
 }
 
-pub const TableType: std.EnumArray(Op.Code, Op) = std.mem.zeroes(std.EnumArray(Op.Code, Op));
+pub const TableType: std.EnumArray(Op.Code, Op) = undefined;
 pub const Table = brk: {
     var table = std.EnumArray(Op.Code, Op).initUndefined();
 

@@ -20,22 +20,28 @@ pub const PathString = packed struct(PathStringBackingIntType) {
         return @as(usize, this.len);
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn slice(this: anytype) []const u8 {
         @setRuntimeSafety(false); // "cast causes pointer to be null" is fine here. if it is null, the len will be 0.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as([*]u8, @ptrFromInt(@as(usize, @intCast(this.ptr))))[0..this.len];
     }
 
     pub inline fn sliceAssumeZ(this: anytype) [:0]const u8 {
         @setRuntimeSafety(false); // "cast causes pointer to be null" is fine here. if it is null, the len will be 0.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as([*:0]u8, @ptrFromInt(@as(usize, @intCast(this.ptr))))[0..this.len :0];
     }
 
     /// Create a PathString from a borrowed slice. No allocation occurs.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn init(str: []const u8) @This() {
         @setRuntimeSafety(false); // "cast causes pointer to be null" is fine here. if it is null, the len will be 0.
 
         return .{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .ptr = @as(PointerIntType, @truncate(@intFromPtr(str.ptr))),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(PathInt, @truncate(str.len)),
         };
     }

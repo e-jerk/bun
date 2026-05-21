@@ -43,8 +43,8 @@ pub fn allocator(self: *Self) std.mem.Allocator {
 
 pub fn from(allocator_: std.mem.Allocator) ?*Self {
     if (allocator_.vtable == AllocatorInterface.VTable) {
-        return // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(allocator_.ptr));
+// safe-transpile: @alignCast requires manual review
+        return @ptrCast(@alignCast(allocator_.ptr));
     }
 
     return null;
@@ -63,11 +63,11 @@ const AllocatorInterface = struct {
         _: std.mem.Alignment,
         _: usize,
     ) void {
-        var self: *Self = // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(ptr));
+// safe-transpile: @alignCast requires manual review
+        var self: *Self = @ptrCast(@alignCast(ptr));
         defer self.deref();
-        bun.sys.munmap(// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(buf))).unwrap() catch |err| {
+// safe-transpile: @alignCast requires manual review
+        bun.sys.munmap(@ptrCast(@alignCast(buf))).unwrap() catch |err| {
             bun.Output.debugWarn("Failed to munmap memfd: {}", .{err});
         };
     }
@@ -138,7 +138,7 @@ pub fn create(bytes: []const u8) bun.sys.Maybe(bun.webcore.Blob.Store.Bytes) {
         unreachable;
     }
 
-    var label_buf: [128]u8 = .{};
+    var label_buf: [128]u8 = undefined;
     const label = std.fmt.bufPrintZ(&label_buf, "memfd-num-{d}", .{memfd_counter.fetchAdd(1, .monotonic)}) catch "";
 
     // Using huge pages was slower.

@@ -32,7 +32,9 @@ pub fn optionsFromJS(value: jsc.JSValue, globalObject: *jsc.JSGlobalObject) From
             options.flags = try flags.coerce(std.c.AI, globalObject);
 
             // hints & ~(AI_ADDRCONFIG | AI_ALL | AI_V4MAPPED)) !== 0
+// safe-transpile: @bitCast requires manual review
             const filter = ~@as(u32, @bitCast(std.c.AI{ .ALL = true, .ADDRCONFIG = true, .V4MAPPED = true }));
+// safe-transpile: @bitCast requires manual review
             const int = @as(u32, @bitCast(options.flags));
             if (int & filter != 0) return error.InvalidFlags;
         }
@@ -137,6 +139,7 @@ pub fn resultAnyToJS(this: *const Result.Any, globalThis: *jsc.JSGlobalObject) b
     return switch (this.*) {
         .addrinfo => |addrinfo| try addrInfoToJSArray(addrinfo orelse return null, globalThis),
         .list => |list| brk: {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const array = try jsc.JSValue.createEmptyArray(globalThis, @as(u32, @truncate(list.items.len)));
             var i: u32 = 0;
             const items: []const Result = list.items;

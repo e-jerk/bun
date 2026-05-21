@@ -173,8 +173,8 @@ pub const TestOptions = struct {
     reporter_outfile: ?[]const u8 = null,
 
     pub inline fn testFilterRegex(self: *const TestOptions) ?*bun.jsc.RegularExpression {
-        return // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(self.test_filter_regex));
+// safe-transpile: @alignCast requires manual review
+        return @ptrCast(@alignCast(self.test_filter_regex));
     }
 };
 

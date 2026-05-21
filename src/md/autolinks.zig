@@ -13,6 +13,7 @@ pub const AutolinkResult = ?struct {
 
 /// Check that emphasis chars at autolink boundaries are actually resolved delimiters.
 /// Called when the relaxed (allow_emph) pass found an autolink but the strict pass didn't.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isEmphBoundaryResolved(content: []const u8, al: std.meta.Child(AutolinkResult), resolved: []const Parser.EmphDelim) bool {
     // Check left boundary: if it's an emphasis char, it must be a resolved delimiter
     if (al.beg > 0) {
@@ -56,6 +57,7 @@ pub fn isEmphBoundaryResolved(content: []const u8, al: std.meta.Child(AutolinkRe
 }
 
 /// Scan a URL component (host, path, query, or fragment) following md4c's URL_MAP.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn scanUrlComponent(
     content: []const u8,
     start: usize,
@@ -102,6 +104,7 @@ pub fn scanUrlComponent(
     return .{ .end = pos, .ok = true };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isInSet(c: u8, set: []const u8) bool {
     for (set) |s| {
         if (c == s) return true;
@@ -111,6 +114,7 @@ pub fn isInSet(c: u8, set: []const u8) bool {
 
 /// Check left boundary for permissive autolinks.
 /// When `allow_emph` is true, emphasis delimiters (*_~) are also valid boundaries.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn checkLeftBoundary(content: []const u8, pos: usize, allow_emph: bool) bool {
     if (pos == 0) return true;
     return switch (content[pos - 1]) {
@@ -123,6 +127,7 @@ pub fn checkLeftBoundary(content: []const u8, pos: usize, allow_emph: bool) bool
 
 /// Check right boundary for permissive autolinks.
 /// When `allow_emph` is true, emphasis delimiters (*_~) are also valid boundaries.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn checkRightBoundary(content: []const u8, pos: usize, allow_emph: bool) bool {
     if (pos >= content.len) return true;
     return switch (content[pos]) {
@@ -136,6 +141,7 @@ pub fn checkRightBoundary(content: []const u8, pos: usize, allow_emph: bool) boo
 
 /// Detect permissive autolinks at the given position in content.
 /// `pos` is the position of the trigger character ('@', ':', or '.').
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findPermissiveAutolink(content: []const u8, pos: usize, allow_emph: bool) AutolinkResult {
     if (pos >= content.len) return null;
     const c = content[pos];
@@ -154,7 +160,7 @@ pub fn findPermissiveAutolink(content: []const u8, pos: usize, allow_emph: bool)
             const suflen = scheme.suffix.len;
             if (pos >= slen and pos + 1 + suflen < content.len) {
                 if (helpers.asciiCaseEql(content[pos - slen .. pos], scheme.name) and
-                    std.mem.eql(u8, content[pos + 1 .. pos + 1 + suflen], scheme.suffix))
+                    zust.SimdUtils.eql(content[pos + 1 .. pos + 1 + suflen], scheme.suffix))
                 {
                     const beg = pos - slen;
                     if (!checkLeftBoundary(content, beg, allow_emph)) continue;
@@ -248,6 +254,7 @@ pub fn findPermissiveAutolink(content: []const u8, pos: usize, allow_emph: bool)
 }
 
 /// GFM post-processing: trim trailing unbalanced `)` and entity-like suffixes from autolink URLs.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn postProcessAutolinkEnd(content: []const u8, beg: usize, end_in: usize) usize {
     var end = end_in;
 

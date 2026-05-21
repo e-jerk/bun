@@ -150,6 +150,7 @@ pub const Linux = struct {
 
         const duration = bun.timespec.now(.force_real_time).ns() -| this.start_time;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = Bun__linux_trace_emit(@tagName(this.event).ptr, @intCast(duration));
     }
 };

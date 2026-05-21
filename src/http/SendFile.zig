@@ -45,8 +45,8 @@ pub fn write(
         }
     } else if (Environment.isFreeBSD) {
         var sbytes: std.posix.off_t = 0;
-        const signed_offset = @as(i64, // safe-transpile: @bitCast requires manual review
-    @bitCast(@as(u64, this.offset)));
+// safe-transpile: @bitCast requires manual review
+        const signed_offset = @as(i64, @bitCast(@as(u64, this.offset)));
         // FreeBSD: sendfile(fd, s, offset, nbytes, hdtr, *sbytes, flags)
         const errcode = bun.sys.getErrno(std.c.sendfile(
             this.fd.cast(),
@@ -69,8 +69,8 @@ pub fn write(
         }
     } else if (Environment.isPosix) {
         var sbytes: std.posix.off_t = adjusted_count;
-        const signed_offset = @as(i64, // safe-transpile: @bitCast requires manual review
-    @bitCast(@as(u64, this.offset)));
+// safe-transpile: @bitCast requires manual review
+        const signed_offset = @as(i64, @bitCast(@as(u64, this.offset)));
         const errcode = bun.sys.getErrno(std.c.sendfile(
             this.fd.cast(),
             socket.fd().cast(),

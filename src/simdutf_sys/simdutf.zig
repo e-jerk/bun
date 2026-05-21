@@ -408,7 +408,6 @@ pub const trim = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn utf8(buf: []const u8) []const u8 {
         return buf[0..utf8_len(buf)];
     }

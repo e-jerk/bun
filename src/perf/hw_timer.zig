@@ -159,14 +159,14 @@ fn osMonotonicNs() u64 {
     if (comptime Environment.isLinux) {
         // CLOCK_MONOTONIC, not _RAW: guaranteed vDSO (no syscall). _RAW only
         // joined the vDSO in 5.3.
-        _ = std.os.linux.clock_gettime(.MONOTONIC, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&spec));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        _ = std.os.linux.clock_gettime(.MONOTONIC, @ptrCast(&spec));
     } else if (comptime Environment.isMac) {
-        _ = std.c.clock_gettime(.MONOTONIC_RAW, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&spec));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        _ = std.c.clock_gettime(.MONOTONIC_RAW, @ptrCast(&spec));
     } else {
-        _ = std.c.clock_gettime(.MONOTONIC, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&spec));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        _ = std.c.clock_gettime(.MONOTONIC, @ptrCast(&spec));
     }
     return spec.ns();
 }

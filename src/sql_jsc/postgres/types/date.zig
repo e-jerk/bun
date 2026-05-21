@@ -5,6 +5,7 @@ pub const from = [_]short{ 1082, 1114, 1184 };
 // This is a signed 64-bit integer.
 const POSTGRES_EPOCH_DATE = 946684800000;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fromBinary(bytes: []const u8) f64 {
     const microseconds = std.mem.readInt(i64, bytes[0..8], .big);
     const double_microseconds: f64 = @floatFromInt(microseconds);

@@ -36,7 +36,7 @@ test "SliceIterator" {
 
     for (args) |a| {
         const b = try iter.next();
-        debug.assert(mem.eql(u8, a, b.?));
+        debug.assert(zust.SimdUtils.eql(a, b.?));
     }
 }
 
@@ -89,6 +89,7 @@ pub const ShellIterator = struct {
     arena: bun.ArenaAllocator,
     str: []const u8,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: mem.Allocator, str: []const u8) ShellIterator {
         return .{
             .arena = bun.ArenaAllocator.init(allocator),
@@ -116,7 +117,8 @@ pub const ShellIterator = struct {
             after_quote,
         } = .skip_whitespace;
 
-        for (iter.str, 0..) |c, i| {
+        // safe-transpile: for with index access requires manual review
+    for (iter.str, 0..) |c, i| {
             switch (state) {
                 // The state that skips the initial whitespace.
                 .skip_whitespace => switch (c) {
@@ -251,20 +253,24 @@ pub const ShellIterator = struct {
         }
     }
 
-    fn result(iter: *ShellIterator, start: usize, end: usize, list: *std.array_list.Managed(u8)) Error!?[]const u8 {
-        const res = iter.str[start..end];
+// safe-transpile: parameters converted to zust.Box — callers must update
+//   iter: zust.Box(ShellIterator)
+//   list: zust.Box(std.array_list.Managed(u8))
+    fn result(iter: zust.Box(ShellIterator), start: usize, end: usize, list: zust.Box(std.array_list.Managed(u8))) Error!?[]const u8 {
+        const res = iter.ptr.str[start..end];
 
         // If we already have something in `list` that means that we could not
         // parse the argument without allocation. We therefor need to just append
         // the rest we have to the list and return that.
-        if (list.items.len != 0) {
-            try list.appendSlice(res);
-            return try list.toOwnedSlice();
+        if (list.ptr.items.len != 0) {
+            try list.ptr.appendSlice(res);
+            return try list.ptr.toOwnedSlice();
         }
         return res;
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn testShellIteratorOk(str: []const u8, allocations: usize, expect: []const []const u8) void {
     var allocator = testing.FailingAllocator.init(testing.allocator, allocations);
     var it = ShellIterator.init(&allocator.allocator, str);
@@ -283,6 +289,7 @@ fn testShellIteratorOk(str: []const u8, allocations: usize, expect: []const []co
     } else |err| testing.expectEqual(@as(anyerror!void, {}), err);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn testShellIteratorErr(str: []const u8, expect: anyerror) void {
     var it = ShellIterator.init(testing.allocator, str);
     defer it.deinit();

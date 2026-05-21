@@ -40,36 +40,45 @@ pub fn NewApp(comptime ssl: bool) type {
         const ThisApp = @This();
 
         pub fn close(this: *ThisApp) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_close(ssl_flag, @as(*uws_app_s, @ptrCast(this)));
         }
 
         pub fn closeIdleConnections(this: *ThisApp) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_close_idle(ssl_flag, @as(*uws_app_s, @ptrCast(this)));
         }
 
         pub fn create(opts: BunSocketContextOptions) ?*ThisApp {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(c.uws_create_app(ssl_flag, opts));
         }
 
         pub fn destroy(app: *ThisApp) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_destroy(ssl_flag, @as(*uws_app_s, @ptrCast(app)));
         }
 
         pub fn setFlags(this: *ThisApp, require_host_header: bool, use_strict_method_validation: bool) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_set_flags(ssl_flag, @as(*uws_app_t, @ptrCast(this)), require_host_header, use_strict_method_validation);
         }
 
         pub fn setMaxHTTPHeaderSize(this: *ThisApp, max_header_size: u64) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_set_max_http_header_size(ssl_flag, @as(*uws_app_t, @ptrCast(this)), max_header_size);
         }
 
         pub fn clearRoutes(app: *ThisApp) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_clear_routes(ssl_flag, @as(*uws_app_t, @ptrCast(app)));
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn publishWithOptions(app: *ThisApp, topic: []const u8, message: []const u8, opcode: Opcode, compress: bool) bool {
             return c.uws_publish(
                 @intFromBool(ssl),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(app),
                 topic.ptr,
                 topic.len,
@@ -90,6 +99,7 @@ pub fn NewApp(comptime ssl: bool) type {
                             .{
                                 {},
                                 req,
+// safe-transpile: @alignCast requires manual review
                                 @as(*Response, @ptrCast(@alignCast(res))),
                             },
                         );
@@ -98,8 +108,10 @@ pub fn NewApp(comptime ssl: bool) type {
                             bun.callmod_inline,
                             handler,
                             .{
+// safe-transpile: @alignCast requires manual review
                                 @as(UserDataType, @ptrCast(@alignCast(user_data.?))),
                                 req,
+// safe-transpile: @alignCast requires manual review
                                 @as(*Response, @ptrCast(@alignCast(res))),
                             },
                         );
@@ -110,17 +122,21 @@ pub fn NewApp(comptime ssl: bool) type {
 
         pub const ListenSocket = opaque {
             pub inline fn close(this: *ThisApp.ListenSocket) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 return @as(*uws.ListenSocket, @ptrCast(this)).close();
             }
             pub inline fn getLocalPort(this: *ThisApp.ListenSocket) i32 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 return @as(*uws.ListenSocket, @ptrCast(this)).getLocalPort();
             }
 
             pub fn socket(this: *ThisApp.ListenSocket) uws.NewSocketHandler(ssl) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 return uws.NewSocketHandler(ssl).from(@ptrCast(this));
             }
         };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn get(
             app: *ThisApp,
             pattern: []const u8,
@@ -128,8 +144,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_get(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn post(
             app: *ThisApp,
             pattern: []const u8,
@@ -137,8 +155,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_post(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn options(
             app: *ThisApp,
             pattern: []const u8,
@@ -146,8 +166,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_options(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn delete(
             app: *ThisApp,
             pattern: []const u8,
@@ -155,8 +177,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_delete(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn patch(
             app: *ThisApp,
             pattern: []const u8,
@@ -164,8 +188,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_patch(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn put(
             app: *ThisApp,
             pattern: []const u8,
@@ -173,8 +199,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_put(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn head(
             app: *ThisApp,
             pattern: []const u8,
@@ -182,8 +210,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_head(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn connect(
             app: *ThisApp,
             pattern: []const u8,
@@ -191,8 +221,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_connect(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn trace(
             app: *ThisApp,
             pattern: []const u8,
@@ -200,8 +232,10 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_trace(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn method(
             app: *ThisApp,
             method_: bun.http.Method,
@@ -223,6 +257,7 @@ pub fn NewApp(comptime ssl: bool) type {
                 else => {},
             }
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn any(
             app: *ThisApp,
             pattern: []const u8,
@@ -230,12 +265,15 @@ pub fn NewApp(comptime ssl: bool) type {
             user_data: UserDataType,
             comptime handler: (fn (UserDataType, *Request, *Response) void),
         ) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_any(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern.ptr, pattern.len, RouteHandler(UserDataType, handler).handle, if (UserDataType == void) null else user_data);
         }
         pub fn domain(app: *ThisApp, pattern: [:0]const u8) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_app_domain(ssl_flag, @as(*uws_app_t, @ptrCast(app)), pattern);
         }
         pub fn run(app: *ThisApp) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_run(ssl_flag, @as(*uws_app_t, @ptrCast(app)));
         }
         pub fn listen(
@@ -248,16 +286,20 @@ pub fn NewApp(comptime ssl: bool) type {
             const Wrapper = struct {
                 pub fn handle(socket: ?*uws.ListenSocket, conf: c.uws_app_listen_config_t, data: ?*anyopaque) callconv(.c) void {
                     if (comptime UserData == void) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         @call(bun.callmod_inline, handler, .{ {}, @as(?*ThisApp.ListenSocket, @ptrCast(socket)), conf });
                     } else {
                         @call(bun.callmod_inline, handler, .{
+// safe-transpile: @alignCast requires manual review
                             @as(UserData, @ptrCast(@alignCast(data.?))),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             @as(?*ThisApp.ListenSocket, @ptrCast(socket)),
                             conf,
                         });
                     }
                 }
             };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_listen(ssl_flag, @as(*uws_app_t, @ptrCast(app)), port, Wrapper.handle, user_data);
         }
 
@@ -270,6 +312,7 @@ pub fn NewApp(comptime ssl: bool) type {
             const Wrapper = struct {
                 pub fn handle(data: *anyopaque, _: c_int, socket: *us_socket_t, error_code: u8, raw_packet: ?[*]u8, raw_packet_length: c_int) callconv(.c) void {
                     @call(bun.callmod_inline, handler, .{
+// safe-transpile: @alignCast requires manual review
                         @as(UserData, @ptrCast(@alignCast(data))),
                         socket,
                         error_code,
@@ -277,6 +320,7 @@ pub fn NewApp(comptime ssl: bool) type {
                     });
                 }
             };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_set_on_clienterror(ssl_flag, @ptrCast(app), Wrapper.handle, @ptrCast(user_data));
         }
 
@@ -290,15 +334,19 @@ pub fn NewApp(comptime ssl: bool) type {
             const Wrapper = struct {
                 pub fn handle(socket: ?*uws.ListenSocket, data: ?*anyopaque) callconv(.c) void {
                     if (comptime UserData == void) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         @call(bun.callmod_inline, handler, .{ {}, @as(?*ThisApp.ListenSocket, @ptrCast(socket)) });
                     } else {
                         @call(bun.callmod_inline, handler, .{
+// safe-transpile: @alignCast requires manual review
                             @as(UserData, @ptrCast(@alignCast(data.?))),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             @as(?*ThisApp.ListenSocket, @ptrCast(socket)),
                         });
                     }
                 }
             };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_app_listen_with_config(ssl_flag, @as(*uws_app_t, @ptrCast(app)), config.host, @as(u16, @intCast(config.port)), config.options, Wrapper.handle, user_data);
         }
 
@@ -313,10 +361,13 @@ pub fn NewApp(comptime ssl: bool) type {
             const Wrapper = struct {
                 pub fn handle(socket: ?*uws.ListenSocket, _: [*:0]const u8, _: i32, data: *anyopaque) callconv(.c) void {
                     if (comptime UserData == void) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         @call(bun.callmod_inline, handler, .{ {}, @as(?*ThisApp.ListenSocket, @ptrCast(socket)) });
                     } else {
                         @call(bun.callmod_inline, handler, .{
+// safe-transpile: @alignCast requires manual review
                             @as(UserData, @ptrCast(@alignCast(data))),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             @as(?*ThisApp.ListenSocket, @ptrCast(socket)),
                         });
                     }
@@ -324,6 +375,7 @@ pub fn NewApp(comptime ssl: bool) type {
             };
             return c.uws_app_listen_domain_with_options(
                 ssl_flag,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @as(*uws_app_t, @ptrCast(app)),
                 domain_name.ptr,
                 domain_name.len,
@@ -336,34 +388,45 @@ pub fn NewApp(comptime ssl: bool) type {
         pub fn constructorFailed(app: *ThisApp) bool {
             return c.uws_constructor_failed(ssl_flag, app);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn numSubscribers(app: *ThisApp, topic: []const u8) u32 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_num_subscribers(ssl_flag, @as(*uws_app_t, @ptrCast(app)), topic.ptr, topic.len);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn publish(app: *ThisApp, topic: []const u8, message: []const u8, opcode: Opcode, compress: bool) bool {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_publish(ssl_flag, @as(*uws_app_t, @ptrCast(app)), topic.ptr, topic.len, message.ptr, message.len, opcode, compress);
         }
         pub fn getNativeHandle(app: *ThisApp) ?*anyopaque {
             return c.uws_get_native_handle(ssl_flag, app);
         }
         pub fn removeServerName(app: *ThisApp, hostname_pattern: [*:0]const u8) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_remove_server_name(ssl_flag, @as(*uws_app_t, @ptrCast(app)), hostname_pattern);
         }
         pub fn addServerName(app: *ThisApp, hostname_pattern: [*:0]const u8) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_add_server_name(ssl_flag, @as(*uws_app_t, @ptrCast(app)), hostname_pattern);
         }
         pub fn addServerNameWithOptions(app: *ThisApp, hostname_pattern: [*:0]const u8, opts: BunSocketContextOptions) !void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             if (c.uws_add_server_name_with_options(ssl_flag, @as(*uws_app_t, @ptrCast(app)), hostname_pattern, opts) != 0) {
                 return error.FailedToAddServerName;
             }
         }
         pub fn missingServerName(app: *ThisApp, handler: c.uws_missing_server_handler, user_data: ?*anyopaque) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_missing_server_name(ssl_flag, @as(*uws_app_t, @ptrCast(app)), handler, user_data);
         }
         pub fn filter(app: *ThisApp, handler: c.uws_filter_handler, user_data: ?*anyopaque) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return c.uws_filter(ssl_flag, @as(*uws_app_t, @ptrCast(app)), handler, user_data);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn ws(app: *ThisApp, pattern: []const u8, ctx: *anyopaque, id: usize, behavior_: WebSocketBehavior) void {
             var behavior = behavior_;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uws_ws(ssl_flag, @as(*uws_app_t, @ptrCast(app)), ctx, pattern.ptr, pattern.len, id, &behavior);
         }
 

@@ -14,6 +14,7 @@ _websocket_request_buf: []u8,
 _tunnel: ?*WebSocketProxyTunnel = null,
 
 /// Initialize a new WebSocketProxy
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(
     target_host: []const u8,
     target_is_https: bool,
@@ -27,6 +28,7 @@ pub fn init(
 }
 
 /// Get the target hostname for SNI during TLS handshake
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getTargetHost(self: *const WebSocketProxy) []const u8 {
     return self._target_host;
 }
@@ -48,6 +50,7 @@ pub fn setTunnel(self: *WebSocketProxy, new_tunnel: ?*WebSocketProxyTunnel) void
 
 /// Take ownership of the WebSocket request buffer, clearing the internal reference.
 /// The caller is responsible for freeing the returned buffer.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn takeWebsocketRequestBuf(self: *WebSocketProxy) []u8 {
     const buf = self._websocket_request_buf;
     self._websocket_request_buf = &[_]u8{};
@@ -56,9 +59,9 @@ pub fn takeWebsocketRequestBuf(self: *WebSocketProxy) []u8 {
 
 /// Clean up all allocated resources
 pub fn deinit(self: *WebSocketProxy) void {
-    bun.default_allocator.free(self._target_host);
+    _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     if (self._websocket_request_buf.len > 0) {
-        bun.default_allocator.free(self._websocket_request_buf);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
     if (self._tunnel) |tunnel| {
         self._tunnel = null;

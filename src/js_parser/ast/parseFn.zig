@@ -436,6 +436,7 @@ pub fn ParseFn(
 
             try p.lexer.expect(T.t_equals_greater_than);
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (args) |*arg| {
                 var opts = ParseStatementOptions{};
                 try p.declareBinding(Symbol.Kind.hoisted, &arg.binding, &opts);

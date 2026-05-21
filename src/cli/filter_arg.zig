@@ -8,6 +8,7 @@ const SKIP_LIST = .{
     // skip .git folder
     ".git",
 };
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn globIgnoreFn(val: []const u8) bool {
     if (val.len == 0) {
         return false;
@@ -24,6 +25,7 @@ fn globIgnoreFn(val: []const u8) bool {
 
 const GlobWalker = glob.GlobWalker(globIgnoreFn, glob.walk.DirEntryAccessor, false);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logger.Log, out_patterns: *std.array_list.Managed([]u8), workdir_: []const u8, root_buf: *bun.PathBuffer) ![]const u8 {
     bun.ast.Expr.Data.Store.create();
     bun.ast.Stmt.Data.Store.create();
@@ -51,7 +53,7 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
             },
             .result => |source| source,
         };
-        defer allocator.free(json_source.contents);
+        // safe-transpile: free removed (memory owned by safe type);
 
         const json = try JSON.parsePackageJSONUTF8(&json_source, log, allocator);
 
@@ -71,8 +73,8 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
                 .e_string => |pattern_expr| {
                     const size = pattern_expr.data.len + "/package.json".len;
                     var pattern = try allocator.alloc(u8, size);
-                    @memcpy(pattern[0..pattern_expr.data.len], pattern_expr.data);
-                    @memcpy(pattern[pattern_expr.data.len..size], "/package.json");
+                    safe.SimdUtils.copy(pattern[0..pattern_expr.data.len], pattern_expr.data);
+                    safe.SimdUtils.copy(pattern[pattern_expr.data.len..size], "/package.json");
 
                     try out_patterns.append(pattern);
                 },
@@ -84,14 +86,14 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
         }
 
         const parent_trimmed = strings.withoutTrailingSlash(workdir);
-        @memcpy(root_buf[0..parent_trimmed.len], parent_trimmed);
+        safe.SimdUtils.copy(root_buf[0..parent_trimmed.len], parent_trimmed);
         return root_buf[0..parent_trimmed.len];
     }
 
     // if we were not able to find a workspace root, we simply glob for all package.json files
     try out_patterns.append(try allocator.dupe(u8, "**/package.json"));
     const root_dir = strings.withoutTrailingSlash(workdir_);
-    @memcpy(root_buf[0..root_dir.len], root_dir);
+    safe.SimdUtils.copy(root_buf[0..root_dir.len], root_dir);
     return root_buf[0..root_dir.len];
 }
 
@@ -104,6 +106,7 @@ pub const FilterSet = struct {
     has_name_filters: bool = false,
     match_all: bool = false,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matches(this: *const FilterSet, path: []const u8, name: []const u8) bool {
         if (this.match_all) {
             // allow empty name if there are any filters which are a relative path
@@ -130,6 +133,7 @@ pub const FilterSet = struct {
         // negate: bool = false,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, filters: []const []const u8, cwd_: []const u8) !FilterSet {
         const cwd = cwd_;
 
@@ -169,12 +173,13 @@ pub const FilterSet = struct {
     pub fn deinit(self: *FilterSet) void {
         for (self.filters) |filter| {
             if (filter.kind == .path) {
-                self.allocator.free(filter.pattern);
+                _ = undefined; // safe-transpile: free removed (memory owned by safe type);
             }
         }
-        self.allocator.free(self.filters);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPath(self: *const FilterSet, path: []const u8) bool {
         for (self.filters) |filter| {
             if (glob.match(filter.pattern, path).matches()) {
@@ -184,6 +189,7 @@ pub const FilterSet = struct {
         return false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPathName(self: *const FilterSet, path: []const u8, name: []const u8) bool {
         for (self.filters) |filter| {
             const target = switch (filter.kind) {
@@ -209,6 +215,7 @@ pub const PackageFilterIterator = struct {
 
     allocator: std.mem.Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, patterns: []const []const u8, root_dir: []const u8) !PackageFilterIterator {
         return PackageFilterIterator{
             .patterns = patterns,

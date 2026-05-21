@@ -1,9 +1,7 @@
 pub fn NewWriterWrap(
     comptime Context: type,
     comptime offsetFn_: (fn (ctx: Context) usize),
-// safe-transpile: function uses raw slice parameter — consider safe.String
     comptime writeFunction_: (fn (ctx: Context, bytes: []const u8) AnyMySQLError.Error!void),
-// safe-transpile: function uses raw slice parameter — consider safe.String
     comptime pwriteFunction_: (fn (ctx: Context, bytes: []const u8, offset: usize) AnyMySQLError.Error!void),
 ) type {
     return struct {

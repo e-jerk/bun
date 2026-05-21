@@ -94,8 +94,8 @@ pub const FieldEnum = blk: {
         fields_len += @typeInfo(TableData(tableInfo.type)).@"struct".fields.len;
     }
 
-    var names: [fields_len][]const u8 = .{};
-    var values: [fields_len]std.math.IntFittingRange(0, fields_len - 1) = .{};
+    var names: [fields_len][]const u8 = undefined;
+    var values: [fields_len]std.math.IntFittingRange(0, fields_len - 1) = undefined;
     var i: usize = 0;
 
     for (@typeInfo(@TypeOf(tables)).@"struct".fields) |tableInfo| {
@@ -110,7 +110,7 @@ pub const FieldEnum = blk: {
         .@"enum" = .{
             .tag_type = std.math.IntFittingRange(0, fields_len - 1),
             .fields = blk: {
-                var enum_fields: [fields_len]std.builtin.Type.EnumField = .{};
+                var enum_fields: [fields_len]std.builtin.Type.EnumField = undefined;
                 for (0..fields_len) |i| {
                     enum_fields[i] = .{
                         .name = names[i],
@@ -135,13 +135,10 @@ fn FieldValue(comptime field: []const u8) type {
     const D = DataField(field);
     if (@typeInfo(D) == .@"struct") {
         if (@hasDecl(D, "unshift") and @TypeOf(D.unshift) != void) {
-// safe-transpile: optional unwrap requires manual review
             return @typeInfo(@TypeOf(D.unshift)).@"fn".return_type.?;
         } else if (@hasDecl(D, "unpack")) {
-// safe-transpile: optional unwrap requires manual review
             return @typeInfo(@TypeOf(D.unpack)).@"fn".return_type.?;
         } else if (@hasDecl(D, "value") and @TypeOf(D.value) != void) {
-// safe-transpile: optional unwrap requires manual review
             return @typeInfo(@TypeOf(D.value)).@"fn".return_type.?;
         } else {
             return D;

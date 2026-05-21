@@ -52,7 +52,7 @@ pub fn main() !void {
     // safe-transpile: free removed (memory owned by safe type);
     // safe-transpile: free removed (memory owned by safe type);
 
-    var buf: [4096]u8 = .{};
+    var buf: [4096]u8 = undefined;
     var stdout_file = @import("std-fs-compat").File.stdout().writer(&buf);
     const stdout = &stdout_file.interface;
 

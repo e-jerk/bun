@@ -139,6 +139,7 @@ pub const PropertyRuleDeclarationParser = struct {
             .{ "initial-value", .initial_value },
         });
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(this: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             // todo_stuff.match_ignore_ascii_case
 
@@ -194,6 +195,7 @@ pub const PropertyRuleDeclarationParser = struct {
         pub const Prelude = void;
         pub const AtRule = void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             return .{ .err = input.newError(css.BasicParseErrorKind{ .at_rule_invalid = name }) };
         }

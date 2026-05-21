@@ -102,6 +102,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
 
         const FromPnpmLockfileError = OOM || error{InvalidPnpmLockfile};
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromPnpmLockfile(res_str: []const u8, string_buf: *String.Buf) FromPnpmLockfileError!Resolution {
             if (strings.withoutPrefixIfPossibleComptime(res_str, "https://codeload.github.com/")) |user_repo_tar_committish| {
                 const user_end = strings.indexOfChar(user_repo_tar_committish, '/') orelse {
@@ -176,6 +177,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn order(
             lhs: *const This,
             rhs: *const This,
@@ -200,6 +202,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn count(this: *const This, buf: []const u8, comptime Builder: type, builder: Builder) void {
             switch (this.tag) {
                 .npm => this.value.npm.count(buf, Builder, builder),
@@ -215,6 +218,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn clone(this: *const This, buf: []const u8, comptime Builder: type, builder: Builder) This {
             return .{
                 .tag = this.tag,
@@ -272,6 +276,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fmt(this: *const This, string_bytes: []const u8, path_sep: bun.fmt.PathFormatOptions.Sep) Formatter {
             return Formatter{
                 .resolution = this,
@@ -311,14 +316,17 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fmtURL(this: *const This, string_bytes: []const u8) URLFormatter {
             return URLFormatter{ .resolution = this, .buf = string_bytes };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fmtForDebug(this: *const This, string_bytes: []const u8) DebugFormatter {
             return DebugFormatter{ .resolution = this, .buf = string_bytes };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(
             lhs: *const This,
             rhs: *const This,
@@ -473,6 +481,7 @@ pub fn ResolutionType(comptime SemverIntType: type) type {
 
             single_file_module: String,
 
+// safe-transpile: @bitCast requires manual review
             pub var zero: Value = @bitCast(std.mem.zeroes([@sizeOf(Value)]u8));
 
             /// To avoid undefined memory between union values, we must zero initialize the union first.

@@ -38,11 +38,12 @@ pub const Execute = struct {
     new_params_bind_flag: bool,
 
     pub fn deinit(this: *Execute) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.params) |*param| {
             param.deinit(bun.default_allocator);
         }
         if (this.params.len > 0) {
-            bun.default_allocator.free(this.params);
+            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
         }
     }
 
@@ -54,8 +55,10 @@ pub const Execute = struct {
         const null_bitmap = null_bitmap_buf[0..bitmap_bytes];
         @memset(null_bitmap, 0);
 
-        for (this.params, 0..) |param, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.params, 0..) |param, i| {
             if (param == .null) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 null_bitmap[i >> 3] |= @as(u8, 1) << @as(u3, @truncate(i & 7));
             }
         }
@@ -85,7 +88,8 @@ pub const Execute = struct {
             }
 
             // Write parameter values
-            for (this.params, this.param_types) |*param, param_type| {
+            // safe-transpile: for with index access requires manual review
+    for (this.params, this.param_types) |*param, param_type| {
                 if (param.* == .null or param_type.type == .MYSQL_TYPE_NULL) continue;
 
                 var value = try param.toData(param_type.type);

@@ -109,7 +109,7 @@ test "special_casing_condition" {
 }
 
 test "special_lowercase_mapping" {
-    var buffer: [1]u21 = .{};
+    var buffer: [1]u21 = undefined;
 
     // Greek Capital Sigma (U+03A3) which has Final_Sigma condition
     const mapping = get(.special_lowercase_mapping, 0x03A3).with(&buffer, 0x03A3);

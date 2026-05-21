@@ -45,7 +45,7 @@ pub fn processLeafBlock(self: *Parser, block_lines: []const VerbatimLine, trim_t
     try self.processInlineContent(merged, block_lines[0].beg);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn processInlineContent(self: *Parser, content: []const u8, base_off: OFF) Parser.Error!void {
     if (!self.stack_check.isSafeToRecurse()) {
         return bun.throwStackOverflow();
@@ -308,7 +308,7 @@ pub fn leaveSpan(self: *Parser, span_type: SpanType) bun.JSError!void {
     try self.renderer.leaveSpan(span_type);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn emitText(self: *Parser, text_type: TextType, content: []const u8) bun.JSError!void {
     try self.renderer.text(text_type, content);
 }
@@ -331,7 +331,7 @@ pub fn emitEmphCloseTags(self: *Parser, sizes: []const u2) bun.JSError!void {
 }
 
 /// Count consecutive backticks starting at `start`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn countBackticks(content: []const u8, start: usize) usize {
     var pos = start;
     while (pos < content.len and content[pos] == '`') pos += 1;
@@ -340,7 +340,7 @@ pub fn countBackticks(content: []const u8, start: usize) usize {
 
 /// Find the matching closing backtick run. Returns end position of content (before closing ticks),
 /// or null if no matching closer found.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findCodeSpanEnd(self: *const Parser, content: []const u8, start: usize, count: usize) ?usize {
     _ = self;
     var pos = start;
@@ -354,8 +354,7 @@ pub fn findCodeSpanEnd(self: *const Parser, content: []const u8, start: usize, c
     return null;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn normalizeCodeSpanContent(self: *const Parser, content: []const u8) []const u8 {
     _ = self;
     // Strip one leading and trailing space if both exist and content isn't all spaces.
@@ -371,7 +370,7 @@ pub fn normalizeCodeSpanContent(self: *const Parser, content: []const u8) []cons
 }
 
 /// Check if a delimiter run is left-flanking per CommonMark spec.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isLeftFlanking(content: []const u8, run_start: usize, run_end: usize) bool {
     // Not followed by Unicode whitespace
     if (run_end >= content.len) return false;
@@ -387,7 +386,7 @@ pub fn isLeftFlanking(content: []const u8, run_start: usize, run_end: usize) boo
 }
 
 /// Check if a delimiter run is right-flanking per CommonMark spec.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isRightFlanking(content: []const u8, run_start: usize, run_end: usize) bool {
     // Not preceded by Unicode whitespace
     if (run_start == 0) return false;
@@ -402,7 +401,7 @@ pub fn isRightFlanking(content: []const u8, run_start: usize, run_end: usize) bo
     return true;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn canOpenEmphasis(emph_char: u8, content: []const u8, run_start: usize, run_end: usize) bool {
     const lf = isLeftFlanking(content, run_start, run_end);
     if (!lf) return false;
@@ -412,7 +411,7 @@ pub fn canOpenEmphasis(emph_char: u8, content: []const u8, run_start: usize, run
     return !rf or (run_start > 0 and helpers.isUnicodePunctuation(helpers.decodeUtf8Backward(content, run_start).codepoint));
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn canCloseEmphasis(emph_char: u8, content: []const u8, run_start: usize, run_end: usize) bool {
     const rf = isRightFlanking(content, run_start, run_end);
     if (!rf) return false;
@@ -423,7 +422,7 @@ pub fn canCloseEmphasis(emph_char: u8, content: []const u8, run_start: usize, ru
 }
 
 /// Collect emphasis delimiter runs from content, skipping code spans and HTML tags.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn collectEmphasisDelimiters(self: *Parser, content: []const u8) void {
     self.emph_delims.clearRetainingCapacity();
     var i: usize = 0;
@@ -557,14 +556,14 @@ pub fn resolveEmphasisDelimiters(self: *Parser) void {
                 opener.remaining -= use;
                 opener.open_count += use;
                 if (opener.open_num < MAX_EMPH_MATCHES) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     opener.open_sizes[opener.open_num] = @intCast(use);
                     opener.open_num += 1;
                 }
                 delims[closer_idx].remaining -= use;
                 delims[closer_idx].close_count += use;
                 if (delims[closer_idx].close_num < MAX_EMPH_MATCHES) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     delims[closer_idx].close_sizes[delims[closer_idx].close_num] = @intCast(use);
                     delims[closer_idx].close_num += 1;
                 }
@@ -595,13 +594,13 @@ pub fn resolveEmphasisDelimiters(self: *Parser) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findEntity(self: *const Parser, content: []const u8, start: usize) ?usize {
     _ = self;
     return helpers.findEntity(content, start);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findHtmlTag(self: *const Parser, content: []const u8, start: usize) ?usize {
     _ = self;
     if (start + 1 >= content.len) return null;

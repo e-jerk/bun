@@ -29,11 +29,13 @@ pub const DiffConfig = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn removeTrailingNewline(text: []const u8) []const u8 {
     if (!std.mem.endsWith(u8, text, "\n")) return text;
     return text[0 .. text.len - 1];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn printDiffMain(arena: std.mem.Allocator, not: bool, received_slice: []const u8, expected_slice: []const u8, writer: anytype, config: DiffConfig) std.Io.Writer.Error!void {
     if (not) {
         switch (config.enable_ansi_colors) {
@@ -88,6 +90,7 @@ pub fn printDiffMain(arena: std.mem.Allocator, not: bool, received_slice: []cons
     }
 
     // trim all segments except the last one
+// safe-transpile: for loop with pointer capture requires manual review
     if (diff_segments.items.len > 0) for (diff_segments.items[0 .. diff_segments.items.len - 1]) |*diff_segment| {
         diff_segment.removed = removeTrailingNewline(diff_segment.removed);
         diff_segment.inserted = removeTrailingNewline(diff_segment.inserted);
@@ -117,9 +120,11 @@ pub fn printDiffMain(arena: std.mem.Allocator, not: bool, received_slice: []cons
         diff_segments = new_diff_segments;
 
         // Forward pass: unskip segments after non-equal segments
-        for (diff_segments.items, 0..) |segment, i| {
+        // safe-transpile: for with index access requires manual review
+    for (diff_segments.items, 0..) |segment, i| {
             if (segment.mode != .equal) {
                 const end = @min(i +| config.chunk_context_lines +| 1, diff_segments.items.len);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (diff_segments.items[i..end]) |*seg| {
                     seg.skip = false;
                 }
@@ -134,6 +139,7 @@ pub fn printDiffMain(arena: std.mem.Allocator, not: bool, received_slice: []cons
                 const segment = diff_segments.items[i];
                 if (segment.mode != .equal) {
                     const start = i -| config.chunk_context_lines;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (diff_segments.items[start .. i + 1]) |*seg| {
                         seg.skip = false;
                     }
@@ -143,6 +149,7 @@ pub fn printDiffMain(arena: std.mem.Allocator, not: bool, received_slice: []cons
     }
 
     // fill removed_line_count and inserted_line_count
+// safe-transpile: for loop with pointer capture requires manual review
     for (diff_segments.items) |*segment| {
         for (segment.removed) |char| if (char == '\n') {
             segment.removed_line_count += 1;
@@ -316,6 +323,7 @@ fn printLinePrefix(
     if (config.enable_ansi_colors) try writer.writeAll(colors.reset);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn printTruncatedLine(
     line: []const u8,
     writer: anytype,
@@ -344,6 +352,7 @@ fn printTruncatedLine(
     if (config.enable_ansi_colors) try writer.writeAll(colors.reset);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn printSegment(
     text: []const u8,
     writer: anytype,
@@ -450,6 +459,7 @@ fn printModifiedSegment(
 
     try printLinePrefix(writer, config, removed_prefix);
 
+// safe-transpile: for loop with pointer capture requires manual review
     for (char_diff.items) |*item| {
         switch (item.operation) {
             .delete => {
@@ -476,6 +486,7 @@ fn printModifiedSegment(
     try writer.writeAll("\n");
 
     try printLinePrefix(writer, config, inserted_prefix);
+// safe-transpile: for loop with pointer capture requires manual review
     for (char_diff.items) |*item| {
         switch (item.operation) {
             .delete => {},
@@ -526,6 +537,7 @@ pub fn printDiff(
     } else false;
 
     var was_skipped = false;
+    // safe-transpile: for with index access requires manual review
     for (diff_segments, 0..) |segment, i| {
         defer {
             removed_line_number += segment.removed_line_count;

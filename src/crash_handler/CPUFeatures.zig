@@ -48,6 +48,7 @@ pub fn format(features: @This(), writer: *std.Io.Writer) !void {
 }
 
 pub fn isEmpty(features: CPUFeatures) bool {
+// safe-transpile: @bitCast requires manual review
     return @as(u8, @bitCast(features.flags)) == 0;
 }
 
@@ -56,6 +57,7 @@ pub fn hasAnyAVX(features: CPUFeatures) bool {
 }
 
 pub fn get() CPUFeatures {
+// safe-transpile: @bitCast requires manual review
     const flags: Flags = @bitCast(bun_cpu_features());
     bun.debugAssert(flags.none == false and flags.padding == 0); // sanity check
 

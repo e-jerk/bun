@@ -30,6 +30,7 @@ const JSS3Error = extern struct {
     message: bun.String = bun.String.empty,
     path: bun.String = bun.String.empty,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(code: []const u8, message: []const u8, path: ?[]const u8) @This() {
         return .{
             // lets make sure we can reuse code and message and keep it service independent

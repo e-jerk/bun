@@ -44,7 +44,7 @@ pub fn getWithPath(
     const path = if (comptime !Environment.isWindows)
         abs_package_json_path
     else brk: {
-        @memcpy(buf[0..abs_package_json_path.len], abs_package_json_path);
+        safe.SimdUtils.copy(buf[0..abs_package_json_path.len], abs_package_json_path);
         bun.path.dangerouslyConvertPathToPosixInPlace(u8, buf[0..abs_package_json_path.len]);
         break :brk buf[0..abs_package_json_path.len];
     };
@@ -59,7 +59,7 @@ pub fn getWithPath(
 
     const source = &(bun.sys.File.toSource(key, allocator, .{}).unwrap() catch |err| {
         _ = this.map.remove(key);
-        allocator.free(key);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
         return .{ .read_err = err };
     });
 
@@ -105,7 +105,7 @@ pub fn getWithSource(
     const path = if (comptime !Environment.isWindows)
         source.path.text
     else brk: {
-        @memcpy(buf[0..source.path.text.len], source.path.text);
+        safe.SimdUtils.copy(buf[0..source.path.text.len], source.path.text);
         bun.path.dangerouslyConvertPathToPosixInPlace(u8, buf[0..source.path.text.len]);
         break :brk buf[0..source.path.text.len];
     };

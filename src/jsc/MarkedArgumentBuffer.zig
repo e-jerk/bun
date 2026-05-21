@@ -6,6 +6,7 @@ pub const MarkedArgumentBuffer = opaque {
 
     extern fn MarkedArgumentBuffer__run(ctx: *anyopaque, *const fn (ctx: *anyopaque, args: *anyopaque) callconv(.c) void) void;
     pub fn run(comptime T: type, ctx: *T, func: *const fn (ctx: *T, args: *MarkedArgumentBuffer) callconv(.c) void) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         MarkedArgumentBuffer__run(@ptrCast(ctx), @ptrCast(func));
     }
 

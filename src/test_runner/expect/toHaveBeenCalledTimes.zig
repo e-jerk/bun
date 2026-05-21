@@ -22,6 +22,7 @@ pub fn toHaveBeenCalledTimes(this: *Expect, globalThis: *JSGlobalObject, callfra
 
     const times = try arguments[0].coerce(i32, globalThis);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var pass = @as(i32, @intCast(try calls.getLength(globalThis))) == times;
 
     const not = this.flags.not;

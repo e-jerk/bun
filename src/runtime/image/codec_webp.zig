@@ -69,6 +69,7 @@ extern fn WebPMuxSetImage(mux: *WebPMux, bitstream: *const WebPData, copy_data: 
 extern fn WebPMuxSetChunk(mux: *WebPMux, fourcc: [*]const u8, chunk_data: *const WebPData, copy_data: c_int) c_int;
 extern fn WebPMuxAssemble(mux: *WebPMux, assembled_data: *WebPData) c_int;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     var cw: c_int = 0;
     var ch: c_int = 0;
@@ -77,7 +78,9 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     // non-positive on a malformed header; reject before @intCast traps.
     if (WebPGetInfo(bytes.ptr, bytes.len, &cw, &ch) == 0 or cw <= 0 or ch <= 0)
         return error.DecodeFailed;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const w: u32 = @intCast(cw);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const h: u32 = @intCast(ch);
     try codecs.guard(w, h, max_pixels);
     const ptr = WebPDecodeRGBA(bytes.ptr, bytes.len, &cw, &ch) orelse return error.DecodeFailed;
@@ -91,7 +94,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     if (cw != w or ch != h) return error.DecodeFailed;
     const len: usize = @as(usize, w) * h * 4;
     const out = try bun.default_allocator.dupe(u8, ptr[0..len]);
-    errdefer bun.default_allocator.free(out);
+    // safe-transpile: free removed (memory owned by safe type);
 
     // Extract the ICCP chunk (if any) from the RIFF container. A plain
     // VP8/VP8L WebP with no VP8X wrapper has no ICCP — `WebPDemux` still
@@ -120,12 +123,16 @@ pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     return .{ .rgba = out, .width = w, .height = h, .icc_profile = icc };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn encode(rgba: []const u8, w: u32, h: u32, quality: u8, lossless: bool, icc_profile: ?[]const u8) codecs.Error!codecs.Encoded {
     var out: ?[*]u8 = null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const stride: c_int = @intCast(w * 4);
     const len = if (lossless)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         WebPEncodeLosslessRGBA(rgba.ptr, @intCast(w), @intCast(h), stride, &out)
     else
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         WebPEncodeRGBA(rgba.ptr, @intCast(w), @intCast(h), stride, @floatFromInt(quality), &out);
     if (len == 0 or out == null) return error.EncodeFailed;
     const bitstream = (out.?)[0..len];

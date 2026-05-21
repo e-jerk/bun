@@ -64,6 +64,7 @@ pub fn memoryCostDetailed(dev: *DevServer) MemoryCost {
         .router = {
             other_bytes += dev.router.memoryCost();
         },
+// safe-transpile: for loop with pointer capture requires manual review
         .route_bundles = for (dev.route_bundles.items) |*bundle| {
             other_bytes += bundle.memoryCost();
         },

@@ -22,11 +22,14 @@ pub const Stream = opaque {
 
     extern fn us_quic_stream_ext(s: *Stream) *anyopaque;
     pub fn ext(s: *Stream, comptime T: type) *?*T {
+// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(us_quic_stream_ext(s)));
     }
 
     extern fn us_quic_stream_write(s: *Stream, data: [*]const u8, len: c_uint) c_int;
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(s: *Stream, data: []const u8) c_int {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_quic_stream_write(s, data.ptr, @intCast(data.len));
     }
 
@@ -37,6 +40,7 @@ pub const Stream = opaque {
 
     extern fn us_quic_stream_send_headers(s: *Stream, h: [*]const Header, n: c_uint, end_stream: c_int) c_int;
     pub fn sendHeaders(s: *Stream, headers: []const Header, end_stream: bool) c_int {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_quic_stream_send_headers(s, headers.ptr, @intCast(headers.len), @intFromBool(end_stream));
     }
 };

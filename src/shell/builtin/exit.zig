@@ -71,8 +71,8 @@ pub fn deinit(this: *Exit) void {
 }
 
 pub inline fn bltn(this: *Exit) *Builtin {
-    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
-    @alignCast(@fieldParentPtr("exit", this));
+// safe-transpile: @alignCast requires manual review
+    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("exit", this));
     return @fieldParentPtr("impl", impl);
 }
 

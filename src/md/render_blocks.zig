@@ -100,7 +100,7 @@ pub fn processTableRow(self: *Parser, vline: VerbatimLine, is_header: bool, col_
             // GFM: \| in table cells should be consumed at the table level,
             // replacing \| with | before inline processing. This matters for
             // code spans where backslash escapes don't apply.
-// zust: use safe.String or safe.GuardedSlice for slice operations
+// zust: use zust.String or zust.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, cell_content, "\\|") != null) {
                 var buf: std.ArrayListUnmanaged(u8) = .empty;
                 defer buf.deinit(self.allocator);
@@ -117,10 +117,10 @@ pub fn processTableRow(self: *Parser, vline: VerbatimLine, is_header: bool, col_
                     }
                     break :blk buf.items;
                 } else |_| cell_content;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try self.processInlineContent(unescaped, vline.beg + @as(OFF, @intCast(cell_beg)));
             } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try self.processInlineContent(cell_content, vline.beg + @as(OFF, @intCast(cell_beg)));
             }
         }

@@ -58,8 +58,8 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-    const impl: *Builtin.Impl = // safe-transpile: @alignCast requires manual review
-    @alignCast(@fieldParentPtr("basename", this));
+// safe-transpile: @alignCast requires manual review
+    const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("basename", this));
     return @fieldParentPtr("impl", impl);
 }
 

@@ -30,11 +30,11 @@ pub fn MaybeResult(comptime MaybeType: type) type {
     const maybe = maybe_ty_info.@"union";
     if (maybe.fields.len != 2) @compileError("Expected the Maybe type to be a union(enum) with two variants");
 
-    if (!std.mem.eql(u8, maybe.fields[0].name, "err")) {
+    if (!safe.SimdUtils.eql(maybe.fields[0].name, "err")) {
         @compileError("Expected the first field of the Maybe type to be \"err\", got: " ++ maybe.fields[0].name);
     }
 
-    if (!std.mem.eql(u8, maybe.fields[1].name, "result")) {
+    if (!safe.SimdUtils.eql(maybe.fields[1].name, "result")) {
         @compileError("Expected the second field of the Maybe type to be \"result\"" ++ maybe.fields[1].name);
     }
 
@@ -50,6 +50,7 @@ pub fn ReturnOfType(comptime Type: type) type {
     return typeinfo.return_type orelse void;
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn typeName(comptime Type: type) []const u8 {
     const name = @typeName(Type);
     return typeBaseName(name);
@@ -60,6 +61,7 @@ pub fn typeName(comptime Type: type) []const u8 {
 pub inline fn typeBaseName(comptime fullname: [:0]const u8) [:0]const u8 {
     @setEvalBranchQuota(1_000_000);
     // leave type name like "namespace.WrapperType(namespace.MyType)" as it is
+// zust: use safe.String or safe.GuardedSlice for slice operations
     const baseidx = comptime std.mem.indexOf(u8, fullname, "(");
     if (baseidx != null) return comptime fullname;
 
@@ -123,6 +125,7 @@ pub fn ConcatArgs1(
     var args: std.meta.ArgsTuple(@TypeOf(func)) = undefined;
     args[0] = a;
 
+    // safe-transpile: for with index access requires manual review
     inline for (args_, 1..) |arg, i| {
         args[i] = arg;
     }
@@ -141,6 +144,7 @@ pub inline fn ConcatArgs2(
     args[0] = a;
     args[1] = b;
 
+    // safe-transpile: for with index access requires manual review
     inline for (args_, 2..) |arg, i| {
         args[i] = arg;
     }
@@ -163,6 +167,7 @@ pub inline fn ConcatArgs4(
     args[2] = c;
     args[3] = d;
 
+    // safe-transpile: for with index access requires manual review
     inline for (args_, 4..) |arg, i| {
         args[i] = arg;
     }
@@ -297,8 +302,8 @@ pub fn looksLikeListContainerType(comptime T: type) ?struct { list: ListContaine
 
         // Looks like array list
         if (fields.len == 2 and
-            std.mem.eql(u8, fields[0].name, "items") and
-            std.mem.eql(u8, fields[1].name, "capacity"))
+            safe.SimdUtils.eql(fields[0].name, "items") and
+            safe.SimdUtils.eql(fields[1].name, "capacity"))
             return .{ .list = .array_list, .child = std.meta.Child(fields[0].type) };
 
         // Looks like babylist
@@ -318,6 +323,7 @@ pub fn looksLikeListContainerType(comptime T: type) ?struct { list: ListContaine
 pub fn Tagged(comptime U: type, comptime T: type) type {
     const info = @typeInfo(U).@"union";
     var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
+    // safe-transpile: for with index access requires manual review
     for (info.fields, 0..) |field, i| {
         fields[i] = .{
             .name = field.name,
@@ -349,6 +355,7 @@ pub fn useAllFields(comptime T: type, _: VoidFields(T)) void {}
 fn VoidFields(comptime T: type) type {
     const fields = @typeInfo(T).@"struct".fields;
     var void_fields: [fields.len]std.builtin.Type.StructField = undefined;
+    // safe-transpile: for with index access requires manual review
     for (fields, 0..) |field, i| {
         void_fields[i] = .{
             .name = field.name,
@@ -373,6 +380,7 @@ pub fn voidFieldTypeDiscardHelper(data: anytype) void {
     _ = data;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hasDecl(comptime T: type, comptime name: []const u8) bool {
     return switch (@typeInfo(T)) {
         .@"struct", .@"union", .@"enum", .@"opaque" => @hasDecl(T, name),
@@ -380,6 +388,7 @@ pub fn hasDecl(comptime T: type, comptime name: []const u8) bool {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hasField(comptime T: type, comptime name: []const u8) bool {
     return switch (@typeInfo(T)) {
         .@"struct", .@"union", .@"enum" => @hasField(T, name),

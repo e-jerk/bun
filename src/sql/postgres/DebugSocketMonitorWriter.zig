@@ -1,4 +1,4 @@
-var file: @import("std-fs-compat").File = std.mem.zeroes(@import("std-fs-compat").File);
+var file: @import("std-fs-compat").File = undefined;
 pub var enabled = false;
 pub var check_done = false;
 

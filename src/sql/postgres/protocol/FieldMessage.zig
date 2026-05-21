@@ -54,6 +54,7 @@ while (true) : (__loop_limit_1 += 1) {
         return messages;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(tag: FieldType, message: []const u8) !FieldMessage {
         return switch (tag) {
             .severity => FieldMessage{ .severity = String.cloneUTF8(message) },

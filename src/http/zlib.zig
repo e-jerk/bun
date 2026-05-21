@@ -13,6 +13,7 @@ pub fn put(mutable: *MutableString) void {
     node.release();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decompress(compressed_data: []const u8, output: *MutableString, allocator: std.mem.Allocator) Zlib.ZlibError!void {
     var reader = try Zlib.ZlibReaderArrayList.initWithOptionsAndListAllocator(
         compressed_data,

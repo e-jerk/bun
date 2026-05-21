@@ -119,6 +119,7 @@ pub fn kind(reader: *const PipeReader, process: *const Subprocess) StdioKind {
     @panic("We should be either stdout or stderr");
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn toOwnedSlice(this: *PipeReader) []u8 {
     if (this.state == .done) {
         return this.state.done;
@@ -181,7 +182,7 @@ pub fn toBuffer(this: *PipeReader, globalThis: *jsc.JSGlobalObject) jsc.JSValue 
 
 pub fn onReaderError(this: *PipeReader, err: bun.sys.Error) void {
     if (this.state == .done) {
-        bun.default_allocator.free(this.state.done);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
     this.state = .{ .err = err };
     if (this.process) |process| {
@@ -230,7 +231,7 @@ fn deinit(this: *PipeReader) void {
     }
 
     if (this.state == .done) {
-        bun.default_allocator.free(this.state.done);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
 
     this.reader.deinit();

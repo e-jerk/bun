@@ -48,6 +48,7 @@ pub const JSXImport = enum {
         Fragment: ?LocRef = null,
         createElement: ?LocRef = null,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(noalias this: *const Symbols, name: []const u8) ?Ref {
             if (strings.eqlComptime(name, "jsx")) return if (this.jsx) |jsx| jsx.ref.? else null;
             if (strings.eqlComptime(name, "jsxDEV")) return if (this.jsxDEV) |jsx| jsx.ref.? else null;
@@ -285,6 +286,7 @@ pub const JSXTag = struct {
             try p.lexer.expectInsideJSXElement(.t_identifier);
 
             if (strings.indexOfChar(member, '-')) |index| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try p.log.addError(p.source, logger.Loc{ .start = member_range.loc.start + @as(i32, @intCast(index)) }, "Unexpected \"-\"");
                 return error.SyntaxError;
             }
@@ -311,9 +313,11 @@ pub const JSXTag = struct {
 ///
 /// This makes sure that there's the lowest possible chance of having a generated name
 /// collide with a user's name. This is the easiest way to do so
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn generatedSymbolName(name: []const u8) []const u8 {
     comptime {
         const hash = std.hash.Wyhash.hash(0, name);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const hash_str = std.fmt.comptimePrint("_{f}", .{bun.fmt.truncatedHash32(@intCast(hash))});
         return name ++ hash_str;
     }
@@ -993,6 +997,7 @@ pub const DeferredArrowArgErrors = struct {
     invalid_expr_yield: logger.Range = logger.Range.None,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn newLazyExportAST(
     allocator: std.mem.Allocator,
     define: *Define,
@@ -1005,6 +1010,7 @@ pub fn newLazyExportAST(
     return newLazyExportASTImpl(allocator, define, opts, log_to_copy_into, expr, source, runtime_api_call, .{});
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn newLazyExportASTImpl(
     allocator: std.mem.Allocator,
     define: *Define,
@@ -1143,6 +1149,7 @@ pub const ReactRefresh = struct {
     };
 
     // https://github.com/facebook/react/blob/d1afcb43fd506297109c32ff462f6f659f9110ae/packages/react-refresh/src/ReactFreshBabelPlugin.js#L42
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isComponentishName(id: []const u8) bool {
         if (id.len == 0) return false;
         return switch (id[0]) {
@@ -1152,6 +1159,7 @@ pub const ReactRefresh = struct {
     }
 
     // https://github.com/facebook/react/blob/d1afcb43fd506297109c32ff462f6f659f9110ae/packages/react-refresh/src/ReactFreshBabelPlugin.js#L408
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isHookName(id: []const u8) bool {
         return id.len >= 4 and
             strings.hasPrefixComptime(id, "use") and
@@ -1191,6 +1199,7 @@ pub fn floatToInt32(f: f64) i32 {
         return 0;
 
     const uint: u32 = @intFromFloat(@mod(@abs(f), std.math.maxInt(u32) + 1));
+// safe-transpile: @bitCast requires manual review
     const int: i32 = @bitCast(uint);
     return if (f < 0) @as(i32, 0) -% int else int;
 }

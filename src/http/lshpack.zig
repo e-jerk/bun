@@ -27,6 +27,7 @@ pub const HPACK = extern struct {
     }
 
     /// DecodeResult name and value uses a thread_local shared buffer and should be copy/cloned before the next decode/encode call
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decode(self: *HPACK, src: []const u8) !DecodeResult {
         var header: lshpack_header = .{};
         const offset = lshpack_wrapper_decode(self, src.ptr, src.len, &header);
@@ -44,6 +45,7 @@ pub const HPACK = extern struct {
 
     /// encode name, value with never_index option into dst_buffer
     /// if name + value length is greater than LSHPACK_MAX_HEADER_SIZE this will return UnableToEncode
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encode(self: *HPACK, name: []const u8, value: []const u8, never_index: bool, dst_buffer: []u8, dst_buffer_offset: usize) !usize {
         const offset = lshpack_wrapper_encode(self, name.ptr, name.len, value.ptr, value.len, @intFromBool(never_index), dst_buffer.ptr, dst_buffer.len, dst_buffer_offset);
         if (offset <= 0) return error.UnableToEncode;

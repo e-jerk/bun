@@ -77,9 +77,9 @@ pub const Parser = struct {
 
     pub const Error = bun.JSError || bun.StackOverflow;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(allocator: Allocator, text: []const u8, flags: Flags, rend: Renderer) Parser {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const size: OFF = @intCast(text.len);
         var p = Parser{
             .allocator = allocator,
@@ -228,7 +228,7 @@ pub const Parser = struct {
 // Public API
 // ========================================
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderToHtml(text: []const u8, allocator: Allocator, flags: Flags, render_opts: root.RenderOptions) Parser.Error![]u8 {
     // Skip UTF-8 BOM
     const input = helpers.skipUtf8Bom(text);
@@ -253,7 +253,7 @@ pub fn renderToHtml(text: []const u8, allocator: Allocator, flags: Flags, render
 /// Renderer implementation (e.g. for JS callback-based rendering).
 /// `render_options` carries render-only flags (tag_filter, heading_ids,
 /// autolink_headings) so they are not silently dropped by the API.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderWithRenderer(text: []const u8, allocator: Allocator, flags: Flags, render_options: root.RenderOptions, rend: Renderer) Parser.Error!void {
     _ = render_options; // Available for renderer implementations; parse layer does not use these.
     const input = helpers.skipUtf8Bom(text);

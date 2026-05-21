@@ -1,7 +1,6 @@
 pub fn NewReaderWrap(
     comptime Context: type,
     comptime markMessageStartFn_: (fn (ctx: Context) void),
-// safe-transpile: function returns small constant slice — consider safe.String
     comptime peekFn_: (fn (ctx: Context) []const u8),
     comptime skipFn_: (fn (ctx: Context, count: isize) void),
     comptime ensureCapacityFn_: (fn (ctx: Context, count: usize) bool),
@@ -66,8 +65,8 @@ pub fn NewReaderWrap(
                 return @as(Int, data.slice()[0]);
             }
             const size = @divExact(@typeInfo(Int).int.bits, 8);
-            return @as(Int, // safe-transpile: @bitCast requires manual review
-    @bitCast(data.slice()[0..size].*));
+// safe-transpile: @bitCast requires manual review
+            return @as(Int, @bitCast(data.slice()[0..size].*));
         }
 
         pub fn encodeLenString(this: @This()) AnyMySQLError.Error!Data {

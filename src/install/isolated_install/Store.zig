@@ -367,7 +367,8 @@ pub const Store = struct {
                     return false;
                 }
 
-                for (l.list.items, r.list.items) |l_item, r_item| {
+                // safe-transpile: for with index access requires manual review
+    for (l.list.items, r.list.items) |l_item, r_item| {
                     if (!ctx.eql(l_item, r_item)) {
                         return false;
                     }
@@ -543,7 +544,8 @@ pub const Store = struct {
                 }
 
                 log("  nodes ({d}): ", .{node.nodes.items.len});
-                for (node.nodes.items, 0..) |id, i| {
+                // safe-transpile: for with index access requires manual review
+    for (node.nodes.items, 0..) |id, i| {
                     log("{d}", .{id.get()});
                     if (i != node.nodes.items.len - 1) {
                         log(",", .{});

@@ -120,7 +120,6 @@ pub const Renderer = struct {
         leaveBlock: *const fn (ptr: *anyopaque, block_type: BlockType, data: u32) bun.JSError!void,
         enterSpan: *const fn (ptr: *anyopaque, span_type: SpanType, detail: SpanDetail) bun.JSError!void,
         leaveSpan: *const fn (ptr: *anyopaque, span_type: SpanType) bun.JSError!void,
-// safe-transpile: function uses raw slice parameter — consider safe.String
         text: *const fn (ptr: *anyopaque, text_type: TextType, content: []const u8) bun.JSError!void,
     };
 
@@ -174,7 +173,6 @@ pub const Attribute = struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn text(self: Attribute, src: []const u8) []const u8 {
         if (self.substr_offsets.len == 0) return "";
         const first = self.substr_offsets[0].beg;

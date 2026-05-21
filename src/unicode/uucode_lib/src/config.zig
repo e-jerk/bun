@@ -314,8 +314,8 @@ pub const Field = struct {
                 a.embedded_len == b.embedded_len and
                 a.min_value == b.min_value and
                 a.max_value == b.max_value and
-                std.mem.eql(u8, a.type, b.type) and
-                std.mem.eql(u8, a.name, b.name);
+                safe.SimdUtils.eql(a.type, b.type) and
+                safe.SimdUtils.eql(a.name, b.name);
         }
 
         pub fn override(self: Runtime, overrides: anytype) Runtime {
@@ -511,13 +511,13 @@ pub const Field = struct {
         var result = self;
 
         inline for (@typeInfo(@TypeOf(overrides)).@"struct".fields) |f| {
-            if (!is_updating_ucd and (std.mem.eql(u8, f.name, "name") or
-                std.mem.eql(u8, f.name, "type") or
-                std.mem.eql(u8, f.name, "shift_low") or
-                std.mem.eql(u8, f.name, "shift_high") or
-                std.mem.eql(u8, f.name, "max_len")) or
-                std.mem.eql(u8, f.name, "min_value") or
-                std.mem.eql(u8, f.name, "max_value"))
+            if (!is_updating_ucd and (safe.SimdUtils.eql(f.name, "name") or
+                safe.SimdUtils.eql(f.name, "type") or
+                safe.SimdUtils.eql(f.name, "shift_low") or
+                safe.SimdUtils.eql(f.name, "shift_high") or
+                safe.SimdUtils.eql(f.name, "max_len")) or
+                safe.SimdUtils.eql(f.name, "min_value") or
+                safe.SimdUtils.eql(f.name, "max_value"))
             {
                 @compileError("Cannot override field '" ++ f.name ++ "'");
             }
@@ -569,21 +569,23 @@ pub const Table = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasField(comptime self: *const Table, name: []const u8) bool {
         @setEvalBranchQuota(10_000);
 
         return inline for (self.fields) |f| {
-            if (std.mem.eql(u8, f.name, name)) {
+            if (safe.SimdUtils.eql(f.name, name)) {
                 break true;
             }
         } else false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn field(comptime self: *const Table, name: []const u8) Field {
         @setEvalBranchQuota(20_000);
 
         return for (self.fields) |f| {
-            if (std.mem.eql(u8, f.name, name)) {
+            if (safe.SimdUtils.eql(f.name, name)) {
                 break f;
             }
         } else @compileError("Field '" ++ name ++ "' not found in Table");
@@ -690,17 +692,19 @@ pub const Extension = struct {
         tracking: anytype,
     ) std.mem.Allocator.Error!void,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasField(comptime self: *const Extension, name: []const u8) bool {
         return inline for (self.fields) |f| {
-            if (std.mem.eql(u8, f.name, name)) {
+            if (safe.SimdUtils.eql(f.name, name)) {
                 break true;
             }
         } else false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn field(comptime self: *const Extension, name: []const u8) Field {
         return for (self.fields) |f| {
-            if (std.mem.eql(u8, f.name, name)) {
+            if (safe.SimdUtils.eql(f.name, name)) {
                 break f;
             }
         } else @compileError("Field '" ++ name ++ "' not found in Extension");
@@ -716,10 +720,11 @@ pub fn _resolveFields(
 ) [field_names.len]Field {
     @setEvalBranchQuota(100_000);
     var result: [field_names.len]Field = undefined;
+    // safe-transpile: for with index access requires manual review
     for (field_names, 0..) |field_name, i| {
         result[i] = extensions_loop: inline for (@typeInfo(config_x).@"struct".decls) |decl| {
             for (extension_names) |ext_name| {
-                if (std.mem.eql(u8, decl.name, ext_name)) {
+                if (safe.SimdUtils.eql(decl.name, ext_name)) {
                     const extension = @field(config_x, decl.name);
                     if (extension.hasField(field_name)) {
                         break :extensions_loop extension.field(field_name);

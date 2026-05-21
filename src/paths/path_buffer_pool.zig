@@ -13,6 +13,7 @@ fn PathBufferPoolT(comptime T: type) type {
 
         pub fn put(buffer: *const T) void {
             // there's no deinit function on T so @constCast is fine
+// safe-transpile: @alignCast requires manual review
             var node: *Pool.Node = @alignCast(@fieldParentPtr("data", @constCast(buffer)));
             node.release();
         }

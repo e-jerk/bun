@@ -52,35 +52,34 @@ pub const Flags = packed struct(u16) {
     version_tag: VersionFlag = VersionFlag.current,
 
     pub fn isValid(flags: Flags) bool {
-        const mask: u16 = // safe-transpile: @bitCast requires manual review
-    @bitCast(Flags{
+// safe-transpile: @bitCast requires manual review
+        const mask: u16 = @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
             .has_shebang = false,
             .version_tag = @enumFromInt(std.math.maxInt(u13)),
         });
 
-        const compare_to: u16 = // safe-transpile: @bitCast requires manual review
-    @bitCast(Flags{
+// safe-transpile: @bitCast requires manual review
+        const compare_to: u16 = @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
             .has_shebang = false,
         });
 
-        return (@as(u16, // safe-transpile: @bitCast requires manual review
-    @bitCast(flags)) & comptime mask) == comptime compare_to;
+// safe-transpile: @bitCast requires manual review
+        return (@as(u16, @bitCast(flags)) & comptime mask) == comptime compare_to;
     }
 };
 
 pub const embedded_executable_data = @embedFile("bun_shim_impl.exe");
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn wU8(comptime s: []const u8) []const u8 {
     @setEvalBranchQuota(1_000_000);
     const str = std.unicode.utf8ToUtf16LeStringLiteral(s);
-    return // safe-transpile: @alignCast requires manual review
-    @alignCast(std.mem.sliceAsBytes(str));
+// safe-transpile: @alignCast requires manual review
+    return @alignCast(std.mem.sliceAsBytes(str));
 }
 
 pub const Shebang = struct {
@@ -126,11 +125,7 @@ pub const Shebang = struct {
             return &[_]u16{};
 
         var end_index: usize = path.len - 1;
-        var __zust_loop_counter: u64 = 0;
-    while (true) {
-        __zust_loop_counter += 1;
-        if (__zust_loop_counter > 1_000_000) return error.InfiniteLoop;
-        
+        while (true) {
             const byte = path[end_index];
             if (byte == '/' or byte == '\\') {
                 if (end_index == 0)
@@ -166,8 +161,8 @@ pub const Shebang = struct {
     }
 
     pub fn parseFromBinPath(bin_path: []const u16) ?Shebang {
-        if (BunExtensions.get(// safe-transpile: @alignCast requires manual review
-    @alignCast(std.mem.sliceAsBytes(extensionW(bin_path))))) |i| {
+// safe-transpile: @alignCast requires manual review
+        if (BunExtensions.get(@alignCast(std.mem.sliceAsBytes(extensionW(bin_path))))) |i| {
             return switch (i) {
                 .run_with_bun => comptime Shebang.init("bun run", true) catch unreachable,
                 .run_with_cmd => comptime Shebang.init("cmd /c", false) catch unreachable,
@@ -239,8 +234,8 @@ pub fn encodeInto(options: @This(), buf: []u8) !void {
     std.debug.assert(buf.len == options.encodedLength());
     std.debug.assert(options.bin_path[0] != '/');
 
-    var wbuf = @as([*]u16, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(@alignCast(&buf[0])))[0 .. buf.len / 2];
+// safe-transpile: @alignCast requires manual review
+    var wbuf = @as([*]u16, @ptrCast(@alignCast(&buf[0])))[0 .. buf.len / 2];
 
     safe.SimdUtils.copy(wbuf[0..options.bin_path.len], options.bin_path);
     wbuf = wbuf[options.bin_path.len..];
@@ -271,16 +266,15 @@ pub fn encodeInto(options: @This(), buf: []u8) !void {
         wbuf[0] = ' ';
         wbuf = wbuf[1..];
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-        @as(*align(1) u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&wbuf[0])).* = @intCast(options.bin_path.len * 2);
-        @as(*align(1) u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&wbuf[2])).* = (s.utf16_len) * 2 + 2; // include the spaces!
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        @as(*align(1) u32, @ptrCast(&wbuf[0])).* = @intCast(options.bin_path.len * 2);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        @as(*align(1) u32, @ptrCast(&wbuf[2])).* = (s.utf16_len) * 2 + 2; // include the spaces!
         wbuf = wbuf[(@sizeOf(u32) * 2) / @sizeOf(u16) ..];
     }
 
-    @as(*align(1) Flags, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&wbuf[0])).* = flags;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    @as(*align(1) Flags, @ptrCast(&wbuf[0])).* = flags;
     wbuf = wbuf[@sizeOf(Flags) / @sizeOf(u16) ..];
 
     if (@import("builtin").mode == .Debug) {
@@ -298,15 +292,15 @@ pub fn looseDecode(input: []const u8) ?Decoded {
     if (input.len < @sizeOf(Flags) + 2 * @sizeOf(u32) + 8) {
         return null;
     }
-    const flags = @as(*align(1) const Flags, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&input[input.len - @sizeOf(Flags)])).*;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    const flags = @as(*align(1) const Flags, @ptrCast(&input[input.len - @sizeOf(Flags)])).*;
     if (!flags.isValid()) {
         return null;
     }
 
     const bin_path_u8 = if (flags.has_shebang) bin_path_u8: {
-        const bin_path_byte_len = @as(*align(1) const u32, // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-    @ptrCast(&input[input.len - @sizeOf(Flags) - 2 * @sizeOf(u32)])).*;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        const bin_path_byte_len = @as(*align(1) const u32, @ptrCast(&input[input.len - @sizeOf(Flags) - 2 * @sizeOf(u32)])).*;
         if (bin_path_byte_len % 2 != 0) {
             return null;
         }

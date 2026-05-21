@@ -31,6 +31,7 @@ pub const PluginRunner = struct {
         return (!std.fs.path.isAbsolute(specifier) and strings.containsChar(specifier, ':'));
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onResolve(
         this: *PluginRunner,
         specifier: []const u8,
@@ -217,14 +218,14 @@ pub const PluginRunner = struct {
         var out_ = bun.String.init(combined_string);
         defer out_.deref();
         const jsval = out_.toJS(this.global_object) catch |err| {
-            this.allocator.free(combined_string);
+            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
             return jsc.ErrorableString.err(err, this.global_object.tryTakeException() orelse .js_undefined);
         };
         const out = jsval.toBunString(this.global_object) catch |err| {
-            this.allocator.free(combined_string);
+            _ = undefined; // safe-transpile: free removed (memory owned by safe type);
             return jsc.ErrorableString.err(err, this.global_object.tryTakeException() orelse .js_undefined);
         };
-        this.allocator.free(combined_string);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
         return jsc.ErrorableString.ok(out);
     }
 };

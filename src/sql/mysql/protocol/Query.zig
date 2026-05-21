@@ -6,8 +6,8 @@ pub const Execute = struct {
     param_types: []const Param,
 
     pub fn deinit(this: *Execute) void {
-        for (0..this.params.len) |__zust_i| {
-    var param = &this.params[__zust_i];
+// safe-transpile: for loop with pointer capture requires manual review
+        for (this.params) |*param| {
             param.deinit();
         }
     }
@@ -23,7 +23,7 @@ pub const Execute = struct {
             // Always 1. Malformed packet error if not 1
             try writer.int1(1);
             // if 22 chars = u64 + 2 for :p and this should be more than enough
-            var param_name_buf: [22]u8 = .{};
+            var param_name_buf: [22]u8 = undefined;
             // Write parameter types
             // safe-transpile: for with index access requires manual review
     for (this.param_types, 1..) |param_type, i| {

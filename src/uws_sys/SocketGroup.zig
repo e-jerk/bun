@@ -59,7 +59,9 @@ pub const SocketGroup = extern struct {
     pub fn init(self: *SocketGroup, loop_: *Loop, vt: ?*const VTable, owner_ptr: anytype) void {
         const P = @TypeOf(owner_ptr);
         const erased: ?*anyopaque = if (P == @TypeOf(null)) null else switch (@typeInfo(P)) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .pointer => |p| if (p.size == .one) @ptrCast(@constCast(owner_ptr)) else @compileError("SocketGroup.init owner must be a single-item pointer"),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .optional => if (owner_ptr) |o| @ptrCast(@constCast(o)) else null,
             else => @compileError("SocketGroup.init owner must be a pointer or null"),
         };
@@ -85,6 +87,7 @@ pub const SocketGroup = extern struct {
     /// non-null owner (Listener, uWS App/Context). Per-kind VM groups in
     /// `RareData` pass `null`, so callers must know which they have.
     pub fn owner(self: *const SocketGroup, comptime T: type) *T {
+// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(self._ext.?));
     }
 
@@ -143,8 +146,10 @@ pub const SocketGroup = extern struct {
         var has_dns_resolved: c_int = 0;
         const ptr = c.us_socket_group_connect(self, @intFromEnum(kind), ssl_ctx, host, port, options, socket_ext_size, &has_dns_resolved) orelse return .failed;
         return if (has_dns_resolved != 0)
+// safe-transpile: @alignCast requires manual review
             .{ .socket = @ptrCast(@alignCast(ptr)) }
         else
+// safe-transpile: @alignCast requires manual review
             .{ .connecting = @ptrCast(@alignCast(ptr)) };
     }
 

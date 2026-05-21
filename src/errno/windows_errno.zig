@@ -677,7 +677,7 @@ pub const SystemErrno = enum(u16) {
     }
 
     const error_map: [SystemErrno.max]Error = brk: {
-        var errors: [SystemErrno.max]Error = .{};
+        var errors: [SystemErrno.max]Error = undefined;
         errors[@intFromEnum(SystemErrno.EPERM)] = error.EPERM;
         errors[@intFromEnum(SystemErrno.ENOENT)] = error.ENOENT;
         errors[@intFromEnum(SystemErrno.ESRCH)] = error.ESRCH;

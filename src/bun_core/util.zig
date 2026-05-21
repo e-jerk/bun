@@ -1,12 +1,10 @@
 // Things that maybe should go in Zig standard library at some point
 
 pub fn Key(comptime Map: type) type {
-// safe-transpile: optional unwrap requires manual review
     return FieldType(Map.KV, "key").?;
 }
 
 pub fn Value(comptime Map: type) type {
-// safe-transpile: optional unwrap requires manual review
     return FieldType(Map.KV, "value").?;
 }
 
@@ -117,19 +115,11 @@ pub fn Of(comptime ArrayLike: type) type {
     }
 
     if (comptime @hasField(ArrayLike, "items")) {
-        return std.meta.Child(if (FieldType(ArrayLike, "items")) |value| {
-    value
-} else {
-    return error.NullPointer;
-});
+        return std.meta.Child(FieldType(ArrayLike, "items").?);
     }
 
     if (comptime @hasField(ArrayLike, "ptr")) {
-        return std.meta.Child(if (FieldType(ArrayLike, "ptr")) |value| {
-    value
-} else {
-    return error.NullPointer;
-});
+        return std.meta.Child(FieldType(ArrayLike, "ptr").?);
     }
 
     @compileError("Cannot infer type within " ++ @typeName(ArrayLike));
@@ -151,11 +141,7 @@ pub inline fn from(
         }
 
         if (comptime @hasField(DefaultType, "items")) {
-            if (Of(if (FieldType(DefaultType, "items")) |value| {
-    value
-} else {
-    return error.NullPointer;
-}) == Of(Array)) {
+            if (Of(FieldType(DefaultType, "items").?) == Of(Array)) {
                 return fromSlice(Array, allocator, @TypeOf(default.items), default.items);
             }
         }
@@ -201,7 +187,7 @@ pub fn fromSlice(
 
         return map;
     } else {
-        var slice: []Of(Array) = .{};
+        var slice: []Of(Array) = undefined;
         if (comptime !bun.trait.isSlice(Array)) {
             // is it an ArrayList with an allocator?
             if (comptime !needsAllocator(Array.ensureUnusedCapacity)) {

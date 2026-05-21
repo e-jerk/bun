@@ -38,10 +38,10 @@ pub const EnvStr = packed struct(u128) {
     }
 
     fn toPtr(ptr_val: *const anyopaque) u48 {
-        const num: [8]u8 = // safe-transpile: @bitCast requires manual review
-    @bitCast(@intFromPtr(ptr_val));
-        return // safe-transpile: @bitCast requires manual review
-    @bitCast(num[0..6].*);
+// safe-transpile: @bitCast requires manual review
+        const num: [8]u8 = @bitCast(@intFromPtr(ptr_val));
+// safe-transpile: @bitCast requires manual review
+        return @bitCast(num[0..6].*);
     }
 
     /// Same thing as `initRefCounted` except it duplicates thepassed string

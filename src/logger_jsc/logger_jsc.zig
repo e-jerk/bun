@@ -1,5 +1,6 @@
 //! JSC bridge for `bun.logger`. Keeps `src/logger/` free of JSC types.
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn msgFromJS(allocator: std.mem.Allocator, globalObject: *jsc.JSGlobalObject, file: []const u8, err: jsc.JSValue) bun.JSError!Msg {
     var zig_exception_holder: jsc.ZigException.Holder = jsc.ZigException.Holder.init();
     if (err.toError()) |value| {
@@ -39,10 +40,12 @@ pub fn levelFromJS(globalThis: *jsc.JSGlobalObject, value: jsc.JSValue) bun.JSEr
     return Log.Level.Map.fromJS(globalThis, value);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn logToJS(this: Log, global: *jsc.JSGlobalObject, allocator: std.mem.Allocator, message: []const u8) bun.JSError!jsc.JSValue {
     const msgs: []const Msg = this.msgs.items;
     var errors_stack: [256]jsc.JSValue = undefined;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const count = @as(u16, @intCast(@min(msgs.len, errors_stack.len)));
     switch (count) {
         0 => return .js_undefined,
@@ -54,7 +57,8 @@ pub fn logToJS(this: Log, global: *jsc.JSGlobalObject, allocator: std.mem.Alloca
             };
         },
         else => {
-            for (msgs[0..count], 0..) |msg, i| {
+            // safe-transpile: for with index access requires manual review
+    for (msgs[0..count], 0..) |msg, i| {
                 errors_stack[i] = switch (msg.metadata) {
                     .build => try bun.api.BuildMessage.create(global, allocator, msg),
                     .resolve => try bun.api.ResolveMessage.create(global, allocator, msg, ""),
@@ -76,7 +80,9 @@ pub fn logToJSArray(this: Log, global: *jsc.JSGlobalObject, allocator: std.mem.A
     const msgs: []const Msg = this.msgs.items;
 
     const arr = try jsc.JSValue.createEmptyArray(global, msgs.len);
+    // safe-transpile: for with index access requires manual review
     for (msgs, 0..) |msg, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try arr.putIndex(global, @as(u32, @intCast(i)), try msgToJS(msg, global, allocator));
     }
 

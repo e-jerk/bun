@@ -18,8 +18,8 @@ pub fn decodeInternal(
     const unrecognized_options_count: u32 = @intCast(@max(try reader.int4(), 0));
     try this.unrecognized_options.ensureTotalCapacity(bun.default_allocator, unrecognized_options_count);
     errdefer {
-        for (0..this.unrecognized_options.items.len) |__zust_i| {
-    var option = &this.unrecognized_options.items[__zust_i];
+// safe-transpile: for loop with pointer capture requires manual review
+        for (this.unrecognized_options.items) |*option| {
             option.deinit();
         }
         this.unrecognized_options.deinit(bun.default_allocator);

@@ -332,15 +332,19 @@ pub const Map = struct {
 
     pub fn dump(this: Map) void {
         defer Output.flush();
-        for (this.symbols_for_source.slice(), 0..) |symbols, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.symbols_for_source.slice(), 0..) |symbols, i| {
             Output.prettyln("\n\n-- Source ID: {d} ({d} symbols) --\n\n", .{ i, symbols.len });
-            for (symbols.slice(), 0..) |symbol, inner_index| {
+            // safe-transpile: for with index access requires manual review
+    for (symbols.slice(), 0..) |symbol, inner_index| {
                 Output.prettyln(
                     " name: {s}\n  tag: {s}\n       {f}\n",
                     .{
                         symbol.original_name, @tagName(symbol.kind),
                         if (symbol.hasLink()) symbol.link else Ref{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .source_index = @truncate(i),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .inner_index = @truncate(inner_index),
                             .tag = .symbol,
                         },
@@ -440,6 +444,7 @@ pub const Map = struct {
         const trace = bun.perf.trace("Symbols.followAll");
         defer trace.end();
         for (symbols.symbols_for_source.slice()) |list| {
+// safe-transpile: for loop with pointer capture requires manual review
             for (list.slice()) |*symbol| {
                 if (!symbol.hasLink()) continue;
                 symbol.link = follow(symbols, symbol.link);

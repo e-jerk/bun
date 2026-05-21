@@ -222,6 +222,7 @@ pub fn copyFileRange(in: fd_t, out: fd_t, len: usize, flags: u32, copy_file_stat
             const rc = std.os.linux.copy_file_range(in, null, out, null, len, flags);
             bun.sys.syslog("copy_file_range({d}, {d}, {d}) = {d}", .{ in, out, len, rc });
             switch (bun.sys.getErrno(rc)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .SUCCESS => return .{ .result = @intCast(rc) },
                 // these may not be regular files, try fallback
                 .INVAL => {
@@ -250,9 +251,11 @@ pub fn copyFileRange(in: fd_t, out: fd_t, len: usize, flags: u32, copy_file_stat
     }
 
     while (!copy_file_state.has_sendfile_failed) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = std.os.linux.sendfile(@intCast(out), @intCast(in), null, len);
         bun.sys.syslog("sendfile({d}, {d}, {d}) = {d}", .{ in, out, len, rc });
         switch (bun.sys.getErrno(rc)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .SUCCESS => return .{ .result = @intCast(rc) },
             .INTR => continue,
             // these may not be regular files, try fallback

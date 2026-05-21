@@ -66,7 +66,6 @@ fn link(ctx: Command.Context) !void {
 
             try manager.setupGlobalDir(ctx);
 
-// safe-transpile: optional unwrap requires manual review
             break :brk manager.global_dir.?.makeOpenPath("node_modules", .{}) catch |err| {
                 if (manager.options.log_level != .silent)
                     Output.prettyErrorln("<r><red>error:<r> failed to create node_modules in global dir due to error {s}", .{@errorName(err)});
@@ -94,7 +93,7 @@ fn link(ctx: Command.Context) !void {
             if (comptime Environment.isWindows) {
                 // create the junction
                 const top_level = Fs.FileSystem.instance.topLevelDirWithoutTrailingSlash();
-                var link_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+                var link_path_buf: bun.PathBuffer = undefined;
                 @memcpy(
                     link_path_buf[0..top_level.len],
                     top_level,
@@ -116,11 +115,11 @@ fn link(ctx: Command.Context) !void {
                 }
             } else {
                 // create the symlink
-                var link_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+                var link_buf: bun.PathBuffer = undefined;
                 const link_target = Fs.FileSystem.instance.topLevelDirWithoutTrailingSlash();
                 safe.SimdUtils.copy(link_buf[0..link_target.len], link_target);
                 link_buf[link_target.len] = 0;
-                var name_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+                var name_buf: bun.PathBuffer = undefined;
                 safe.SimdUtils.copy(name_buf[0..name.len], name);
                 name_buf[name.len] = 0;
                 bun.sys.symlinkat(link_buf[0..link_target.len :0], bun.FD.fromSystem(node_modules.fd), name_buf[0..name.len :0]).unwrap() catch |err| {
@@ -133,9 +132,9 @@ fn link(ctx: Command.Context) !void {
 
         // Step 3b. Link any global bins
         if (package.bin.tag != .none) {
-            var link_target_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
-            var link_dest_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
-            var link_rel_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+            var link_target_buf: bun.PathBuffer = undefined;
+            var link_dest_buf: bun.PathBuffer = undefined;
+            var link_rel_buf: bun.PathBuffer = undefined;
 
             var node_modules_path = bun.AbsPath(.{}).initFdPath(.fromStdDir(node_modules.toDir())) catch |err| {
                 if (manager.options.log_level != .silent) {

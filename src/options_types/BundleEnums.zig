@@ -50,7 +50,7 @@ pub const Format = enum {
 
     pub const fromJS = @import("../bundler_jsc/options_jsc.zig").formatFromJS;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fromString(slice: []const u8) ?Format {
         return Map.getWithEql(slice, bun.strings.eqlComptime);
     }

@@ -54,10 +54,12 @@ pub const Event = extern struct {
     pub fn name(event: *align(1) Event) [:0]u8 {
         if (comptime Environment.allow_assert) bun.assertf(event.name_len > 0, "INotifyWatcher.Event.name() called with name_len == 0, you should check it before calling this function.", .{});
         const name_first_char_ptr = std.mem.asBytes(&event.name_len).ptr + @sizeOf(u32);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return bun.sliceTo(@as([*:0]u8, @ptrCast(name_first_char_ptr)), 0);
     }
 
     pub fn size(event: *align(1) Event) u32 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@sizeOf(Event) + event.name_len);
     }
 };
@@ -90,6 +92,7 @@ pub fn unwatch(this: *INotifyWatcher, wd: EventListIndex) void {
     _ = system.inotify_rm_watch(this.fd, wd);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(this: *INotifyWatcher, _: []const u8) !void {
     bun.assert(!this.loaded);
     this.loaded = true;
@@ -131,6 +134,7 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
             const errno = std.posix.errno(rc);
             switch (errno) {
                 .SUCCESS => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     var read_eventlist_bytes = this.eventlist_bytes[0..@intCast(rc)];
                     log("{f} read {} bytes", .{ this.fd, read_eventlist_bytes.len });
                     if (read_eventlist_bytes.len == 0) return .{ .result = &.{} };
@@ -155,11 +159,13 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
                                 const e = std.posix.errno(new_rc);
                                 switch (e) {
                                     .SUCCESS => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         read_eventlist_bytes.len += @intCast(new_rc);
                                         break :outer read_eventlist_bytes;
                                     },
                                     .AGAIN, .INTR => continue :inner,
                                     else => return .{ .err = .{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                         .errno = @truncate(@intFromEnum(e)),
                                         .syscall = .read,
                                     } },
@@ -176,11 +182,13 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
                         bun.Output.err("EINVAL", "inotify read({f}, {d})", .{ this.fd, this.eventlist_bytes.len });
                     }
                     return .{ .err = .{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         .errno = @truncate(@intFromEnum(errno)),
                         .syscall = .read,
                     } };
                 },
                 else => return .{ .err = .{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .errno = @truncate(@intFromEnum(errno)),
                     .syscall = .read,
                 } },
@@ -191,6 +199,7 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
     var count: u32 = 0;
     while (i < read_eventlist_bytes.len) {
         // It is NOT aligned naturally. It is align 1!!!
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const event: *align(1) Event = @ptrCast(read_eventlist_bytes[i..][0..@sizeOf(Event)].ptr);
         this.eventlist_ptrs[count] = event;
         i += event.size();
@@ -209,6 +218,7 @@ pub fn read(this: *INotifyWatcher) bun.sys.Maybe([]const *align(1) Event) {
         if (count == max_count) {
             this.read_ptr = .{
                 .i = i,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @intCast(read_eventlist_bytes.len),
             };
             log("{f} read buffer filled up", .{this.fd});
@@ -282,6 +292,7 @@ pub fn watchLoopCycle(this: *bun.Watcher) bun.sys.Maybe(void) {
 
             this.watch_events[event_id] = watchEventFromInotifyEvent(
                 event,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(std.mem.indexOfScalar(
                     EventListIndex,
                     eventlist_index,
@@ -332,6 +343,7 @@ fn processINotifyEventBatch(this: *bun.Watcher, event_count: usize, temp_name_li
     var last_event_index: usize = 0;
     var last_event_id: EventListIndex = std.math.maxInt(EventListIndex);
 
+    // safe-transpile: for with index access requires manual review
     for (all_events, 0..) |_, i| {
         if (all_events[i].name_len > 0) {
             // Check bounds before accessing arrays

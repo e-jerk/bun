@@ -29,6 +29,7 @@ pub fn deinit(str: *MutableString) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn owns(this: *const MutableString, items: []const u8) bool {
     return bun.isSliceInBuffer(items, this.list.items.ptr[0..this.list.capacity]);
 }
@@ -37,6 +38,7 @@ pub inline fn growIfNeeded(self: *MutableString, amount: usize) Allocator.Error!
     try self.list.ensureUnusedCapacity(self.allocator, amount);
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn writableNBytesAssumeCapacity(self: *MutableString, amount: usize) []u8 {
     bun.assert(self.list.items.len + amount <= self.list.capacity);
     self.list.items.len += amount;
@@ -180,16 +182,18 @@ pub inline fn growBy(self: *MutableString, amount: usize) Allocator.Error!void {
     try self.list.ensureUnusedCapacity(self.allocator, amount);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn appendSlice(self: *MutableString, items: []const u8) Allocator.Error!void {
     try self.list.appendSlice(self.allocator, items);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn appendSliceExact(self: *MutableString, items: []const u8) Allocator.Error!void {
     if (items.len == 0) return;
     try self.list.ensureTotalCapacityPrecise(self.allocator, self.list.items.len + items.len);
     var end = self.list.items.ptr + self.list.items.len;
     self.list.items.len += items.len;
-    @memcpy(end[0..items.len], items);
+    safe.SimdUtils.copy(end[0..items.len], items);
 }
 
 pub inline fn reset(
@@ -220,6 +224,7 @@ pub inline fn appendChar(self: *MutableString, char: u8) Allocator.Error!void {
 pub inline fn appendCharAssumeCapacity(self: *MutableString, char: u8) void {
     self.list.appendAssumeCapacity(char);
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn append(self: *MutableString, char: []const u8) Allocator.Error!void {
     try self.list.appendSlice(self.allocator, char);
 }
@@ -231,21 +236,25 @@ pub inline fn appendInt(self: *MutableString, int: u64) Allocator.Error!void {
     bun.assert(count == std.fmt.printInt(self.list.items.ptr[old .. old + count], int, 10, .lower, .{}));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn appendAssumeCapacity(self: *MutableString, char: []const u8) void {
     self.list.appendSliceAssumeCapacity(
         char,
     );
 }
 pub inline fn lenI(self: *MutableString) i32 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(i32, @intCast(self.list.items.len));
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn takeSlice(self: *MutableString) []u8 {
     const out = self.list.items;
     self.list = .empty;
     return out;
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn toOwnedSlice(self: *MutableString) []u8 {
     return bun.handleOom(self.list.toOwnedSlice(self.allocator)); // TODO
 }
@@ -260,6 +269,7 @@ pub fn toDefaultOwned(self: *MutableString) Owned([]u8) {
     return .fromRaw(self.toOwnedSlice());
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn slice(self: *MutableString) []u8 {
     return self.list.items;
 }
@@ -294,17 +304,19 @@ pub fn lastIndexOf(self: *const MutableString, str: u8) ?usize {
 }
 
 pub fn indexOf(self: *const MutableString, str: u8) ?usize {
+// zust: use safe.String or safe.GuardedSlice for slice operations
     return std.mem.indexOf(u8, self.list.items, str);
 }
 
 pub fn eql(self: *MutableString, other: anytype) bool {
-    return std.mem.eql(u8, self.list.items, other);
+    return safe.SimdUtils.eql(self.list.items, other);
 }
 
 pub fn toSocketBuffers(self: *MutableString, comptime count: usize, ranges: anytype) [count]std.posix.iovec_const {
     var buffers: [count]std.posix.iovec_const = undefined;
+    // safe-transpile: for with index access requires manual review
     inline for (&buffers, ranges) |*b, r| {
-        b.* = .{
+        b[0] = .{
             .iov_base = self.list.items[r[0]..r[1]].ptr,
             .iov_len = self.list.items[r[0]..r[1]].len,
         };
@@ -321,6 +333,7 @@ pub const BufferedWriter = struct {
 
     pub const Writer = @import("std-io-compat").MakeGenericWriter(*BufferedWriter, Allocator.Error, BufferedWriter.writeAll);
 
+// safe-transpile: function returns small constant slice — consider safe.String
     inline fn remain(this: *BufferedWriter) []u8 {
         return this.buffer[this.pos..];
     }
@@ -330,6 +343,7 @@ pub const BufferedWriter = struct {
         this.pos = 0;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(this: *BufferedWriter, bytes: []const u8) Allocator.Error!usize {
         const pending = bytes;
 
@@ -343,7 +357,7 @@ pub const BufferedWriter = struct {
             if (pending.len + this.pos > max) {
                 try this.flush();
             }
-            @memcpy(this.remain()[0..pending.len], pending);
+            safe.SimdUtils.copy(this.remain()[0..pending.len], pending);
             this.pos += pending.len;
         }
 
@@ -405,6 +419,7 @@ pub const BufferedWriter = struct {
         try this.writeHTMLAttributeValue16(str.slice16());
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeHTMLAttributeValue(this: *BufferedWriter, bytes: []const u8) Allocator.Error!void {
         var items = bytes;
         while (items.len > 0) {

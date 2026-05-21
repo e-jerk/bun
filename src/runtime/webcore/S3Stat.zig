@@ -16,6 +16,7 @@ pub const S3Stat = struct {
         return globalThis.throwInvalidArguments("S3Stat is not constructable", .{});
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(
         size: u64,
         etag: []const u8,

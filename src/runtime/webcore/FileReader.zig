@@ -170,7 +170,7 @@ pub fn setup(
     this: *FileReader,
     fd: bun.FD,
 ) void {
-    this.* = FileReader{
+    this[0] = FileReader{
         .reader = .{},
         .done = false,
         .fd = fd,
@@ -306,6 +306,7 @@ pub fn deinit(this: *FileReader) void {
     this.parent().deinit();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState) bool {
     var buf = init_buf;
     log("onReadChunk() = {d} ({s}) - read_inside_on_pull: {s}", .{ buf.len, @tagName(state), @tagName(this.read_inside_on_pull) });
@@ -339,7 +340,7 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
         switch (this.read_inside_on_pull) {
             .js => |in_progress| {
                 if (in_progress.len >= buf.len and !hasMore) {
-                    @memcpy(in_progress[0..buf.len], buf);
+                    safe.SimdUtils.copy(in_progress[0..buf.len], buf);
                     this.read_inside_on_pull = .{ .js = in_progress[buf.len..] };
                 } else if (in_progress.len > 0 and !hasMore) {
                     this.read_inside_on_pull = .{ .temporary = buf };
@@ -380,7 +381,8 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
             defer buffer.clearAndFree(bun.default_allocator);
             if (buffer.items.len > 0) {
                 if (this.pending_view.len >= buffer.items.len) {
-                    @memcpy(this.pending_view[0..buffer.items.len], buffer.items);
+                    safe.SimdUtils.copy(this.pending_view[0..buffer.items.len], buffer.items);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     this.pending.result = .{ .into_array_and_done = .{ .value = this.pending_value.get() orelse .zero, .len = @truncate(buffer.items.len) } };
                 } else {
                     this.pending.result = .{ .owned_and_done = bun.ByteList.moveFromList(buffer) };
@@ -394,12 +396,13 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
         const was_done = this.reader.isDone();
 
         if (this.pending_view.len >= buf.len) {
-            @memcpy(this.pending_view[0..buf.len], buf);
+            safe.SimdUtils.copy(this.pending_view[0..buf.len], buf);
             reader_buffer.clearRetainingCapacity();
             this.buffered.clearRetainingCapacity();
 
             const into_array: streams.Result.IntoArray = .{
                 .value = this.pending_value.get() orelse .zero,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @truncate(buf.len),
             };
 
@@ -458,6 +461,7 @@ fn isPulling(this: *const FileReader) bool {
     return this.read_inside_on_pull != .none;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Result {
     array.ensureStillAlive();
     defer array.ensureStillAlive();
@@ -471,7 +475,7 @@ pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Resul
 
         if (buffer.len >= @as(usize, drained.len)) {
             const drained_len = drained.len;
-            @memcpy(buffer[0..drained_len], drained.slice());
+            safe.SimdUtils.copy(buffer[0..drained_len], drained.slice());
             // drain() moved ownership of the allocation into `drained` and
             // left `this.buffered` / the reader buffer empty, so free
             // `drained` here — freeing `this.buffered` would be a no-op.
@@ -516,9 +520,11 @@ pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Resul
 
                 if (amount_read > 0) {
                     if (this.reader.isDone()) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         return .{ .into_array_and_done = .{ .value = array, .len = @truncate(amount_read) } };
                     }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     return .{ .into_array = .{ .value = array, .len = @truncate(amount_read) } };
                 }
 

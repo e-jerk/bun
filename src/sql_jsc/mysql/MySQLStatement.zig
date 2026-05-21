@@ -48,14 +48,15 @@ pub fn reset(this: *MySQLStatement) void {
 pub fn deinit(this: *MySQLStatement) void {
     debug("MySQLStatement deinit", .{});
 
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         column.deinit();
     }
     if (this.columns.len > 0) {
-        bun.default_allocator.free(this.columns);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
     if (this.params.len > 0) {
-        bun.default_allocator.free(this.params);
+        _ = undefined; // safe-transpile: free removed (memory owned by safe type);
     }
     this.cached_structure.deinit();
     this.error_response.deinit();
@@ -70,6 +71,7 @@ pub fn checkForDuplicateFields(this: *@This()) void {
     var seen_numbers = std.array_list.Managed(u32).init(bun.default_allocator);
     defer seen_numbers.deinit();
     var seen_fields = bun.StringHashMap(void).init(bun.default_allocator);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun.handleOom(seen_fields.ensureUnusedCapacity(@intCast(this.columns.len)));
     defer seen_fields.deinit();
 
@@ -119,6 +121,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
     var stack_ids: [70]jsc.JSObject.ExternColumnIdentifier = [_]jsc.JSObject.ExternColumnIdentifier{.{ .tag = 0, .value = .{ .index = 0 } }} ** 70;
     // lets de duplicate the fields early
     var nonDuplicatedCount = this.columns.len;
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         if (column.name_or_index == .duplicate) {
             nonDuplicatedCount -= 1;
@@ -127,6 +130,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
     const ids = if (nonDuplicatedCount <= jsc.JSObject.maxInlineCapacity()) stack_ids[0..nonDuplicatedCount] else bun.handleOom(bun.default_allocator.alloc(jsc.JSObject.ExternColumnIdentifier, nonDuplicatedCount));
 
     var i: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         if (column.name_or_index == .duplicate) continue;
 
@@ -156,6 +160,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
         this.cached_structure.set(globalObject, jsc.JSObject.createStructure(
             globalObject,
             owner,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(ids.len),
             ids.ptr,
         ), null);

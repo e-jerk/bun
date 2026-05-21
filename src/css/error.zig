@@ -33,6 +33,7 @@ pub fn Err(comptime T: type) type {
 
         pub const toErrorInstance = @import("../css_jsc/error_jsc.zig").toErrorInstance;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromParseError(err: ParseError(ParserError), filename: []const u8) Err(ParserError) {
             if (T != ParserError) {
                 @compileError("Called .fromParseError() when T is not ParserError");
@@ -152,6 +153,7 @@ pub const ErrorLocation = struct {
     /// The column number, starting from 1.
     column: u32,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn withFilename(this: ErrorLocation, filename: []const u8) ErrorLocation {
         return ErrorLocation{
             .filename = filename,
@@ -168,7 +170,9 @@ pub const ErrorLocation = struct {
         return logger.Location{
             .file = source.path.text,
             .namespace = source.path.namespace,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .line = @intCast(this.line + 1),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .column = @intCast(this.column),
             .line_text = if (bun.strings.getLinesInText(source.contents, this.line, 1)) |lines| try allocator.dupe(u8, lines.buffer[0]) else null,
         };

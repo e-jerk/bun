@@ -111,9 +111,7 @@ pub const Property = struct {
         var class_static_block: ?*ClassStaticBlock = null;
         if (this.class_static_block != null) {
             class_static_block = bun.create(allocator, ClassStaticBlock, .{
-// safe-transpile: optional unwrap requires manual review
                 .loc = this.class_static_block.?.loc,
-// safe-transpile: optional unwrap requires manual review
                 .stmts = try this.class_static_block.?.stmts.clone(allocator),
             });
         }

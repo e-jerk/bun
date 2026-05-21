@@ -266,10 +266,12 @@ pub const AuditLevel = enum {
         .{ "critical", .critical },
     });
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromString(str: []const u8) ?AuditLevel {
         return Map.get(str);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn shouldIncludeSeverity(self: AuditLevel, severity: []const u8) bool {
         const severity_level = AuditLevel.fromString(severity) orelse .moderate;
         return @intFromEnum(severity_level) >= @intFromEnum(self);
