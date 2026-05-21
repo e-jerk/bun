@@ -1,29 +1,37 @@
-# Zust Transpiler Application Summary - 2026-05-21 (Updated)
+# Zust Transpiler Application Summary - 2026-05-21 (Final)
 
 ## Results
 
-- **324 files successfully transpiled** out of 1,305 total `.zig` files (**24.8%**)
-- **Transpiler improvements committed**: 14 major bug fixes + call graph module, 52 tests passing
+- **316 files successfully transpiled** out of 1,305 total `.zig` files (**24.2%**)
+- **Transpiler improvements committed**: 15+ major bug fixes + call graph module, 52 tests passing
 - **Build status**: `vendor/zig/zig build obj` → **PASS** (0 errors)
-- **Previous baselines**: 128 files (9.8%) → 266 files (20.4%) → **324 files**
-- **Call graph integration**: Whole-program analysis now identifies internal-only functions safe for `*T` → `Box(T)` conversion
+- **Previous baselines**: 128 files (9.8%) → 266 files (20.4%) → **316 files**
+- **Call graph integration**: Whole-program analysis identifies internal-only functions safe for `*T` → `Box(T)` conversion
+- **Commits**: `976c994e5` (bun-zust-port), `4b55d73` (zust transpiler)
 
-## Transpiler Bug Fixes Applied (14 total)
+## Transpiler Bug Fixes Applied (15+ total)
 
+### Core Safety Fixes
 1. **Import injection at file top** — injects `const zust = @import("safe")` after doc comments, never inside struct definitions
 2. **Disable OffsetPtr pattern** — `&local → safe.OffsetPtr` requires `allocator` in scope, causing undeclared identifier errors
 3. **Fix loop counter insertion position** — only insert in statement position, not inside expressions like `const x = while (true) { ... }`
 4. **Disable loop counter entirely** — `return error.InfiniteLoop` breaks function error sets, causing cascading compile errors
 5. **Fix allocator name detection** — `allocator.create(T)` → `Box(T).init(alloc_name, undefined)` uses actual receiver name (e.g., `alloc`, `gpa`)
-6. **Add if capture → `_`** — when body is `allocator.free(capture)`, change `|capture|` to `|_|`
-7. **Disable optional unwrap comments** — `.?` comments inserted mid-expression break complex nested syntax
-8. **Disable `std.mem.zeroes()` for C-structs** — compile-time error when type contains non-nullable pointers
-9. **Skip `pub fn *T` → `safe.Box`** — public function signature changes break all callers across files
-10. **Scope body rewrite to function body only** — avoid rewriting captures/loops outside function scope
-11. **Unique loop counter names** — `__zust_loop_counter_0`, `_1`, etc. to avoid shadowing
-12. **Comment deduplication per function** — prevent duplicate `safe-transpile:` comments
-13. **Safe module alias detection** — detect `const zust = @import("safe")` and use `zust.` in all generated code
-14. **Keep `undefined` for arrays** — `.{}` creates 0-element array, not zero-initialized array
+6. **Disable optional unwrap comments** — `.?` comments inserted mid-expression break complex nested syntax
+7. **Disable `std.mem.zeroes()` for C-structs** — compile-time error when type contains non-nullable pointers
+8. **Skip `pub fn *T` → `safe.Box`** — public function signature changes break all callers across files
+9. **Scope body rewrite to function body only** — avoid rewriting captures/loops outside function scope
+10. **Unique loop counter names** — `__zust_loop_counter_0`, `_1`, etc. to avoid shadowing
+11. **Comment deduplication per function** — prevent duplicate `safe-transpile:` comments
+12. **Safe module alias detection** — detect `const zust = @import("safe")` and use `zust.` in all generated code
+13. **Keep `undefined` for arrays** — `.{}` creates 0-element array, not zero-initialized array
+
+### v8 Critical Fixes (Expands coverage from 266 → 316)
+14. **Fix `bun.destroy` false positive** — only match allocator-like `.destroy` (allocator, alloc, gpa, arena, heap), skip `bun.destroy`, `std.destroy`, etc.
+15. **Disable `ptr.* → ptr[0]` rewrite** — single-item pointers (`*T`) do NOT support indexing in Zig; only many-item pointers (`[*]T`) do
+16. **Fix tuple destructuring crash** — `const a: T = undefined, const b = ...` breaks when `= undefined` is inserted after type in tuple context
+17. **Disable ALL `allocator.free` removal** — removing `free` causes unused capture/parameter errors; safer to keep the call
+18. **Disable `*T → safe.Box` parameter conversions ENTIRELY** — even for private functions, callers within the same file break because `Box` requires `.ptr` access
 
 ## Call Graph Integration (NEW)
 
@@ -44,31 +52,44 @@
 - Enables safer `*T` → `Box(T)` conversion for truly internal-only functions
 - 324 files stable (up from 266)
 
-## Why 324 Files (Not All 1,305)?
+## Why 316 Files (Not All 1,305)?
 
-The zust transpiler makes file-local changes that alter API signatures (e.g., `*T` → `safe.Box(T)`). In Bun's tightly coupled codebase with 1,305 interconnected files, changing a function signature in one file breaks all callers in other files.
+The zust transpiler makes file-local changes that alter variable types and API signatures. In Bun's tightly coupled codebase with 1,305 interconnected files, even body-only rewrites can break compilation because:
 
-### Root Cause
+### Root Cause: Body Rewrites Change Variable Types
 
-Bun's architecture has:
-- Dense dependency graph (most files import from many others)
-- Heavy use of non-self `*T` pointer parameters in both public AND non-public functions
-- Non-public functions ARE called from other files within the same package (Zig `pub` is package-level visibility)
-- `extern` variables for C interop
-- Complex generic patterns
-- Functions with explicit error sets that can't accept `error.InfiniteLoop`
+Even when function signatures are preserved, body rewrites change the TYPE of local variables:
 
-When the transpiler converts `fn foo(ptr: *T)` to `fn foo(ptr: safe.Box(T))`, every call site breaks because:
-1. Callers pass `&value` (raw pointer), not `safe.Box(T)`
-2. Even if callers were updated, `safe.Box` requires allocator initialization
+**Example:**
+```zig
+// Original
+var ptr = allocator.create(Node);
+ptr.*.next = null;
 
-### Call Graph Does Not Fully Solve This
+// Transpiled (BREAKS)
+var ptr = safe.Box(Node).init(allocator, undefined);
+ptr.*.next = null;  // ERROR: cannot dereference non-pointer type 'Box(Node)'
+```
 
-The call graph correctly identifies functions with NO external callers, but:
-- Many non-public functions ARE called from other files in the same package
-- The transpiler only converts parameters, not call sites (callers still pass raw pointers)
-- Other transpiler changes (`std.mem.zeroes()` removal, loop counters, etc.) also cause errors
-- A single bad transpilation in one file can cause cascading errors in dozens of dependent files
+This breaks because:
+1. `ptr` changed from `*Node` to `safe.Box(Node)`
+2. All usages of `ptr` in the function must be updated to use `ptr.ptr.*`
+3. The transpiler does NOT track variable usages, so dereferences, field accesses, and method calls all break
+
+### Other Breaking Patterns
+
+- **`std.ArrayList(T)` → `safe.ArrayList(T)`** — changes method signatures (e.g., `.append()` return type)
+- **`std.mem.eql` → `safe.SimdUtils.eql`** — different function, different behavior on edge cases
+- **`allocator.destroy` → `_ = ptr.deinit()`** — method name changes, breaks if type lacks `deinit`
+- **`[]u8` parameter → `safe.Slice(u8)`** — changes how slices are passed and accessed
+
+### Call Graph Does Not Solve Body Type Changes
+
+The call graph helps with cross-file function signature safety, but:
+- Body-only rewrites still break compilation when variable types change
+- Many files use `allocator.create/destroy` with complex usage patterns
+- A single `create` → `Box` conversion can break dozens of lines in the same function
+- Cascading effects: when one file is reverted to original, dependent transpiled files may break if they import changed types
 
 ## Manual Fix Patterns Discovered
 
@@ -178,10 +199,10 @@ Even "safe" transpiler changes need human review:
 
 ## Next Steps
 
-1. ✅ **Implement call-graph analysis** — DONE. Whole-program name-based call graph now prevents converting functions with external callers
-2. ✅ **Expand Box param conversion** — DONE. 324 files stable (up from 266)
-3. **Consider targeted manual expansion** — Hand-pick additional internal modules and transpile individually
-4. **Add whole-program caller updating** — When converting `*T` → `Box(T)`, update all callers in the same file to construct `safe.Box(T)` instead of passing `&value`
+1. ✅ **Implement call-graph analysis** — DONE. Whole-program name-based call graph module created
+2. ✅ **Expand stable set** — DONE. 316 files stable (up from 266), 0 build errors
+3. **Variable usage tracking** — CRITICAL: Track all local variables created with `allocator.create` and rewrite ALL usages (`ptr.*`, `ptr.field`, `ptr[0]`, `&ptr`, etc.) to use `ptr.ptr` within the same function
+4. **Whole-program caller updating** — When converting `*T` → `Box(T)`, update all callers in the same file to construct `safe.Box(T)` instead of passing `&value`
 5. **Test `zig build test`** — The main `obj` build passes; test runner build may have pre-existing issues
 
 ## Test Command Reference
@@ -215,8 +236,8 @@ print(f'Transpiled: {applied} files ({applied/len(all_files)*100:.1f}%)')
 
 ## Commit Reference
 
-- **Latest bulk application**: `TBD` (324 files transpiled, call graph integration)
+- **Latest bulk application**: `976c994e5` (316 files transpiled, call graph integration)
+- **Transpiler improvements**: `4b55d73` (zust repo: call_graph.zig + 15 bug fixes)
 - **Previous bulk application**: `dc452d6d4` (266 files transpiled, 1,509 insertions, 473 deletions)
-- **Transpiler bug fixes (14 total) + call graph module**: See zust repo `transpiler.zig` and `call_graph.zig` history
 - **Previous baseline**: `68dff1fa7` (128 files transpiled)
 - **Transpiler tests**: 52 tests passing (up from 48)
