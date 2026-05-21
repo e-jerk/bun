@@ -127,6 +127,7 @@ fn consumePendingValue(thisValue: jsc.JSValue, globalObject: *jsc.JSGlobalObject
     return pending_value;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onResult(this: *@This(), command_tag_str: []const u8, globalObject: *jsc.JSGlobalObject, connection: jsc.JSValue, is_last: bool) void {
     this.ref();
     defer this.deref();
@@ -208,12 +209,12 @@ pub fn call(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSEr
         return globalThis.throwInvalidArgumentType("query", "pendingValue", "Array");
     }
 
-    var ptr = try bun.default_allocator.create(PostgresSQLQuery);
+    var ptr = try safe.Box(PostgresSQLQuery).init(bun.default_allocator, undefined);
 
-    const this_value = ptr.toJS(globalThis);
+    const this_value = ptr.ptr.toJS(globalThis);
     this_value.ensureStillAlive();
 
-    ptr.* = .{
+    ptr.ptr.* = .{
         .query = try query.toBunString(globalThis),
         .thisValue = JSRef.initWeak(this_value),
         .flags = .{
@@ -281,23 +282,23 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
     if (this.flags.simple) {
         debug("executeQuery", .{});
 
-        const stmt = bun.default_allocator.create(PostgresSQLStatement) catch {
+        const stmt = safe.Box(PostgresSQLStatement).init(bun.default_allocator, undefined) catch {
             this.deref();
             return globalObject.throwOutOfMemory();
         };
         // Query is simple and it's the only owner of the statement
-        stmt.* = .{
+        stmt.ptr.* = .{
             .signature = Signature.empty(),
             .status = .parsing,
         };
-        this.statement = stmt;
+        this.statement = stmt.ptr;
 
         const can_execute = !connection.hasQueryRunning();
         if (can_execute) {
             PostgresRequest.executeQuery(query_str.slice(), PostgresSQLConnection.Writer, writer) catch |err| {
                 // fail to run do cleanup
                 this.statement = null;
-                bun.default_allocator.destroy(stmt);
+                bun.default_allocator.destroy(stmt.ptr);
                 this.deref();
 
                 if (!globalObject.hasException())
@@ -313,7 +314,7 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
         connection.requests.writeItem(this) catch {
             // fail to run do cleanup
             this.statement = null;
-            bun.default_allocator.destroy(stmt);
+            bun.default_allocator.destroy(stmt.ptr);
             this.deref();
 
             return globalObject.throwOutOfMemory();
@@ -351,7 +352,7 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
             connection_entry_value = entry.value_ptr;
             if (entry.found_existing) {
                 const stmt = connection_entry_value.?.*;
-                this.statement = stmt;
+        this.statement = stmt;
                 stmt.ref();
                 signature.deinit();
 
@@ -455,7 +456,7 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
             // parseAndBindAndExecute(), preventing PgBouncer from splitting them.
         }
         {
-            const stmt = bun.default_allocator.create(PostgresSQLStatement) catch {
+            const stmt = safe.Box(PostgresSQLStatement).init(bun.default_allocator, undefined) catch {
                 if (connection_entry_value != null) {
                     _ = connection.statements.remove(signature_hash);
                 }
@@ -465,20 +466,20 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
             // we only have connection_entry_value if we are using named prepared statements
             if (connection_entry_value) |entry_value| {
                 connection.prepared_statement_id += 1;
-                stmt.* = .{
+                stmt.ptr.* = .{
                     .signature = signature,
                     .ref_count = .initExactRefs(2),
                     .status = if (did_write) .parsing else .pending,
                 };
-                this.statement = stmt;
+                this.statement = stmt.ptr;
 
-                entry_value.* = stmt;
+                entry_value.* = stmt.ptr;
             } else {
-                stmt.* = .{
+                stmt.ptr.* = .{
                     .signature = signature,
                     .status = if (did_write) .parsing else .pending,
                 };
-                this.statement = stmt;
+                this.statement = stmt.ptr;
             }
         }
     }

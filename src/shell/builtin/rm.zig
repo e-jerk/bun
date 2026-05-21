@@ -328,6 +328,7 @@ pub fn deinit(this: *Rm) void {
 }
 
 pub inline fn bltn(this: *Rm) *Builtin {
+// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("rm", this));
     return @fieldParentPtr("impl", impl);
 }
@@ -339,6 +340,7 @@ const ParseFlagsResult = enum {
     illegal_option_with_flag,
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn parseFlag(this: *Opts, _: *Builtin, flag: []const u8) ParseFlagsResult {
     if (flag.len == 0) return .done;
     if (flag[0] != '-') return .done;
@@ -712,14 +714,14 @@ pub const ShellRmTask = struct {
     };
 
     pub fn create(root_path: bun.PathString, rm: *Rm, cwd: bun.FD, error_signal: *std.atomic.Value(bool), is_absolute: bool) *ShellRmTask {
-        const task = bun.handleOom(bun.default_allocator.create(ShellRmTask));
-        task.* = ShellRmTask{
+        const task = bun.handleOom(zust.Box(ShellRmTask).init(bun.default_allocator, undefined));
+        task.ptr.* = ShellRmTask{
             .rm = rm,
             .opts = rm.opts,
             .cwd = cwd,
             .root_path = root_path,
             .root_task = DirTask{
-                .task_manager = task,
+                .task_manager = task.ptr,
                 .parent_task = null,
                 .path = root_path.sliceAssumeZ(),
                 .subtask_count = std.atomic.Value(usize).init(1),
@@ -733,7 +735,7 @@ pub const ShellRmTask = struct {
             .root_is_absolute = is_absolute,
             .join_style = JoinStyle.fromPath(root_path),
         };
-        return task;
+        return task.ptr;
     }
 
     pub fn schedule(this: *@This()) void {
@@ -764,7 +766,7 @@ pub const ShellRmTask = struct {
             return;
         }
 
-        var subtask: *DirTask = bun.handleOom(bun.default_allocator.create(DirTask));
+        var subtask: *DirTask = bun.handleOom(zust.Box(DirTask).init(bun.default_allocator, undefined)).ptr;
         subtask.* = DirTask{
             .task_manager = this,
             .path = path,
@@ -1195,6 +1197,7 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     pub fn workPoolCallback(task: *jsc.WorkPoolTask) void {
+// safe-transpile: @alignCast requires manual review
         var this: *ShellRmTask = @alignCast(@fieldParentPtr("task", task));
         this.root_task.runFromThreadPoolImpl();
     }
@@ -1234,6 +1237,7 @@ inline fn fastMod(val: anytype, comptime rhs: comptime_int) @TypeOf(val) {
     return val & (rhs - 1);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeFailingError(this: *Rm, buf: []const u8, exit_code: ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_write_err;

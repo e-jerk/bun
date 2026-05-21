@@ -44,15 +44,15 @@ pub const HTMLRewriter = struct {
     pub const fromJSDirect = js.fromJSDirect;
 
     pub fn constructor(_: *JSGlobalObject, _: *jsc.CallFrame) bun.JSError!*HTMLRewriter {
-        const rewriter = bun.handleOom(bun.default_allocator.create(HTMLRewriter));
-        rewriter.* = HTMLRewriter{
+        const rewriter = bun.handleOom(zust.Box(HTMLRewriter).init(bun.default_allocator, undefined));
+        rewriter.ptr.* = HTMLRewriter{
             .builder = LOLHTML.HTMLRewriter.Builder.init(),
             .context = bun.new(LOLHTMLContext, .{
                 .ref_count = .init(),
             }),
         };
         bun.analytics.Features.html_rewriter += 1;
-        return rewriter;
+        return rewriter.ptr;
     }
 
     pub fn on_(
@@ -70,11 +70,11 @@ pub const HTMLRewriter = struct {
         errdefer selector.deinit();
 
         const handler_ = try ElementHandler.init(global, listener);
-        const handler = bun.handleOom(bun.default_allocator.create(ElementHandler));
-        handler.* = handler_;
+        const handler = bun.handleOom(zust.Box(ElementHandler).init(bun.default_allocator, undefined));
+        handler.ptr.* = handler_;
         errdefer {
-            handler.deinit();
-            bun.default_allocator.destroy(handler);
+            handler.ptr.deinit();
+            _ = handler.deinit();
         }
 
         this.builder.addElementContentHandlers(
@@ -82,22 +82,22 @@ pub const HTMLRewriter = struct {
 
             ElementHandler,
             ElementHandler.onElement,
-            if (handler.onElementCallback != null)
-                handler
+            if (handler.ptr.onElementCallback != null)
+                handler.ptr
             else
                 null,
 
             ElementHandler,
             ElementHandler.onComment,
-            if (handler.onCommentCallback != null)
-                handler
+            if (handler.ptr.onCommentCallback != null)
+                handler.ptr
             else
                 null,
 
             ElementHandler,
             ElementHandler.onText,
-            if (handler.onTextCallback != null)
-                handler
+            if (handler.ptr.onTextCallback != null)
+                handler.ptr
             else
                 null,
         ) catch {
@@ -105,7 +105,7 @@ pub const HTMLRewriter = struct {
         };
 
         bun.handleOom(this.context.selectors.append(bun.default_allocator, selector));
-        bun.handleOom(this.context.element_handlers.append(bun.default_allocator, handler));
+        bun.handleOom(this.context.element_handlers.append(bun.default_allocator, handler.ptr));
         return callFrame.this();
     }
 
@@ -117,45 +117,45 @@ pub const HTMLRewriter = struct {
     ) bun.JSError!JSValue {
         const handler_ = try DocumentHandler.init(global, listener);
 
-        const handler = bun.handleOom(bun.default_allocator.create(DocumentHandler));
-        handler.* = handler_;
+        const handler = bun.handleOom(zust.Box(DocumentHandler).init(bun.default_allocator, undefined));
+        handler.ptr.* = handler_;
         errdefer {
-            handler.deinit();
-            bun.default_allocator.destroy(handler);
+            handler.ptr.deinit();
+            _ = handler.deinit();
         }
 
         // If this fails, subsequent calls to write or end should throw
         this.builder.addDocumentContentHandlers(
             DocumentHandler,
             DocumentHandler.onDocType,
-            if (handler.onDocTypeCallback != null)
-                handler
+            if (handler.ptr.onDocTypeCallback != null)
+                handler.ptr
             else
                 null,
 
             DocumentHandler,
             DocumentHandler.onComment,
-            if (handler.onCommentCallback != null)
-                handler
+            if (handler.ptr.onCommentCallback != null)
+                handler.ptr
             else
                 null,
 
             DocumentHandler,
             DocumentHandler.onText,
-            if (handler.onTextCallback != null)
-                handler
+            if (handler.ptr.onTextCallback != null)
+                handler.ptr
             else
                 null,
 
             DocumentHandler,
             DocumentHandler.onEnd,
-            if (handler.onEndCallback != null)
-                handler
+            if (handler.ptr.onEndCallback != null)
+                handler.ptr
             else
                 null,
         );
 
-        bun.handleOom(this.context.document_handlers.append(bun.default_allocator, handler));
+        bun.handleOom(this.context.document_handlers.append(bun.default_allocator, handler.ptr));
         return callFrame.this();
     }
 
@@ -274,6 +274,7 @@ pub const HTMLRewriter = struct {
             this.signal = signal;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeToDestination(this: *HTMLRewriterLoader, bytes: []const u8) void {
             if (this.backpressure.count > 0) {
                 this.backpressure.write(bytes) catch {
@@ -495,6 +496,7 @@ pub const HTMLRewriter = struct {
             const value = original.getBodyValue();
             const owned_readable_stream = original.getBodyReadableStream(sink.global);
             sink.ref();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             sink.bodyValueBufferer = jsc.WebCore.Body.ValueBufferer.init(sink, @ptrCast(&onFinishedBuffering), sink.global, bun.default_allocator);
             response_js_value.ensureStillAlive();
 
@@ -530,6 +532,7 @@ pub const HTMLRewriter = struct {
             return response_js_value;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onFinishedBuffering(sink: *BufferOutputSink, bytes: []const u8, js_err: ?jsc.WebCore.Body.Value.ValueError, is_async: bool) void {
             defer sink.deref();
             if (js_err) |err| {
@@ -567,6 +570,7 @@ pub const HTMLRewriter = struct {
             } else {}
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn runOutputSink(
             sink: *BufferOutputSink,
             bytes: []const u8,
@@ -623,6 +627,7 @@ pub const HTMLRewriter = struct {
             ) catch {}; // TODO: properly propagate exception upwards
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *BufferOutputSink, bytes: []const u8) void {
             bun.handleOom(this.bytes.append(bytes));
         }
@@ -1760,11 +1765,11 @@ pub const Element = struct {
             return ZigString.init("Expected a function").withEncoding().toJS(globalObject);
         }
 
-        const end_tag_handler = bun.handleOom(bun.default_allocator.create(EndTag.Handler));
-        end_tag_handler.* = .{ .global = globalObject, .callback = function };
+        const end_tag_handler = bun.handleOom(zust.Box(EndTag.Handler).init(bun.default_allocator, undefined));
+        end_tag_handler.ptr.* = .{ .global = globalObject, .callback = function };
 
-        this.element.?.onEndTag(EndTag.Handler.onEndTagHandler, end_tag_handler) catch {
-            bun.default_allocator.destroy(end_tag_handler);
+        this.element.?.onEndTag(EndTag.Handler.onEndTagHandler, end_tag_handler.ptr) catch {
+            _ = end_tag_handler.deinit();
             const err = createLOLHTMLError(globalObject);
             return globalObject.throwValue(err);
         };

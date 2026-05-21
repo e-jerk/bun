@@ -2,6 +2,7 @@
 //! call sites stay `output.toJS(global)`.
 
 pub const SavedFile = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toJS(
         globalThis: *jsc.JSGlobalObject,
         path: []const u8,
@@ -18,14 +19,15 @@ pub const SavedFile = struct {
             bun.default_allocator,
         ) catch unreachable;
 
-        var blob = bun.default_allocator.create(jsc.WebCore.Blob) catch unreachable;
-        blob.* = jsc.WebCore.Blob.initWithStore(store, globalThis);
+        var blob = safe.Box(jsc.WebCore.Blob).init(bun.default_allocator, undefined) catch unreachable;
+        blob.ptr.* = jsc.WebCore.Blob.initWithStore(store, globalThis);
         if (mime_type) |mime| {
-            blob.content_type = mime.value;
+            blob.ptr.content_type = mime.value;
         }
-        blob.size = @as(jsc.WebCore.Blob.SizeType, @truncate(byte_size));
-        blob.allocator = bun.default_allocator;
-        return blob.toJS(globalThis);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        blob.ptr.size = @as(jsc.WebCore.Blob.SizeType, @truncate(byte_size));
+        blob.ptr.allocator = bun.default_allocator;
+        return blob.ptr.toJS(globalThis);
     }
 };
 
@@ -71,7 +73,7 @@ pub fn toJS(
             break :brk build_output.toJS(globalObject);
         },
         .saved => brk: {
-            var build_output = bun.default_allocator.create(jsc.API.BuildArtifact) catch @panic("Unable to allocate Artifact");
+            var build_output = safe.Box(jsc.API.BuildArtifact).init(bun.default_allocator, undefined) catch @panic("Unable to allocate Artifact");
             const path_to_use = owned_pathname orelse this.src_path.text;
 
             const file_blob = jsc.WebCore.Blob.Store.initFile(
@@ -91,7 +93,7 @@ pub fn toJS(
                 },
             };
 
-            build_output.* = jsc.API.BuildArtifact{
+            build_output.ptr.* = jsc.API.BuildArtifact{
                 .blob = jsc.WebCore.Blob.initWithStore(file_blob, globalObject),
                 .hash = this.hash,
                 .loader = this.input_loader,
@@ -99,7 +101,7 @@ pub fn toJS(
                 .path = bun.default_allocator.dupe(u8, path_to_use) catch @panic("Failed to allocate path"),
             };
 
-            break :brk build_output.toJS(globalObject);
+            break :brk build_output.ptr.toJS(globalObject);
         },
         .buffer => |buffer| brk: {
             var blob = jsc.WebCore.Blob.init(@constCast(buffer.bytes), buffer.allocator, globalObject);
@@ -110,10 +112,11 @@ pub fn toJS(
                 blob.content_type = this.loader.toMimeType(&.{owned_pathname orelse ""}).value;
             }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             blob.size = @as(jsc.WebCore.Blob.SizeType, @truncate(buffer.bytes.len));
 
-            var build_output = bun.default_allocator.create(jsc.API.BuildArtifact) catch @panic("Unable to allocate Artifact");
-            build_output.* = jsc.API.BuildArtifact{
+            var build_output = safe.Box(jsc.API.BuildArtifact).init(bun.default_allocator, undefined) catch @panic("Unable to allocate Artifact");
+            build_output.ptr.* = jsc.API.BuildArtifact{
                 .blob = blob,
                 .hash = this.hash,
                 .loader = this.input_loader,
@@ -128,7 +131,7 @@ pub fn toJS(
                 },
             };
 
-            break :brk build_output.toJS(globalObject);
+            break :brk build_output.ptr.toJS(globalObject);
         },
     };
 }
@@ -198,6 +201,7 @@ pub fn toBlob(
                 },
             };
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             blob.size = @as(jsc.WebCore.Blob.SizeType, @truncate(buffer.bytes.len));
             break :brk blob;
         },

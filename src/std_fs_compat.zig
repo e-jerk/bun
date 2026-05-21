@@ -5,6 +5,7 @@ const bun = @import("bun");
 /// Helper for C pointers that are null-terminated but Zig 0.16's std.mem.span
 /// does not accept [*c] pointers anymore.
 pub fn spanC(ptr: [*c]const u8) [:0]const u8 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const p: [*:0]const u8 = @ptrCast(ptr);
     var len: usize = 0;
     while (p[len] != 0) : (len += 1) {}
@@ -31,47 +32,59 @@ pub const File = struct {
         return std.c.isatty(self.handle) != 0;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(self: File, data: []const u8) (error{ WriteFailed, BrokenPipe })!void {
         var written: usize = 0;
         while (written < data.len) {
             const n = std.c.write(self.handle, data[written..].ptr, data.len - written);
             if (n < 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (std.posix.errno(@as(c_int, @intCast(n))) == .PIPE) return error.BrokenPipe;
                 return error.WriteFailed;
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             written += @intCast(n);
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pwriteAll(self: File, data: []const u8, offset: u64) (error{ WriteFailed, BrokenPipe })!void {
         var written: usize = 0;
         while (written < data.len) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const n = std.c.pwrite(self.handle, data[written..].ptr, data.len - written, @intCast(offset + written));
             if (n < 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (std.posix.errno(@as(c_int, @intCast(n))) == .PIPE) return error.BrokenPipe;
                 return error.WriteFailed;
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             written += @intCast(n);
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readAll(self: File, buf: []u8) error{Unexpected, ReadFailed}!usize {
         var read_count: usize = 0;
         while (read_count < buf.len) {
             const n = std.c.read(self.handle, buf[read_count..].ptr, buf.len - read_count);
             if (n < 0) return error.Unexpected;
             if (n == 0) break;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             read_count += @intCast(n);
         }
         return read_count;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn preadAll(self: File, buf: []u8, offset: u64) !usize {
         var read_count: usize = 0;
         while (read_count < buf.len) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const n = std.c.pread(self.handle, buf[read_count..].ptr, buf.len - read_count, @intCast(offset + read_count));
             if (n < 0) return error.ReadFailed;
             if (n == 0) break;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             read_count += @intCast(n);
         }
         return read_count;
@@ -85,20 +98,24 @@ pub const File = struct {
         return .{ .context = self };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn readToEndAlloc(self: File, allocator: std.mem.Allocator, max_size: usize) ![]u8 {
         const size = try self.getEndPos();
         if (size > max_size) return error.FileTooBig;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const buf = try allocator.alloc(u8, @intCast(size));
         errdefer allocator.free(buf);
         const read_size = try self.readAll(buf);
         return buf[0..read_size];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writerStreaming(self: File, buffer: []u8) std.fs.File.Writer {
         const std_file = std.fs.File{ .handle = self.handle };
         return std.fs.File.writerStreaming(std_file, buffer);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readerStreaming(self: File, buffer: []u8) std.fs.File.Reader {
         const std_file = std.fs.File{ .handle = self.handle };
         return std.fs.File.readerStreaming(std_file, buffer);
@@ -117,10 +134,12 @@ pub const File = struct {
     }
 
     pub fn seekTo(self: File, pos: u64) !void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = std.c.lseek(self.handle, @intCast(pos), std.c.SEEK.SET);
     }
 
     pub fn seekBy(self: File, delta: i64) !void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = std.c.lseek(self.handle, @intCast(delta), std.c.SEEK.CUR);
     }
 
@@ -131,10 +150,12 @@ pub const File = struct {
     pub fn getEndPos(self: File) !u64 {
         var st: std.c.Stat = undefined;
         if (std.c.fstat(self.handle, &st) != 0) return error.Unexpected;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(st.size);
     }
 
     pub fn setEndPos(self: File, new_length: u64) !void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (std.c.ftruncate(self.handle, @intCast(new_length)) != 0) return error.Unexpected;
     }
 
@@ -147,14 +168,18 @@ pub const File = struct {
             }
         }.call;
         return .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .inode = @intCast(st.ino),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .nlink = @intCast(st.nlink),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .size = @intCast(st.size),
             .permissions = Permissions.fromMode(st.mode),
             .kind = bun.sys.kindFromMode(st.mode),
             .atime = tsToIo(st.atime()),
             .mtime = tsToIo(st.mtime()),
             .ctime = tsToIo(st.ctime()),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .block_size = @intCast(st.blksize),
         };
     }
@@ -185,17 +210,21 @@ pub const File = struct {
     pub const OpenFlags = std.fs.File.OpenFlags;
 
     pub const Writer = @import("std-io-compat").MakeGenericWriter(File, error{WriteFailed}, struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(ctx: File, data: []const u8) error{WriteFailed}!usize {
             const n = std.c.write(ctx.handle, data.ptr, data.len);
             if (n < 0) return error.WriteFailed;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(n);
         }
     }.write);
 
     pub const Reader = @import("std-io-compat").MakeGenericReader(File, error{ReadFailed}, struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn read(ctx: File, buf: []u8) error{ReadFailed}!usize {
             const n = std.c.read(ctx.handle, buf.ptr, buf.len);
             if (n < 0) return error.ReadFailed;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(n);
         }
     }.read);
@@ -218,12 +247,15 @@ pub const FsDir = struct {
         Unexpected,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn makeOpenPath(self: FsDir, sub_path: []const u8, opts: MakePathOptions) OpenError!FsDir {
         _ = opts;
         if (sub_path.len == 0) return error.Unexpected;
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
 
         // Create intermediate directories
@@ -232,6 +264,7 @@ pub const FsDir = struct {
             if (sub_path[i] == std.fs.path.sep) {
                 if (i > 0) {
                     buf[i] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const rc = std.c.mkdirat(self.fd, @as([*:0]u8, @ptrCast(&buf)), 0o755);
                     if (rc != 0) {
                         if (std.posix.errno(rc) != .EXIST) return error.Unexpected;
@@ -256,11 +289,14 @@ pub const FsDir = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn openDir(self: FsDir, sub_path: []const u8, opts: struct { no_follow: bool = false, iterate: bool = true }) OpenError!FsDir {
         _ = opts;
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         const new_fd = std.c.openat(self.fd, pathz, std.c.O{ .DIRECTORY = true, .ACCMODE = .RDONLY }, @as(std.posix.mode_t, 0));
         if (new_fd < 0) return error.Unexpected;
@@ -287,30 +323,38 @@ pub const FsDir = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createFile(self: FsDir, sub_path: []const u8, flags: CreateFileOptions) !File {
         _ = flags;
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         const fd = std.c.openat(self.fd, pathz, std.c.O{ .CREAT = true, .ACCMODE = .WRONLY, .TRUNC = true }, @as(std.posix.mode_t, 0o644));
         if (fd < 0) return error.Unexpected;
         return File{ .handle = fd, .flags = .{ .nonblocking = false } };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn makeDir(self: FsDir, sub_path: []const u8) !void {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         if (std.c.mkdirat(self.fd, pathz, 0o755) != 0) {
             return error.Unexpected;
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readLinkZ(self: FsDir, sub_path: [*:0]const u8, out_buffer: []u8) ![]u8 {
         const result = std.c.readlinkat(self.fd, sub_path, out_buffer.ptr, out_buffer.len);
         if (result < 0) return error.Unexpected;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return out_buffer[0..@intCast(result)];
     }
 
@@ -334,14 +378,18 @@ pub const FsDir = struct {
         return st;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn statFile(self: FsDir, sub_path: []const u8) !std.posix.Stat {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         return self.statFileZ(pathz);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readFile(self: FsDir, sub_path: []const u8, buf: []u8) ![]u8 {
         var file = try self.openFile(sub_path, .{});
         defer file.close();
@@ -349,29 +397,37 @@ pub const FsDir = struct {
         return buf[0..len];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn deleteTree(self: FsDir, sub_path: []const u8) !void {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         if (std.c.unlinkat(self.fd, pathz, std.c.AT.REMOVEDIR) != 0) {
             return error.Unexpected;
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn deleteTreeAbsolute(abs_path: []const u8) !void {
         const dirname = std.fs.path.dirname(abs_path) orelse "/";
         var dir_buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(dir_buf[0..dirname.len], dirname);
         dir_buf[dirname.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const dirz = @as([*:0]u8, @ptrCast(&dir_buf));
         const dir_fd = std.c.open(dirz, std.c.O{ .DIRECTORY = true, .ACCMODE = .RDONLY }, @as(std.posix.mode_t, 0));
         if (dir_fd < 0) return error.Unexpected;
         defer _ = std.c.close(dir_fd);
         const basename = std.fs.path.basename(abs_path);
         var name_buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(name_buf[0..basename.len], basename);
         name_buf[basename.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const namez = @as([*:0]u8, @ptrCast(&name_buf));
         if (std.c.unlinkat(dir_fd, namez, std.c.AT.REMOVEDIR) != 0) {
             return error.Unexpected;
@@ -396,10 +452,13 @@ pub const FsDir = struct {
         return File{ .handle = fd, .flags = .{ .nonblocking = false } };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn openFile(self: FsDir, sub_path: []const u8, flags: struct { mode: std.c.O = .{ .ACCMODE = .RDONLY } }) OpenError!File {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         const fd = std.c.openat(self.fd, pathz, flags.mode, @as(u32, 0));
         if (fd < 0) {
@@ -414,28 +473,36 @@ pub const FsDir = struct {
         return File{ .handle = fd, .flags = .{ .nonblocking = false } };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readFileAlloc(self: FsDir, allocator: std.mem.Allocator, sub_path: []const u8, max_size: usize) ![]u8 {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         const file = try self.openFileZ(pathz, .{});
         defer file.close();
         const size = try file.getEndPos();
         const actual_size = @min(size, max_size);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const result = try allocator.alloc(u8, @intCast(actual_size));
         errdefer allocator.free(result);
         const read_size = try file.readAll(result);
         if (read_size < actual_size) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return try allocator.realloc(result, @intCast(read_size));
         }
         return result;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeFile(self: FsDir, sub_path: []const u8, data: []const u8) !void {
         var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..sub_path.len], sub_path);
         buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pathz = @as([*:0]u8, @ptrCast(&buf));
         const oflags: std.c.O = .{
             .CREAT = true,
@@ -450,6 +517,7 @@ pub const FsDir = struct {
         while (written < data.len) {
             const rc = std.c.write(fd, data[written..].ptr, data.len - written);
             if (rc < 0) return error.Unexpected;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             written += @intCast(rc);
         }
     }
@@ -526,6 +594,7 @@ pub const Timer = struct {
         var ts: std.posix.timespec = undefined;
         _ = std.c.clock_gettime(std.c.CLOCK.MONOTONIC, &ts);
         const now = @as(i128, ts.sec) * std.time.ns_per_s + ts.nsec;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@max(0, now - self.start_time));
     }
 
@@ -545,6 +614,7 @@ pub const Timer = struct {
         const now = @as(i128, ts.sec) * std.time.ns_per_s + ts.nsec;
         const elapsed = @max(0, now - self.start_time);
         self.start_time = now;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(elapsed);
     }
 };
@@ -559,6 +629,7 @@ pub const Instant = struct {
     }
 
     pub fn since(self: Instant, other: Instant) u64 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@max(0, self.timestamp - other.timestamp));
     }
 
@@ -570,19 +641,23 @@ pub const Instant = struct {
 pub fn milliTimestamp() i64 {
     var ts: std.posix.timespec = undefined;
     _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(ts.sec * std.time.ms_per_s + @divTrunc(ts.nsec, std.time.ns_per_ms));
 }
 
 pub fn timestamp() i64 {
     var ts: std.posix.timespec = undefined;
     _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(ts.sec);
 }
 
 // Thread compatibility
 pub fn sleep(ns: u64) void {
     var req: std.posix.timespec = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .sec = @intCast(ns / std.time.ns_per_s),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .nsec = @intCast(ns % std.time.ns_per_s),
     };
     var rem: std.posix.timespec = undefined;
@@ -597,7 +672,9 @@ pub fn isatty(fd: std.posix.fd_t) bool {
 pub fn nanosleep(seconds: u64, nanoseconds: u64) !void {
     const ns_total = seconds * std.time.ns_per_s + nanoseconds;
     var req: std.posix.timespec = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .sec = @intCast(ns_total / std.time.ns_per_s),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .nsec = @intCast(ns_total % std.time.ns_per_s),
     };
     var rem: std.posix.timespec = undefined;
@@ -606,10 +683,13 @@ pub fn nanosleep(seconds: u64, nanoseconds: u64) !void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn makeDir(dir: Dir, sub_path: []const u8) !void {
     var buf: [std.fs.max_path_bytes]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
     @memcpy(buf[0..sub_path.len], sub_path);
     buf[sub_path.len] = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const pathz = @as([*:0]u8, @ptrCast(&buf));
     const rc = std.c.mkdirat(dir.fd, pathz, 0o755);
     if (rc != 0) {
@@ -642,7 +722,9 @@ pub fn trimLeft(comptime T: type, slice: []const T, values_to_strip: []const T) 
 }
 
 // process compatibility
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getEnvVarOwned(allocator: std.mem.Allocator, key: []const u8) error{OutOfMemory}!?[]u8 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const value = std.c.getenv(@ptrCast(key.ptr));
     if (value == null) return null;
     const slice = std.mem.span(value.?);
@@ -650,6 +732,7 @@ pub fn getEnvVarOwned(allocator: std.mem.Allocator, key: []const u8) error{OutOf
 }
 
 // heap compatibility
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getFdPath(fd: std.posix.fd_t, buf: []u8) ![]u8 {
     if (std.c.fcntl(fd, std.c.F.GETPATH, @intFromPtr(buf.ptr)) != 0) {
         return error.Unexpected;

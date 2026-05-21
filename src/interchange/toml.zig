@@ -12,9 +12,9 @@ const HashMapPool = struct {
             }
         }
 
-        const new_node = default_allocator.create(LinkedList.Node) catch unreachable;
-        new_node.* = LinkedList.Node{ .data = HashMap.initContext(default_allocator, IdentityContext{}) };
-        return new_node;
+        const new_node = safe.Box(LinkedList.Node).init(default_allocator, undefined) catch unreachable;
+        new_node.ptr.* = LinkedList.Node{ .data = HashMap.initContext(default_allocator, IdentityContext{}) };
+        return new_node.ptr;
     }
 
     pub fn release(node: *LinkedList.Node) void {
@@ -102,9 +102,9 @@ pub const TOML = struct {
     }
 
     pub fn parseKey(p: *TOML, allocator: std.mem.Allocator) anyerror!*Rope {
-        var rope = try allocator.create(Rope);
-        const head = rope;
-        rope.* = .{
+        var rope = try safe.Box(Rope).init(allocator, undefined);
+        const head = rope.ptr;
+        rope.ptr.* = .{
             .head = (try p.parseKeySegment()) orelse {
                 try p.lexer.expectedString("key");
                 return error.SyntaxError;
@@ -114,7 +114,7 @@ pub const TOML = struct {
         while (p.lexer.token == .t_dot) {
             try p.lexer.next();
 
-            rope = try rope.append((try p.parseKeySegment()) orelse break, allocator);
+            rope.ptr = try rope.ptr.append((try p.parseKeySegment()) orelse break, allocator);
         }
 
         return head;
@@ -219,6 +219,7 @@ pub const TOML = struct {
                     error.Clobber => {
                         const loc = rope.head.loc;
                         assert(loc.start > 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const start: u32 = @intCast(loc.start);
                         const key_name = std.mem.trimEnd(u8, p.source().contents[start..rope_end], &std.ascii.whitespace);
                         p.lexer.addError(start, "Cannot redefine key '{s}'", .{key_name});
