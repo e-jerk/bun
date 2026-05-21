@@ -2,12 +2,12 @@
 
 ## Results
 
-- **316 files successfully transpiled** out of 1,305 total `.zig` files (**24.2%**)
-- **Transpiler improvements committed**: 15+ major bug fixes + call graph module, 52 tests passing
+- **580 files successfully transpiled** out of 1,305 total `.zig` files (**44.4%**)
+- **Transpiler improvements committed**: 15+ major bug fixes + call graph module + variable tracking, 52 tests passing
 - **Build status**: `vendor/zig/zig build obj` → **PASS** (0 errors)
-- **Previous baselines**: 128 files (9.8%) → 266 files (20.4%) → **316 files**
-- **Call graph integration**: Whole-program analysis identifies internal-only functions safe for `*T` → `Box(T)` conversion
-- **Commits**: `976c994e5` (bun-zust-port), `4b55d73` (zust transpiler)
+- **Previous baselines**: 128 files (9.8%) → 266 files (20.4%) → 316 files (24.2%) → **580 files (44.4%)**
+- **Key breakthrough**: Intra-function variable tracking rewrites ALL usages of safe.Box variables
+- **Commits**: `d8117a9ae` (bun-zust-port 580 files), `5494bf0` (zust transpiler variable tracking)
 
 ## Transpiler Bug Fixes Applied (15+ total)
 
@@ -33,6 +33,18 @@
 17. **Disable ALL `allocator.free` removal** — removing `free` causes unused capture/parameter errors; safer to keep the call
 18. **Disable `*T → safe.Box` parameter conversions ENTIRELY** — even for private functions, callers within the same file break because `Box` requires `.ptr` access
 
+### v11 BREAKTHROUGH: Intra-Function Variable Tracking (Expands coverage from 316 → 580)
+19. **Track safe.Box variables per function body** — When `allocator.create(T)` is converted to `safe.Box(T).init(...)`, the variable's type changes from `*T` to `safe.Box(T)`. The transpiler now scans the entire function body and rewrites ALL usages of that variable
+20. **Rewrite patterns for Box variables**:
+    - `ptr.*` → `ptr.ptr.*`
+    - `ptr.field` → `ptr.ptr.field`
+    - `ptr[index]` → `ptr.ptr[index]`
+    - `&ptr` → `ptr.ptr`
+    - `ptr ± N` → `ptr.ptr ± N`
+    - `allocator.destroy(ptr)` → `_ = ptr.deinit()`
+21. **Unwrap `.try` and `.catch` nodes** — `try allocator.create(T)` and `allocator.create(T) catch fallback` are both correctly tracked
+22. **Skip already-rewritten identifiers** — prevents `ptr.ptr` from being double-rewritten to `ptr.ptr.ptr`
+
 ## Call Graph Integration (NEW)
 
 ### Implementation
@@ -52,7 +64,7 @@
 - Enables safer `*T` → `Box(T)` conversion for truly internal-only functions
 - 324 files stable (up from 266)
 
-## Why 316 Files (Not All 1,305)?
+## Why 580 Files (Not All 1,305)?
 
 The zust transpiler makes file-local changes that alter variable types and API signatures. In Bun's tightly coupled codebase with 1,305 interconnected files, even body-only rewrites can break compilation because:
 
@@ -60,7 +72,7 @@ The zust transpiler makes file-local changes that alter variable types and API s
 
 Even when function signatures are preserved, body rewrites change the TYPE of local variables:
 
-**Example:**
+**Example (BEFORE v11 — this would BREAK):**
 ```zig
 // Original
 var ptr = allocator.create(Node);
@@ -71,25 +83,21 @@ var ptr = safe.Box(Node).init(allocator, undefined);
 ptr.*.next = null;  // ERROR: cannot dereference non-pointer type 'Box(Node)'
 ```
 
-This breaks because:
-1. `ptr` changed from `*Node` to `safe.Box(Node)`
-2. All usages of `ptr` in the function must be updated to use `ptr.ptr.*`
-3. The transpiler does NOT track variable usages, so dereferences, field accesses, and method calls all break
+**Fixed in v11 with variable tracking:**
+```zig
+// Transpiled (WORKS)
+var ptr = safe.Box(Node).init(allocator, undefined);
+ptr.ptr.*.next = null;  // OK: accesses the inner pointer
+```
 
-### Other Breaking Patterns
+### Remaining Breaking Patterns (Preventing Full 1,305)
 
 - **`std.ArrayList(T)` → `safe.ArrayList(T)`** — changes method signatures (e.g., `.append()` return type)
 - **`std.mem.eql` → `safe.SimdUtils.eql`** — different function, different behavior on edge cases
-- **`allocator.destroy` → `_ = ptr.deinit()`** — method name changes, breaks if type lacks `deinit`
 - **`[]u8` parameter → `safe.Slice(u8)`** — changes how slices are passed and accessed
-
-### Call Graph Does Not Solve Body Type Changes
-
-The call graph helps with cross-file function signature safety, but:
-- Body-only rewrites still break compilation when variable types change
-- Many files use `allocator.create/destroy` with complex usage patterns
-- A single `create` → `Box` conversion can break dozens of lines in the same function
-- Cascading effects: when one file is reverted to original, dependent transpiled files may break if they import changed types
+- **Complex generic instantiations** — `ThreadlocalBuffers(T)` with `allocator.create(Storage)` creates `Box(BoxStateful)` which doesn't support direct dereference
+- **Cascading effects** — reverting one error file can cause errors in dependent transpiled files
+- **Files with no transpiler changes** — ~400 files have no applicable patterns
 
 ## Manual Fix Patterns Discovered
 
@@ -200,9 +208,9 @@ Even "safe" transpiler changes need human review:
 ## Next Steps
 
 1. ✅ **Implement call-graph analysis** — DONE. Whole-program name-based call graph module created
-2. ✅ **Expand stable set** — DONE. 316 files stable (up from 266), 0 build errors
-3. **Variable usage tracking** — CRITICAL: Track all local variables created with `allocator.create` and rewrite ALL usages (`ptr.*`, `ptr.field`, `ptr[0]`, `&ptr`, etc.) to use `ptr.ptr` within the same function
-4. **Whole-program caller updating** — When converting `*T` → `Box(T)`, update all callers in the same file to construct `safe.Box(T)` instead of passing `&value`
+2. ✅ **Expand stable set** — DONE. 580 files stable (up from 316), 0 build errors
+3. ✅ **Variable usage tracking** — DONE. All local variables created with `allocator.create` now have their usages rewritten (`ptr.*`, `ptr.field`, `ptr[0]`, `&ptr`, etc.) to use `ptr.ptr` within the same function
+4. **Expand to 800+ files** — The current barrier is files with complex generic patterns and cascading revert effects. Targeted manual expansion of internal modules could push coverage higher.
 5. **Test `zig build test`** — The main `obj` build passes; test runner build may have pre-existing issues
 
 ## Test Command Reference
@@ -236,8 +244,9 @@ print(f'Transpiled: {applied} files ({applied/len(all_files)*100:.1f}%)')
 
 ## Commit Reference
 
-- **Latest bulk application**: `976c994e5` (316 files transpiled, call graph integration)
-- **Transpiler improvements**: `4b55d73` (zust repo: call_graph.zig + 15 bug fixes)
+- **Latest bulk application**: `d8117a9ae` (580 files transpiled, intra-function variable tracking)
+- **Transpiler improvements**: `5494bf0` (zust repo: variable tracking for safe.Box conversions)
+- **Previous bulk application**: `976c994e5` (316 files transpiled, call graph integration)
 - **Previous bulk application**: `dc452d6d4` (266 files transpiled, 1,509 insertions, 473 deletions)
 - **Previous baseline**: `68dff1fa7` (128 files transpiled)
 - **Transpiler tests**: 52 tests passing (up from 48)
