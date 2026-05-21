@@ -98,15 +98,19 @@ start_over: while (true) : (__loop_limit_1 += 1) {
 
                         self.index = 0;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         self.end_index = @as(usize, @intCast(rc));
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                         self.received_eof = self.end_index <= (self.buf.len - 4) and @as(u32, @bitCast(self.buf[self.buf.len - 4 ..][0..4].*)) == 1;
                     }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const darwin_entry = @as(*align(1) posix.system.dirent, @ptrCast(&self.buf[self.index]));
                     const next_index = self.index + darwin_entry.reclen;
                     self.index = next_index;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const name = @as([*]u8, @ptrCast(&darwin_entry.name))[0..darwin_entry.namlen];
 
@@ -158,12 +162,15 @@ start_over: while (true) : (__loop_limit_2 += 1) {
                         if (rc == 0) return .{ .result = null };
                         self.index = 0;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         self.end_index = @as(usize, @intCast(rc));
                     }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const entry = @as(*align(1) posix.system.dirent, @ptrCast(&self.buf[self.index]));
                     self.index += if (@hasDecl(posix.system.dirent, "reclen")) entry.reclen() else entry.reclen;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const name = @as([*]u8, @ptrCast(&entry.name))[0..entry.namlen];
                     if (strings.eqlComptime(name, ".") or strings.eqlComptime(name, "..") or entry.fileno == 0) {
@@ -212,10 +219,12 @@ start_over: while (true) : (__loop_limit_3 += 1) {
                         self.end_index = rc;
                     }
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const linux_entry = @as(*align(1) linux.dirent64, @ptrCast(&self.buf[self.index]));
                     const next_index = self.index + linux_entry.reclen;
                     self.index = next_index;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const name = mem.sliceTo(@as([*:0]u8, @ptrCast(&linux_entry.name)), 0);
 
@@ -297,7 +306,9 @@ while (true) : (__loop_limit_4 += 1) {
                         const filter_ptr: ?*w.UNICODE_STRING = if (self.name_filter) |f| blk: {
                             filter_us = .{
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 .Length = @intCast(f.len * 2),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 .MaximumLength = @intCast(f.len * 2),
                                 .Buffer = @constCast(f.ptr),
@@ -374,6 +385,7 @@ while (true) : (__loop_limit_4 += 1) {
 
                     const entry_offset = self.index;
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                     const dir_info: FILE_DIRECTORY_INFORMATION_PTR = @ptrCast(@alignCast(&self.buf[entry_offset]));
                     if (dir_info.NextEntryOffset != 0) {
                         self.index = entry_offset + dir_info.NextEntryOffset;
@@ -394,6 +406,7 @@ while (true) : (__loop_limit_4 += 1) {
                     const name_byte_offset = entry_offset + @offsetOf(FILE_DIRECTORY_INFORMATION, "FileName");
                     const buf_remaining_u16: usize = (self.buf.len -| name_byte_offset) / @sizeOf(u16);
                     const name_len_u16: usize = @min(dir_info.FileNameLength / 2, max_name_u16, buf_remaining_u16);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const dir_info_name = @as([*]const u16, @ptrCast(&dir_info.FileName))[0..name_len_u16];
 
@@ -474,6 +487,7 @@ start_over: while (true) : (__loop_limit_5 += 1) {
                         self.index = 0;
                         self.end_index = bufused;
                     }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const entry = @as(*align(1) w.dirent_t, @ptrCast(&self.buf[self.index]));
                     const entry_size = @sizeOf(w.dirent_t);

@@ -11,12 +11,15 @@ pub const Header = extern struct {
     qpack_index: c_int = -1,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(name_: []const u8, value_: []const u8, idx: ?Qpack) Header {
         return .{
             .name = name_.ptr,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .name_len = @intCast(name_.len),
             .value = value_.ptr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .value_len = @intCast(value_.len),
             .qpack_index = if (idx) |i| @intFromEnum(i) else -1,
@@ -70,6 +73,7 @@ pub const Qpack = enum(u8) {
         indexed: struct { name: []const u8, index: Qpack },
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn idx(comptime name: []const u8, i: Qpack) Class {
             return .{ .indexed = .{ .name = name, .index = i } };
         }
@@ -78,6 +82,7 @@ pub const Qpack = enum(u8) {
     /// Case-insensitive header-name → encoding disposition. Null means the
     /// name is neither forbidden nor in the static table; lowercase it and
     /// send with no index hint.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn classify(name: []const u8) ?Class {
         return map.getAnyCase(name);

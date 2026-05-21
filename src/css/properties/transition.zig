@@ -129,22 +129,30 @@ pub const TransitionHandler = struct {
                 delays.setLen(val.len());
                 timing_functions.setLen(val.len());
 
-                for (val.slice(), properties.slice_mut()) |*item, *out_prop| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (val.slice(), properties.slice_mut()) |*item, *out_prop| {
                     out_prop.* = item.property.deepClone(context.allocator);
                 }
                 this.maybeFlush(dest, context, "properties", &properties, vp);
 
-                for (val.slice(), durations.slice_mut()) |*item, *out_dur| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (val.slice(), durations.slice_mut()) |*item, *out_dur| {
                     out_dur.* = item.duration.deepClone(context.allocator);
                 }
                 this.maybeFlush(dest, context, "durations", &durations, vp);
 
-                for (val.slice(), delays.slice_mut()) |*item, *out_delay| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (val.slice(), delays.slice_mut()) |*item, *out_delay| {
                     out_delay.* = item.delay.deepClone(context.allocator);
                 }
                 this.maybeFlush(dest, context, "delays", &delays, vp);
 
-                for (val.slice(), timing_functions.slice_mut()) |*item, *out_timing| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (val.slice(), timing_functions.slice_mut()) |*item, *out_timing| {
                     out_timing.* = item.timing_function.deepClone(context.allocator);
                 }
                 this.maybeFlush(dest, context, "timing_functions", &timing_functions, vp);
@@ -171,6 +179,8 @@ pub const TransitionHandler = struct {
         this.flush(dest, context);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn property(this: *@This(), dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime feature: Feature, comptime prop: []const u8, val: anytype, vp: VendorPrefix) void {
         this.maybeFlush(dest, context, prop, val, vp);
 
@@ -189,6 +199,8 @@ pub const TransitionHandler = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn maybeFlush(this: *@This(), dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype, vp: VendorPrefix) void {
         // If two vendor prefixes for the same property have different
         // values, we need to flush what we have immediately to preserve order.
@@ -321,6 +333,8 @@ pub const TransitionHandler = struct {
         var durations_idx: u32 = 0;
         var delays_idx: u32 = 0;
         var timing_idx: u32 = 0;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (properties.slice()) |*property_id| {
             const duration = if (durations.len() > durations_idx) durations.at(durations_idx).deepClone(context.allocator) else Time{ .seconds = 0.0 };
             const delay = if (delays.len() > delays_idx) delays.at(delays_idx).deepClone(context.allocator) else Time{ .seconds = 0.0 };
@@ -396,6 +410,8 @@ fn expandProperties(properties: *css.SmallList(PropertyId, 1), context: *css.Pro
                 replace(context.allocator, rtl_props, rtl, i);
             }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             i += @intCast(ltr.len);
         } else {
             // Expand vendor prefixes for targets.

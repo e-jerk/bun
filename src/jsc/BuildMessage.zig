@@ -16,10 +16,14 @@ pub const BuildMessage = struct {
     pub fn getNotes(this: *BuildMessage, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         const notes = this.msg.notes;
         const array = try jsc.JSValue.createEmptyArray(globalThis, notes.len);
-        for (notes, 0..) |note, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (notes, 0..) |note, i| {
             const cloned = try note.clone(bun.default_allocator);
             try array.putIndex(
                 globalThis,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(i),
                 try BuildMessage.create(globalThis, bun.default_allocator, logger.Msg{ .data = cloned, .kind = .note }),
             );
@@ -49,14 +53,14 @@ pub const BuildMessage = struct {
         msg: logger.Msg,
         // resolve_result: *const Resolver.Result,
     ) bun.OOM!jsc.JSValue {
-        var build_error = try allocator.create(BuildMessage);
-        build_error.* = BuildMessage{
+        var build_error = try safe.Box(BuildMessage).init(allocator, undefined);
+        build_error.ptr.* = BuildMessage{
             .msg = try msg.clone(allocator),
             // .resolve_result = resolve_result.*,
             .allocator = allocator,
         };
 
-        return build_error.toJS(globalThis);
+        return build_error.ptr.toJS(globalThis);
     }
 
     pub fn toString(

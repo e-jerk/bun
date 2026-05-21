@@ -37,6 +37,7 @@ pub const DOMFormData = opaque {
             const cb = callback;
             pub fn run(c: *anyopaque, str: *ZigString) callconv(.c) void {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 cb(@as(Ctx, @ptrCast(c)), str.*);
             }
         };

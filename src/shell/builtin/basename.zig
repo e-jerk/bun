@@ -26,6 +26,7 @@ pub fn deinit(this: *@This()) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn fail(this: *@This(), msg: []const u8) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .err;
@@ -35,6 +36,7 @@ fn fail(this: *@This(), msg: []const u8) Yield {
     return this.bltn().done(1);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn print(this: *@This(), msg: []const u8) void {
     if (this.bltn().stdout.needsIO() != null) {
@@ -58,6 +60,7 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("basename", this));
     return @fieldParentPtr("impl", impl);

@@ -125,6 +125,8 @@ const OptionToken = struct {
 };
 
 pub fn findOptionByLongName(long_name: String, options: []const OptionDefinition) ?usize {
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (options, 0..) |option, i| {
         if (long_name.eql(option.long_name)) {
             return i;
@@ -149,11 +151,15 @@ fn getDefaultArgs(globalThis: *JSGlobalObject) !ArgsSlice {
                     return .{
                         .array = argv,
                         .start = 1,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .end = @intCast(try argv.getLength(globalThis)),
                     };
                 }
             }
         }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return .{ .array = argv, .start = 2, .end = @intCast(try argv.getLength(globalThis)) };
     }
 
@@ -440,6 +446,8 @@ fn tokenizeArgs(
                         }
                         try ctx.handleToken(.{ .option = .{
                             .index = original_arg_idx,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .optgroup_idx = @intCast(idx_in_optgroup),
                             .value = value,
                             .inline_value = has_inline_value,
@@ -457,6 +465,8 @@ fn tokenizeArgs(
                         // Immediately process as a short_option_and_value
                         try ctx.handleToken(.{ .option = .{
                             .index = original_arg_idx,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .optgroup_idx = @intCast(idx_in_optgroup),
                             .value = ValueRef{ .bunstr = arg.substring(idx_in_optgroup + 1) },
                             .inline_value = true,
@@ -654,6 +664,8 @@ pub fn parseArgs(globalThis: *JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
         break :args .{
             .array = config_args,
             .start = 0,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .end = @intCast(try config_args.getLength(globalThis)),
         };
     } else try getDefaultArgs(globalThis);

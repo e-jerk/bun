@@ -41,6 +41,7 @@ pub fn convertStmtsForChunkForDevServer(
     var esm_callbacks: std.ArrayListUnmanaged(Expr) = .empty;
 
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (ast.import_records.slice()) |*record| {
         if (record.path.is_disabled) continue;
         if (record.source_index.isValid() and c.parse_graph.input_files.items(.loader)[record.source_index.get()] == .css) {

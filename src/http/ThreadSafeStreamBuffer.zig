@@ -13,6 +13,7 @@ const Callback = struct {
 
     pub fn init(comptime T: type, callback: *const fn (*T) void, context: *T) @This() {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return .{ .callback = @ptrCast(callback), .context = @ptrCast(context) };
     }
 

@@ -121,6 +121,8 @@ pub const StringRefList = struct {
 
     pub const empty: StringRefList = .{ .strings = .{} };
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn track(al: *StringRefList, str: ZigString.Slice) []const u8 {
         bun.handleOom(al.strings.append(bun.default_allocator, str));
         return str.slice();
@@ -398,6 +400,8 @@ pub const Framework = struct {
             // f.resolveHelper(client, &sc.client_runtime_import, &had_errors);
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (clone.file_system_router_types) |*fsr| {
             fsr.root = try arena.dupe(u8, bun.path.joinAbs(server.fs.top_level_dir, .auto, fsr.root));
             if (fsr.entry_client) |*entry_client| f.resolveHelper(client, entry_client, &had_errors, "client side entrypoint");
@@ -409,6 +413,8 @@ pub const Framework = struct {
         return clone;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn resolveHelper(f: *const Framework, r: *bun.resolver.Resolver, path: *[]const u8, had_errors: *bool, desc: []const u8) void {
         if (f.built_in_modules.get(path.*)) |mod| {
             switch (mod) {
@@ -426,6 +432,8 @@ pub const Framework = struct {
         path.* = result.path().?.text;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn resolveOrNull(r: *bun.resolver.Resolver, path: []const u8) ?[]const u8 {
         return (r.resolve(r.fs.top_level_dir, path, .stmt) catch {
             r.log.reset();
@@ -565,6 +573,8 @@ pub const Framework = struct {
 
             var it = try array.arrayIterator(global);
             var i: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
             errdefer for (file_system_router_types[0..i]) |*fsr| fsr.style.deinit();
             while (try it.next()) |fsr_opts| : (i += 1) {
                 const root = try getOptionalString(fsr_opts, global, "root", refs, arena) orelse {
@@ -643,6 +653,8 @@ pub const Framework = struct {
 
             break :brk file_system_router_types;
         };
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         errdefer for (file_system_router_types) |*fsr| fsr.style.deinit();
 
         const framework: Framework = .{
@@ -798,7 +810,9 @@ pub const Framework = struct {
         });
 
         if ((bundler_options.define.keys.len + bundler_options.drop.count()) > 0) {
-            for (bundler_options.define.keys, bundler_options.define.values) |k, v| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (bundler_options.define.keys, bundler_options.define.values) |k, v| {
                 const parsed = try bun.options.Define.Data.parse(k, v, false, false, log, arena);
                 try out.options.define.insert(arena, k, parsed);
             }
@@ -822,6 +836,8 @@ pub const Framework = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn getOptionalString(
     target: JSValue,
     global: *jsc.JSGlobalObject,
@@ -847,6 +863,8 @@ pub const HmrRuntime = struct {
     pub fn init(code: [:0]const u8) HmrRuntime {
         return .{
             .code = code,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .line_count = @intCast(std.mem.count(u8, code, "\n")),
         };
     }
@@ -956,10 +974,14 @@ pub const PatternBuffer = struct {
         .i = @sizeOf(bun.PathBuffer),
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn prepend(pb: *PatternBuffer, chunk: []const u8) void {
         bun.assert(pb.i >= chunk.len);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         pb.i -= @intCast(chunk.len);
-        @memcpy(pb.slice()[0..chunk.len], chunk);
+        safe.SimdUtils.copy(pb.slice()[0..chunk.len], chunk);
     }
 
     pub fn prependPart(pb: *PatternBuffer, part: FrameworkRouter.Part) void {
@@ -977,6 +999,8 @@ pub const PatternBuffer = struct {
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(pb: *PatternBuffer) []u8 {
         return pb.bytes[pb.i..];
     }

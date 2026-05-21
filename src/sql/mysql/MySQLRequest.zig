@@ -1,4 +1,5 @@
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn executeQuery(
     query: []const u8,
     comptime Context: type,
@@ -12,6 +13,7 @@ pub fn executeQuery(
 
     try packet.end();
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn prepareRequest(
     query: []const u8,

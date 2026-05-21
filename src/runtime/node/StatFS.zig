@@ -68,12 +68,26 @@ pub fn StatFSType(comptime big: bool) type {
                 .wasm => @compileError("Unsupported OS"),
             };
             return .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._fstype = @truncate(@as(i64, @intCast(fstype_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._bsize = @truncate(@as(i64, @intCast(bsize_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._blocks = @truncate(@as(i64, @intCast(blocks_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._bfree = @truncate(@as(i64, @intCast(bfree_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._bavail = @truncate(@as(i64, @intCast(bavail_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._files = @truncate(@as(i64, @intCast(files_))),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 ._ffree = @truncate(@as(i64, @intCast(ffree_))),
             };
         }

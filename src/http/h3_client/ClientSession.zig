@@ -30,6 +30,8 @@ registry_index: u32 = std.math.maxInt(u32),
 /// FIFO; `lsquic_conn_make_stream` was already called once per entry.
 pending: std.ArrayListUnmanaged(*Stream) = .empty,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn matches(this: *const ClientSession, hostname: []const u8, port: u16, reject_unauthorized: bool) bool {
     return !this.closed and this.port == port and
         this.reject_unauthorized == reject_unauthorized and

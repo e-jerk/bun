@@ -21,6 +21,7 @@ pub const JSONLineBuffer = struct {
 
     /// Get the active (unconsumed) portion of the buffer.
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     fn activeSlice(self: *const @This()) []const u8 {
         return self.data.slice()[self.head..];
     }
@@ -35,11 +36,13 @@ pub const JSONLineBuffer = struct {
         if (bun.strings.indexOfChar(unscanned, '\n')) |local_idx| {
             bun.debugAssert(local_idx <= std.math.maxInt(u32));
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const pos = self.scanned_pos +| @as(u32, @intCast(local_idx));
             self.newline_pos = pos;
             self.scanned_pos = pos +| 1; // Only scanned up to (and including) the newline
         } else {
             bun.debugAssert(slice.len <= std.math.maxInt(u32));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             self.scanned_pos = @intCast(slice.len); // No newline, scanned everything
         }
@@ -52,11 +55,13 @@ pub const JSONLineBuffer = struct {
         bun.copy(u8, self.data.ptr[0..slice.len], slice);
         bun.debugAssert(slice.len <= std.math.maxInt(u32));
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.data.len = @intCast(slice.len);
         self.head = 0;
     }
 
     /// Append bytes to the buffer, scanning only new data for newline.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(self: *@This(), bytes: []const u8) void {
         _ = bun.handleOom(self.data.write(bun.default_allocator, bytes));
@@ -117,6 +122,7 @@ pub const JSONLineBuffer = struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn unusedCapacitySlice(self: *@This()) []u8 {
         return self.data.unusedCapacitySlice();
     }
@@ -127,8 +133,10 @@ pub const JSONLineBuffer = struct {
 
     /// Notify the buffer that data was written directly (e.g., via pre-allocated slice).
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn notifyWritten(self: *@This(), new_data: []const u8) void {
         bun.debugAssert(new_data.len <= std.math.maxInt(u32));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.data.len +|= @as(u32, @intCast(new_data.len));
         self.scanForNewline();

@@ -206,6 +206,8 @@ pub const EasingFunction = union(enum) {
     }
 
     /// Returns whether the given string is a valid easing function name.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isIdent(s: []const u8) bool {
         return Map.getASCIIICaseInsensitive(s) != null;
     }

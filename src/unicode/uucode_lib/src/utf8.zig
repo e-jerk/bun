@@ -30,6 +30,8 @@ const state_utf8d = [_]u8{
 // zig fmt: on
 
 fn decodeByte(state: *usize, cp: *u21, byte: u8) void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const class: std.math.IntFittingRange(0, 11) = @intCast(utf8d[byte]);
     const mask: u21 = 0xff;
 
@@ -53,6 +55,8 @@ pub const Iterator = struct {
 
     const Self = @This();
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(bytes: []const u8) Self {
         return .{
             .bytes = bytes,

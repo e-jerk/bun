@@ -104,6 +104,8 @@ pub fn writeUTF16(this: *@This(), data: streams.Result) streams.Result.Writable 
     if (this.next) |*next| {
         return next.writeUTF16(data);
     }
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     const len = this.bytes.writeUTF16(this.allocator, @as([*]const u16, @ptrCast(@alignCast(data.slice().ptr)))[0..std.mem.bytesAsSlice(u16, data.slice()).len]) catch {
         return .{ .err = Syscall.Error.oom };
     };

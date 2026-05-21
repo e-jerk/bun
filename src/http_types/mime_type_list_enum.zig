@@ -2330,7 +2330,9 @@ pub const MimeTypeList = enum(u14) {
     @"x-shader/x-vertex" = 6294,
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: MimeTypeList) []const u8 {
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
         const length: usize = _lengths[p.length_group];
@@ -2340,11 +2342,13 @@ pub const MimeTypeList = enum(u14) {
 
     pub fn len(this: MimeTypeList) usize {
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
         return _lengths[p.length_group];
     }
 
     pub fn ptr(this: MimeTypeList) [*]const u8 {
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         const p: Packed = @bitCast(@as(PackedInt, @intFromEnum(this)));
         const length: usize = _lengths[p.length_group];

@@ -63,6 +63,8 @@ const log = Output.scoped(.WebSocketServer, .visible);
 pub fn onOpen(this: *ServerWebSocket, ws: uws.AnyWebSocket) void {
     log("OnOpen", .{});
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     this._flags.packed_websocket_ptr = @truncate(@intFromPtr(ws.raw()));
     this._flags.closed = false;
     this._flags.ssl = ws == .ssl;
@@ -116,6 +118,8 @@ pub fn onOpen(this: *ServerWebSocket, ws: uws.AnyWebSocket) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onMessage(
     this: *ServerWebSocket,
     ws: uws.AnyWebSocket,
@@ -210,6 +214,8 @@ pub fn onDrain(this: *ServerWebSocket, _: uws.AnyWebSocket) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn binaryToJS(this: *const ServerWebSocket, globalThis: *jsc.JSGlobalObject, data: []const u8) bun.JSError!jsc.JSValue {
     return switch (this._flags.binary_type) {
         .Buffer => jsc.ArrayBuffer.createBuffer(
@@ -229,6 +235,8 @@ fn binaryToJS(this: *const ServerWebSocket, globalThis: *jsc.JSGlobalObject, dat
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPing(this: *ServerWebSocket, _: uws.AnyWebSocket, data: []const u8) void {
     log("onPing: {s}", .{data});
 
@@ -254,6 +262,8 @@ pub fn onPing(this: *ServerWebSocket, _: uws.AnyWebSocket, data: []const u8) voi
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPong(this: *ServerWebSocket, _: uws.AnyWebSocket, data: []const u8) void {
     log("onPong: {s}", .{data});
 
@@ -282,6 +292,8 @@ pub fn onPong(this: *ServerWebSocket, _: uws.AnyWebSocket, data: []const u8) voi
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onClose(this: *ServerWebSocket, _: uws.AnyWebSocket, code: i32, message: []const u8) void {
     log("onClose", .{});
     // TODO: Can this called inside finalize?
@@ -426,6 +438,8 @@ pub fn publish(
         return JSValue.jsNumber(
             // if 0, return 0
             // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
         );
     }
@@ -448,6 +462,8 @@ pub fn publish(
         return JSValue.jsNumber(
             // if 0, return 0
             // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
         );
     }
@@ -512,6 +528,8 @@ pub fn publishText(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -573,6 +591,8 @@ pub fn publishBinary(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -612,6 +632,8 @@ pub fn publishBinaryWithoutTypeChecks(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -654,6 +676,8 @@ pub fn publishTextWithoutTypeChecks(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }

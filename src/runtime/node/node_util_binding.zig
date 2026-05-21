@@ -219,6 +219,8 @@ pub fn parseEnv(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.
     try p.loadFromString(str.slice(), true, false);
 
     var obj = jsc.JSValue.createEmptyObject(globalThis, map.map.count());
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (map.map.keys(), map.map.values()) |k, v| {
         obj.put(globalThis, jsc.ZigString.initUTF8(k), try bun.String.createUTF8ForJS(globalThis, v.value));
     }

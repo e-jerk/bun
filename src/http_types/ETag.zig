@@ -2,6 +2,7 @@ const ETag = @This();
 
 /// Parse a single entity tag from a string, returns the tag without quotes and whether it's weak
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn parse(tag_str: []const u8) struct { tag: []const u8, is_weak: bool } {
     var str = std.mem.trim(u8, tag_str, " \t");
 
@@ -23,6 +24,7 @@ fn parse(tag_str: []const u8) struct { tag: []const u8, is_weak: bool } {
 
 /// Perform weak comparison between two entity tags according to RFC 9110 Section 8.8.3.2
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn weakMatch(tag1: []const u8, is_weak1: bool, tag2: []const u8, is_weak2: bool) bool {
     _ = is_weak1;
     _ = is_weak2;
@@ -30,6 +32,7 @@ fn weakMatch(tag1: []const u8, is_weak1: bool, tag2: []const u8, is_weak2: bool)
     return safe.SimdUtils.eql(tag1, tag2);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendToHeaders(bytes: []const u8, headers: *bun.http.Headers) !void {
     const hash = std.hash.XxHash64.hash(0, bytes);
@@ -39,6 +42,7 @@ pub fn appendToHeaders(bytes: []const u8, headers: *bun.http.Headers) !void {
     try headers.append("etag", etag_str);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn ifNoneMatch(
     /// "ETag" header

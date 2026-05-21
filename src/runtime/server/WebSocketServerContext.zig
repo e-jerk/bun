@@ -52,6 +52,7 @@ pub const Handler = struct {
         var valid = false;
 
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     inline for (.{
             .{ "error", "onError" },
             .{ "message", "onMessage" },
@@ -209,6 +210,7 @@ pub fn onCreate(globalObject: *jsc.JSGlobalObject, object: JSValue) bun.JSError!
                 return globalObject.throwInvalidArguments("websocket expects maxPayloadLength to be an integer", .{});
             }
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             server.maxPayloadLength = @truncate(@max(value.toInt64(), 0));
         }
     }
@@ -219,6 +221,7 @@ pub fn onCreate(globalObject: *jsc.JSGlobalObject, object: JSValue) bun.JSError!
                 return globalObject.throwInvalidArguments("websocket expects idleTimeout to be an integer", .{});
             }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             var idleTimeout: u16 = @truncate(@max(value.toInt64(), 0));
             if (idleTimeout > 960) {
@@ -238,6 +241,7 @@ pub fn onCreate(globalObject: *jsc.JSGlobalObject, object: JSValue) bun.JSError!
                 return globalObject.throwInvalidArguments("websocket expects backpressureLimit to be an integer", .{});
             }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             server.backpressureLimit = @truncate(@max(value.toInt64(), 0));
         }

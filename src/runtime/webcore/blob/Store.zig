@@ -150,6 +150,8 @@ pub fn initFile(pathlike: jsc.Node.PathOrFileDescriptor, mime_type: ?MimeType, a
 }
 
 /// Takes ownership of `bytes`, which must have been allocated with `allocator`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(bytes: []u8, allocator: std.mem.Allocator) *Store {
     const store = Blob.Store.new(.{
         .data = .{
@@ -161,6 +163,8 @@ pub fn init(bytes: []u8, allocator: std.mem.Allocator) *Store {
     return store;
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn sharedView(this: Store) []u8 {
     if (this.data == .bytes)
         return this.data.bytes.slice();
@@ -218,6 +222,8 @@ pub fn serialize(this: *Store, comptime Writer: type, writer: Writer) !void {
                 },
                 .path => |path| {
                     const path_slice = path.slice();
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     try writer.writeInt(u32, @as(u32, @truncate(path_slice.len)), .little);
                     try writer.writeAll(path_slice);
                 },
@@ -228,14 +234,20 @@ pub fn serialize(this: *Store, comptime Writer: type, writer: Writer) !void {
             try writer.writeInt(u8, @intFromEnum(pathlike_tag), .little);
 
             const path_slice = s3.pathlike.slice();
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try writer.writeInt(u32, @as(u32, @truncate(path_slice.len)), .little);
             try writer.writeAll(path_slice);
         },
         .bytes => |bytes| {
             const slice = bytes.slice();
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try writer.writeInt(u32, @truncate(slice.len), .little);
             try writer.writeAll(slice);
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try writer.writeInt(u32, @truncate(bytes.stored_name.slice().len), .little);
             try writer.writeAll(bytes.stored_name.slice());
         },
@@ -310,6 +322,8 @@ pub const S3 = struct {
         return S3Credentials.getCredentialsWithOptions(this.getCredentials().*, this.options, options, this.acl, this.storage_class, this.request_payer, globalObject);
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn path(this: *@This()) []const u8 {
         var path_name = bun.URL.parse(this.pathlike.slice()).s3Path();
         // normalize start and ending
@@ -335,6 +349,8 @@ pub const S3 = struct {
             pub const new = bun.TrivialNew(@This());
 
             pub fn resolve(result: bun.S3.S3DeleteResult, opaque_self: *anyopaque) bun.JSTerminated!void {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 const self: *@This() = @ptrCast(@alignCast(opaque_self));
                 defer self.deinit();
                 const globalObject = self.global;
@@ -362,6 +378,8 @@ pub const S3 = struct {
         defer aws_options.deinit();
         store.ref();
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         try bun.S3.delete(&aws_options.credentials, this.path(), @ptrCast(&Wrapper.resolve), Wrapper.new(.{
             .promise = promise,
             .store = store, // store is needed in case of not found error
@@ -383,6 +401,8 @@ pub const S3 = struct {
             global: *JSGlobalObject,
 
             pub fn resolve(result: bun.S3.S3ListObjectsResult, opaque_self: *anyopaque) bun.JSTerminated!void {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 const self: *@This() = @ptrCast(@alignCast(opaque_self));
                 defer self.deinit();
                 const globalObject = self.global;
@@ -422,6 +442,8 @@ pub const S3 = struct {
         const options = try bun.S3.getListObjectsOptionsFromJS(globalThis, listOptions);
         store.ref();
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         try bun.S3.listObjects(&aws_options.credentials, options, @ptrCast(&Wrapper.resolve), bun.new(Wrapper, .{
             .promise = promise,
             .store = store, // store is needed in case of not found error
@@ -480,10 +502,16 @@ pub const Bytes = struct {
 
     /// Takes ownership of `bytes`, which must have been allocated with
     /// `allocator`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(bytes: []u8, allocator: std.mem.Allocator) Bytes {
         return .{
             .ptr = bytes.ptr,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(SizeType, @truncate(bytes.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .cap = @as(SizeType, @truncate(bytes.len)),
             .allocator = allocator,
         };
@@ -524,6 +552,8 @@ pub const Bytes = struct {
         this.cap = 0;
         return result;
     }
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: Bytes) []u8 {
         if (this.ptr) |ptr| {
             return ptr[0..this.len];
@@ -531,6 +561,8 @@ pub const Bytes = struct {
         return "";
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn allocatedSlice(this: Bytes) []u8 {
         if (this.ptr) |ptr| {
             return ptr[0..this.cap];

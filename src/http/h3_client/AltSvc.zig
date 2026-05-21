@@ -29,6 +29,8 @@ pub const Entry = struct {
 ///
 /// Returns `error.Clear` for the literal `clear` so the caller can drop the
 /// cache entry.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parse(field_value: []const u8) error{Clear}!?Entry {
     const value = strings.trim(field_value, " \t");
     if (value.len == 0) return null;
@@ -87,6 +89,8 @@ var cache: bun.StringHashMapUnmanaged(Record) = .{};
 /// long-lived processes that hit many distinct origins.
 const max_entries = 256;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn key(buf: []u8, hostname: []const u8, port: u16) []const u8 {
     // Callers guard `hostname.len > 256` against a `256+8` buffer, and a u16
     // port is at most 5 digits + ':' — bufPrint cannot overflow.
@@ -109,6 +113,8 @@ fn sweepExpired(now: i64) void {
 /// Remember (or refresh / clear) the h3 alternative for `origin_host:origin_port`
 /// from a received `Alt-Svc` field-value. Runs on the HTTP thread inside
 /// `handleResponseMetadata`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn record(origin_host: []const u8, origin_port: u16, field_value: []const u8) void {
     var buf: [256 + 8]u8 = undefined;
     if (origin_host.len > 256) return;
@@ -140,6 +146,8 @@ pub fn record(origin_host: []const u8, origin_port: u16, field_value: []const u8
 /// Look up a previously-advertised h3 alternative for `origin_host:origin_port`.
 /// Expired entries are dropped on access. Runs on the HTTP thread inside
 /// `start_()`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lookup(origin_host: []const u8, origin_port: u16) ?u16 {
     var buf: [256 + 8]u8 = undefined;
     if (origin_host.len > 256) return null;

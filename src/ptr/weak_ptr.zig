@@ -19,6 +19,8 @@ pub const WeakPtrData = packed struct(u32) {
 /// contents can be freed, but the object itself is not destroyed until all
 /// `WeakPtr`s are released. Even if the allocation is present, `WeakPtr(T).get`
 /// will return null after the inner contents are freed.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn WeakPtr(comptime T: type, data_field: []const u8) type {
     return struct {
         pub const Data = WeakPtrData;

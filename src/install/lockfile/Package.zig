@@ -116,8 +116,14 @@ pub fn Package(comptime SemverIntType: type) type {
             try new.buffers.resolutions.ensureUnusedCapacity(new.allocator, old_dependencies.len);
             try new.buffers.extern_strings.ensureUnusedCapacity(new.allocator, new_extern_string_count);
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const prev_len = @as(u32, @truncate(new.buffers.dependencies.items.len));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const end = prev_len + @as(u32, @truncate(old_dependencies.len));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const max_package_id = @as(PackageID, @truncate(old.packages.len));
 
             new.buffers.dependencies.items = new.buffers.dependencies.items.ptr[0..end];
@@ -129,6 +135,8 @@ pub fn Package(comptime SemverIntType: type) type {
             const dependencies: []Dependency = new.buffers.dependencies.items[prev_len..end];
             const resolutions: []PackageID = new.buffers.resolutions.items[prev_len..end];
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const id = @as(PackageID, @truncate(new.packages.len));
             const new_package = try new.appendPackageWithID(
                 .{
@@ -174,7 +182,9 @@ pub fn Package(comptime SemverIntType: type) type {
                 cloner.manager.preinstall_state.items[new_package.meta.id] = cloner.old_preinstall_state.items[this.meta.id];
             }
 
-            for (old_dependencies, dependencies) |old_dep, *new_dep| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (old_dependencies, dependencies) |old_dep, *new_dep| {
                 new_dep.* = try old_dep.clone(
                     pm,
                     old_string_buf,
@@ -187,7 +197,9 @@ pub fn Package(comptime SemverIntType: type) type {
 
             cloner.trees_count += @as(u32, @intFromBool(old_resolutions.len > 0));
 
-            for (old_resolutions, resolutions, 0..) |old_resolution, *resolution, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (old_resolutions, resolutions, 0..) |old_resolution, *resolution, i| {
                 if (old_resolution >= max_package_id) {
                     resolution.* = invalid_package_id;
                     continue;
@@ -200,6 +212,8 @@ pub fn Package(comptime SemverIntType: type) type {
                     try cloner.clone_queue.append(.{
                         .old_resolution = old_resolution,
                         .parent = new_package.meta.id,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .resolve_id = new_package.resolutions.off + @as(PackageID, @intCast(i)),
                     });
                 }
@@ -283,7 +297,11 @@ pub fn Package(comptime SemverIntType: type) type {
                 package.meta.arch = package_json.arch;
                 package.meta.os = package_json.os;
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 package.dependencies.off = @as(u32, @truncate(dependencies_list.items.len));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 package.dependencies.len = total_dependencies_count - @as(u32, @truncate(dependencies.len));
                 package.resolutions.off = package.dependencies.off;
                 package.resolutions.len = package.dependencies.len;
@@ -362,7 +380,9 @@ pub fn Package(comptime SemverIntType: type) type {
 
                     if (comptime Environment.isDebug) assert(keys.len == version_strings.len);
 
-                    for (keys, version_strings) |key, ver| {
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, version_strings) |key, ver| {
                         string_builder.count(key.slice(manifest.string_buf));
                         string_builder.count(ver.slice(manifest.string_buf));
                     }
@@ -418,12 +438,16 @@ pub fn Package(comptime SemverIntType: type) type {
                     if (comptime Environment.isDebug) assert(keys.len == version_strings.len);
                     const is_peer = comptime strings.eqlComptime(group.field, "peer_dependencies");
 
-                    list: for (keys, version_strings, 0..) |key, version_string_, i| {
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    list: for (keys, version_strings, 0..) |key, version_string_, i| {
                         // Duplicate peer & dev dependencies are promoted to whichever appeared first
                         // In practice, npm validates this so it shouldn't happen
                         var duplicate_at: ?usize = null;
                         if (comptime group.behavior.isPeer() or group.behavior.isDev() or group.behavior.isOptional()) {
-                            for (dependencies[0..total_dependencies_count], 0..) |dependency, j| {
+                            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (dependencies[0..total_dependencies_count], 0..) |dependency, j| {
                                 if (dependency.name_hash == key.hash) {
                                     if (comptime group.behavior.isOptional()) {
                                         duplicate_at = j;
@@ -494,6 +518,8 @@ pub fn Package(comptime SemverIntType: type) type {
                 package.meta.integrity = package_version.integrity;
                 package.meta.setHasInstallScript(package_version.has_install_script);
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 package.dependencies.off = @as(u32, @truncate(dependencies_list.items.len));
                 package.dependencies.len = total_dependencies_count;
                 package.resolutions.off = package.dependencies.off;
@@ -580,7 +606,9 @@ pub fn Package(comptime SemverIntType: type) type {
                 } else {
                     from_lockfile.overrides.sort(from_lockfile);
                     to_lockfile.overrides.sort(to_lockfile);
-                    for (
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (
                         from_lockfile.overrides.map.keys(),
                         from_lockfile.overrides.map.values(),
                         to_lockfile.overrides.map.keys(),
@@ -612,7 +640,9 @@ pub fn Package(comptime SemverIntType: type) type {
                     from_lockfile.catalogs.sort(from_lockfile);
                     to_lockfile.catalogs.sort(to_lockfile);
 
-                    for (
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (
                         from_lockfile.catalogs.default.keys(),
                         from_lockfile.catalogs.default.values(),
                         to_lockfile.catalogs.default.keys(),
@@ -629,7 +659,9 @@ pub fn Package(comptime SemverIntType: type) type {
                         }
                     }
 
-                    for (
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (
                         from_lockfile.catalogs.groups.keys(),
                         from_lockfile.catalogs.groups.values(),
                         to_lockfile.catalogs.groups.keys(),
@@ -645,7 +677,9 @@ pub fn Package(comptime SemverIntType: type) type {
                             break :catalogs;
                         }
 
-                        for (
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (
                             from_catalog_deps.keys(),
                             from_catalog_deps.values(),
                             to_catalog_deps.keys(),
@@ -720,9 +754,13 @@ pub fn Package(comptime SemverIntType: type) type {
                         {
                             // added
                             for (default_trusted_dependencies.entries) |entry| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 if (!from_trusted_dependencies.contains(@truncate(entry.hash))) {
                                     // although this is a new trusted dependency, it is from the default
                                     // list so it shouldn't be added to the lockfile
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     try summary.added_trusted_dependencies.put(allocator, @truncate(entry.hash), false);
                                 }
                             }
@@ -733,6 +771,8 @@ pub fn Package(comptime SemverIntType: type) type {
                             var from_trusted_iter = from_trusted_dependencies.iterator();
                             while (from_trusted_iter.next()) |entry| {
                                 const from_trusted = entry.key_ptr.*;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 if (!default_trusted_dependencies.hasWithHash(@intCast(from_trusted))) {
                                     try summary.removed_trusted_dependencies.put(allocator, from_trusted, {});
                                 }
@@ -784,7 +824,9 @@ pub fn Package(comptime SemverIntType: type) type {
                     break :patched_dependencies_changed false;
                 };
 
-                for (from_deps, 0..) |*from_dep, i| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (from_deps, 0..) |*from_dep, i| {
                     found: {
                         const prev_i = to_i;
 
@@ -908,6 +950,8 @@ pub fn Package(comptime SemverIntType: type) type {
                             };
 
                             if (update_mapping) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 mapping[to_i] = @truncate(i);
                                 continue;
                             }
@@ -923,6 +967,8 @@ pub fn Package(comptime SemverIntType: type) type {
                 // Use saturating arithmetic here because a migrated
                 // package-lock.json could be out of sync with the package.json, so the
                 // number of from_deps could be greater than to_deps.
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 summary.add = @truncate((to_deps.len) -| (from_deps.len -| summary.remove));
 
                 if (from.resolution.tag != .root) {
@@ -1107,6 +1153,8 @@ pub fn Package(comptime SemverIntType: type) type {
                             }
                         } else {
                             // It doesn't satisfy, but a workspace shares the same name. Override the workspace with the other dependency
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                             for (package_dependencies[0..dependencies_count]) |*dep| {
                                 if (dep.name_hash == name_hash and dep.behavior.isWorkspace()) {
                                     dep.* = .{
@@ -1188,6 +1236,8 @@ pub fn Package(comptime SemverIntType: type) type {
 
                         if (workspace_version) |ver| {
                             try lockfile.workspace_versions.put(allocator, name_hash, ver);
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                             for (package_dependencies[0..dependencies_count]) |*package_dep| {
                                 if (switch (package_dep.version.tag) {
                                     // `dependencies` & `workspaces` defined within the same `package.json`
@@ -1204,6 +1254,8 @@ pub fn Package(comptime SemverIntType: type) type {
                                 }
                             }
                         } else if (workspace_entry.found_existing) {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                             for (package_dependencies[0..dependencies_count]) |*package_dep| {
                                 if (package_dep.version.tag == .workspace and
                                     String.Builder.stringHash(package_dep.realname().slice(buf)) == name_hash)
@@ -1235,6 +1287,8 @@ pub fn Package(comptime SemverIntType: type) type {
                 if (entry.found_existing) {
                     // duplicate dependencies are allowed in optionalDependencies
                     if (comptime group.behavior.isOptional()) {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                         for (package_dependencies[0..dependencies_count]) |*package_dep| {
                             if (package_dep.name_hash == this_dep.name_hash) {
                                 package_dep.* = this_dep;
@@ -1528,6 +1582,8 @@ pub fn Package(comptime SemverIntType: type) type {
                                     else => {},
                                 }
                             }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             total_dependencies_count += @as(u32, @truncate(obj.properties.len));
                         },
                         else => {
@@ -1569,6 +1625,8 @@ pub fn Package(comptime SemverIntType: type) type {
                                     , .{}) catch {};
                                     return error.InvalidPackageJSON;
                                 };
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 lockfile.trusted_dependencies.?.putAssumeCapacity(@as(TruncatedPackageNameHash, @truncate(String.Builder.stringHash(name))), {});
                             }
                         },
@@ -1783,9 +1841,13 @@ pub fn Package(comptime SemverIntType: type) type {
                 if (group.behavior.isWorkspace()) {
                     var seen_workspace_names = TrustedDependenciesSet{};
                     defer seen_workspace_names.deinit(allocator);
-                    for (workspace_names.values(), workspace_names.keys()) |entry, path| {
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (workspace_names.values(), workspace_names.keys()) |entry, path| {
 
                         // workspace names from their package jsons. duplicates not allowed
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         const gop = try seen_workspace_names.getOrPut(allocator, @truncate(String.Builder.stringHash(entry.name)));
                         if (gop.found_existing) {
                             // this path does alot of extra work to format the error message
@@ -1805,7 +1867,9 @@ pub fn Package(comptime SemverIntType: type) type {
                             const notes = notes: {
                                 var notes = try allocator.alloc(logger.Data, num_notes);
                                 var i: usize = 0;
-                                for (workspace_names.values(), workspace_names.keys()) |value, note_path| {
+                                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (workspace_names.values(), workspace_names.keys()) |value, note_path| {
                                     if (note_path.ptr == path.ptr) continue;
                                     if (strings.eqlLong(value.name, entry.name, true)) {
                                         const note_abs_path = bun.handleOom(allocator.dupeZ(u8, Path.joinAbsStringZ(cwd, &.{ note_path, "package.json" }, .auto)));
@@ -1981,9 +2045,15 @@ pub fn Package(comptime SemverIntType: type) type {
                 Dependency.isLessThan,
             );
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             package.dependencies.off = @as(u32, @truncate(off));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             package.dependencies.len = @as(u32, @truncate(total_dependencies_count));
 
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             package.resolutions = @as(@TypeOf(package.resolutions), @bitCast(package.dependencies));
 
             @memset(lockfile.buffers.resolutions.items.ptr[off..total_len], invalid_package_id);
@@ -2027,7 +2097,9 @@ pub fn Package(comptime SemverIntType: type) type {
                     Type: type,
                 };
                 var data: [fields.len]Data = undefined;
-                for (fields, &data, 0..) |field_info, *elem, i| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (fields, &data, 0..) |field_info, *elem, i| {
                     elem.* = .{
                         .size = @sizeOf(field_info.type),
                         .size_index = i,
@@ -2052,7 +2124,9 @@ pub fn Package(comptime SemverIntType: type) type {
                 var sizes_bytes: [fields.len]usize = undefined;
                 var field_indexes: [fields.len]usize = undefined;
                 var Types: [fields.len]type = undefined;
-                for (data, &sizes_bytes, &field_indexes, &Types) |elem, *size, *index, *Type| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (data, &sizes_bytes, &field_indexes, &Types) |elem, *size, *index, *Type| {
                     size.* = elem.size;
                     index.* = elem.size_index;
                     Type.* = elem.Type;
@@ -2174,6 +2248,8 @@ pub fn Package(comptime SemverIntType: type) type {
                     try loadFields(stream, end_at, OldPackageV2.List, &list_for_migrating_from_v2, &needs_update);
 
                     for (0..list_for_migrating_from_v2.len) |_pkg_id| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const pkg_id: PackageID = @intCast(_pkg_id);
                         const old = list_for_migrating_from_v2.get(pkg_id);
                         const new: PackageType = .{
@@ -2223,12 +2299,14 @@ pub fn Package(comptime SemverIntType: type) type {
                     const bytes = std.mem.sliceAsBytes(value);
                     const end_pos = stream.pos + bytes.len;
                     if (end_pos <= end_at) {
-                        @memcpy(bytes, stream.buffer[stream.pos..][0..bytes.len]);
+                        safe.SimdUtils.copy(bytes, stream.buffer[stream.pos..][0..bytes.len]);
                         stream.pos = end_pos;
                         if (comptime strings.eqlComptime(field.name, "meta")) {
                             // need to check if any values were created from an older version of bun
                             // (currently just `has_install_script`). If any are found, the values need
                             // to be updated before saving the lockfile.
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                             for (value) |*meta| {
                                 if (meta.needsUpdate()) {
                                     needs_update.* = true;

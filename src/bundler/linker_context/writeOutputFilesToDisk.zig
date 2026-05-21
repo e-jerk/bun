@@ -42,6 +42,8 @@ pub fn writeOutputFilesToDisk(
     var pathbuf: bun.PathBuffer = undefined;
     const bv2: *bundler.BundleV2 = @fieldParentPtr("linker", c);
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, chunk_index_in_chunks_list| {
         // In standalone mode, only write HTML chunks to disk.
         // Insert placeholder output files for non-HTML chunks to keep indices aligned.
@@ -158,7 +160,11 @@ pub fn writeOutputFilesToDisk(
                                 .buffer = .{
                                     .ptr = @constCast(output_source_map.ptr),
                                     // TODO: handle > 4 GB files
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     .len = @as(u32, @truncate(output_source_map.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     .byte_len = @as(u32, @truncate(output_source_map.len)),
                                 },
                             },
@@ -187,6 +193,8 @@ pub fn writeOutputFilesToDisk(
                     .loader = .json,
                     .input_loader = .file,
                     .output_kind = .sourcemap,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .size = @as(u32, @truncate(output_source_map.len)),
                     .data = .{
                         .saved = 0,
@@ -238,7 +246,7 @@ pub fn writeOutputFilesToDisk(
                         defer source_provider_url_str.deinit();
                         const bytecode, const cached_bytecode = result;
                         debug("Bytecode cache generated {s}: {f}", .{ source_provider_url_str.slice(), bun.fmt.size(bytecode.len, .{ .space_between_number_and_unit = true }) });
-                        @memcpy(fdpath[0..chunk.final_rel_path.len], chunk.final_rel_path);
+                        safe.SimdUtils.copy(fdpath[0..chunk.final_rel_path.len], chunk.final_rel_path);
                         fdpath[chunk.final_rel_path.len..][0..bun.bytecode_extension.len].* = bun.bytecode_extension.*;
                         defer cached_bytecode.deref();
                         switch (jsc.Node.fs.NodeFS.writeFileWithPathBuffer(
@@ -248,7 +256,11 @@ pub fn writeOutputFilesToDisk(
                                     .buffer = .{
                                         .buffer = .{
                                             .ptr = @constCast(bytecode.ptr),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                             .len = @as(u32, @truncate(bytecode.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                             .byte_len = @as(u32, @truncate(bytecode.len)),
                                         },
                                     },
@@ -281,7 +293,11 @@ pub fn writeOutputFilesToDisk(
                             .hash = if (chunk.template.placeholder.hash != null) bun.hash(bytecode) else null,
                             .output_kind = .bytecode,
                             .loader = .file,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .size = @as(u32, @truncate(bytecode.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .display_size = @as(u32, @truncate(bytecode.len)),
                             .data = .{
                                 .saved = 0,
@@ -305,7 +321,11 @@ pub fn writeOutputFilesToDisk(
                         .buffer = .{
                             .ptr = @constCast(code_result.buffer.ptr),
                             // TODO: handle > 4 GB files
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .len = @as(u32, @truncate(code_result.buffer.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .byte_len = @as(u32, @truncate(code_result.buffer.len)),
                         },
                     },
@@ -359,7 +379,11 @@ pub fn writeOutputFilesToDisk(
             .loader = chunk.content.loader(),
             .source_map_index = source_map_index,
             .bytecode_index = bytecode_index,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .size = @as(u32, @truncate(code_result.buffer.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .display_size = @as(u32, @truncate(display_size)),
             .is_executable = chunk.flags.is_executable,
             .data = .{
@@ -376,6 +400,8 @@ pub fn writeOutputFilesToDisk(
             else
                 null,
             .referenced_css_chunks = switch (chunk.content) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .javascript => |js| @ptrCast(try bun.default_allocator.dupe(u32, js.css_chunks)),
                 .css => &.{},
                 .html => &.{},
@@ -393,8 +419,12 @@ pub fn writeOutputFilesToDisk(
 
     {
         const additional_output_files = output_files.getMutableAdditionalOutputFiles();
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         output_files.total_insertions += @intCast(additional_output_files.len);
-        for (c.parse_graph.additional_output_files.items, additional_output_files) |*src, *dest| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (c.parse_graph.additional_output_files.items, additional_output_files) |*src, *dest| {
             const bytes = src.value.buffer.bytes;
             src.value.buffer.bytes.len = 0;
 
@@ -422,7 +452,11 @@ pub fn writeOutputFilesToDisk(
                         .buffer = .{
                             .buffer = .{
                                 .ptr = @constCast(bytes.ptr),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .len = @as(u32, @truncate(bytes.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .byte_len = @as(u32, @truncate(bytes.len)),
                             },
                         },
@@ -449,6 +483,8 @@ pub fn writeOutputFilesToDisk(
             dest.value = .{
                 .saved = .{},
             };
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             dest.size = @as(u32, @truncate(bytes.len));
         }
     }

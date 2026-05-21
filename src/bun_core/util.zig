@@ -99,6 +99,7 @@ pub fn fromMapLike(
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn FieldType(comptime Map: type, comptime name: []const u8) ?type {
     const i = std.meta.fieldIndex(Map, name) orelse return null;
     const field = std.meta.fields(Map)[i];
@@ -201,6 +202,7 @@ pub fn fromSlice(
                 slice = map.items;
             } else if (comptime @hasField(Array, "len")) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 map.len = @as(u32, @intCast(default.len));
                 slice = map.slice();
             } else {
@@ -213,7 +215,9 @@ pub fn fromSlice(
             map = .{
                 .ptr = slice.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(default.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .cap = @as(u32, @truncate(default.len)),
             };

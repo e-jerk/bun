@@ -122,6 +122,8 @@ pub const Impl = opaque {
 
     pub fn get(this: *Impl) jsc.JSValue {
         // `this` is actually a pointer to a `JSC::JSValue`; see Strong.cpp.
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const js_value: *jsc.DecodedJSValue = @ptrCast(@alignCast(this));
         return js_value.encode();
     }

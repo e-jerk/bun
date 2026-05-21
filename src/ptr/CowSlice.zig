@@ -64,6 +64,8 @@ pub fn CowSliceZ(T: type, comptime sentinel: ?T) type {
 
             return .{
                 .ptr = data.ptr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .flags = .{ .is_owned = true, .len = @intCast(data.len) },
                 .debug = if (comptime cow_str_assertions)
                     bun.new(DebugData, .{
@@ -91,6 +93,8 @@ pub fn CowSliceZ(T: type, comptime sentinel: ?T) type {
                 .ptr = @constCast(data.ptr),
                 .flags = .{
                     .is_owned = false,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .len = @intCast(data.len),
                 },
                 .debug = if (cow_str_assertions) null,
@@ -182,6 +186,8 @@ pub fn CowSliceZ(T: type, comptime sentinel: ?T) type {
             var result = str.borrow();
             // SAFETY: const semantics are enforced by is_owned flag
             result.ptr = @constCast(subrange.ptr);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             result.flags.len = @intCast(end_ - start);
             return result;
         }
@@ -259,6 +265,8 @@ pub fn CowSliceZ(T: type, comptime sentinel: ?T) type {
                 .ptr = @constCast(data.ptr),
                 .flags = .{
                     .is_owned = is_owned,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .len = @intCast(data.len),
                 },
                 .debug = if (cow_str_assertions) null,

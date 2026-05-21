@@ -169,11 +169,23 @@ fn ns(self: *const Self) u64 {
 
 pub fn fire(self: *Self, now: *const timespec, vm: *VirtualMachine) void {
     switch (self.tag) {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .PostgresSQLConnectionTimeout => @as(*api.Postgres.PostgresSQLConnection, @alignCast(@fieldParentPtr("timer", self))).onConnectionTimeout(),
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .PostgresSQLConnectionMaxLifetime => @as(*api.Postgres.PostgresSQLConnection, @alignCast(@fieldParentPtr("max_lifetime_timer", self))).onMaxLifetimeTimeout(),
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .MySQLConnectionTimeout => @as(*api.MySQL.MySQLConnection, @alignCast(@fieldParentPtr("timer", self))).onConnectionTimeout(),
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .MySQLConnectionMaxLifetime => @as(*api.MySQL.MySQLConnection, @alignCast(@fieldParentPtr("max_lifetime_timer", self))).onMaxLifetimeTimeout(),
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .ValkeyConnectionTimeout => @as(*api.Valkey, @alignCast(@fieldParentPtr("timer", self))).onConnectionTimeout(),
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         .ValkeyConnectionReconnect => @as(*api.Valkey, @alignCast(@fieldParentPtr("reconnect_timer", self))).onReconnectTimer(),
         .DevServerMemoryVisualizerTick => bun.bake.DevServer.emitMemoryVisualizerMessageTimer(self, now),
         .DevServerSweepSourceMaps => bun.bake.DevServer.SourceMapStore.sweepWeakRefs(self, now),
@@ -202,6 +214,8 @@ pub fn fire(self: *Self, now: *const timespec, vm: *VirtualMachine) void {
             if (@FieldType(t.Type(), "event_loop_timer") != Self) {
                 @compileError(@typeName(t.Type()) ++ " has wrong type for 'event_loop_timer'");
             }
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             var container: *t.Type() = @alignCast(@fieldParentPtr("event_loop_timer", self));
             if (comptime t.Type() == TimeoutObject or t.Type() == ImmediateObject) {
                 container.internals.fire(now, vm);

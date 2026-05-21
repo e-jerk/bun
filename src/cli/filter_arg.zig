@@ -9,6 +9,7 @@ const SKIP_LIST = .{
     ".git",
 };
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn globIgnoreFn(val: []const u8) bool {
     if (val.len == 0) {
         return false;
@@ -25,6 +26,7 @@ fn globIgnoreFn(val: []const u8) bool {
 
 const GlobWalker = glob.GlobWalker(globIgnoreFn, glob.walk.DirEntryAccessor, false);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logger.Log, out_patterns: *std.array_list.Managed([]u8), workdir_: []const u8, root_buf: *bun.PathBuffer) ![]const u8 {
     bun.ast.Expr.Data.Store.create();
@@ -107,6 +109,7 @@ pub const FilterSet = struct {
     match_all: bool = false,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matches(this: *const FilterSet, path: []const u8, name: []const u8) bool {
         if (this.match_all) {
             // allow empty name if there are any filters which are a relative path
@@ -133,6 +136,7 @@ pub const FilterSet = struct {
         // negate: bool = false,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, filters: []const []const u8, cwd_: []const u8) !FilterSet {
         const cwd = cwd_;
@@ -180,6 +184,7 @@ pub const FilterSet = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPath(self: *const FilterSet, path: []const u8) bool {
         for (self.filters) |filter| {
             if (glob.match(filter.pattern, path).matches()) {
@@ -189,6 +194,7 @@ pub const FilterSet = struct {
         return false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPathName(self: *const FilterSet, path: []const u8, name: []const u8) bool {
         for (self.filters) |filter| {
@@ -215,6 +221,7 @@ pub const PackageFilterIterator = struct {
 
     allocator: std.mem.Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, patterns: []const []const u8, root_dir: []const u8) !PackageFilterIterator {
         return PackageFilterIterator{

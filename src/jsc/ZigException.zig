@@ -39,10 +39,12 @@ pub const ZigException = extern struct {
         this.message.deref();
 
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.stack.source_lines_ptr[0..this.stack.source_lines_len]) |*line| {
             line.deref();
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (this.stack.frames_ptr[0..this.stack.frames_len]) |*frame| {
             frame.deinit();

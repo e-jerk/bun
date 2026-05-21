@@ -27,7 +27,9 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
             }
         }).lenAsc;
         if (KeyType == u8) {
-            for (kvs_list, 0..) |kv, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (kvs_list, 0..) |kv, i| {
                 if (V != void) {
                     sorted_kvs[i] = .{ .key = kv.@"0", .value = kv.@"1" };
                 } else {
@@ -67,7 +69,9 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
 
         const keys_list: []const []const KeyType = blk: {
             var k: [kvs.len][]const KeyType = undefined;
-            for (kvs, 0..) |kv, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (kvs, 0..) |kv, i| {
                 k[i] = kv.key;
             }
             const final = k;
@@ -220,7 +224,9 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
                 if (length == i) {
                     const lowerbuf: [i]u8 = brk: {
                         var buf: [i]u8 = undefined;
-                        for (input, &buf) |c, *j| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (input, &buf) |c, *j| {
                             j.* = std.ascii.toLower(c);
                         }
                         break :brk buf;
@@ -264,7 +270,9 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
                 if (length == i) {
                     const lowercased: [i]u8 = brk: {
                         var buf: [i]u8 = undefined;
-                        for (input[0..i], &buf) |c, *b| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (input[0..i], &buf) |c, *b| {
                             b.* = switch (c) {
                                 'A'...'Z' => c + 32,
                                 else => c,

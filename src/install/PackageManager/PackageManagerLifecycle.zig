@@ -27,7 +27,9 @@ pub const LifecycleScriptTimeLog = struct {
             const longest: Entry = longest: {
                 var i: usize = 0;
                 var longest: u64 = log.list.items[0].duration;
-                for (log.list.items[1..], 1..) |item, j| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (log.list.items[1..], 1..) |item, j| {
                     if (item.duration > longest) {
                         i = j;
                         longest = item.duration;
@@ -138,6 +140,8 @@ pub fn determinePreinstallState(
             // 3. apply patch to temp dir
             // 4. rename temp dir to `folder_path`
             if (patch_hash != null) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
+// zust: use safe.String or safe.GuardedSlice for slice operations
                 const non_patched_path_ = folder_path[0 .. std.mem.indexOf(u8, folder_path, "_patch_hash=") orelse @panic("Expected folder path to contain `patch_hash=`, this is a bug in Bun. Please file a GitHub issue.")];
                 const non_patched_path = bun.handleOom(manager.lockfile.allocator.dupeZ(u8, non_patched_path_));
                 defer manager.lockfile.allocator.free(non_patched_path);
@@ -329,6 +333,8 @@ pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) std.arra
                     const package_id = this.lockfile.buffers.resolutions.items[dep_id];
                     if (package_id == invalid_package_id) continue;
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     const entry = bun.handleOom(set.getOrPut(@truncate(root_dep.name_hash)));
                     if (!entry.found_existing) {
                         const dependency_slice = parts.items(.dependencies)[package_id];
@@ -356,6 +362,8 @@ fn addDependenciesToSet(
         if (package_id == invalid_package_id) continue;
 
         const dep = lockfile.buffers.dependencies.items[dep_id];
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const entry = bun.handleOom(names.getOrPut(@truncate(dep.name_hash)));
         if (!entry.found_existing) {
             const dependency_slice = lockfile.packages.items(.dependencies)[package_id];

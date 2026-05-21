@@ -166,6 +166,7 @@ pub fn loop(this: *Worker) *bun.Async.Loop {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn dispatch(this: *Worker, file_idx: u32, file: []const u8) void {
     const f = &this.coord.frame;
     f.begin(.run);
@@ -216,6 +217,7 @@ pub const WorkerPipe = struct {
         this.reader.deinit();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onReadChunk(this: *WorkerPipe, chunk: []const u8, _: bun.io.ReadState) bool {
         bun.handleOom(this.worker.captured.appendSlice(bun.default_allocator, chunk));

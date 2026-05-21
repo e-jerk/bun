@@ -153,6 +153,7 @@ pub const ImportRule = struct {
     const This = @This();
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUrl(url: []const u8) This {
         return .{
             .url = url,
@@ -165,6 +166,7 @@ pub const ImportRule = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUrlAndImportRecordIdx(url: []const u8, import_record_idx: u32) This {
         return .{
             .url = url,
@@ -176,6 +178,7 @@ pub const ImportRule = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromConditionsAndUrl(url: []const u8, conds: ImportConditions) This {
         return ImportRule{
@@ -190,10 +193,12 @@ pub const ImportRule = struct {
 
     pub fn conditions(this: *const @This()) *const ImportConditions {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(&this.layer);
     }
 
     pub fn conditionsMut(this: *@This()) *ImportConditions {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(&this.layer);
     }

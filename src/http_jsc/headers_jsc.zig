@@ -11,6 +11,7 @@ pub fn toFetchHeaders(this: *Headers, global: *bun.jsc.JSGlobalObject) bun.JSErr
         this.entries.items(.value).ptr,
         &bun.ZigString.fromBytes(this.buf.items),
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @truncate(this.entries.len),
     ) orelse return error.JSError;
     return headers;

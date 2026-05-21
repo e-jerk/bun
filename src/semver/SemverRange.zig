@@ -131,6 +131,8 @@ pub const Formatter = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmt(this: *const Range, buf: []const u8) @This().Formatter {
     return .{ .buffer = buf, .range = this };
 }
@@ -165,6 +167,8 @@ pub const Comparator = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmt(this: *const Comparator, buf: []const u8) @This().Formatter {
         return .{ .buffer = buf, .comparator = this };
     }

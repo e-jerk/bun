@@ -2,6 +2,7 @@ const ConstantType = enum { ERRNO, ERRNO_WIN, SIG, DLOPEN, OTHER };
 const zust = @import("safe");
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn getErrnoConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasField(std.posix.E, name))
         return @intFromEnum(@field(std.posix.E, name))
@@ -9,6 +10,7 @@ fn getErrnoConstant(comptime name: []const u8) ?comptime_int {
         return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn getWindowsErrnoConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasField(std.posix.E, name))
@@ -18,6 +20,7 @@ fn getWindowsErrnoConstant(comptime name: []const u8) ?comptime_int {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn getSignalsConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasDecl(std.posix.SIG, name))
         return @field(std.posix.SIG, name)
@@ -25,6 +28,7 @@ fn getSignalsConstant(comptime name: []const u8) ?comptime_int {
         return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn getDlopenConstant(comptime name: []const u8) ?comptime_int {
     return if (@hasDecl(std.posix.system.RTLD, name))

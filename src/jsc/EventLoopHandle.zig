@@ -97,7 +97,6 @@ pub const EventLoopHandle = union(EventLoopKind) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn pipeReadBuffer(this: EventLoopHandle) []u8 {
         return switch (this) {
             .js => this.js.pipeReadBuffer(),
@@ -129,7 +128,6 @@ pub const EventLoopHandle = union(EventLoopKind) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn topLevelDir(this: EventLoopHandle) []const u8 {
         return switch (this) {
             .js => this.js.virtual_machine.transpiler.fs.top_level_dir,

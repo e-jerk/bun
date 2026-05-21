@@ -198,6 +198,7 @@ pub fn indexOfNeedsEscapeForJavaScriptString(slice: string, quote_char: u8) ?u32
     }
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @truncate(result);
 }
 
@@ -236,12 +237,14 @@ extern "c" fn highway_copy_u16_to_u8(
 ) void;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyU16ToU8(input: []align(1) const u16, output: []u8) void {
     highway_copy_u16_to_u8(input.ptr, input.len, output.ptr);
 }
 
 /// Apply a WebSocket mask to data using SIMD acceleration
 /// If skip_mask is true, data is copied without masking
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fillWithSkipMask(mask: [4]u8, output: []u8, input: []const u8, skip_mask: bool) void {
     if (input.len == 0) {

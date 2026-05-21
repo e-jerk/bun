@@ -206,6 +206,8 @@ pub const BorderRadiusHandler = struct {
         logicalProperty(dest, context, end_start, "border-bottom-left-radius", "border-bottom-right-radius", logical_supported);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn singleProperty(d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, comptime prop: []const u8, val: ?struct { Size2D(LengthPercentage), css.VendorPrefix }) void {
         if (val) |v| {
             if (!v[1].isEmpty()) {
@@ -215,6 +217,8 @@ pub const BorderRadiusHandler = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn logicalProperty(d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, val: ?css.Property, comptime ltr: []const u8, comptime rtl: []const u8, logical_supported: bool) void {
         if (val) |v| {
             if (logical_supported) {
@@ -246,6 +250,8 @@ pub const BorderRadiusHandler = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn maybeFlush(self: *BorderRadiusHandler, d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype, vp: css.VendorPrefix) void {
         // If two vendor prefixes for the same property have different
         // values, we need to flush what we have immediately to preserve order.
@@ -260,6 +266,8 @@ pub const BorderRadiusHandler = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn propertyHelper(self: *BorderRadiusHandler, d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, comptime prop: []const u8, val: *const Size2D(LengthPercentage), vp: css.VendorPrefix) void {
         if (self.category != .physical) {
             self.flush(d, ctx);
@@ -278,6 +286,8 @@ pub const BorderRadiusHandler = struct {
         self.category = .physical;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn logicalPropertyHelper(self: *BorderRadiusHandler, d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, comptime prop: []const u8, val: *const css.Property) void {
         if (self.category != .logical) {
             self.flush(d, ctx);

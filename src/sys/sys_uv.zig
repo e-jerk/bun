@@ -140,6 +140,7 @@ pub fn unlink(file_path: [:0]const u8) Maybe(void) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readlink(file_path: [:0]const u8, buf: []u8) Maybe([:0]u8) {
     var req: uv.fs_t = uv.fs_t.uninitialized;
     defer req.deinit();
@@ -330,6 +331,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
             uv_fd,
             chunk_bufs.ptr,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(chunk_len),
             current_position,
             null,
@@ -346,6 +348,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const bytes_read: usize = @intCast(req.result.int());
         total_read += bytes_read;
 
@@ -358,6 +361,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
 
         // Update position for the next chunk (if position tracking is enabled)
         if (current_position >= 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             current_position += @intCast(bytes_read);
         }
@@ -391,6 +395,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
             uv_fd,
             chunk_bufs.ptr,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(chunk_len),
             current_position,
             null,
@@ -407,6 +412,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const bytes_written: usize = @intCast(req.result.int());
         total_written += bytes_written;
 
@@ -420,6 +426,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
         // Update position for the next chunk (if position tracking is enabled)
         if (current_position >= 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             current_position += @intCast(bytes_written);
         }
     }
@@ -431,6 +438,7 @@ pub inline fn readv(fd: FD, bufs: []bun.PlatformIOVec) Maybe(usize) {
     return preadv(fd, bufs, -1);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pread(fd: FD, buf: []u8, position: i64) Maybe(usize) {
     // If buffer fits in a single uv_buf_t, use the simple path
@@ -460,6 +468,7 @@ pub fn pread(fd: FD, buf: []u8, position: i64) Maybe(usize) {
                 remaining = remaining[chunk_len..];
                 if (current_position >= 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     current_position += @intCast(bytes_read);
                 }
             },
@@ -469,6 +478,7 @@ pub fn pread(fd: FD, buf: []u8, position: i64) Maybe(usize) {
     return .{ .result = total_read };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn read(fd: FD, buf: []u8) Maybe(usize) {
     // If buffer fits in a single uv_buf_t, use the simple path
@@ -507,6 +517,7 @@ pub inline fn writev(fd: FD, bufs: []bun.PlatformIOVec) Maybe(usize) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pwrite(fd: FD, buf: []const u8, position: i64) Maybe(usize) {
     // If buffer fits in a single uv_buf_t, use the simple path
     if (buf.len <= max_buf_len) {
@@ -535,6 +546,7 @@ pub fn pwrite(fd: FD, buf: []const u8, position: i64) Maybe(usize) {
                 remaining = remaining[chunk_len..];
                 if (current_position >= 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     current_position += @intCast(bytes_written);
                 }
             },
@@ -544,6 +556,7 @@ pub fn pwrite(fd: FD, buf: []const u8, position: i64) Maybe(usize) {
     return .{ .result = total_written };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(fd: FD, buf: []const u8) Maybe(usize) {
     // If buffer fits in a single uv_buf_t, use the simple path

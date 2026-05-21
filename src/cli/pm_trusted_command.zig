@@ -30,7 +30,11 @@ pub const UntrustedCommand = struct {
         defer untrusted_dep_ids.deinit();
 
         // loop through dependencies and get trusted and untrusted deps with lifecycle scripts
-        for (pm.lockfile.buffers.dependencies.items, 0..) |dep, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (pm.lockfile.buffers.dependencies.items, 0..) |dep, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(i);
             const package_id = pm.lockfile.buffers.resolutions.items[dep_id];
             if (package_id == Install.invalid_package_id) continue;
@@ -186,7 +190,11 @@ pub const TrustCommand = struct {
         var untrusted_dep_ids: DepIdSet = .{};
         defer untrusted_dep_ids.deinit(ctx.allocator);
 
-        for (pm.lockfile.buffers.dependencies.items, pm.lockfile.buffers.resolutions.items, 0..) |dep, package_id, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (pm.lockfile.buffers.dependencies.items, pm.lockfile.buffers.resolutions.items, 0..) |dep, package_id, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_id: u32 = @intCast(i);
             if (package_id == Install.invalid_package_id) continue;
 
@@ -405,6 +413,8 @@ pub const TrustCommand = struct {
         try Install.PackageManager.PackageJSONEditor.editTrustedDependencies(ctx.allocator, &package_json, names);
 
         for (names) |name| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try pm.lockfile.trusted_dependencies.?.put(ctx.allocator, @truncate(String.Builder.stringHash(name)), {});
         }
 
@@ -423,6 +433,8 @@ pub const TrustCommand = struct {
         const new_package_json_contents = package_json_writer.ctx.writtenWithoutTrailingZero();
 
         try pm.root_package_json_file.pwriteAll(new_package_json_contents, 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = bun.sys.ftruncate(bun.FD.fromSystem(pm.root_package_json_file.handle), @intCast(new_package_json_contents.len));
         pm.root_package_json_file.close();
 

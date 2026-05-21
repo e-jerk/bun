@@ -127,6 +127,8 @@ const log = Output.scoped(.TarballStream, .hidden);
 /// state machine is only worth its per-chunk overhead for tarballs that
 /// would otherwise consume a noticeable amount of memory.
 pub fn minSize() usize {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(bun.env_var.BUN_INSTALL_STREAMING_MIN_SIZE.get());
 }
 
@@ -177,6 +179,8 @@ pub fn deinit(this: *TarballStream) void {
 /// without touching the filesystem or libarchive; actual processing is
 /// deferred to `drain` on a worker so the HTTP event loop stays
 /// responsive.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onChunk(this: *TarballStream, chunk: []const u8, is_last: bool, err: ?anyerror) void {
     this.mutex.lock();
     if (chunk.len > 0) {
@@ -385,11 +389,17 @@ fn openArchive(this: *TarballStream) !void {
     // Bypass bidding entirely: the stream is always gzip → tar, and
     // bidding would try to read-ahead before any bytes have arrived.
     // ARCHIVE_FILTER_GZIP = 1, ARCHIVE_FORMAT_TAR = 0x30000.
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     if (lib.archive_read_append_filter(@ptrCast(archive), 1) != 0) return error.Fail;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     if (lib.archive_read_set_format(@ptrCast(archive), 0x30000) != 0) return error.Fail;
     _ = archive.readSetOptions("read_concatenated_archives");
 
     switch (@as(lib.Archive.Result, @enumFromInt(lib.archive_read_open(
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(archive),
         this,
         null,
@@ -448,12 +458,16 @@ fn archiveReadCallback(
     ctx: *anyopaque,
     out_buffer: [*c]*const anyopaque,
 ) callconv(.c) lib.la_ssize_t {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     const this: *TarballStream = @ptrCast(@alignCast(ctx));
 
     const remaining = this.reading.items[this.read_pos..];
     if (remaining.len > 0) {
         out_buffer.* = remaining.ptr;
         this.read_pos = this.reading.items.len;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(remaining.len);
     }
 
@@ -475,11 +489,15 @@ fn archiveReadCallback(
         if (again.len > 0) {
             out_buffer.* = again.ptr;
             this.read_pos = this.reading.items.len;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(again.len);
         }
     }
 
     if (closed) {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         out_buffer.* = @ptrCast(@alignCast(this)); // unused when len==0
         return 0;
     }
@@ -592,13 +610,19 @@ fn beginEntry(this: *TarballStream, entry: *lib.Archive.Entry) !void {
             this.out_fd = null;
         },
         .file => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const mode: bun.Mode = if (comptime Environment.isWindows) 0 else @intCast(entry.perm() | 0o666);
             const fd = try openOutputFile(dest, path, path_slice, mode);
             this.entry_count += 1;
 
             if (comptime Environment.isLinux) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const size: usize = @intCast(@max(entry.size(), 0));
                 if (size > 1_000_000) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     bun.sys.preallocate_file(fd.cast(), 0, @intCast(size)) catch {};
                 }
             }
@@ -652,6 +676,8 @@ fn makeDirectory(
     path: [:0]bun.OSPathChar,
     path_slice: bun.OSPathSlice,
 ) void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var mode = @as(i32, @intCast(entry.perm()));
     // if dirs are readable, then they should be listable
     // https://github.com/npm/node-tar/blob/main/lib/mode-fix.js
@@ -661,6 +687,8 @@ fn makeDirectory(
     if (comptime Environment.isWindows) {
         dest_fd.makePath(u16, path) catch {};
     } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         switch (bun.sys.mkdiratZ(dest_fd, path, @intCast(mode))) {
             .result => {},
             .err => |e| switch (e.getErrno()) {
@@ -705,6 +733,8 @@ fn applyWindowsNpmPathEscapes(path: [:0]bun.OSPathChar) void {
     // the extraction round-trips with node-tar.
     var remain: []bun.OSPathChar = path;
     if (strings.startsWithWindowsDriveLetterT(bun.OSPathChar, remain)) remain = remain[2..];
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (remain) |*char| switch (char.*) {
         '|', '<', '>', '?', ':' => char.* += 0xf000,
         else => {},
@@ -724,6 +754,8 @@ fn writeDataBlock(this: *TarballStream, fd: bun.FD, block: lib.Archive.Block) !v
 
     this.entry_final_offset = @max(
         this.entry_final_offset,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         block.offset + @as(i64, @intCast(data.len)),
     );
 
@@ -733,6 +765,8 @@ fn writeDataBlock(this: *TarballStream, fd: bun.FD, block: lib.Archive.Block) !v
                 .result => {
                     this.entry_actual_offset = @max(
                         this.entry_actual_offset,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         block.offset + @as(i64, @intCast(data.len)),
                     );
                     return;
@@ -744,6 +778,8 @@ fn writeDataBlock(this: *TarballStream, fd: bun.FD, block: lib.Archive.Block) !v
 
     if (block.offset != this.entry_actual_offset) seek: {
         if (this.use_lseek) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             switch (bun.sys.setFileOffset(fd, @intCast(block.offset))) {
                 .result => {
                     this.entry_actual_offset = block.offset;
@@ -753,6 +789,8 @@ fn writeDataBlock(this: *TarballStream, fd: bun.FD, block: lib.Archive.Block) !v
             }
         }
         if (block.offset > this.entry_actual_offset) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const zero_count: usize = @intCast(block.offset - this.entry_actual_offset);
             switch (lib.Archive.writeZerosToFile(file, zero_count)) {
                 .ok => this.entry_actual_offset = block.offset,
@@ -764,6 +802,8 @@ fn writeDataBlock(this: *TarballStream, fd: bun.FD, block: lib.Archive.Block) !v
     }
 
     switch (file.writeAll(data)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .result => this.entry_actual_offset += @intCast(data.len),
         .err => |e| return bun.errnoToZigErr(e.errno),
     }

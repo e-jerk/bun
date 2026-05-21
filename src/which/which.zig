@@ -1,3 +1,5 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn isValid(buf: *bun.PathBuffer, segment: []const u8, bin: []const u8) ?u16 {
     const prefix_len = segment.len + 1; // includes trailing path separator
     const len = prefix_len + bin.len;
@@ -10,11 +12,15 @@ fn isValid(buf: *bun.PathBuffer, segment: []const u8, bin: []const u8) ?u16 {
     buf[len] = 0;
     const filepath = buf[0..len :0];
     if (!bun.sys.isExecutableFilePath(filepath)) return null;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(filepath.len);
 }
 
 // Like /usr/bin/which but without needing to exec a child process
 // Remember to resolve the symlink if necessary
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn which(buf: *bun.PathBuffer, path: []const u8, cwd: []const u8, bin: []const u8) ?[:0]const u8 {
     if (bin.len > bun.MAX_PATH_BYTES) return null;
     bun.Output.scoped(.which, .hidden)("path={s} cwd={s} bin={s}", .{ path, cwd, bin });
@@ -76,6 +82,8 @@ const win_extensions = .{
     "bat",
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn endsWithExtension(str: []const u8) bool {
     if (str.len < 4) return false;
     if (str[str.len - 4] != '.') return false;
@@ -99,7 +107,7 @@ fn searchBin(buf: *bun.WPathBuffer, path_size: usize, check_windows_extensions: 
         buf[path_size] = '.';
         buf[path_size + 1 + 3] = 0;
         inline for (win_extensionsW) |ext| {
-            @memcpy(buf[path_size + 1 .. path_size + 1 + 3], ext);
+            safe.SimdUtils.copy(buf[path_size + 1 .. path_size + 1 + 3], ext);
             if (bun.sys.existsOSPath(buf[0 .. path_size + 1 + ext.len :0], true))
                 return buf[0 .. path_size + 1 + ext.len :0];
         }
@@ -108,6 +116,8 @@ fn searchBin(buf: *bun.WPathBuffer, path_size: usize, check_windows_extensions: 
 }
 
 /// Check if bin file exists in this path (internally used by whichWin)
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn searchBinInPath(buf: *bun.WPathBuffer, path_buf: *bun.PathBuffer, path: []const u8, bin: []const u8, check_windows_extensions: bool) ?[:0]u16 {
     if (path.len == 0) return null;
     const segment = if (std.fs.path.isAbsolute(path)) (PosixToWinNormalizer.resolveCWDWithExternalBuf(path_buf, path) catch return null) else path;
@@ -125,6 +135,8 @@ fn searchBinInPath(buf: *bun.WPathBuffer, path_buf: *bun.PathBuffer, path: []con
 /// This is the windows version of `which`.
 /// It operates on wide strings.
 /// It is similar to Get-Command in powershell.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn whichWin(buf: *bun.WPathBuffer, path: []const u8, cwd: []const u8, bin: []const u8) ?[:0]const u16 {
     if (bin.len == 0) return null;
     const path_buf = bun.path_buffer_pool.get();

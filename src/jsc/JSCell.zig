@@ -32,6 +32,7 @@ pub const JSCell = opaque {
             bun.assert(JSValue.fromCell(this).isGetterSetter());
         }
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @as(*GetterSetter, @ptrCast(@alignCast(this)));
     }
 
@@ -39,6 +40,7 @@ pub const JSCell = opaque {
         if (comptime bun.Environment.allow_assert) {
             bun.assert(JSValue.fromCell(this).isCustomGetterSetter());
         }
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @as(*CustomGetterSetter, @ptrCast(@alignCast(this)));
     }

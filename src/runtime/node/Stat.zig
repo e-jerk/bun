@@ -15,14 +15,24 @@ pub fn StatType(comptime big: bool) type {
 
         inline fn toNanoseconds(ts: StatTimespec) u64 {
             if (ts.sec < 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return @intCast(@max(bun.timespec.nsSigned(&bun.timespec{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .sec = @intCast(ts.sec),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .nsec = @intCast(ts.nsec),
                 }), 0));
             }
 
             return bun.timespec.ns(&bun.timespec{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .sec = @intCast(ts.sec),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .nsec = @intCast(ts.nsec),
             });
         }
@@ -33,7 +43,11 @@ pub fn StatType(comptime big: bool) type {
             // > libuv calculates tv_sec and tv_nsec from it and converts to signed long,
             // > which causes Y2038 overflow. On the other platforms it is safe to treat
             // > negative values as pre-epoch time.
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const tv_sec = if (Environment.isWindows) @as(u32, @bitCast(@as(i32, @truncate(ts.sec)))) else ts.sec;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const tv_nsec = if (Environment.isWindows) @as(u32, @bitCast(@as(i32, @truncate(ts.nsec)))) else ts.nsec;
             if (big) {
                 const sec: i64 = tv_sec;

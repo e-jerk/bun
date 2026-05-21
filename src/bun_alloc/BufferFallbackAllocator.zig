@@ -7,6 +7,7 @@ _fallback_allocator: Allocator,
 _fixed_buffer_allocator: FixedBufferAllocator,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(buffer: []u8, fallback_allocator: Allocator) BufferFallbackAllocator {
     return .{
         ._fallback_allocator = fallback_allocator,
@@ -28,6 +29,7 @@ pub fn allocator(self: *BufferFallbackAllocator) Allocator {
 
 fn alloc(ctx: *anyopaque, len: usize, alignment: std.mem.Alignment, ra: usize) ?[*]u8 {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     const self: *BufferFallbackAllocator = @ptrCast(@alignCast(ctx));
     return FixedBufferAllocator.alloc(
         &self._fixed_buffer_allocator,
@@ -38,7 +40,9 @@ fn alloc(ctx: *anyopaque, len: usize, alignment: std.mem.Alignment, ra: usize) ?
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn resize(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize) bool {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const self: *BufferFallbackAllocator = @ptrCast(@alignCast(ctx));
     if (self._fixed_buffer_allocator.ownsPtr(buf.ptr)) {
@@ -54,7 +58,9 @@ fn resize(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usi
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn remap(ctx: *anyopaque, memory: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize) ?[*]u8 {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const self: *BufferFallbackAllocator = @ptrCast(@alignCast(ctx));
     if (self._fixed_buffer_allocator.ownsPtr(memory.ptr)) {
@@ -70,7 +76,9 @@ fn remap(ctx: *anyopaque, memory: []u8, alignment: std.mem.Alignment, new_len: u
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn free(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, ra: usize) void {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const self: *BufferFallbackAllocator = @ptrCast(@alignCast(ctx));
     if (self._fixed_buffer_allocator.ownsPtr(buf.ptr)) {

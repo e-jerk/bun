@@ -122,6 +122,8 @@ inline fn setContext(ctx: *const Context) noreturn {
 /// Install at root source file as `pub const panic = @import("recover").panic;`
 pub const panic: type = std.debug.FullPanic(
     struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn panic(
             msg: []const u8,
             first_trace_addr: ?usize,

@@ -16,6 +16,8 @@ pub fn dumpDescribe(describe: *DescribeScope) bun.JSError!void {
     for (describe.afterEach.items) |entry| try dumpTest(entry, "afterEach");
     for (describe.afterAll.items) |entry| try dumpTest(entry, "afterAll");
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn dumpTest(current: *ExecutionEntry, label: []const u8) bun.JSError!void {
     if (!group.getLogEnabled()) return;
     group.beginMsg("{s} \"{f}\" (concurrent={}, only={})", .{ label, std.zig.fmtString(current.base.name orelse "(unnamed)"), current.base.concurrent, current.base.only });
@@ -26,11 +28,15 @@ pub fn dumpOrder(this: *Execution) bun.JSError!void {
     group.beginMsg("dumpOrder", .{});
     defer group.end();
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.groups, 0..) |group_value, group_index| {
         group.beginMsg("{d} ConcurrentGroup ({d}-{d})", .{ group_index, group_value.sequence_start, group_value.sequence_end });
         defer group.end();
 
-        for (group_value.sequences(this), 0..) |*sequence, sequence_index| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (group_value.sequences(this), 0..) |*sequence, sequence_index| {
             group.beginMsg("{d} Sequence ({d}x)", .{ sequence_index, sequence.remaining_repeat_count });
             defer group.end();
 
@@ -62,6 +68,8 @@ pub const group = struct {
     pub fn begin(pos: std.builtin.SourceLocation) void {
         return beginMsg("\x1b[36m{s}\x1b[37m:\x1b[93m{d}\x1b[37m:\x1b[33m{d}\x1b[37m: \x1b[35m{s}\x1b[m", .{ pos.file, pos.line, pos.column, pos.fn_name });
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn beginMsg(comptime fmtt: []const u8, args: anytype) void {
         if (!getLogEnabled()) return;
 
@@ -87,6 +95,8 @@ pub const group = struct {
         writer.interface.print("\x1b[32m{s}\x1b[m\n", .{if (last_was_start) "+-" else "--"}) catch {};
         writer.interface.flush() catch {};
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn log(comptime fmtt: []const u8, args: anytype) void {
         if (!getLogEnabled()) return;
         var buf: [64]u8 = undefined;

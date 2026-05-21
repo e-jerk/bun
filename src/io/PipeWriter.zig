@@ -26,12 +26,16 @@ pub fn PosixPipeWriter(
     comptime getFileType: *const fn (*This) FileType,
 ) type {
     return struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn tryWrite(this: *This, force_sync: bool, buf_: []const u8) WriteResult {
             return switch (if (!force_sync) getFileType(this) else .file) {
                 inline else => |ft| return tryWriteWithWriteFn(this, buf_, comptime writeToFileType(ft)),
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn tryWriteWithWriteFn(this: *This, buf: []const u8, comptime write_fn: *const fn (bun.FD, []const u8) bun.sys.Maybe(usize)) WriteResult {
             const fd = getFd(this);
 
@@ -71,6 +75,8 @@ pub fn PosixPipeWriter(
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn writeToBlockingPipe(fd: bun.FD, buf: []const u8) bun.sys.Maybe(usize) {
             if (comptime bun.Environment.isLinux) {
                 if (bun.linux.RWFFlagSupport.isMaybeSupported()) {
@@ -98,6 +104,8 @@ pub fn PosixPipeWriter(
             switch (drainBufferedData(
                 parent,
                 buffer,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (size_hint > 0 and getFileType(parent).isBlocking()) @intCast(size_hint) else std.math.maxInt(usize),
                 received_hup,
             )) {
@@ -128,6 +136,8 @@ pub fn PosixPipeWriter(
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn drainBufferedData(parent: *This, buf: []const u8, max_write_size: usize, received_hup: bool) WriteResult {
             _ = received_hup; // autofix
 
@@ -193,6 +203,8 @@ pub fn PosixBufferedWriter(Parent: type, function_table: anytype) type {
         }
 
         pub fn createPoll(this: *@This(), fd: bun.FD) *Async.FilePoll {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return Async.FilePoll.init(@as(*Parent, @ptrCast(this.parent)).eventLoop(), fd, .{}, PosixWriter, this);
         }
 
@@ -282,6 +294,8 @@ pub fn PosixBufferedWriter(Parent: type, function_table: anytype) type {
             this.updateRef(event_loop, false);
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
+// safe-transpile: function returns small constant slice — consider zust.String
         fn getBufferInternal(this: *PosixWriter) []const u8 {
             return getBuffer(this.parent);
         }
@@ -355,6 +369,8 @@ pub fn PosixBufferedWriter(Parent: type, function_table: anytype) type {
                 this.handle = .{ .poll = this.createPoll(fd) };
                 break :brk this.handle.poll;
             };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const loop = @as(*Parent, @ptrCast(this.parent)).eventLoop().loop();
 
             switch (poll.registerWithFd(loop, .writable, .dispatch, fd)) {
@@ -362,6 +378,8 @@ pub fn PosixBufferedWriter(Parent: type, function_table: anytype) type {
                     return .initErr(err);
                 },
                 .result => {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     this.enableKeepingProcessAlive(@as(*Parent, @ptrCast(this.parent)).eventLoop());
                 },
             }
@@ -427,6 +445,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
 
         const PosixWriter = @This();
 
+// safe-transpile: function returns small constant slice — consider zust.String
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn getBuffer(this: *const PosixWriter) []const u8 {
             return this.outgoing.slice();
         }
@@ -441,6 +461,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
             this.is_done = true;
             this.outgoing.reset();
 
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             onError(@ptrCast(@alignCast(this.parent)), err);
             this.close();
         }
@@ -480,6 +502,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
             this.outgoing.reset();
 
             if (onReady) |cb| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 cb(@ptrCast(this.parent));
             }
         }
@@ -519,6 +543,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
             return this.maybeWriteNewlyBufferedData(buf_len);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeLatin1(this: *PosixWriter, buf: []const u8) WriteResult {
             if (this.is_done or this.closed_without_reporting) {
                 return .{ .done = 0 };
@@ -553,6 +579,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
             return this.tryWriteNewlyBufferedData(this.outgoing.slice());
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn tryWriteNewlyBufferedData(this: *PosixWriter, buf: []const u8) WriteResult {
             bun.assert(!this.is_done);
 
@@ -586,6 +614,8 @@ pub fn PosixStreamingWriter(comptime Parent: type, comptime function_table: anyt
             return rc;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *PosixWriter, buf: []const u8) WriteResult {
             if (this.is_done or this.closed_without_reporting) {
                 return .{ .done = 0 };
@@ -1006,6 +1036,8 @@ pub fn WindowsBufferedWriter(Parent: type, function_table: anytype) type {
             }
             const pending = this.getBufferInternal();
             const has_pending_data = (pending.len - written) != 0;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             onWrite(this.parent, @intCast(written), if (this.is_done and !has_pending_data) .drained else .pending);
             // is_done can be changed inside onWrite
             if (this.is_done and !has_pending_data) {
@@ -1071,6 +1103,8 @@ pub fn WindowsBufferedWriter(Parent: type, function_table: anytype) type {
                     file.prepare();
                     this.write_buffer = uv.uv_buf_t.init(buffer);
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     if (uv.uv_fs_write(this.parent.loop(), &file.fs, file.file, @ptrCast(&this.write_buffer), 1, -1, onFsWriteComplete).toError(.write)) |err| {
                         file.complete(false);
                         this.close();
@@ -1089,6 +1123,8 @@ pub fn WindowsBufferedWriter(Parent: type, function_table: anytype) type {
             }
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
+// safe-transpile: function returns small constant slice — consider zust.String
         fn getBufferInternal(this: *WindowsWriter) []const u8 {
             return getBuffer(this.parent);
         }
@@ -1142,6 +1178,8 @@ pub const StreamBuffer = struct {
         return this.size() > 0;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(this: *StreamBuffer, buffer: []const u8) OOM!void {
         _ = try this.list.appendSlice(buffer);
     }
@@ -1150,6 +1188,8 @@ pub const StreamBuffer = struct {
         this.cursor += amount;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeAssumeCapacity(this: *StreamBuffer, buffer: []const u8) void {
         this.list.appendSliceAssumeCapacity(buffer);
     }
@@ -1197,6 +1237,8 @@ pub const StreamBuffer = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeLatin1(this: *StreamBuffer, buffer: []const u8, comptime check_ascii: bool) OOM!void {
         if (comptime check_ascii) {
             if (bun.strings.isAllASCII(buffer)) {
@@ -1217,6 +1259,8 @@ pub const StreamBuffer = struct {
         _ = try byte_list.writeUTF16(this.list.allocator, buffer);
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *const StreamBuffer) []const u8 {
         return this.list.items[this.cursor..];
     }
@@ -1425,6 +1469,8 @@ pub fn WindowsStreamingWriter(comptime Parent: type, function_table: anytype) ty
                     file.prepare();
                     this.write_buffer = uv.uv_buf_t.init(bytes);
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     if (uv.uv_fs_write(this.parent.loop(), &file.fs, file.file, @ptrCast(&this.write_buffer), 1, -1, onFsWriteComplete).toError(.write)) |err| {
                         file.complete(false);
                         this.last_write_result = .{ .err = err };
@@ -1521,10 +1567,14 @@ pub fn WindowsStreamingWriter(comptime Parent: type, function_table: anytype) ty
             return writeInternal(this, buf, &StreamBuffer.writeUTF16);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeLatin1(this: *WindowsWriter, buffer: []const u8) WriteResult {
             return writeInternal(this, buffer, &StreamBuffer.writeLatin1);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *WindowsWriter, buffer: []const u8) WriteResult {
             return writeInternal(this, buffer, &StreamBuffer.write);
         }

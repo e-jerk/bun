@@ -18,6 +18,8 @@ pub const BufferReadStream = struct {
     archive: *Archive,
     reading: bool = false,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(this: *BufferReadStream, buf: []const u8) void {
         this.* = BufferReadStream{
             .buf = buf,
@@ -62,11 +64,15 @@ pub const BufferReadStream = struct {
         return rc;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn bufLeft(this: BufferReadStream) []const u8 {
         return this.buf[this.pos..];
     }
 
     pub inline fn fromCtx(ctx: *anyopaque) *Stream {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @as(*Stream, @ptrCast(@alignCast(ctx)));
     }
 
@@ -89,6 +95,8 @@ pub const BufferReadStream = struct {
         const diff = @min(remaining.len, this.block_size);
         buffer.* = remaining[0..diff].ptr;
         this.pos += diff;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(isize, @intCast(diff));
     }
 
@@ -99,11 +107,17 @@ pub const BufferReadStream = struct {
     ) callconv(.c) lib.la_int64_t {
         var this = fromCtx(ctx_);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const buflen = @as(isize, @intCast(this.buf.len));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pos = @as(isize, @intCast(this.pos));
 
         const proposed = pos + offset;
         const new_pos = @min(@max(proposed, 0), buflen - 1);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.pos = @as(usize, @intCast(new_pos));
         return new_pos - pos;
     }
@@ -116,22 +130,32 @@ pub const BufferReadStream = struct {
     ) callconv(.c) lib.la_int64_t {
         var this = fromCtx(ctx_);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const buflen = @as(isize, @intCast(this.buf.len));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pos = @as(isize, @intCast(this.pos));
 
         switch (@as(Seek, @enumFromInt(whence))) {
             Seek.current => {
                 const new_pos = @max(@min(pos + offset, buflen - 1), 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.pos = @as(usize, @intCast(new_pos));
                 return new_pos;
             },
             Seek.end => {
                 const new_pos = @max(@min(buflen - offset, buflen), 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.pos = @as(usize, @intCast(new_pos));
                 return new_pos;
             },
             Seek.set => {
                 const new_pos = @max(@min(offset, buflen - 1), 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.pos = @as(usize, @intCast(new_pos));
                 return new_pos;
             },
@@ -177,6 +201,8 @@ pub const BufferReadStream = struct {
 /// The check works by resolving the symlink target relative to the symlink's
 /// directory location using a fake root, then checking if the result stays
 /// within that fake root.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn isSymlinkTargetSafe(symlink_path: []const u8, link_target: [:0]const u8, symlink_join_buf: *?*bun.PathBuffer) bool {
     // Absolute symlink targets are never safe - they could point anywhere
     if (link_target.len > 0 and link_target[0] == '/') {
@@ -218,6 +244,8 @@ pub const Archiver = struct {
 
         pub const U64Context = struct {
             pub fn hash(_: @This(), k: u64) u32 {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @as(u32, @truncate(k));
             }
             pub fn eql(_: @This(), a: u64, b: u64, _: usize) bool {
@@ -242,6 +270,8 @@ pub const Archiver = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOverwritingFileList(
         file_buffer: []const u8,
         root: []const u8,
@@ -288,6 +318,8 @@ pub const Archiver = struct {
                     pathname = std.mem.sliceTo(pathname_.ptr[0..pathname_.len :0], 0);
                     const dirname = std.mem.trim(u8, std.fs.path.dirname(bun.asByteSlice(pathname)) orelse "", std.fs.path.sep_str);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const size: usize = @intCast(@max(entry.size(), 0));
                     if (size > 0) {
                         var opened = dir.openFileZ(pathname, .{ .mode = .{ .ACCMODE = .WRONLY } }) catch continue :loop;
@@ -330,6 +362,8 @@ pub const Archiver = struct {
         npm: bool = false,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn extractToDir(
         file_buffer: []const u8,
         dir: @import("std-fs-compat").FsDir,
@@ -436,6 +470,8 @@ pub const Archiver = struct {
                             remain = remain[2..];
                         }
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                         for (remain) |*char| {
                             switch (char.*) {
                                 '|', '<', '>', '?', ':' => char.* += 0xf000,
@@ -454,6 +490,8 @@ pub const Archiver = struct {
 
                     switch (kind) {
                         .directory => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             var mode = @as(i32, @intCast(entry.perm()));
 
                             // if dirs are readable, then they should be listable
@@ -468,6 +506,8 @@ pub const Archiver = struct {
                             if (comptime Environment.isWindows) {
                                 try bun.MakePath.makePath(u16, dir, path);
                             } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 const rc = std.c.mkdirat(dir_fd, path, @intCast(mode));
                                 if (rc != 0) {
                                     const err = std.posix.errno(rc);
@@ -514,6 +554,8 @@ pub const Archiver = struct {
                             // then https://github.com/npm/cli/blob/feb54f7e9a39bd52519221bae4fafc8bc70f235e/node_modules/pacote/lib/fetcher.js#L402-L411
                             //
                             // we simplify and turn it into `entry.mode || 0o666` because we aren't accepting a umask or fmask option.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const mode: bun.Mode = if (comptime Environment.isWindows) 0 else @intCast(entry.perm() | 0o666);
 
                             const flags = bun.O.WRONLY | bun.O.CREAT | bun.O.TRUNC;
@@ -569,6 +611,8 @@ pub const Archiver = struct {
                                 file_handle.close();
                             };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const size: usize = @intCast(@max(entry.size(), 0));
 
                             if (size > 0) {
@@ -585,11 +629,15 @@ pub const Archiver = struct {
                                         }
                                     }
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                                     for (ctx_.pluckers) |*plucker_| {
                                         if (plucker_.filename_hash == hash) {
                                             try plucker_.contents.inflate(size);
                                             plucker_.contents.list.expandToCapacity();
                                             const read = archive.readData(plucker_.contents.list.items);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                             try plucker_.contents.inflate(@as(usize, @intCast(read)));
                                             plucker_.found = read > 0;
                                             plucker_.fd = file_handle;
@@ -605,6 +653,8 @@ pub const Archiver = struct {
                                         bun.sys.preallocate_file(
                                             file_handle.cast(),
                                             0,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                             @intCast(size),
                                         ) catch {};
                                     }
@@ -627,6 +677,8 @@ pub const Archiver = struct {
                                         },
                                         else => {
                                             if (options.log) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                                 const archive_error = bun.sliceTo(lib.Archive.errorString(@ptrCast(archive)), 0);
                                                 Output.err("libarchive error", "extracting {f}: {s}", .{
                                                     bun.fmt.fmtOSPath(path_slice, .{}),
@@ -648,6 +700,8 @@ pub const Archiver = struct {
         return count;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn extractToDisk(
         file_buffer: []const u8,
         root: []const u8,

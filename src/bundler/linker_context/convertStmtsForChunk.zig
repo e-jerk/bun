@@ -309,7 +309,9 @@ pub fn convertStmtsForChunk(
                         // Turn this statement into "import {foo} from 'path'"
                         // TODO: is this allocation necessary?
                         const items = allocator.alloc(js_ast.ClauseItem, s.items.len) catch unreachable;
-                        for (s.items, items) |src, *dest| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (s.items, items) |src, *dest| {
                             dest.* = .{
                                 .alias = src.original_name,
                                 .alias_loc = src.alias_loc,

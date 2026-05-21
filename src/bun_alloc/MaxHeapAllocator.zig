@@ -14,12 +14,14 @@ fn alloc(ptr: *anyopaque, len: usize, alignment: std.mem.Alignment, _: usize) ?[
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn resize(_: *anyopaque, buf: []u8, _: std.mem.Alignment, new_len: usize, _: usize) bool {
     _ = new_len;
     _ = buf;
     @panic("not implemented");
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn free(
     _: *anyopaque,

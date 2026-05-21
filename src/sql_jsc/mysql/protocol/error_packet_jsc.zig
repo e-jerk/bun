@@ -1,4 +1,5 @@
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn createMySQLError(
     globalObject: *JSC.JSGlobalObject,
     message: []const u8,

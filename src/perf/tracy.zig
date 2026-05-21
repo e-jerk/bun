@@ -20,11 +20,15 @@ const ___tracy_c_zone_context = extern struct {
         ___tracy_emit_zone_end(self);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn addText(self: @This(), text: []const u8) void {
         if (!enable) return;
         ___tracy_emit_zone_text(self, text.ptr, text.len);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn setName(self: @This(), name: []const u8) void {
         if (!enable) return;
         ___tracy_emit_zone_name(self, name.ptr, name.len);
@@ -123,6 +127,8 @@ pub fn TracyAllocator(comptime name: ?[:0]const u8) type {
         }
 
         fn allocFn(ptr: *anyopaque, len: usize, ptr_align: u8, ret_addr: usize) ?[*]u8 {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             const self = @as(*Self, @ptrCast(@alignCast(ptr)));
             const result = self.parent_allocator.rawAlloc(len, ptr_align, ret_addr);
             if (result) |data| {
@@ -139,7 +145,11 @@ pub fn TracyAllocator(comptime name: ?[:0]const u8) type {
             return result;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn resizeFn(ptr: *anyopaque, buf: []u8, buf_align: u8, new_len: usize, ret_addr: usize) bool {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             const self = @as(*Self, @ptrCast(@alignCast(ptr)));
             if (self.parent_allocator.rawResize(buf, buf_align, new_len, ret_addr)) {
                 if (name) |n| {
@@ -158,7 +168,11 @@ pub fn TracyAllocator(comptime name: ?[:0]const u8) type {
             return false;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn freeFn(ptr: *anyopaque, buf: []u8, buf_align: u8, ret_addr: usize) void {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             const self = @as(*Self, @ptrCast(@alignCast(ptr)));
             self.parent_allocator.rawFree(buf, buf_align, ret_addr);
             // this condition is to handle free being called on an empty slice that was never even allocated
@@ -186,6 +200,8 @@ pub inline fn messageColor(comptime msg: [:0]const u8, color: u32) void {
     ___tracy_emit_messageLC(msg.ptr, color, if (enable_callstack) callstack_depth else 0);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn messageCopy(msg: []const u8) void {
     if (!enable) return;
     ___tracy_emit_message(msg.ptr, msg.len, if (enable_callstack) callstack_depth else 0);
@@ -526,6 +542,8 @@ fn dlsym(comptime Type: type, comptime symbol: [:0]const u8) ?Type {
                 "tracy.dll",
             } else .{};
 
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             const RLTD: std.c.RTLD = if (bun.Environment.isMac) @bitCast(@as(i32, -2)) else if (bun.Environment.isLinux) .{} else {};
 
             if (bun.env_var.BUN_TRACY_PATH.get()) |path| {

@@ -7,6 +7,7 @@ last_modified_buffer_len: u8 = 0,
 // TODO: add etag support here!
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash(this: *@This(), stat: bun.Stat, path: []const u8) void {
     var stat_hasher = std.hash.XxHash64.init(42);
     stat_hasher.update(std.mem.asBytes(&stat.size));
@@ -19,16 +20,20 @@ pub fn hash(this: *@This(), stat: bun.Stat, path: []const u8) void {
     this.value = stat_hasher.final();
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (prev != this.value and bun.S.ISREG(@intCast(stat.mode))) {
         const mtime_timespec = stat.mtime();
         // Clamp negative values to 0 to avoid timestamp overflow issues on Windows
         const mtime = bun.timespec{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .nsec = @intCast(@max(mtime_timespec.nsec, 0)),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .sec = @intCast(@max(mtime_timespec.sec, 0)),
         };
         if (mtime.ms() > 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.last_modified_buffer_len = @intCast(bun.jsc.wtf.writeHTTPDate(&this.last_modified_buffer, mtime.msUnsigned()).len);
             this.last_modified_u64 = mtime.msUnsigned();
@@ -36,6 +41,7 @@ pub fn hash(this: *@This(), stat: bun.Stat, path: []const u8) void {
             this.last_modified_buffer_len = 0;
             this.last_modified_u64 = 0;
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     } else if (!bun.S.ISREG(@intCast(stat.mode))) {
         this.last_modified_buffer_len = 0;

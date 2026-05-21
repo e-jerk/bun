@@ -11,6 +11,7 @@ pub fn ColonListType(comptime t: type, comptime value_resolver: anytype) type {
 
         pub fn load(self: *@This(), input: []const string) !void {
             // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (input, 0..) |str, i| {
                 // Support either ":" or "=" as the separator, preferring whichever is first.
                 // ":" is less confusing IMO because that syntax is used with flags

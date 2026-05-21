@@ -504,6 +504,8 @@ pub fn tickQueueWithCount(this: *EventLoop, virtual_machine: *VirtualMachine, co
                 any.runOnJSThread();
             },
             @field(Task.Tag, @typeName(PosixSignalTask)) => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 PosixSignalTask.runFromJSThread(@intCast(task.asUintptr()), global);
             },
             @field(Task.Tag, @typeName(NapiFinalizerTask)) => {
@@ -511,6 +513,8 @@ pub fn tickQueueWithCount(this: *EventLoop, virtual_machine: *VirtualMachine, co
                 any.runOnJSThread();
             },
             @field(Task.Tag, @typeName(NativePromiseContextDeferredDerefTask)) => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 NativePromiseContextDeferredDerefTask.runFromJSThread(@intCast(task.asUintptr()));
             },
             @field(Task.Tag, @typeName(StatFS)) => {

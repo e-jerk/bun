@@ -17,7 +17,9 @@ pub fn allocate(this: *HeaderBuilder, allocator: std.mem.Allocator) !void {
 pub fn append(this: *HeaderBuilder, name: string, value: string) void {
     const name_ptr = api.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(this.content.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(name.len)),
     };
@@ -26,7 +28,9 @@ pub fn append(this: *HeaderBuilder, name: string, value: string) void {
 
     const value_ptr = api.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(this.content.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(value.len)),
     };
@@ -37,7 +41,9 @@ pub fn append(this: *HeaderBuilder, name: string, value: string) void {
 pub fn appendFmt(this: *HeaderBuilder, name: string, comptime fmt: string, args: anytype) void {
     const name_ptr = api.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(this.content.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(name.len)),
     };
@@ -48,7 +54,9 @@ pub fn appendFmt(this: *HeaderBuilder, name: string, comptime fmt: string, args:
 
     const value_ptr = api.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(this.content.len - value.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(value.len)),
     };

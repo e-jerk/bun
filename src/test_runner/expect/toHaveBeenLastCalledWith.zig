@@ -16,6 +16,7 @@ pub fn toHaveBeenLastCalledWith(this: *Expect, globalThis: *JSGlobalObject, call
     }
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const totalCalls: u32 = @truncate(try calls.getLength(globalThis));
     var lastCallValue: JSValue = .zero;
 
@@ -53,7 +54,9 @@ pub fn toHaveBeenLastCalledWith(this: *Expect, globalThis: *JSGlobalObject, call
 
     const expected_args_js_array = try JSValue.createEmptyArray(globalThis, arguments.len);
     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (arguments, 0..) |arg, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try expected_args_js_array.putIndex(globalThis, @intCast(i), arg);
     }

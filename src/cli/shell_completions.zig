@@ -10,6 +10,7 @@ pub const Shell = enum {
     const fish_completions = @embedFile("completions-fish");
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn completions(this: Shell) []const u8 {
         return switch (this) {
             .bash => bash_completions,
@@ -58,6 +59,7 @@ pub fn print(this: @This()) void {
 
     if (this.commands.len > 1) {
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.commands[1..], 0..) |cmd, i| {
             writer.writeAll(delimiter) catch return;
 

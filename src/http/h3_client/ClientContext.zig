@@ -39,6 +39,7 @@ pub fn getOrCreate(loop: *uws.Loop) ?*ClientContext {
 
 /// Find or open a connection to `hostname:port` and queue `client` on it.
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn connect(this: *ClientContext, client: *HTTPClient, hostname: []const u8, port: u16) bool {
     const reject = client.flags.reject_unauthorized;
     for (this.sessions.items) |s| {
@@ -57,6 +58,7 @@ pub fn connect(this: *ClientContext, client: *HTTPClient, hostname: []const u8, 
         .reject_unauthorized = reject,
     });
     _ = H3.live_sessions.fetchAdd(1, .monotonic);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     session.registry_index = @intCast(this.sessions.items.len);
     bun.handleOom(this.sessions.append(bun.default_allocator, session));

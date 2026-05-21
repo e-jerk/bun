@@ -369,6 +369,8 @@ pub const HorizontalPositionKeyword = enum {
         return this.* == other.*;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -403,6 +405,8 @@ pub const VerticalPositionKeyword = enum {
         return this.* == other.*;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }

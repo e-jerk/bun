@@ -44,6 +44,8 @@ pub fn encodeWithoutTypeChecks(this: *TextEncoderStreamEncoder, globalObject: *j
     return this.encodeLatin1(globalObject, str.slice());
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn encodeLatin1(this: *TextEncoderStreamEncoder, globalObject: *JSGlobalObject, input: []const u8) JSValue {
     log("encodeLatin1: \"{s}\"", .{input});
 

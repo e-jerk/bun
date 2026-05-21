@@ -101,6 +101,8 @@ const WindowsImpl = struct {
         // NTDLL functions work with time in units of 100 nanoseconds.
         // Positive values are absolute deadlines while negative values are relative durations.
         if (timeout) |delay| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             timeout_value = @as(windows.LARGE_INTEGER, @intCast(delay / 100));
             timeout_value = -timeout_value;
             timeout_ptr = &timeout_value;
@@ -224,11 +226,17 @@ const LinuxImpl = struct {
     fn wait(ptr: *const atomic.Value(u32), expect: u32, timeout: ?u64) error{Timeout}!void {
         var ts: linux.timespec = undefined;
         if (timeout) |timeout_ns| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             ts.sec = @as(@TypeOf(ts.sec), @intCast(timeout_ns / std.time.ns_per_s));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             ts.nsec = @as(@TypeOf(ts.nsec), @intCast(timeout_ns % std.time.ns_per_s));
         }
 
         const rc = linux.futex_4arg(
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&ptr.raw),
             .{ .cmd = .WAIT, .private = true },
             expect,
@@ -250,6 +258,8 @@ const LinuxImpl = struct {
     }
 
     fn wake(ptr: *const atomic.Value(u32), max_waiters: u32) void {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const rc = linux.futex_3arg(&ptr.raw, .{ .cmd = .WAKE, .private = true }, @bitCast(std.math.cast(i32, max_waiters) orelse std.math.maxInt(i32)));
 
         switch (linux.E.init(rc)) {
@@ -274,7 +284,11 @@ const FreebsdImpl = struct {
 
             tm.flags = 0; // use relative time not UMTX_ABSTIME
             tm.clockid = .MONOTONIC;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             tm.timeout.sec = @as(@TypeOf(tm.timeout.sec), @intCast(timeout_ns / std.time.ns_per_s));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             tm.timeout.nsec = @as(@TypeOf(tm.timeout.nsec), @intCast(timeout_ns % std.time.ns_per_s));
         }
 
@@ -326,6 +340,8 @@ const WasmImpl = struct {
         if (!comptime std.Target.wasm.featureSetHas(builtin.target.cpu.features, .atomics)) {
             @compileError("WASI target missing cpu feature 'atomics'");
         }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const to: i64 = if (timeout) |to| @intCast(to) else -1;
         const result = asm volatile (
             \\local.get %[ptr]
@@ -335,6 +351,8 @@ const WasmImpl = struct {
             \\local.set %[ret]
             : [ret] "=r" (-> u32),
             : [ptr] "r" (&ptr.raw),
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
               [expected] "r" (@as(i32, @bitCast(expect))),
               [timeout] "r" (to),
         );

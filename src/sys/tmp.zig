@@ -58,6 +58,7 @@ pub const Tmpfile = struct {
             if (this.using_tmpfile) {
                 var retry = true;
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const basename: [:0]const u8 = @ptrCast(std.fs.path.basename(destname));
                 while (retry) {
                     const ret = bun.sys.linkatTmpfile(this.fd, this.destination_dir, basename);

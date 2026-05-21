@@ -1,4 +1,5 @@
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn isSafeAltName(name: []const u8, utf8: bool) bool {
     for (name) |c| {
         switch (c) {

@@ -121,6 +121,7 @@ const Options = struct {
                                 const converted = bun.strings.convertUTF8toUTF16InBuffer(this.pooled[this.len..], characters);
                                 if (comptime opts.sep != .any) {
                                     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.pooled[this.len..][0..converted.len], 0..) |c, off| {
                                         switch (c) {
                                             '/', '\\' => this.pooled[this.len + off] = opts.sep.char(),
@@ -134,6 +135,7 @@ const Options = struct {
                                 const converted = bun.strings.convertUTF16toUTF8InBuffer(this.pooled[this.len..], characters) catch unreachable;
                                 if (comptime opts.sep != .any) {
                                     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.pooled[this.len..][0..converted.len], 0..) |c, off| {
                                         switch (c) {
                                             '/', '\\' => this.pooled[this.len + off] = opts.sep.char(),
@@ -772,6 +774,7 @@ pub fn Path(comptime opts: Options) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn appendFmt(this: *@This(), comptime fmt: []const u8, args: anytype) Result(void) {
             // TODO: there's probably a better way to do this. needed for trimming slashes

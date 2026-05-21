@@ -125,6 +125,8 @@ export fn us_dispatch_ssl_raw_tap(s: *us_socket_t, data: [*c]u8, len: c_int) ?*u
     const TLSSocket = bun.jsc.API.NewSocket(true);
     const tls = s.ext(*TLSSocket).*;
     if (tls.twin) |raw| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         raw.onData(TLSSocket.Socket.from(s), data[0..@intCast(len)]);
     }
     return s;

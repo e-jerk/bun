@@ -66,6 +66,8 @@ pub const TrackList = struct {
         var items_index = 0;
         var first = true;
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.line_names.sliceConst()) |*names| {
             if (!names.isEmpty()) try serializeLineNames(names, dest);
 
@@ -341,6 +343,8 @@ pub const TrackRepeat = struct {
 
         var track_sizes_index = 0;
         var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.line_names.sliceConst()) |*names| {
             if (!names.isEmpty()) {
                 try serializeLineNames(names, dest);
@@ -368,6 +372,8 @@ pub const TrackRepeat = struct {
 fn serializeLineNames(names: []const CustomIdent, dest: *Printer) PrintErr!void {
     try dest.writeChar('[');
     var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (names) |*name| {
         if (first) {
             first = false;
@@ -379,6 +385,8 @@ fn serializeLineNames(names: []const CustomIdent, dest: *Printer) PrintErr!void 
     try dest.writeChar(']');
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeIdent(name: []const u8, dest: *Printer) PrintErr!void {
     const css_module_grid_enabled = if (dest.css_module) |*css_module| css_module.config.grid else false;
     if (css_module_grid_enabled) {
@@ -476,8 +484,10 @@ pub const GridTemplateAreas = union(enum) {
         } } };
     }
 
-    const HTML_SPACE_CHARACTERS: []const u8 = &.{ 0x0020, 0x0009, 0x000a, 0x000c, 0x000d };
+    const HTML_SPACE_CHARACTERS: safe.Slice(u8) = &.{ 0x0020, 0x0009, 0x000a, 0x000c, 0x000d };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseString(allocator: Allocator, s: []const u8, tokens: *SmallList(?[]const u8, 1)) bun.Maybe(u32, void) {
         var string = s;
         var column = 0;
@@ -494,7 +504,9 @@ pub const GridTemplateAreas = union(enum) {
 
             if (bun.strings.startsWithChar(rest, '.')) {
                 const idx = idx: {
-                    for (rest, 0..) |*c, i| {
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (rest, 0..) |*c, i| {
                         if (c.* != '.') {
                             break :idx i;
                         }
@@ -512,7 +524,9 @@ pub const GridTemplateAreas = union(enum) {
             if (!starts_with_name_codepoint) return .{ .err = {} };
 
             const token_len = token_len: {
-                for (rest, 0..) |*c, i| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (rest, 0..) |*c, i| {
                     if (!isNameCodepoint(c.*)) {
                         break :token_len i;
                     }

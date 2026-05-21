@@ -45,6 +45,8 @@ pub const Coordinator = struct {
     }
 
     fn hasUndispatchedFiles(this: *const Coordinator) bool {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers) |*w| if (!w.range.isEmpty()) return true;
         return false;
     }
@@ -53,6 +55,8 @@ pub const Coordinator = struct {
     fn findStealVictim(this: *Coordinator) ?*Worker {
         var victim: ?*Worker = null;
         var most: u32 = 0;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers) |*v| {
             if (v.range.len() > most) {
                 most = v.range.len();
@@ -90,6 +94,8 @@ pub const Coordinator = struct {
     /// group kill here plus stdin EOF in the worker loop is the best effort.
     fn abortAll(this: *Coordinator) noreturn {
         AbortHandler.uninstall();
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers[0..this.spawned_count]) |*w| {
             if (w.process) |p| {
                 if (Environment.isPosix) {
@@ -128,11 +134,15 @@ pub const Coordinator = struct {
         if (this.spawned_count >= this.parallel_limit) return;
         if (this.bailed or !this.hasUndispatchedFiles()) return;
         const now = @import("std-fs-compat").milliTimestamp();
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers[0..this.spawned_count]) |*w| {
             if (!w.alive) continue;
             if (w.inflight == null) return;
             if (now - w.dispatched_at < this.scale_up_after_ms) return;
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const want = @min(this.parallel_limit, @as(u32, @intCast(this.files.len)) - this.files_done);
         while (this.spawned_count < want) {
             // On failure, leave the slot unconsumed so the next drive() tick
@@ -166,11 +176,15 @@ pub const Coordinator = struct {
         this.breakDots();
         Output.prettyError("\nBailed out after {d} failure{s}<r>\n", .{ this.bail, if (this.bail == 1) "" else "s" });
         Output.flush();
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers[0..this.spawned_count]) |*other| {
             if (other.alive and other.inflight == null) other.shutdown();
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn relPath(this: *Coordinator, file_idx: u32) []const u8 {
         return bun.path.relative(bun.fs.FileSystem.instance.top_level_dir, this.files[file_idx].slice());
     }
@@ -223,6 +237,8 @@ pub const Coordinator = struct {
             },
             .file_done => {
                 var nums: [9]u32 = undefined;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                 for (&nums) |*n| n.* = rd.u32_();
                 const idx, const pass, const fail, const skip, const todo, const expectations, const skipped_label, const files, const unhandled = nums;
 
@@ -371,6 +387,8 @@ pub const Coordinator = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn describeStatus(buf: []u8, status: bun.spawn.Status) []const u8 {
         return switch (status) {
             .exited => |e| std.fmt.bufPrint(buf, "exit code {d}", .{e.code}) catch unreachable,
@@ -405,6 +423,8 @@ pub const Coordinator = struct {
         // crash when the exit arrives. Runs even if --bail already set
         // `bailed`, since bailOut() only shutdown()s idle workers and would
         // leave inflight ones running past the banner.
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers[0..this.spawned_count]) |*other| {
             if (!other.alive) continue;
             if (other.process) |p| {
@@ -422,7 +442,11 @@ pub const Coordinator = struct {
 
     /// Mark every not-yet-dispatched file as failed so `drive()` can exit
     /// instead of spinning when no live worker remains to make progress.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn abortQueuedFiles(this: *Coordinator, reason: []const u8) void {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.workers) |*w| {
             while (w.range.popFront()) |idx| {
                 Output.prettyError("<r><red>✗<r> <b>{s}<r> <d>({s})<r>\n", .{ this.relPath(idx), reason });

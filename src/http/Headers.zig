@@ -26,10 +26,12 @@ pub fn clone(this: *Headers) !Headers {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn get(this: *const Headers, name: []const u8) ?[]const u8 {
     const entries = this.entries.slice();
     const names = entries.items(.name);
     const values = entries.items(.value);
+    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (names, 0..) |name_ptr, i| {
         if (bun.strings.eqlCaseInsensitiveASCII(this.asStr(name_ptr), name, true)) {
@@ -41,22 +43,27 @@ pub fn get(this: *const Headers, name: []const u8) ?[]const u8 {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn append(this: *Headers, name: []const u8, value: []const u8) !void {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var offset: u32 = @truncate(this.buf.items.len);
     try this.buf.ensureUnusedCapacity(this.allocator, name.len + value.len);
     const name_ptr = api.StringPointer{
         .offset = offset,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @truncate(name.len),
     };
     this.buf.appendSliceAssumeCapacity(name);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     offset = @truncate(this.buf.items.len);
     this.buf.appendSliceAssumeCapacity(value);
 
     const value_ptr = api.StringPointer{
         .offset = offset,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @truncate(value.len),
     };
@@ -80,6 +87,7 @@ pub fn getContentEncoding(this: *const Headers) ?[]const u8 {
 pub fn getContentType(this: *const Headers) ?[]const u8 {
     return this.get("content-type");
 }
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn asStr(this: *const Headers, ptr: api.StringPointer) []const u8 {
     return if (ptr.offset + ptr.length <= this.buf.items.len)
@@ -110,13 +118,16 @@ pub fn fromPicoHttpHeaders(headers: []const picohttp.Header, allocator: std.mem.
     result.buf.items.len = buf_len;
     var offset: u32 = 0;
     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (headers, 0..headers.len) |header, i| {
         const name_offset = offset;
         bun.copy(u8, result.buf.items[offset..][0..header.name.len], header.name);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         offset += @truncate(header.name.len);
         const value_offset = offset;
         bun.copy(u8, result.buf.items[offset..][0..header.value.len], header.value);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         offset += @truncate(header.value.len);
 
@@ -124,10 +135,12 @@ pub fn fromPicoHttpHeaders(headers: []const picohttp.Header, allocator: std.mem.
             .name = .{
                 .offset = name_offset,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .length = @truncate(header.name.len),
             },
             .value = .{
                 .offset = value_offset,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .length = @truncate(header.value.len),
             },
@@ -151,6 +164,7 @@ pub fn from(fetch_headers_ref: ?*FetchHeaders, allocator: std.mem.Allocator, opt
         if (options.body) |body| {
             if (body.hasContentTypeFromUser() and (fetch_headers_ref == null or !(fetch_headers_ref.?).fastHas(.ContentType))) {
                 header_count += 1;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 buf_len += @as(u32, @truncate(body.contentType().len + "Content-Type".len));
                 break :brk true;
@@ -179,6 +193,7 @@ pub fn from(fetch_headers_ref: ?*FetchHeaders, allocator: std.mem.Allocator, opt
         bun.copy(u8, headers.buf.items[buf_len_before_content_type + "Content-Type".len ..], (options.body.?).contentType());
         values[header_count - 1] = .{
             .offset = buf_len_before_content_type + @as(u32, "Content-Type".len),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .length = @as(u32, @truncate((options.body.?).contentType().len)),
         };

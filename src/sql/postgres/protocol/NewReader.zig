@@ -41,6 +41,7 @@ pub fn NewReaderWrap(
         }
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn peek(this: @This()) []const u8 {
             return peekFn(this.wrapped);
         }
@@ -66,6 +67,7 @@ pub fn NewReaderWrap(
                 return @as(Int, slice[0]);
             }
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             return @byteSwap(@as(Int, @bitCast(slice[0..@sizeOf(Int)].*)));
         }
 
@@ -74,6 +76,7 @@ pub fn NewReaderWrap(
             if (remain.len < @sizeOf(Int)) {
                 return null;
             }
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             return @byteSwap(@as(Int, @bitCast(remain[0..@sizeOf(Int)].*)));
         }
@@ -94,6 +97,7 @@ pub fn NewReaderWrap(
         pub fn length(this: @This()) !PostgresInt32 {
             const expected = try this.int(PostgresInt32);
             if (expected > -1) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try this.ensureCapacity(@intCast(expected -| 4));
             }

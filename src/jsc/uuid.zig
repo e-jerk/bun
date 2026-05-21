@@ -87,6 +87,8 @@ fn printBytes(
     buf[13] = '-';
     buf[18] = '-';
     buf[23] = '-';
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     inline for (encoded_pos, 0..) |i, j| {
         buf[comptime i + 0] = hex[bytes[j] >> 4];
         buf[comptime i + 1] = hex[bytes[j] & 0x0f];
@@ -99,12 +101,16 @@ pub fn print(
     printBytes(&self.bytes, buf);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parse(buf: []const u8) Error!UUID {
     var uuid = UUID{ .bytes = undefined };
 
     if (buf.len != 36 or buf[8] != '-' or buf[13] != '-' or buf[18] != '-' or buf[23] != '-')
         return Error.InvalidUUID;
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     inline for (encoded_pos, 0..) |i, j| {
         const hi = hex_to_nibble[buf[i + 0]];
         const lo = hex_to_nibble[buf[i + 1]];
@@ -150,24 +156,40 @@ pub const UUID7 = struct {
         var bytes: [16]u8 = undefined;
 
         // First 6 bytes: timestamp in big-endian
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[0] = @truncate(timestamp >> 40);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[1] = @truncate(timestamp >> 32);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[2] = @truncate(timestamp >> 24);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[3] = @truncate(timestamp >> 16);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[4] = @truncate(timestamp >> 8);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[5] = @truncate(timestamp);
 
         // Byte 6: Version 7 in high nibble, top 4 bits of counter in low nibble
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[6] = (@as(u8, 7) << 4) | @as(u8, @truncate((count >> 8) & 0x0F));
 
         // Byte 7: Lower 8 bits of counter
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bytes[7] = @truncate(count);
 
         // Byte 8: Variant in top 2 bits, 6 bits of random
         bytes[8] = 0x80 | (random[0] & 0x3F);
 
         // Remaining 7 bytes: random
-        @memcpy(bytes[9..16], random[1..8]);
+        safe.SimdUtils.copy(bytes[9..16], random[1..8]);
 
         return UUID7{
             .bytes = bytes,
@@ -204,6 +226,8 @@ pub const UUID5 = struct {
         pub const oid: *const [16]u8 = &.{ 0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 };
         pub const x500: *const [16]u8 = &.{ 0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(namespace: []const u8) ?*const [16]u8 {
             if (bun.strings.eqlCaseInsensitiveASCII(namespace, "dns", true)) {
                 return dns;
@@ -220,6 +244,8 @@ pub const UUID5 = struct {
     };
 
     /// Generate a UUID v5 from a namespace UUID and name data
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(namespace: *const [16]u8, name: []const u8) UUID5 {
         const hash = brk: {
             var sha1_hasher = bun.sha.SHA1.init();

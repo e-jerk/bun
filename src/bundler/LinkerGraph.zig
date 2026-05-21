@@ -50,7 +50,11 @@ pub fn generateNewSymbol(this: *LinkerGraph, source_index: u32, kind: Symbol.Kin
     const source_symbols = &this.symbols.symbols_for_source.slice()[source_index];
 
     var ref = Ref.init(
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @truncate(source_symbols.len),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @truncate(source_index),
         false,
     );
@@ -70,6 +74,8 @@ pub fn generateNewSymbol(this: *LinkerGraph, source_index: u32, kind: Symbol.Kin
     return ref;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn generateRuntimeSymbolImportAndUse(
     graph: *LinkerGraph,
     source_index: Index.Int,
@@ -96,6 +102,8 @@ pub fn addPartToFile(
     part: Part,
 ) bun.OOM!u32 {
     var parts: *Part.List = &graph.ast.items(.parts)[id];
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const part_id = @as(u32, @truncate(parts.len));
     try parts.append(graph.allocator, part);
     var top_level_symbol_to_parts_overlay: ?*TopLevelSymbolToParts = null;
@@ -200,9 +208,13 @@ pub fn generateSymbolImportAndUse(
     var dependencies = &part.dependencies;
     const part_ids = g.topLevelSymbolToParts(source_index_to_import_from.get(), ref);
     const new_dependencies = try dependencies.writableSlice(g.allocator, part_ids.len);
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (part_ids, new_dependencies) |part_id, *dependency| {
         dependency.* = .{
             .source_index = source_index_to_import_from,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .part_index = @as(u32, @truncate(part_id)),
         };
     }
@@ -256,7 +268,9 @@ pub fn load(
             @memset(output_was_auto_generated, 0);
         }
 
-        for (entry_points, path_strings, source_indices) |i, *path_string, *source_index| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (entry_points, path_strings, source_indices) |i, *path_string, *source_index| {
             const source = sources[i.get()];
             if (comptime Environment.allow_assert) {
                 bun.assert(source.index.get() == i.get());
@@ -301,7 +315,9 @@ pub fn load(
 
             // Index all SCBs into the bitset. This is needed so chunking
             // can track the chunks that SCBs belong to.
-            for (scb.list.items(.use_directive), scb.list.items(.source_index), scb.list.items(.reference_source_index)) |use, original_id, ref_id| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (scb.list.items(.use_directive), scb.list.items(.source_index), scb.list.items(.reference_source_index)) |use, original_id, ref_id| {
                 switch (use) {
                     .none => {},
                     .client => {
@@ -316,6 +332,8 @@ pub fn load(
 
             // For client components, the import record index currently points to the original source index, instead of the reference source index.
             for (this.reachable_files) |source_id| {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                 for (import_records_list[source_id.get()].slice()) |*import_record| {
                     if (import_record.source_index.isValid() and this.is_scb_bitset.isSet(import_record.source_index.get())) {
                         // Only rewrite if this is an original SCB file, not a reference file
@@ -339,7 +357,9 @@ pub fn load(
         // set it to max value so that if we access an invalid one, it crashes
         @memset(std.mem.sliceAsBytes(stable_source_indices), 255);
 
-        for (this.reachable_files, 0..) |source_index, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (this.reachable_files, 0..) |source_index, i| {
             stable_source_indices[source_index.get()] = Index.source(i);
         }
 
@@ -347,6 +367,8 @@ pub fn load(
             files.items(.distance_from_entry_point),
             (LinkerGraph.File{}).distance_from_entry_point,
         );
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         this.stable_source_indices = @as([]const u32, @ptrCast(stable_source_indices));
     }
 
@@ -355,7 +377,9 @@ pub fn load(
             js_ast.Symbol.NestedList.fromBorrowedSliceDangerous(this.ast.items(.symbols)),
         );
         var symbols = bun.handleOom(input_symbols.symbols_for_source.clone(this.allocator));
-        for (symbols.slice(), input_symbols.symbols_for_source.slice()) |*dest, src| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (symbols.slice(), input_symbols.symbols_for_source.slice()) |*dest, src| {
             dest.* = bun.handleOom(src.clone(this.allocator));
         }
         this.symbols = js_ast.Symbol.Map.initList(symbols);
@@ -390,7 +414,9 @@ pub fn load(
         if (count > 0) {
             try this.ts_enums.ensureTotalCapacity(this.allocator, count);
             for (this.ast.items(.ts_enums)) |ts_enums| {
-                for (ts_enums.keys(), ts_enums.values()) |key, value| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (ts_enums.keys(), ts_enums.values()) |key, value| {
                     this.ts_enums.putAssumeCapacityNoClobber(key, value);
                 }
             }
@@ -399,10 +425,14 @@ pub fn load(
 
     const src_named_exports: []js_ast.Ast.NamedExports = this.ast.items(.named_exports);
     const dest_resolved_exports: []ResolvedExports = this.meta.items(.resolved_exports);
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (src_named_exports, dest_resolved_exports, 0..) |src, *dest, source_index| {
         var resolved = ResolvedExports{};
         resolved.ensureTotalCapacity(this.allocator, src.count()) catch unreachable;
-        for (src.keys(), src.values()) |key, value| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (src.keys(), src.values()) |key, value| {
             resolved.putAssumeCapacityNoClobber(key, .{ .data = .{
                 .import_ref = value.ref,
                 .name_loc = value.alias_loc,
@@ -419,15 +449,23 @@ pub fn takeAstOwnership(this: *LinkerGraph) void {
     const ast = this.ast.slice();
     const heap: bun.allocators.MimallocArena.Borrowed = .downcast(this.allocator);
     if (comptime !bun.collections.baby_list.safety_checks) return;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (ast.items(.import_records)) |*import_records| {
         import_records.transferOwnership(heap);
     }
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (ast.items(.parts)) |*parts| {
         parts.transferOwnership(heap);
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (parts.slice()) |*part| {
             part.dependencies.transferOwnership(heap);
         }
     }
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (ast.items(.symbols)) |*symbols| {
         symbols.transferOwnership(heap);
     }
@@ -487,6 +525,8 @@ pub fn propagateAsyncDependencies(this: *LinkerGraph) !void {
             self.visited.set(index);
             if (self.flags[index].is_async_or_has_async_dependency) return;
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
             for (self.import_records[index].sliceConst()) |*import_record| {
                 switch (import_record.kind) {
                     .stmt => {},

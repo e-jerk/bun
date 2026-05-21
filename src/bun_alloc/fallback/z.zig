@@ -19,6 +19,7 @@ fn alloc(_: *anyopaque, len: usize, alignment: Alignment, return_address: usize)
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn resize(
     _: *anyopaque,
     buf: []u8,
@@ -33,6 +34,7 @@ fn resize(
     return true;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn free(_: *anyopaque, buf: []u8, alignment: Alignment, return_address: usize) void {
     c_allocator.rawFree(buf, alignment, return_address);

@@ -22,6 +22,7 @@ pub const ConnectingSocket = opaque {
 
     pub fn ext(this: *ConnectingSocket, comptime T: type) *T {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(c.us_connecting_socket_ext(this)));
     }
 

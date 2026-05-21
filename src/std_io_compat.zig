@@ -28,6 +28,8 @@ pub fn FixedBufferStream(comptime Buffer: type) type {
             self.pos = 0;
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn getWritten(self: Self) []const u8 {
             if (@typeInfo(@TypeOf(self.buffer)) == .pointer) {
                 return self.buffer[0..self.pos];
@@ -36,10 +38,12 @@ pub fn FixedBufferStream(comptime Buffer: type) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(self: *Self, bytes: []const u8) error{OutOfMemory}!usize {
             const end = @min(self.pos + bytes.len, self.buffer.len);
             const to_write = bytes[0..(end - self.pos)];
-            @memcpy(self.buffer[self.pos..end], to_write);
+            safe.SimdUtils.copy(self.buffer[self.pos..end], to_write);
             self.pos += to_write.len;
             return to_write.len;
         }
@@ -49,24 +53,30 @@ pub fn FixedBufferStream(comptime Buffer: type) type {
 
             pub const Error = error{OutOfMemory};
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn write(w: Writer, bytes: []const u8) Error!usize {
                 const self = w.context;
                 const end = @min(self.pos + bytes.len, self.buffer.len);
                 const to_write = bytes[0..(end - self.pos)];
-                @memcpy(self.buffer[self.pos..end], to_write);
+                safe.SimdUtils.copy(self.buffer[self.pos..end], to_write);
                 self.pos += to_write.len;
                 return to_write.len;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn writeAll(w: Writer, bytes: []const u8) Error!void {
                 const self = w.context;
                 const end = @min(self.pos + bytes.len, self.buffer.len);
                 const to_write = bytes[0..(end - self.pos)];
-                @memcpy(self.buffer[self.pos..end], to_write);
+                safe.SimdUtils.copy(self.buffer[self.pos..end], to_write);
                 self.pos += to_write.len;
                 if (to_write.len < bytes.len) return error.OutOfMemory;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn print(w: Writer, comptime fmt: []const u8, args: anytype) error{OutOfMemory}!void {
                 const self = w.context;
                 const remaining = self.buffer[self.pos..];
@@ -120,32 +130,38 @@ pub fn FixedBufferStream(comptime Buffer: type) type {
                 const size = @sizeOf(T);
                 if (self.pos + size > self.buffer.len) return error.EndOfStream;
                 var result: T = undefined;
-                @memcpy(std.mem.asBytes(&result), self.buffer[self.pos..][0..size]);
+                safe.SimdUtils.copy(std.mem.asBytes(&result), self.buffer[self.pos..][0..size]);
                 self.pos += size;
                 return result;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn readNoEof(r: Reader, buf: []u8) Error!void {
                 const self = r.context;
                 if (self.pos + buf.len > self.buffer.len) return error.EndOfStream;
-                @memcpy(buf, self.buffer[self.pos..][0..buf.len]);
+                safe.SimdUtils.copy(buf, self.buffer[self.pos..][0..buf.len]);
                 self.pos += buf.len;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn read(r: Reader, buf: []u8) Error!usize {
                 const self = r.context;
                 const available = self.buffer.len - self.pos;
                 const to_read = @min(buf.len, available);
-                @memcpy(buf[0..to_read], self.buffer[self.pos..][0..to_read]);
+                safe.SimdUtils.copy(buf[0..to_read], self.buffer[self.pos..][0..to_read]);
                 self.pos += to_read;
                 return to_read;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn readAll(r: Reader, buf: []u8) Error!usize {
                 const self = r.context;
                 const available = self.buffer.len - self.pos;
                 const to_read = @min(buf.len, available);
-                @memcpy(buf[0..to_read], self.buffer[self.pos..][0..to_read]);
+                safe.SimdUtils.copy(buf[0..to_read], self.buffer[self.pos..][0..to_read]);
                 self.pos += to_read;
                 return to_read;
             }
@@ -161,10 +177,14 @@ pub const GenericWriter = struct {
     context: *anyopaque,
     writeFn: *const fn (*anyopaque, []const u8) anyerror!usize,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(self: GenericWriter, bytes: []const u8) anyerror!usize {
         return self.writeFn(self.context, bytes);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(self: GenericWriter, bytes: []const u8) !void {
         var written: usize = 0;
         while (written < bytes.len) {
@@ -179,10 +199,14 @@ pub fn MakeGenericWriter(comptime Context: type, comptime WriteError: type, comp
 
         pub const Error = WriteError;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(self: @This(), bytes: []const u8) Error!usize {
             return writeFn(self.context, bytes);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeAll(self: @This(), bytes: []const u8) Error!void {
             var written: usize = 0;
             while (written < bytes.len) {
@@ -190,6 +214,8 @@ pub fn MakeGenericWriter(comptime Context: type, comptime WriteError: type, comp
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn print(self: @This(), comptime fmt: []const u8, args: anytype) Error!void {
             var buf: [65536]u8 = undefined;
             const result = std.fmt.bufPrint(&buf, fmt, args) catch unreachable;
@@ -212,6 +238,8 @@ pub fn MakeGenericWriter(comptime Context: type, comptime WriteError: type, comp
             context: Context,
 
             fn drain(w: *std.Io.Writer, data: []const []const u8, splat: usize) std.Io.Writer.Error!usize {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 const adapter: *Adapter = @alignCast(@fieldParentPtr("new_interface", w));
                 if (w.end > 0) {
                     _ = writeFn(adapter.context, w.buffer[0..w.end]) catch return error.WriteFailed;
@@ -231,6 +259,8 @@ pub fn MakeGenericWriter(comptime Context: type, comptime WriteError: type, comp
             }
 
             fn flush(w: *std.Io.Writer) std.Io.Writer.Error!void {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 const adapter: *Adapter = @alignCast(@fieldParentPtr("new_interface", w));
                 if (w.end > 0) {
                     _ = writeFn(adapter.context, w.buffer[0..w.end]) catch return error.WriteFailed;
@@ -239,6 +269,8 @@ pub fn MakeGenericWriter(comptime Context: type, comptime WriteError: type, comp
             }
         };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn adaptToNewApi(self: @This(), buffer: []u8) Adapter {
             return .{
                 .new_interface = .{
@@ -261,10 +293,14 @@ pub fn MakeGenericReader(comptime Context: type, comptime ReadError: type, compt
 
         pub const Error = ReadError;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn read(self: @This(), buf: []u8) Error!usize {
             return readFn(self.context, buf);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn readAll(self: @This(), buf: []u8) Error!usize {
             var read_count: usize = 0;
             while (read_count < buf.len) {
@@ -323,6 +359,8 @@ pub fn ArrayListWriter(comptime List: type) type {
             return @constCast(self.context);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn doAppend(list: Context, bytes: []const u8) Error!void {
             const old_len = list.items.len;
             const new_len = old_len + bytes.len;
@@ -334,19 +372,25 @@ pub fn ArrayListWriter(comptime List: type) type {
                     return error.OutOfMemory;
                 }
             }
-            @memcpy(list.items.ptr[old_len..new_len], bytes);
+            safe.SimdUtils.copy(list.items.ptr[old_len..new_len], bytes);
             list.items.len = new_len;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeAll(self: @This(), bytes: []const u8) Error!void {
             try doAppend(self.listPtr(), bytes);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(self: @This(), bytes: []const u8) Error!usize {
             try doAppend(self.listPtr(), bytes);
             return bytes.len;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn print(self: @This(), comptime fmt: []const u8, args: anytype) Error!void {
             var buf: [4096]u8 = undefined;
             const result = std.fmt.bufPrint(&buf, fmt, args) catch return error.OutOfMemory;
@@ -423,6 +467,8 @@ pub fn UnmanagedArrayListWriter(comptime List: type) type {
 
         pub const Error = error{OutOfMemory};
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn doAppend(list: List, allocator: std.mem.Allocator, bytes: []const u8) Error!void {
             var l = if (comptime @typeInfo(List) == .pointer) list.* else list;
             const old_len = l.items.len;
@@ -432,19 +478,25 @@ pub fn UnmanagedArrayListWriter(comptime List: type) type {
             } else {
                 try l.ensureTotalCapacity(allocator, new_len);
             }
-            @memcpy(l.items.ptr[old_len..new_len], bytes);
+            safe.SimdUtils.copy(l.items.ptr[old_len..new_len], bytes);
             l.items.len = new_len;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeAll(self: @This(), bytes: []const u8) Error!void {
             try doAppend(self.context, self.allocator, bytes);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(self: @This(), bytes: []const u8) Error!usize {
             try doAppend(self.context, self.allocator, bytes);
             return bytes.len;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn print(self: @This(), comptime fmt: []const u8, args: anytype) Error!void {
             var buf: [4096]u8 = undefined;
             const result = std.fmt.bufPrint(&buf, fmt, args) catch return error.OutOfMemory;

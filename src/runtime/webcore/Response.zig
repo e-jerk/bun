@@ -574,6 +574,8 @@ pub fn constructJSON(
 
     if (args.nextEat()) |arg_init| {
         if (arg_init.isUndefinedOrNull()) {} else if (arg_init.isNumber()) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             response._init.status_code = @as(u16, @intCast(@min(@max(0, arg_init.toInt32()), std.math.maxInt(u16))));
         } else {
             if (Response.Init.init(globalThis, arg_init) catch |err| if (err == error.JSError) return .zero else null) |_init| {
@@ -590,6 +592,8 @@ pub fn constructJSON(
 
 fn validateRedirectStatusCode(globalThis: *jsc.JSGlobalObject, status_code: i32) bun.JSError!u16 {
     switch (status_code) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         301, 302, 303, 307, 308 => return @intCast(status_code),
         else => {
             const err = globalThis.createRangeErrorInstance("Failed to execute 'redirect' on 'Response': Invalid status code", .{});
@@ -852,6 +856,8 @@ pub const Init = struct {
         if (try response_init.fastGet(globalThis, .status)) |status_value| {
             const number = try status_value.coerceToInt64(globalThis);
             if ((200 <= number and number < 600) or number == 101) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 result.status_code = @as(u16, @truncate(@as(u32, @intCast(number))));
             } else {
                 if (!globalThis.hasException()) {

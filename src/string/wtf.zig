@@ -50,6 +50,7 @@ pub const WTFStringImplStruct = extern struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn byteSlice(this: WTFStringImpl) []const u8 {
         return this.m_ptr.latin1[0..this.byteLength()];
     }
@@ -68,12 +69,14 @@ pub const WTFStringImplStruct = extern struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn latin1Slice(self: WTFStringImpl) []const u8 {
         bun.assert(is8Bit(self));
         return self.m_ptr.latin1[0..length(self)];
     }
 
     /// Caller must ensure that the string is 8-bit and ASCII.
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn utf8Slice(self: WTFStringImpl) []const u8 {
         if (comptime bun.Environment.allow_assert)
@@ -218,6 +221,7 @@ pub const WTFStringImplStruct = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasPrefix(self: WTFStringImpl, text: []const u8) bool {
         return bun.cpp.Bun__WTFStringImpl__hasPrefix(self, text.ptr, text.len);
     }
@@ -247,6 +251,7 @@ pub const StringImplAllocator = struct {
         return @constCast(this.m_ptr.latin1);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn free(
         ptr: *anyopaque,

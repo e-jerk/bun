@@ -9,6 +9,8 @@ pub fn format(formatter: ErrorResponse, writer: *std.Io.Writer) !void {
 }
 
 pub fn deinit(this: *ErrorResponse) void {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.messages.items) |*message| {
         message.deinit();
     }

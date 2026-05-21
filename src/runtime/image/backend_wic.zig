@@ -35,6 +35,7 @@ pub const BackendError = codecs.Error || error{BackendUnavailable};
 const zust = @import("safe");
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     const f = try factory();
     // IWICStream::InitializeFromMemory takes a DWORD count; Windows ships
@@ -48,11 +49,13 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     if (f.vt.CreateStream(f, &stream) < 0 or stream == null) return error.BackendUnavailable;
     defer release(stream);
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if ((if (stream) |v| v else unreachable).vt.InitializeFromMemory((if (stream) |v| v else unreachable), bytes.ptr, @intCast(bytes.len)) < 0)
         return error.DecodeFailed;
 
     var dec: ?*IWICBitmapDecoder = null;
     // WICDecodeMetadataCacheOnDemand = 0. vendor GUID null = let WIC pick.
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     if (f.vt.CreateDecoderFromStream(f, @ptrCast(stream), null, 0, &dec) < 0 or dec == null)
         return error.DecodeFailed;
@@ -83,8 +86,10 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     // CopyPixels takes UINT byte-count + UINT stride — same DWORD ceiling.
     if (out_len > std.math.maxInt(u32)) return error.TooManyPixels;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const out = try bun.default_allocator.alloc(u8, @intCast(out_len));
     errdefer bun.default_allocator.free(out);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if ((if (conv) |v| v else unreachable).vt.CopyPixels((if (conv) |v| v else unreachable), null, @intCast(stride), @intCast(out_len), out.ptr) < 0)
         return error.DecodeFailed;
@@ -92,6 +97,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     return .{ .rgba = out, .width = w, .height = h };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOptions) BackendError![]u8 {
     // Punt to the static codecs for everything WIC can't express the same way:
@@ -154,10 +160,12 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     const stride: u32 = width * 4;
     if (std.meta.eql(pf, GUID_WICPixelFormat32bppRGBA)) {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if ((if (frame) |v| v else unreachable).vt.WritePixels((if (frame) |v| v else unreachable), height, stride, @intCast(rgba.len), rgba.ptr) < 0)
             return error.EncodeFailed;
     } else {
         var src: ?*IWICBitmapSource = null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (f.vt.CreateBitmapFromMemory(f, width, height, &GUID_WICPixelFormat32bppRGBA, stride, @intCast(rgba.len), rgba.ptr, &src) < 0 or src == null)
             return error.EncodeFailed;
@@ -178,6 +186,7 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     // position IS the byte count. (MSDN GetHGlobalFromStream: "use IStream::Stat
     // to obtain the actual size".)
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     const istream: *IStream = @ptrCast(@alignCast((if (stream) |v| v else unreachable)));
     var pos: u64 = 0;
     if (istream.vt.Seek(istream, 0, STREAM_SEEK_CUR, &pos) < 0) return error.EncodeFailed;
@@ -185,8 +194,10 @@ pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOpti
     var hg: ?*anyopaque = null;
     if (GetHGlobalFromStream((if (stream) |v| v else unreachable), &hg) < 0 or hg == null) return error.EncodeFailed;
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const ptr: [*]const u8 = @ptrCast(GlobalLock((if (hg) |v| v else unreachable)) orelse return error.EncodeFailed);
     defer _ = GlobalUnlock((if (hg) |v| v else unreachable));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return try bun.default_allocator.dupe(u8, ptr[0..@intCast(pos)]);
 }
@@ -239,6 +250,7 @@ const STREAM_SEEK_CUR: u32 = 1;
 /// layout-compatible with `*IUnknown`.
 inline fn release(p: anytype) void {
     if (p) |obj| {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const unk: *IUnknown = @ptrCast(@alignCast(obj));
         _ = unk.vt.Release(unk);
@@ -419,10 +431,12 @@ fn loadFactory() void {
     const dll = bun.windows.LoadLibraryA("windowscodecs.dll") orelse return;
     const sym = bun.windows.GetProcAddressA(dll, "WICConvertBitmapSource") orelse return;
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     wicConvertBitmapSource = @ptrCast(@alignCast(sym));
 
     var out: ?*anyopaque = null;
     if (CoCreateInstance(&CLSID_WICImagingFactory, null, CLSCTX_INPROC_SERVER, &IID_IWICImagingFactory, &out) < 0) return;
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     factory_ptr = @ptrCast(@alignCast(out));
 }
@@ -504,8 +518,10 @@ pub fn clipboard() error{ BackendUnavailable, OutOfMemory }!?[]u8 {
             buf[0] = 'B';
             buf[1] = 'M';
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             std.mem.writeInt(u32, buf[2..6], @intCast(buf.len), .little);
             std.mem.writeInt(u32, buf[6..10], 0, .little);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             std.mem.writeInt(u32, buf[10..14], @intCast(off), .little);
             return buf;
@@ -519,6 +535,7 @@ pub fn clipboard() error{ BackendUnavailable, OutOfMemory }!?[]u8 {
 fn dupGlobal(h: *anyopaque, comptime prefix: usize) error{OutOfMemory}!?[]u8 {
     const size = GlobalSize(h);
     if (size == 0) return null;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const ptr: [*]const u8 = @ptrCast(GlobalLock(h) orelse return null);
     defer _ = GlobalUnlock(h);

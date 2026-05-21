@@ -2,6 +2,7 @@
 //! `src/install/dependency.zig` so call sites are unchanged.
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn versionToJS(dep: *const Dependency.Version, buf: []const u8, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
     const object = jsc.JSValue.createEmptyObject(globalThis, 0);
     object.put(globalThis, "type", try bun.String.static(@tagName(dep.tag)).toJS(globalThis));

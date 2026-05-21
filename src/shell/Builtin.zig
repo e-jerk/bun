@@ -87,6 +87,8 @@ pub const Kind = enum {
         _ = this;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn usageString(this: Kind) []const u8 {
         return switch (this) {
             .cat => "usage: cat [-belnstuv] [file ...]\n",
@@ -115,6 +117,8 @@ pub const Kind = enum {
         return bun.feature_flag.BUN_ENABLE_EXPERIMENTAL_SHELL_BUILTINS.get();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromStr(str: []const u8) ?Builtin.Kind {
         const result = std.meta.stringToEnum(Builtin.Kind, str) orelse return null;
         if (bun.Environment.isWindows) return result;
@@ -188,6 +192,8 @@ pub const BuiltinIO = struct {
         ///   this.bltn.stderr.enqueueFmtBltn(this, .cd, fmt, args, safeguard);
         /// }
         /// ```
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueueFmtBltn(
             this: *@This(),
             ptr: anytype,
@@ -199,10 +205,14 @@ pub const BuiltinIO = struct {
             return this.fd.writer.enqueueFmtBltn(ptr, this.fd.captured, kind, fmt_, args);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueue(this: *@This(), ptr: anytype, buf: []const u8, _: OutputNeedsIOSafeGuard) Yield {
             return this.fd.writer.enqueue(ptr, this.fd.captured, buf);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueueFmt(this: *@This(), ptr: anytype, comptime fmt: []const u8, args: anytype, _: OutputNeedsIOSafeGuard) Yield {
             return this.fd.writer.enqueueFmt(ptr, this.fd.captured, fmt, args);
         }
@@ -283,9 +293,13 @@ pub fn argsSlice(this: *Builtin) []const [*:0]const u8 {
         return &[_][*:0]const u8{};
 
     const args_ptr = args_raw.ptr;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return @as([*][*:0]const u8, @ptrCast(args_ptr))[0..args_len];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn callImpl(this: *Builtin, comptime Ret: type, comptime field: []const u8, args_: anytype) Ret {
     return switch (this.kind) {
         .cat => this.callImplWithType(Cat, Ret, "cat", field, args_),
@@ -310,6 +324,8 @@ pub inline fn callImpl(this: *Builtin, comptime Ret: type, comptime field: []con
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn callImplWithType(this: *Builtin, comptime BuiltinImpl: type, comptime Ret: type, comptime union_field: []const u8, comptime field: []const u8, args_: anytype) Ret {
     const self = &@field(this.impl, union_field);
     const args = brk: {
@@ -707,6 +723,8 @@ pub fn stdBufferedBytelist(this: *Builtin, comptime io_kind: anytype) ?*bun.Byte
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn readStdinNoIO(this: *Builtin) []const u8 {
     return switch (this.stdin) {
         .arraybuf => |buf| buf.buf.slice(),
@@ -717,6 +735,8 @@ pub fn readStdinNoIO(this: *Builtin) []const u8 {
 }
 
 /// **WARNING** You should make sure that stdout/stderr does not need IO (e.g. `.needsIO(.stderr)` is false before caling `.writeNoIO(.stderr, buf)`)
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeNoIO(this: *Builtin, comptime io_kind: anytype, buf: []const u8) Maybe(usize) {
     if (comptime io_kind != .stdout and io_kind != .stderr) {
         @compileError("Bad IO" ++ @tagName(io_kind));
@@ -748,7 +768,9 @@ pub fn writeNoIO(this: *Builtin, comptime io_kind: anytype, buf: []const u8) May
                 len;
 
             const slice = io.arraybuf.buf.slice()[io.arraybuf.i .. io.arraybuf.i + write_len];
-            @memcpy(slice, buf[0..write_len]);
+            safe.SimdUtils.copy(slice, buf[0..write_len]);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             io.arraybuf.i +|= @truncate(write_len);
             log("{s} write to arraybuf {d}\n", .{ @tagName(this.kind), write_len });
             return Maybe(usize).initResult(write_len);
@@ -758,6 +780,8 @@ pub fn writeNoIO(this: *Builtin, comptime io_kind: anytype, buf: []const u8) May
 }
 
 /// Error messages formatted to match bash
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn taskErrorToString(this: *Builtin, comptime kind: Kind, err: anytype) []const u8 {
     switch (@TypeOf(err)) {
         Syscall.Error => {
@@ -786,6 +810,8 @@ pub fn taskErrorToString(this: *Builtin, comptime kind: Kind, err: anytype) []co
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtErrorArena(this: *Builtin, comptime kind: ?Kind, comptime fmt_: []const u8, args: anytype) []u8 {
     const cmd_str = comptime if (kind) |k| @tagName(k) ++ ": " else "";
     const fmt = cmd_str ++ fmt_;

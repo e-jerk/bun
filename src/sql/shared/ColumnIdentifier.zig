@@ -21,6 +21,7 @@ pub const ColumnIdentifier = union(enum) {
             // JSC only supports indexed property names up to 2^32
             if (int < std.math.maxInt(u32))
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return .{ .index = @intCast(int) };
         }
 

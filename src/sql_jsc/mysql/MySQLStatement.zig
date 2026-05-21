@@ -49,6 +49,7 @@ pub fn deinit(this: *MySQLStatement) void {
     debug("MySQLStatement deinit", .{});
 
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         column.deinit();
     }
@@ -71,6 +72,7 @@ pub fn checkForDuplicateFields(this: *@This()) void {
     var seen_numbers = std.array_list.Managed(u32).init(bun.default_allocator);
     defer seen_numbers.deinit();
     var seen_fields = bun.StringHashMap(void).init(bun.default_allocator);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun.handleOom(seen_fields.ensureUnusedCapacity(@intCast(this.columns.len)));
     defer seen_fields.deinit();
@@ -122,6 +124,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
     // lets de duplicate the fields early
     var nonDuplicatedCount = this.columns.len;
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         if (column.name_or_index == .duplicate) {
             nonDuplicatedCount -= 1;
@@ -130,6 +133,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
     const ids = if (nonDuplicatedCount <= jsc.JSObject.maxInlineCapacity()) stack_ids[0..nonDuplicatedCount] else bun.handleOom(bun.default_allocator.alloc(jsc.JSObject.ExternColumnIdentifier, nonDuplicatedCount));
 
     var i: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (this.columns) |*column| {
         if (column.name_or_index == .duplicate) continue;
@@ -160,6 +164,7 @@ pub fn structure(this: *MySQLStatement, owner: JSValue, globalObject: *jsc.JSGlo
         this.cached_structure.set(globalObject, jsc.JSObject.createStructure(
             globalObject,
             owner,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(ids.len),
             ids.ptr,

@@ -20,6 +20,8 @@ pub fn runAsCoordinator(
     coverage_opts: *TestCommand.CodeCoverageOptions,
 ) !bool {
     const allocator = ctx.allocator;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const N: u32 = @intCast(files.len);
     const K: u32 = @min(ctx.test_options.parallel, N);
     if (K <= 1) {
@@ -66,6 +68,8 @@ pub fn runAsCoordinator(
     // create duplicate entries when the parent already has the variable set,
     // and POSIX getenv() returns the first match.
     const envps = try arena.allocator().alloc([:null]?[*:0]const u8, K);
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (envps, 0..) |*envp, i| {
         const id = try std.fmt.allocPrint(arena.allocator(), "{d}", .{i + 1});
         bun.handleOom(vm.transpiler.env.map.put("JEST_WORKER_ID", id));
@@ -100,6 +104,8 @@ pub fn runAsCoordinator(
         .worker_tmpdir = worker_tmpdir,
         .parallel_limit = K,
         .scale_up_after_ms = if (ctx.test_options.parallel_delay_ms) |d|
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(d)
         else if (vm.transpiler.env.get("BUN_TEST_PARALLEL_SCALE_MS")) |s|
             @max(0, std.fmt.parseInt(i64, s, 10) catch default_scale_up_after_ms)
@@ -113,7 +119,11 @@ pub fn runAsCoordinator(
     Coordinator.AbortHandler.install();
     defer Coordinator.AbortHandler.uninstall();
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (workers, 0..) |*w, i| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const idx: u32 = @intCast(i);
         w.* = .{
             .coord = &coord,
@@ -152,6 +162,8 @@ fn buildWorkerArgv(arena: std.mem.Allocator, ctx: Command.Context) ![:null]?[*:0
     const opts = &ctx.test_options;
 
     const printZ = struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn f(a: std.mem.Allocator, comptime fmt: []const u8, args: anytype) ![*:0]const u8 {
             return (try std.fmt.allocPrintSentinel(a, fmt, args, 0)).ptr;
         }
@@ -190,13 +202,17 @@ fn buildWorkerArgv(arena: std.mem.Allocator, ctx: Command.Context) ![:null]?[*:0
         try argv.append(arena, (try arena.dupeZ(u8, preload)).ptr);
     }
     if (ctx.args.define) |define| {
-        for (define.keys, define.values) |key, value| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (define.keys, define.values) |key, value| {
             try argv.append(arena, "--define");
             try argv.append(arena, try printZ(arena, "{s}={s}", .{ key, value }));
         }
     }
     if (ctx.args.loaders) |loaders| {
-        for (loaders.extensions, loaders.loaders) |ext, loader| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (loaders.extensions, loaders.loaders) |ext, loader| {
             try argv.append(arena, "--loader");
             try argv.append(arena, try printZ(arena, "{s}:{s}", .{ ext, @tagName(loader) }));
         }
@@ -268,6 +284,8 @@ const WorkerCommands = struct {
     /// EOF, error, `.shutdown`, or a corrupt frame.
     done: bool = false,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn send(this: *WorkerCommands, frame_bytes: []const u8) void {
         this.channel.send(frame_bytes);
     }
@@ -397,8 +415,12 @@ fn workerFlushAggregates(reporter: *CommandLineReporter, vm: *jsc.VirtualMachine
 
     if (worker_tmp) |dir| {
         const id: i64 = if (Environment.isWindows)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(std.os.windows.GetCurrentProcessId())
         else
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(std.c.getpid());
         if (reporter.reporters.junit) |junit| {
             const path = bun.handleOom(std.fmt.allocPrintSentinel(bun.default_allocator, "{s}/w{d}.xml", .{ dir, id }, 0));
@@ -433,6 +455,8 @@ var worker_cmds: ?*WorkerCommands = null;
 /// Called from `CommandLineReporter.handleTestCompleted` in the worker with the
 /// fully-formatted status line (✓/✗ + scopes + name + duration, including ANSI
 /// codes). The coordinator prints these bytes verbatim so output matches serial.
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn workerEmitTestDone(file_idx: u32, formatted_line: []const u8) void {
     const cmds = worker_cmds orelse return;
     worker_frame.begin(.test_done);

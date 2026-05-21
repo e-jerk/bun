@@ -570,6 +570,7 @@ pub const Table = struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasField(comptime self: *const Table, name: []const u8) bool {
         @setEvalBranchQuota(10_000);
 
@@ -580,6 +581,7 @@ pub const Table = struct {
         } else false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn field(comptime self: *const Table, name: []const u8) Field {
         @setEvalBranchQuota(20_000);
@@ -693,6 +695,7 @@ pub const Extension = struct {
     ) std.mem.Allocator.Error!void,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasField(comptime self: *const Extension, name: []const u8) bool {
         return inline for (self.fields) |f| {
             if (safe.SimdUtils.eql(f.name, name)) {
@@ -701,6 +704,7 @@ pub const Extension = struct {
         } else false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn field(comptime self: *const Extension, name: []const u8) Field {
         return for (self.fields) |f| {
@@ -720,6 +724,7 @@ pub fn _resolveFields(
 ) [field_names.len]Field {
     @setEvalBranchQuota(100_000);
     var result: [field_names.len]Field = undefined;
+    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (field_names, 0..) |field_name, i| {
         result[i] = extensions_loop: inline for (@typeInfo(config_x).@"struct".decls) |decl| {

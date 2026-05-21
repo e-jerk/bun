@@ -12,6 +12,7 @@
 //! See 'bun_shim_impl.zig' for more details on how this file is consumed.
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn eqlComptime(a: []const u8, comptime b: []const u8) bool {
     return safe.SimdUtils.eql(a, b);
 }
@@ -53,6 +54,7 @@ pub const Flags = packed struct(u16) {
 
     pub fn isValid(flags: Flags) bool {
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const mask: u16 = @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
@@ -61,12 +63,14 @@ pub const Flags = packed struct(u16) {
         });
 
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const compare_to: u16 = @bitCast(Flags{
             .is_node_or_bun = false,
             .is_node = false,
             .has_shebang = false,
         });
 
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return (@as(u16, @bitCast(flags)) & comptime mask) == comptime compare_to;
     }
@@ -75,9 +79,11 @@ pub const Flags = packed struct(u16) {
 pub const embedded_executable_data = @embedFile("bun_shim_impl.exe");
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn wU8(comptime s: []const u8) []const u8 {
     @setEvalBranchQuota(1_000_000);
     const str = std.unicode.utf8ToUtf16LeStringLiteral(s);
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     return @alignCast(std.mem.sliceAsBytes(str));
 }
@@ -88,10 +94,12 @@ pub const Shebang = struct {
     is_node_or_bun: bool,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(launcher: []const u8, is_node_or_bun: bool) !Shebang {
         return .{
             .launcher = launcher,
             // TODO(@paperclover): what if this is invalid utf8?
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .utf16_len = @intCast(bun.simdutf.length.utf16.from.utf8(launcher)),
             .is_node_or_bun = is_node_or_bun,
@@ -162,6 +170,7 @@ pub const Shebang = struct {
 
     pub fn parseFromBinPath(bin_path: []const u16) ?Shebang {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         if (BunExtensions.get(@alignCast(std.mem.sliceAsBytes(extensionW(bin_path))))) |i| {
             return switch (i) {
                 .run_with_bun => comptime Shebang.init("bun run", true) catch unreachable,
@@ -181,6 +190,7 @@ pub const Shebang = struct {
     ///
     /// Since a command line cannot be longer than 32766 characters,
     /// this function does not accept inputs longer than `max_shebang_input_length`
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(contents_maybe_overflow: []const u8, bin_path: []const u16) !?Shebang {
         const contents = contents_maybe_overflow[0..@min(contents_maybe_overflow.len, max_shebang_input_length)];
@@ -230,10 +240,12 @@ pub fn encodedLength(options: @This()) usize {
 
 /// The buffer must be exactly the correct length given by encodedLength
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeInto(options: @This(), buf: []u8) !void {
     std.debug.assert(buf.len == options.encodedLength());
     std.debug.assert(options.bin_path[0] != '/');
 
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     var wbuf = @as([*]u16, @ptrCast(@alignCast(&buf[0])))[0 .. buf.len / 2];
 
@@ -267,12 +279,15 @@ pub fn encodeInto(options: @This(), buf: []u8) !void {
         wbuf = wbuf[1..];
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @as(*align(1) u32, @ptrCast(&wbuf[0])).* = @intCast(options.bin_path.len * 2);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @as(*align(1) u32, @ptrCast(&wbuf[2])).* = (s.utf16_len) * 2 + 2; // include the spaces!
         wbuf = wbuf[(@sizeOf(u32) * 2) / @sizeOf(u16) ..];
     }
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     @as(*align(1) Flags, @ptrCast(&wbuf[0])).* = flags;
     wbuf = wbuf[@sizeOf(Flags) / @sizeOf(u16) ..];
@@ -288,10 +303,12 @@ const Decoded = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn looseDecode(input: []const u8) ?Decoded {
     if (input.len < @sizeOf(Flags) + 2 * @sizeOf(u32) + 8) {
         return null;
     }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const flags = @as(*align(1) const Flags, @ptrCast(&input[input.len - @sizeOf(Flags)])).*;
     if (!flags.isValid()) {
@@ -299,6 +316,7 @@ pub fn looseDecode(input: []const u8) ?Decoded {
     }
 
     const bin_path_u8 = if (flags.has_shebang) bin_path_u8: {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const bin_path_byte_len = @as(*align(1) const u32, @ptrCast(&input[input.len - @sizeOf(Flags) - 2 * @sizeOf(u32)])).*;
         if (bin_path_byte_len % 2 != 0) {

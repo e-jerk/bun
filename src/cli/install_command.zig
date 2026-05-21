@@ -46,6 +46,7 @@ fn install(ctx: Command.Context) !void {
             .ctx = &analyzer,
             .entry_points = cli.positionals[1..],
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
 

@@ -307,6 +307,7 @@ pub fn deinit(this: *FileReader) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState) bool {
     var buf = init_buf;
     log("onReadChunk() = {d} ({s}) - read_inside_on_pull: {s}", .{ buf.len, @tagName(state), @tagName(this.read_inside_on_pull) });
@@ -383,6 +384,7 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
                 if (this.pending_view.len >= buffer.items.len) {
                     safe.SimdUtils.copy(this.pending_view[0..buffer.items.len], buffer.items);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     this.pending.result = .{ .into_array_and_done = .{ .value = this.pending_value.get() orelse .zero, .len = @truncate(buffer.items.len) } };
                 } else {
                     this.pending.result = .{ .owned_and_done = bun.ByteList.moveFromList(buffer) };
@@ -402,6 +404,7 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
 
             const into_array: streams.Result.IntoArray = .{
                 .value = this.pending_value.get() orelse .zero,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @truncate(buf.len),
             };
@@ -462,6 +465,7 @@ fn isPulling(this: *const FileReader) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Result {
     array.ensureStillAlive();
     defer array.ensureStillAlive();
@@ -521,9 +525,11 @@ pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Resul
                 if (amount_read > 0) {
                     if (this.reader.isDone()) {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         return .{ .into_array_and_done = .{ .value = array, .len = @truncate(amount_read) } };
                     }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     return .{ .into_array = .{ .value = array, .len = @truncate(amount_read) } };
                 }

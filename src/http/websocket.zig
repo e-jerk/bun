@@ -39,15 +39,19 @@ pub const WebsocketHeader = packed struct(u16) {
             var buf_ = [2]u8{ 0, 0 };
             var stream = @import("std-io-compat").fixedBufferStream(&buf_);
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             stream.writer().writeInt(u16, @as(u16, @bitCast(header)), .big) catch unreachable;
             stream.pos = 0;
             const casted = stream.reader().readInt(u16, .big) catch unreachable;
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             bun.assert(casted == @as(u16, @bitCast(header)));
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             bun.assert(std.meta.eql(@as(WebsocketHeader, @bitCast(casted)), header));
         }
 
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         try writer.writeInt(u16, @as(u16, @bitCast(header)), .big);
         bun.assert(header.len == packLength(n));
@@ -55,6 +59,7 @@ pub const WebsocketHeader = packed struct(u16) {
 
     pub fn packLength(length: usize) u7 {
         return switch (length) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             0...125 => @as(u7, @truncate(length)),
             126...0xFFFF => 126,
@@ -83,10 +88,12 @@ pub const WebsocketHeader = packed struct(u16) {
 
     pub fn slice(self: WebsocketHeader) [2]u8 {
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         return @as([2]u8, @bitCast(@byteSwap(@as(u16, @bitCast(self)))));
     }
 
     pub fn fromSlice(bytes: [2]u8) WebsocketHeader {
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @as(WebsocketHeader, @bitCast(@byteSwap(@as(u16, @bitCast(bytes)))));
     }

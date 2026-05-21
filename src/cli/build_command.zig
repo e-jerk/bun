@@ -441,6 +441,8 @@ pub const BuildCommand = struct {
                     // then don't rename it to something else, since an HTML
                     // import manifest might depend on the file path being the
                     // one we think it should be.
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                     for (output_files) |*f| {
                         if (f.output_kind == .@"entry-point" and (f.side orelse .server) == .server) {
                             f.dest_path = std.fs.path.basename(outfile);
@@ -478,7 +480,9 @@ pub const BuildCommand = struct {
 
             const all_paths = try ctx.allocator.alloc([]const u8, output_files.len);
             var max_path_len: usize = 0;
-            for (all_paths, output_files) |*dest, src| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (all_paths, output_files) |*dest, src| {
                 dest.* = src.dest_path;
             }
 
@@ -579,7 +583,11 @@ pub const BuildCommand = struct {
                                     .data = .{ .buffer = .{
                                         .buffer = .{
                                             .ptr = @constCast(sourcemap_bytes.ptr),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                             .len = @as(u32, @truncate(sourcemap_bytes.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                             .byte_len = @as(u32, @truncate(sourcemap_bytes.len)),
                                         },
                                     } },
@@ -603,6 +611,8 @@ pub const BuildCommand = struct {
                     }
                 }
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 const compiled_elapsed = @divTrunc(@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bundled_end)), @as(i64, std.time.ns_per_ms));
                 const compiled_elapsed_digit_count: isize = switch (compiled_elapsed) {
                     0...9 => 3,
@@ -612,6 +622,8 @@ pub const BuildCommand = struct {
                     else => 0,
                 };
                 const padding_buf = [_]u8{' '} ** 16;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const padding_ = padding_buf[0..@as(usize, @intCast(compiled_elapsed_digit_count))];
                 Output.pretty("{s}", .{padding_});
 
@@ -732,9 +744,13 @@ fn exitOrWatch(code: u8, watch: bool) noreturn {
 fn printSummary(bundled_end: i128, minify_duration: u64, minified: bool, input_code_length: usize, reachable_file_count: usize, output_files: []const options.OutputFile) void {
     const padding_buf = [_]u8{' '} ** 16;
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const bundle_until_now = @divTrunc(@as(i64, @truncate(bundled_end - bun.cli.start_time)), @as(i64, std.time.ns_per_ms));
 
     const bundle_elapsed = if (minified)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         bundle_until_now - @as(i64, @intCast(@as(u63, @truncate(minify_duration))))
     else
         bundle_until_now;
@@ -747,6 +763,8 @@ fn printSummary(bundled_end: i128, minify_duration: u64, minified: bool, input_c
         else => 0,
     };
     if (minified) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         Output.pretty("{s}", .{padding_buf[0..@as(usize, @intCast(minified_digit_count))]});
         Output.printElapsedStdoutTrim(@as(f64, @floatFromInt(minify_duration)));
         const output_size = brk: {
@@ -761,11 +779,15 @@ fn printSummary(bundled_end: i128, minify_duration: u64, minified: bool, input_c
         };
         // this isn't an exact size
         // we may inject sourcemaps or comments or import paths
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const delta: i64 = @as(i64, @truncate(@as(i65, @intCast(input_code_length)) - @as(i65, @intCast(output_size))));
         if (delta > 1024) {
             Output.prettyln(
                 "  <green>minify<r>  -{f} <d>(estimate)<r>",
                 .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     bun.fmt.size(@as(usize, @intCast(delta)), .{}),
                 },
             );
@@ -773,6 +795,8 @@ fn printSummary(bundled_end: i128, minify_duration: u64, minified: bool, input_c
             Output.prettyln(
                 "  <b>minify<r>   +{f} <d>(estimate)<r>",
                 .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     bun.fmt.size(@as(usize, @intCast(-delta)), .{}),
                 },
             );
@@ -789,6 +813,8 @@ fn printSummary(bundled_end: i128, minify_duration: u64, minified: bool, input_c
         else => 0,
     };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     Output.pretty("{s}", .{padding_buf[0..@as(usize, @intCast(bundle_elapsed_digit_count))]});
     Output.printElapsedStdoutTrim(@as(f64, @floatFromInt(bundle_elapsed)));
     Output.prettyln(

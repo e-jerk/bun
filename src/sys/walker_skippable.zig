@@ -128,6 +128,7 @@ pub fn next(self: *Walker) bun.sys.Maybe(?WalkerEntry) {
 pub fn deinit(self: *Walker) void {
     if (self.stack.items.len > 0) {
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (self.stack.items[1..]) |*item| {
             if (self.stack.items.len != 0) {
                 item.iter.iter.dir.close();
@@ -168,6 +169,7 @@ pub fn walk(
     const skip_filenames_ = skip_names[0..skip_name_i];
     var skip_dirnames_ = skip_names[skip_name_i..];
 
+    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (skip_dirnames, 0..) |name, i| {
         skip_dirnames_[i] = bun.hashWithSeed(seed, std.mem.sliceAsBytes(name));

@@ -10,6 +10,7 @@ pub const Data = union(enum) {
     pub const Empty: Data = .{ .empty = {} };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn create(possibly_inline_bytes: []const u8, allocator: std.mem.Allocator) !Data {
         if (possibly_inline_bytes.len == 0) {
             return .{ .empty = {} };
@@ -18,6 +19,7 @@ pub const Data = union(enum) {
         if (possibly_inline_bytes.len <= 15) {
             var inline_storage = InlineStorage{};
             safe.SimdUtils.copy(inline_storage.buffer[0..possibly_inline_bytes.len], possibly_inline_bytes);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             inline_storage.len = @truncate(possibly_inline_bytes.len);
             return .{ .inline_storage = inline_storage };
@@ -64,6 +66,7 @@ pub const Data = union(enum) {
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const @This()) []const u8 {
         return switch (this.*) {

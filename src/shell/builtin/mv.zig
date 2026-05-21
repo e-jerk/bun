@@ -178,6 +178,8 @@ pub fn start(this: *Mv) Yield {
     return this.next();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeFailingError(this: *Mv, buf: []const u8, exit_code: ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .{ .waiting_write_err = .{ .exit_code = exit_code } };
@@ -298,6 +300,8 @@ pub fn next(this: *Mv) Yield {
                     },
                 };
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                 for (this.state.executing.tasks) |*t| {
                     t.error_signal = &this.state.executing.error_signal;
                     t.task.schedule();
@@ -458,6 +462,8 @@ pub fn parseFlags(this: *Mv) Result([]const [*:0]const u8, Opts.ParseError) {
     return .{ .err = .show_usage };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseFlag(this: *Mv, flag: []const u8) union(enum) { continue_parsing, done, illegal_option: []const u8 } {
     if (flag.len == 0) return .done;
     if (flag[0] != '-') return .done;
@@ -496,6 +502,8 @@ pub fn parseFlag(this: *Mv, flag: []const u8) union(enum) { continue_parsing, do
 }
 
 pub inline fn bltn(this: *Mv) *Builtin {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("mv", this));
     return @fieldParentPtr("impl", impl);
 }

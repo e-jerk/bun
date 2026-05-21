@@ -3,6 +3,7 @@ pub var enabled = false;
 pub var check_done = false;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(data: []const u8) void {
     file.writeAll(data) catch {};
 }

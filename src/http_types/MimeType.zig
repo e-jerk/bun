@@ -47,6 +47,8 @@ pub fn createHashTable(allocator: std.mem.Allocator) !Map {
     @branchHint(.cold);
 
     var map = Map.init(allocator);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     try map.ensureTotalCapacity(@as(u32, @truncate(Table.all.len)));
     @setEvalBranchQuota(4000);
     for (Table.all) |entry| {
@@ -395,6 +397,8 @@ pub const all = @import("./mime_type_list_enum.zig").MimeTypeList.all;
 
 // TODO: do a comptime static hash map for this
 // its too many branches to use ComptimeStringMap
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn byName(name: []const u8) MimeType {
     return MimeType.init(name, null, null);
 }
@@ -1611,6 +1615,8 @@ const IMAGES_HEADERS = .{
     .{ [_]u8{ 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }, Table.@"image/gif" },
     .{ [_]u8{ 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a }, Table.@"image/png" },
 };
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn sniff(bytes: []const u8) ?MimeType {
     if (bytes.len < 2) return null;
 

@@ -31,6 +31,7 @@ const CropRegion = extern struct { x: c_int, y: c_int, w: c_int, h: c_int };
 /// TJSCALED: ceil(dim * num / denom).
 inline fn scaled(dim: u32, sf: ScalingFactor) u32 {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(@divFloor(@as(i64, dim) * sf.num + sf.denom - 1, sf.denom));
 }
 
@@ -49,6 +50,7 @@ const TJPF_RGBA = 7;
 const TJSAMP_420 = 2;
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codecs.Error!codecs.Decoded {
     const h = tj3Init(1) orelse return error.OutOfMemory;
     defer tj3Destroy(h);
@@ -63,7 +65,9 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codec
     // failure rather than letting @intCast trap on hostile input.
     if (rw <= 0 or rh <= 0) return error.DecodeFailed;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const src_w: u32 = @intCast(rw);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const src_h: u32 = @intCast(rh);
     try codecs.guard(src_w, src_h, max_pixels);
@@ -81,6 +85,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codec
         var n: c_int = 0;
         if (tj3GetScalingFactors(&n)) |sfs| {
             var best: ScalingFactor = .{ .num = 1, .denom = 1 };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             for (sfs[0..@intCast(n)]) |sf| {
                 // Only consider downscale factors.
@@ -119,9 +124,11 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codec
     // leave rows unfilled with raw mimalloc bytes) is treated as corrupt.
     _ = tj3Set(h, TJPARAM_MAXPIXELS, std.math.cast(c_int, src_w * src_h) orelse std.math.maxInt(c_int));
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     _ = tj3SetCroppingRegion(h, .{ .x = 0, .y = 0, .w = @intCast(w), .h = @intCast(ht) });
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * ht * 4);
     errdefer bun.default_allocator.free(out);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (tj3Decompress8(h, bytes.ptr, bytes.len, out.ptr, @intCast(w * 4), TJPF_RGBA) != 0)
         return error.DecodeFailed;
@@ -150,9 +157,11 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: codecs.DecodeHint) codec
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn encode(rgba: []const u8, w: u32, ht: u32, quality: u8, progressive: bool, icc_profile: ?[]const u8) codecs.Error!codecs.Encoded {
     const h = tj3Init(0) orelse return error.OutOfMemory;
     defer tj3Destroy(h);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     _ = tj3Set(h, TJPARAM_QUALITY, @intCast(@min(@max(quality, 1), 100)));
     _ = tj3Set(h, TJPARAM_SUBSAMP, TJSAMP_420);
@@ -170,6 +179,7 @@ pub fn encode(rgba: []const u8, w: u32, ht: u32, quality: u8, progressive: bool,
     }
     var out_ptr: ?[*]u8 = null;
     var out_len: usize = 0;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (tj3Compress8(h, rgba.ptr, @intCast(w), 0, @intCast(ht), TJPF_RGBA, &out_ptr, &out_len) != 0) {
         // tj3Compress8 may have allocated (or grown) `out_ptr` before

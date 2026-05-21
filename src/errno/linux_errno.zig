@@ -232,6 +232,7 @@ pub fn getErrno(rc: anytype) E {
         // the errno is stored in this value
         usize => {
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             const signed: isize = @bitCast(rc);
             const int = if (signed > -4096 and signed < 0) -signed else 0;
             return @enumFromInt(int);

@@ -12,6 +12,7 @@ pub fn getPath(this: *const PathToSourceIndexMap, path: *const Fs.Path) ?Index.I
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn get(this: *const PathToSourceIndexMap, text: []const u8) ?Index.Int {
     return this.map.get(text);
 }
@@ -20,6 +21,7 @@ pub fn putPath(this: *PathToSourceIndexMap, allocator: std.mem.Allocator, path: 
     try this.map.put(allocator, path.text, value);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn put(this: *PathToSourceIndexMap, allocator: std.mem.Allocator, text: []const u8, value: Index.Int) bun.OOM!void {
     try this.map.put(allocator, text, value);
@@ -30,10 +32,12 @@ pub fn getOrPutPath(this: *PathToSourceIndexMap, allocator: std.mem.Allocator, p
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getOrPut(this: *PathToSourceIndexMap, allocator: std.mem.Allocator, text: []const u8) bun.OOM!Map.GetOrPutResult {
     return try this.map.getOrPut(allocator, text);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn remove(this: *PathToSourceIndexMap, text: []const u8) bool {
     return this.map.remove(text);

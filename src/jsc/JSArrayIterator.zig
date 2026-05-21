@@ -21,6 +21,7 @@ pub const JSArrayIterator = struct {
             .array = value,
             .global = global,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @truncate(try value.getLength(global)),
         };
     }

@@ -180,6 +180,8 @@ pub const FD = packed struct(backing_int) {
 
     pub fn asSocketFd(fd: FD) std.posix.socket_t {
         return switch (os) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .windows => @ptrCast(fd.native()),
             else => fd.native(),
         };
@@ -368,6 +370,8 @@ pub const FD = packed struct(backing_int) {
         pub fn hash(_: @This(), fd: FD) u64 {
             // a file descriptor is i32 on linux, u64 on windows
             // the goal here is to do zero work and widen the 32 bit type to 64
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             return @as(if (backing_int == u64) u64 else u32, @bitCast(fd));
         }
 
@@ -465,6 +469,8 @@ pub const FD = packed struct(backing_int) {
     /// Note that currently FD can encode the invalid file descriptor value.
     /// Obviously, prefer fd instead of that.
     pub const Optional = enum(backing_int) {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         none = @bitCast(invalid),
         _,
         pub fn init(maybe: ?FD) Optional {
@@ -475,6 +481,8 @@ pub const FD = packed struct(backing_int) {
                 fd.close();
         }
         pub fn unwrap(optional: Optional) ?FD {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             return if (optional == .none) null else @bitCast(@intFromEnum(optional));
         }
         pub fn take(optional: *Optional) ?FD {
@@ -484,6 +492,8 @@ pub const FD = packed struct(backing_int) {
     };
     /// Properly converts FD.invalid into FD.Optional.none
     pub fn toOptional(fd: FD) Optional {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         return @enumFromInt(@as(backing_int, @bitCast(fd)));
     }
 
@@ -496,6 +506,8 @@ pub const FD = packed struct(backing_int) {
     }
 
     // TODO: make our own version of deleteTree
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn deleteTree(dir: FD, subpath: []const u8) !void {
         try dir.stdDir().deleteTree(subpath);
     }
@@ -560,6 +572,8 @@ pub const FD = packed struct(backing_int) {
     comptime {
         if (os == .windows) {
             // The conversion from FD to fd_t should be an integer truncate
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             bun.assert(@as(FD, @bitCast(@as(u64, 512))).value.as_system == 512);
         }
     }
@@ -576,6 +590,8 @@ fn handleToNumber(handle: fd_t) HandleNumber {
     } else {
         // intCast fails if 'fd > 2^62'
         // possible with handleToNumber(GetCurrentProcess());
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@intFromPtr(handle));
     }
 }

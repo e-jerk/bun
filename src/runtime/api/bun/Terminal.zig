@@ -121,10 +121,14 @@ pub const Options = struct {
         errdefer options.deinit();
 
         if (try js_options.getOptional(globalObject, "cols", i32)) |n| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (n > 0 and n <= 65535) options.cols = @intCast(n);
         }
 
         if (try js_options.getOptional(globalObject, "rows", i32)) |n| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (n > 0 and n <= 65535) options.rows = @intCast(n);
         }
 
@@ -199,7 +203,11 @@ fn initTerminal(
         .write_fd = pty_result.write_fd,
         .slave_fd = pty_result.slave,
         .hpcon = if (comptime Environment.isWindows) pty_result.hpcon else {},
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .cols = if (Environment.isWindows) @intCast(clampToCoord(options.cols)) else options.cols,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .rows = if (Environment.isWindows) @intCast(clampToCoord(options.rows)) else options.rows,
         .term_name = term_name,
         .event_loop_handle = jsc.EventLoopHandle.init(globalObject.bunVM().eventLoop()),
@@ -750,6 +758,8 @@ fn createPtyWindows(cols: u16, rows: u16) CreatePtyError!PtyResult {
 
 /// COORD.X/Y are i16; clamp the u16 cols/rows to its range.
 inline fn clampToCoord(v: u16) i16 {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(@min(v, std.math.maxInt(i16)));
 }
 
@@ -764,6 +774,8 @@ fn getTermiosFlag(this: *Terminal, comptime field: enum { iflag, oflag, lflag, c
     const termios_data = getTermios(this.master_fd) orelse return JSValue.jsNumber(0);
     const flag = @field(termios_data, @tagName(field));
     const Int = @typeInfo(@TypeOf(flag)).@"struct".backing_integer.?;
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return JSValue.jsNumber(@as(f64, @floatFromInt(@as(Int, @bitCast(flag)))));
 }
 
@@ -776,6 +788,8 @@ fn setTermiosFlag(this: *Terminal, globalObject: *jsc.JSGlobalObject, comptime f
     const Int = @typeInfo(FlagType).@"struct".backing_integer.?;
     const max_val: f64 = @floatFromInt(std.math.maxInt(Int));
     const clamped = @max(0, @min(num, max_val));
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     @field(termios_data, @tagName(field)) = @bitCast(@as(Int, @intFromFloat(clamped)));
     _ = setTermios(this.master_fd, &termios_data);
 }
@@ -837,10 +851,16 @@ pub fn write(
     // Write using the streaming writer
     const write_result = this.writer.write(bytes);
     return switch (write_result) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .done => |amt| JSValue.jsNumber(@as(i32, @intCast(amt))),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .wrote => |amt| JSValue.jsNumber(@as(i32, @intCast(amt))),
         // On Windows the streaming writer buffers and returns .pending=0; the
         // bytes were accepted, so report bytes.len to match POSIX semantics.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .pending => |amt| JSValue.jsNumber(@as(i32, @intCast(if (Environment.isWindows) bytes.len else amt))),
         .err => |err| globalObject.throwValue(try err.toJS(globalObject)),
     };
@@ -861,6 +881,8 @@ pub fn resize(
     const new_cols: u16 = blk: {
         if (args[0].isNumber()) {
             const n = args[0].toInt32();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (n > 0 and n <= 65535) break :blk @intCast(n);
         }
         return globalObject.throw("resize() requires valid cols argument", .{});
@@ -869,6 +891,8 @@ pub fn resize(
     const new_rows: u16 = blk: {
         if (args[1].isNumber()) {
             const n = args[1].toInt32();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (n > 0 and n <= 65535) break :blk @intCast(n);
         }
         return globalObject.throw("resize() requires valid rows argument", .{});
@@ -911,7 +935,11 @@ pub fn resize(
         }
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     this.cols = if (Environment.isWindows) @intCast(clampToCoord(new_cols)) else new_cols;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     this.rows = if (Environment.isWindows) @intCast(clampToCoord(new_rows)) else new_rows;
 
     return .js_undefined;
@@ -1138,6 +1166,8 @@ fn callExitCallback(this: *Terminal, exit_code: i32, signal: ?bun.SignalCode) vo
 
 // Called when data is available from the reader
 // Returns true to continue reading, false to pause
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onReadChunk(this: *Terminal, chunk: []const u8, has_more: bun.io.ReadState) bool {
     _ = has_more;
     log("onReadChunk: {} bytes", .{chunk.len});

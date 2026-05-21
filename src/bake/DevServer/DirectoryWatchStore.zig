@@ -22,9 +22,13 @@ pub const empty: DirectoryWatchStore = .{
 };
 
 pub fn owner(store: *DirectoryWatchStore) *DevServer {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("directory_watchers", store));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn trackResolutionFailure(store: *DirectoryWatchStore, import_source: []const u8, specifier: []const u8, renderer: bake.Graph, loader: bun.options.Loader) bun.OOM!void {
     // When it does not resolve to a file path, there is nothing to track.
     if (specifier.len == 0) return;
@@ -86,6 +90,8 @@ pub fn trackResolutionFailure(store: *DirectoryWatchStore, import_source: []cons
 /// `dir_name_to_watch` is cloned
 /// `file_path` must have lifetime that outlives the watch
 /// `specifier` is cloned
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn insert(
     store: *DirectoryWatchStore,
     dir_name_to_watch: []const u8,
@@ -230,6 +236,8 @@ pub fn freeEntry(store: *DirectoryWatchStore, alloc: Allocator, entry_index: usi
 /// `file_path`, compared by pointer identity since the slice is shared with
 /// IncrementalGraph.bundled_files. Called before IncrementalGraph frees a
 /// file's key string so that no `Dep` is left holding a dangling pointer.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn removeDependenciesForFile(store: *DirectoryWatchStore, alloc: Allocator, file_path: []const u8) void {
     if (store.watches.count() == 0) return;
 
@@ -268,6 +276,8 @@ fn appendDepAssumeCapacity(store: *DirectoryWatchStore, dep: Dep) Dep.Index {
         return index;
     }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const index = Dep.Index.init(@intCast(store.dependencies.items.len));
     store.dependencies.appendAssumeCapacity(dep);
     return index;

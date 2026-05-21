@@ -523,6 +523,8 @@ pub fn Data(comptime c: config.Table) type {
     var types: [c.fields.len]type = undefined;
     var attrs: [c.fields.len]std.builtin.Type.StructField.Attributes = undefined;
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (c.fields, 0..) |cf, i| {
         const F = Field(cf, c.packing);
 
@@ -537,7 +539,9 @@ pub fn Data(comptime c: config.Table) type {
             .backing_integer = null,
             .fields = blk: {
                 var struct_fields: [c.fields.len]std.builtin.Type.StructField = undefined;
-                for (c.fields, 0..) |cf, i| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (c.fields, 0..) |cf, i| {
                     struct_fields[i] = .{
                         .name = cf.name,
                         .type = types[i],
@@ -561,6 +565,8 @@ pub fn writeDataItems(comptime D: type, writer: *std.Io.Writer, data_items: []co
         try writer.print("@bitCast([_]{s}{{\n", .{@typeName(IntEquivalent)});
 
         for (data_items) |item| {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             try writer.print("{d},", .{@as(IntEquivalent, @bitCast(item))});
         }
 
@@ -660,6 +666,8 @@ pub fn Table2(
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn StructFromDecls(comptime Struct: type, comptime decl: []const u8) type {
     const fields = @typeInfo(Struct).@"struct".fields;
     var names: [fields.len][]const u8 = undefined;
@@ -749,6 +757,8 @@ pub fn Slice(
                     return .empty;
                 }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const len: Len = @intCast(s.len);
                 const gop = try tracking.offset_map.getOrPut(allocator, s);
 
@@ -756,6 +766,8 @@ pub fn Slice(
                     return .{
                         .len = len,
                         .data = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             .offset = @intCast(gop.value_ptr.*),
                         },
                     };
@@ -763,7 +775,7 @@ pub fn Slice(
 
                 const offset = tracking.max_offset;
                 gop.value_ptr.* = offset;
-                @memcpy(backing[offset .. offset + s.len], s);
+                safe.SimdUtils.copy(backing[offset .. offset + s.len], s);
                 gop.key_ptr.* = backing[offset .. offset + s.len];
                 tracking.len_counts[s.len - 1] += 1;
                 tracking.max_offset += s.len;
@@ -771,12 +783,14 @@ pub fn Slice(
                 return .{
                     .len = len,
                     .data = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .offset = @intCast(offset),
                     },
                 };
             } else {
                 var embedded: [embedded_len]T = undefined;
-                @memcpy(embedded[0..s.len], s);
+                safe.SimdUtils.copy(embedded[0..s.len], s);
                 switch (@typeInfo(T)) {
                     .@"struct" => {
                         @memset(embedded[s.len..], 0);
@@ -790,6 +804,8 @@ pub fn Slice(
                 }
 
                 return .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .len = @intCast(s.len),
                     .data = .{
                         .embedded = embedded,
@@ -915,7 +931,7 @@ pub fn Slice(
             } else if ((comptime embedded_len == 0) or a.len > embedded_len) {
                 return a.data.offset == b.data.offset;
             } else {
-                return std.mem.eql(T, &a.data.embedded, &b.data.embedded);
+                return safe.SimdUtils.eql(&a.data.embedded, &b.data.embedded);
             }
         }
 
@@ -1105,7 +1121,7 @@ pub fn SliceMap(comptime T: type, comptime V: type) type {
         }
         pub fn eql(self: @This(), a: []const T, b: []const T) bool {
             _ = self;
-            return std.mem.eql(T, a, b);
+            return safe.SimdUtils.eql(a, b);
         }
     }, std.hash_map.default_max_load_percentage);
 }
@@ -1145,6 +1161,8 @@ pub fn PackedOptional(comptime c: config.Field) type {
                 return null;
             } else {
                 return switch (@typeInfo(T)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .int => @intCast(self.data),
                     .@"enum" => @enumFromInt(self.data),
                     .bool => self.data == 1,
@@ -1222,6 +1240,8 @@ pub fn Shift(comptime c: config.Field, comptime packing: config.Table.Packing) t
         pub const @"null" = Self{ .data = null_data };
 
         pub fn init(cp: u21, d: u21) Self {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Self{ .data = @intCast(@as(isize, d) - @as(isize, cp)) };
         }
 
@@ -1234,6 +1254,8 @@ pub fn Shift(comptime c: config.Field, comptime packing: config.Table.Packing) t
         }
 
         fn _unshift(self: Self, cp: u21) u21 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(@as(isize, cp) + @as(isize, self.data));
         }
 
@@ -1270,6 +1292,8 @@ pub fn Shift(comptime c: config.Field, comptime packing: config.Table.Packing) t
         pub const @"null" = Self{ .data = null_data };
 
         pub fn init(cp: u21, d: u21) Self {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Self{ .data = @intCast(@as(isize, d) - @as(isize, cp)) };
         }
 
@@ -1282,6 +1306,8 @@ pub fn Shift(comptime c: config.Field, comptime packing: config.Table.Packing) t
         }
 
         fn _unshift(self: Self, cp: u21) u21 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(@as(isize, cp) + @as(isize, self.data));
         }
 
@@ -1316,6 +1342,8 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
     var union_types: [info.fields.len]type = undefined;
     var union_attrs: [info.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
     var has_shift: bool = false;
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (info.fields, 0..) |f, i| {
         const T = if (c.cp_packing == .shift and f.type == u21) blk: {
             has_shift = true;
@@ -1336,7 +1364,9 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
             .backing_integer = null,
             .fields = blk: {
                 var union_fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
-                for (info.fields, 0..) |f, i| {
+                // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (info.fields, 0..) |f, i| {
                     union_fields[i] = .{
                         .name = f.name,
                         .type = union_types[i],
@@ -1490,6 +1520,8 @@ pub fn Union(comptime c: config.Field, comptime packing: config.Table.Packing) t
 /// This is used in build/tables.zig but is exposed to allow extension to use
 /// it as well. Use this to initialize non-slice fields, and use
 /// `sliceFieldInit` for slice fields.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fieldInit(
     comptime field: []const u8,
     cp: u21,
@@ -1527,6 +1559,8 @@ pub fn fieldInit(
 
 /// This is used in build/tables.zig but is exposed to allow extension to use
 /// it as well. Use this to initialize "var len" fields.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn sliceFieldInit(
     comptime field: []const u8,
     allocator: Allocator,

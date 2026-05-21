@@ -22,16 +22,22 @@ pub fn main() void {
     if (Environment.isWindows) {
         _ = bun.windows.libuv.uv_replace_allocator(
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&bun.mimalloc.mi_malloc),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&bun.mimalloc.mi_realloc),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&bun.mimalloc.mi_calloc),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&bun.mimalloc.mi_free),
         );
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         environ = @ptrCast(std.os.environ.ptr);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _environ = @ptrCast(std.os.environ.ptr);
     }
@@ -151,6 +157,7 @@ comptime {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn extractName(t: TestFn) []const u8 {
     inline for (.{ ".test.", ".decltest." }) |test_sep| {
         if (std.mem.lastIndexOf(u8, t.name, test_sep)) |marker| {
@@ -206,6 +213,7 @@ const TestFn = std.builtin.TestFn;
 fn milliTimestamp() i64 {
     var ts: std.posix.timespec = undefined;
     _ = std.c.clock_gettime(std.c.CLOCK.REALTIME, &ts);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(ts.sec * std.time.ms_per_s + @divTrunc(ts.nsec, std.time.ns_per_ms));
 }

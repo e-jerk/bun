@@ -40,6 +40,8 @@ pub fn onOpen(s: *HmrSocket, ws: AnyWebSocket) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onMessage(s: *HmrSocket, ws: AnyWebSocket, msg: []const u8, opcode: uws.Opcode) void {
     _ = opcode;
 
@@ -234,6 +236,8 @@ fn onUnsubscribe(s: *HmrSocket, field: HmrTopic.Bits) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onClose(s: *HmrSocket, ws: AnyWebSocket, exit_code: i32, message: []const u8) void {
     _ = ws;
     _ = exit_code;
@@ -261,6 +265,8 @@ pub fn onClose(s: *HmrSocket, ws: AnyWebSocket, exit_code: i32, message: []const
     s.dev.allocator().destroy(s);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn notifyInspectorClientNavigation(s: *const HmrSocket, pattern: []const u8, rbi: RouteBundle.Index.Optional) void {
     if (s.inspector_connection_id > -1) {
         if (s.dev.inspector()) |agent| {

@@ -19,25 +19,35 @@ pub const TaggedPointer = packed struct(u64) {
         const address = @intFromPtr(ptr);
 
         return TaggedPointer{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             ._ptr = @as(AddressableSize, @truncate(address)),
             .data = data,
         };
     }
 
     pub inline fn get(this: TaggedPointer, comptime Type: type) *Type {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(*Type, @ptrFromInt(@as(usize, @intCast(this._ptr))));
     }
 
     pub inline fn from(val: anytype) TaggedPointer {
         const ValueType = @TypeOf(val);
         return switch (ValueType) {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             f64, i64, u64 => @bitCast(val),
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             ?*anyopaque, *anyopaque => @bitCast(@intFromPtr(val)),
             else => @compileError("Unsupported type: " ++ @typeName(ValueType)),
         };
     }
 
     pub inline fn to(this: TaggedPointer) *anyopaque {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         return @ptrFromInt(@as(u64, @bitCast(this)));
     }
 };
@@ -61,6 +71,8 @@ pub fn TagTypeEnumWithTypeMap(comptime Types: anytype) struct {
 
     var enum_names: [Types.len][:0]const u8 = undefined;
     var enum_values: [Types.len]TaggedPointer.Tag = undefined;
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     inline for (Types, 0..) |field, i| {
         const name = comptime @typeName(field);
         enum_names[i] = std.fmt.comptimePrint("{s}\x00", .{name});
@@ -218,6 +230,8 @@ pub fn TaggedPointerUnion(comptime Types: anytype) type {
             return this.repr._ptr == 0;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub inline fn call(this: This, comptime fn_name: []const u8, args_without_this: anytype, comptime Ret: type) Ret {
             inline for (type_map) |entry| {
                 if (this.repr.data == entry.value) {
@@ -227,7 +241,9 @@ pub fn TaggedPointerUnion(comptime Types: anytype) type {
                         var args: std.meta.ArgsTuple(@TypeOf(@field(entry.ty, fn_name))) = undefined;
                         args[0] = pointer;
 
-                        inline for (args_without_this, 1..) |a, i| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    inline for (args_without_this, 1..) |a, i| {
                             args[i] = a;
                         }
 

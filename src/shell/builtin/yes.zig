@@ -17,6 +17,7 @@ pub fn start(this: *@This()) Yield {
     } else {
         // Sum all args + spaces between + newline
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
             bufalloc += arg_slice.len;
@@ -41,6 +42,7 @@ pub fn start(this: *@This()) Yield {
         this.buffer_used = 2;
     } else {
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
             safe.SimdUtils.copy(this.buffer[this.buffer_used .. this.buffer_used + arg_slice.len], arg_slice);
@@ -96,6 +98,7 @@ fn writeNoIO(this: *@This()) Yield {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeOnceNoIO(this: *@This(), buf: []const u8) ?Yield {
     switch (this.bltn().writeNoIO(.stdout, buf)) {
         .result => {},
@@ -108,6 +111,7 @@ fn writeOnceNoIO(this: *@This(), buf: []const u8) ?Yield {
     return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFailingError(this: *Yes, buf: []const u8, exit_code: shell.ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -133,6 +137,7 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("yes", this));
     return @fieldParentPtr("impl", impl);

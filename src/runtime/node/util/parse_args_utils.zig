@@ -77,6 +77,7 @@ pub fn isOptionLikeValue(value: String) bool {
 pub fn findOptionByShortName(short_name: String, options: []const OptionDefinition) ?usize {
     var long_option_index: ?usize = null;
     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (options, 0..) |option, i| {
         if (short_name.eql(option.short_name)) {
             return i;

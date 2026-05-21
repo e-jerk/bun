@@ -65,6 +65,8 @@ fn findPathInner(
     return errorable.unwrap() catch null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn _stat(path: []const u8) i32 {
     const exists = bun.sys.existsAtType(.cwd(), path).unwrap() catch
         return -1; // Returns a negative integer for any other kind of strings.
@@ -86,6 +88,8 @@ extern fn JSCommonJSExtensions__swapRemove(global: *jsc.JSGlobalObject, index: u
 
 // Memory management is complicated because JSValues are stored in gc-visitable
 // WriteBarriers in C++ but the hash map for extensions is in Zig for flexibility.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onRequireExtensionModify(global: *jsc.JSGlobalObject, str: []const u8, loader: bun.schema.api.Loader, value: jsc.JSValue) bun.OOM!void {
     const vm = global.bunVM();
     const list = &vm.commonjs_custom_extensions;
@@ -119,6 +123,8 @@ fn onRequireExtensionModify(global: *jsc.JSGlobalObject, str: []const u8, loader
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onRequireExtensionModifyNonFunction(global: *JSGlobalObject, str: []const u8) bun.OOM!void {
     const vm = global.bunVM();
     const list = &vm.commonjs_custom_extensions;
@@ -140,6 +146,8 @@ fn onRequireExtensionModifyNonFunction(global: *JSGlobalObject, str: []const u8)
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn findLongestRegisteredExtension(vm: *jsc.VirtualMachine, filename: []const u8) ?CustomLoader {
     const basename = std.fs.path.basename(filename);
     var next: usize = 0;

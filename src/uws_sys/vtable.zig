@@ -65,10 +65,14 @@ pub fn Trampolines(comptime H: type) type {
         }
 
         pub fn on_open(s: *us_socket_t, is_client: c_int, ip: [*c]u8, ip_len: c_int) callconv(.c) ?*us_socket_t {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             call(s, H.onOpen, .{ is_client != 0, if (ip != null) ip[0..@intCast(ip_len)] else @as([]const u8, &.{}) });
             return s;
         }
         pub fn on_data(s: *us_socket_t, data: [*c]u8, len: c_int) callconv(.c) ?*us_socket_t {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             call(s, H.onData, .{data[0..@intCast(len)]});
             return s;
         }

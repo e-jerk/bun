@@ -18,6 +18,7 @@ pub const BakeSourceProvider = opaque {
     /// current global is a `Bake::GlobalObject`; null otherwise (caller falls
     /// back to reading `<source>.map` from disk).
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getExternalData(_: *BakeSourceProvider, source_filename: []const u8) ?[]const u8 {
         const global = bun.jsc.VirtualMachine.get().global;
         if (!BakeGlobalObject__isBakeGlobalObject(global)) return null;
@@ -29,6 +30,7 @@ pub const BakeSourceProvider = opaque {
     }
 
     /// The last two arguments to this specify loading hints
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getSourceMap(
         provider: *BakeSourceProvider,

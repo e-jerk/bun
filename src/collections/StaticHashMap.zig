@@ -118,6 +118,8 @@ pub fn HashMap(comptime K: type, comptime V: type, comptime Context: type, compt
             const shift = 63 - math.log2_int(u64, capacity) + 1;
             const overflow = capacity / 10 + (63 - @as(u64, shift) + 1) << 1;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const entries = try gpa.alloc(Entry, @as(usize, @intCast(capacity + overflow)));
             @memset(entries, .{});
 
@@ -151,8 +153,12 @@ var loop_limit: usize = 0;
         fn grow(self: *Self, gpa: mem.Allocator) !void {
             const capacity = @as(u64, 1) << (63 - self.shift + 1);
             const overflow = capacity / 10 + (63 - @as(usize, self.shift) + 1) << 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const end = self.entries + @as(usize, @intCast(capacity + overflow));
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const map = try Self.initCapacity(gpa, @as(usize, @intCast(capacity * 2)));
             var src = self.entries;
             var dst = map.entries;
@@ -210,6 +216,8 @@ fn HashMapMixin(
         pub fn slice(self: *Self) []Self.Entry {
             const capacity = @as(u64, 1) << (63 - self.shift + 1);
             const overflow = capacity / 10 + (63 - @as(usize, self.shift) + 1) << 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return self.entries[0..@as(usize, @intCast(capacity + overflow))];
         }
 
@@ -388,6 +396,8 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
             const shift = 63 - math.log2_int(u64, capacity) + 1;
             const overflow = capacity / 10 + (63 - @as(u64, shift) + 1) << 1;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const entries = try gpa.alloc(Entry, @as(usize, @intCast(capacity + overflow)));
             @memset(entries, Entry{});
 
@@ -405,7 +415,11 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
         /// assuming that if the first 64 bits of 'a' and 'b' are equivalent, then 'a' and 'b' are most likely
         /// equivalent.
         fn cmp(a: [32]u8, b: [32]u8) math.Order {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             const msa = @as(u64, @bitCast(a[0..8].*));
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             const msb = @as(u64, @bitCast(b[0..8].*));
             if (msa != msb) {
                 return if (mem.bigToNative(u64, msa) < mem.bigToNative(u64, msb)) .lt else .gt;
@@ -430,6 +444,8 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
         /// hash values across a table into buckets which are lexicographically ordered from one another in
         /// ascending order.
         fn idx(a: [32]u8, shift: u6) usize {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(usize, @intCast(mem.readIntBig(u64, a[0..8]) >> shift));
         }
 
@@ -441,6 +457,8 @@ pub fn SortedHashMap(comptime V: type, comptime max_load_percentage: comptime_in
         pub fn slice(self: *Self) []Entry {
             const capacity = @as(u64, 1) << (63 - self.shift + 1);
             const overflow = capacity / 10 + (63 - @as(usize, self.shift) + 1) << 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return self.entries[0..@as(usize, @intCast(capacity + overflow))];
         }
 
@@ -464,8 +482,12 @@ var loop_limit: usize = 0;
         fn grow(self: *Self, gpa: mem.Allocator) !void {
             const capacity = @as(u64, 1) << (63 - self.shift + 1);
             const overflow = capacity / 10 + (63 - @as(usize, self.shift) + 1) << 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const end = self.entries + @as(usize, @intCast(capacity + overflow));
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const map = try Self.initCapacity(gpa, @as(usize, @intCast(capacity * 2)));
             var src = self.entries;
             var dst = map.entries;
@@ -601,11 +623,15 @@ test "StaticHashMap: put, get, delete, grow" {
         const keys = try testing.allocator.alloc(usize, 512);
         defer testing.allocator.free(keys);
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (keys) |*key| key.* = @as(usize, rng.next());
 
         try testing.expectEqual(@as(u6, 55), map.shift);
 
-        for (keys, 0..) |key, i| map.putAssumeCapacity(key, i);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| map.putAssumeCapacity(key, i);
         try testing.expectEqual(keys.len, map.len);
 
         var it: usize = 0;
@@ -618,8 +644,12 @@ test "StaticHashMap: put, get, delete, grow" {
             }
         }
 
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
     }
 }
 
@@ -630,6 +660,8 @@ test "HashMap: put, get, delete, grow" {
         const keys = try testing.allocator.alloc(usize, 512);
         defer testing.allocator.free(keys);
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (keys) |*key| key.* = rng.next();
 
         var map = try AutoHashMap(usize, usize, 50).initCapacity(testing.allocator, 16);
@@ -637,7 +669,9 @@ test "HashMap: put, get, delete, grow" {
 
         try testing.expectEqual(@as(u6, 60), map.shift);
 
-        for (keys, 0..) |key, i| try map.put(testing.allocator, key, i);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try map.put(testing.allocator, key, i);
 
         try testing.expectEqual(@as(u6, 54), map.shift);
         try testing.expectEqual(keys.len, map.len);
@@ -652,8 +686,12 @@ test "HashMap: put, get, delete, grow" {
             }
         }
 
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
     }
 }
 
@@ -677,6 +715,8 @@ test "SortedHashMap: put, get, delete, grow" {
         const keys = try testing.allocator.alloc([32]u8, 512);
         defer testing.allocator.free(keys);
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (keys) |*key| rng.fill(key);
 
         var map = try SortedHashMap(usize, 50).initCapacity(testing.allocator, 16);
@@ -684,7 +724,9 @@ test "SortedHashMap: put, get, delete, grow" {
 
         try testing.expectEqual(@as(u6, 60), map.shift);
 
-        for (keys, 0..) |key, i| try map.put(testing.allocator, key, i);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try map.put(testing.allocator, key, i);
 
         try testing.expectEqual(@as(u6, 54), map.shift);
         try testing.expectEqual(keys.len, map.len);
@@ -699,8 +741,12 @@ test "SortedHashMap: put, get, delete, grow" {
             }
         }
 
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
-        for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.get(key).?);
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| try testing.expectEqual(i, map.delete(key).?);
     }
 }
 

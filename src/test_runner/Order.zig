@@ -33,6 +33,7 @@ pub const AllOrderResult = struct {
         if (aor.start == 0 and aor.end == 0) return;
         const skip_to = this.groups.items.len;
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.groups.items[aor.start..aor.end]) |*group| {
             group.failure_skip_to = skip_to;
         }

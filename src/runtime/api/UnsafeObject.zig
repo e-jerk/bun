@@ -46,6 +46,8 @@ pub fn arrayBufferToString(
     switch (array_buffer.typed_array_type) {
         .Uint16Array, .Int16Array => {
             var zig_str = ZigString.init("");
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
             zig_str._unsafe_ptr_do_not_use = @as([*]const u8, @ptrCast(@alignCast(array_buffer.ptr)));
             zig_str.len = array_buffer.len;
             zig_str.markUTF16();

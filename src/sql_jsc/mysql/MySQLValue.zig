@@ -162,7 +162,11 @@ pub const Value = union(enum) {
             .uint => |i| writer.writeInt(u32, i, .little) catch undefined,
             .long => |l| writer.writeInt(i64, l, .little) catch undefined,
             .ulong => |l| writer.writeInt(u64, l, .little) catch undefined,
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             .float => |f| writer.writeInt(u32, @bitCast(f), .little) catch undefined,
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             .double => |d| writer.writeInt(u64, @bitCast(d), .little) catch undefined,
             inline .date, .time => |d| {
                 stream.pos = d.toBinary(field_type, &buffer);
@@ -284,6 +288,8 @@ pub const Value = union(enum) {
             return fromBinary(data.slice());
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromBinary(val: []const u8) DateTime {
             switch (val.len) {
                 4 => {
@@ -337,6 +343,8 @@ pub const Value = union(enum) {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn toBinary(this: *const DateTime, field_type: FieldType, buffer: []u8) u8 {
             switch (field_type) {
                 .MYSQL_TYPE_YEAR => {
@@ -378,6 +386,8 @@ pub const Value = union(enum) {
                 this.hour,
                 this.minute,
                 this.second,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (this.microsecond > 0) @intCast(@divFloor(this.microsecond, 1000)) else 0,
             );
         }
@@ -393,13 +403,21 @@ pub const Value = union(enum) {
             const minute = @divFloor(ts, 60);
             const second = @mod(ts, 60);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const date = gregorianDate(@intCast(days));
             return .{
                 .year = date.year,
                 .month = date.month,
                 .day = date.day,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .hour = @intCast(hour),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .minute = @intCast(minute),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .second = @intCast(second),
                 .microsecond = microseconds,
             };
@@ -460,9 +478,17 @@ pub const Value = union(enum) {
             const seconds = @mod(timestamp, 60);
             return .{
                 .negative = timestamp < 0,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .days = @intCast(days),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .hours = @intCast(hours),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .minutes = @intCast(minutes),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .seconds = @intCast(seconds),
                 .microseconds = microseconds,
             };
@@ -481,6 +507,8 @@ pub const Value = union(enum) {
             return fromBinary(data.slice());
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromBinary(val: []const u8) Time {
             if (val.len == 0) {
                 return Time{};
@@ -519,6 +547,8 @@ pub const Value = union(enum) {
             return JSValue.jsDoubleNumber(this.toJSTimestamp());
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn toBinary(this: *const Time, field_type: FieldType, buffer: []u8) u8 {
             switch (field_type) {
                 .MYSQL_TYPE_TIME, .MYSQL_TYPE_TIME2 => {
@@ -561,7 +591,9 @@ pub const Value = union(enum) {
             }
 
             const decimal_pos = this.digits.len - this.scale;
-            for (this.digits, 0..) |digit, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (this.digits, 0..) |digit, i| {
                 if (i == decimal_pos and this.scale > 0) {
                     str.append('.') catch return JSValue.jsNumber(0);
                 }
@@ -621,6 +653,8 @@ fn gregorianDate(days: i32) Date {
     return .{
         .year = y,
         .month = m,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .day = @intCast(d + 1),
     };
 }

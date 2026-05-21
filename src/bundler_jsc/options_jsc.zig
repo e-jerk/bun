@@ -51,6 +51,7 @@ pub fn compileTargetFromJS(global: *jsc.JSGlobalObject, value: jsc.JSValue) bun.
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn compileTargetFromSlice(global: *jsc.JSGlobalObject, slice_with_bun_prefix: []const u8) bun.JSError!CompileTarget {
     const slice = slice_with_bun_prefix["bun-".len..];
     const target_parsed = CompileTarget.tryFrom(slice) catch {

@@ -16,6 +16,7 @@ pub const Integrity = extern struct {
     );
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseSHASum(buf: []const u8) !Integrity {
         if (buf.len == 0) {
             return Integrity{
@@ -54,6 +55,7 @@ pub const Integrity = extern struct {
 
             // parse hex integer
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             integrity.value[out_i] = @as(u8, @truncate(x0 << 4 | x1));
 
             out_i += 1;
@@ -63,6 +65,7 @@ pub const Integrity = extern struct {
         return integrity;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(buf: []const u8) Integrity {
         if (buf.len < "sha256-".len) {
@@ -128,6 +131,7 @@ pub const Integrity = extern struct {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parse(buf: []const u8) struct { Tag, usize } {
             const Matcher = strings.ExactSizeMatcher(8);
 
@@ -158,6 +162,7 @@ pub const Integrity = extern struct {
     };
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(
         this: *const Integrity,
     ) []const u8 {
@@ -186,6 +191,7 @@ pub const Integrity = extern struct {
     }
 
     /// Compute a sha512 integrity hash from raw bytes (e.g. a downloaded tarball).
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn forBytes(bytes: []const u8) Integrity {
         const len = std.crypto.hash.sha2.Sha512.digest_length;
@@ -227,6 +233,7 @@ pub const Integrity = extern struct {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn update(this: *Streaming, bytes: []const u8) void {
             if (bytes.len == 0) return;
@@ -272,10 +279,12 @@ pub const Integrity = extern struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn verify(this: *const Integrity, bytes: []const u8) bool {
         return @call(bun.callmod_inline, verifyByTag, .{ this.tag, bytes, &this.value });
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn verifyByTag(tag: Tag, bytes: []const u8, sum: []const u8) bool {
         var digest: [digest_buf_len]u8 = undefined;

@@ -3,6 +3,7 @@ pub const ListenSocket = opaque {
         c.us_listen_socket_close(this);
     }
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getLocalAddress(this: *ListenSocket, buf: []u8) ![]const u8 {
         return this.getSocket().localAddress(buf);
     }
@@ -10,6 +11,7 @@ pub const ListenSocket = opaque {
         return this.getSocket().localPort();
     }
     pub fn getSocket(this: *ListenSocket) *uws.us_socket_t {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this);
     }
@@ -23,6 +25,7 @@ pub const ListenSocket = opaque {
     }
 
     pub fn ext(this: *ListenSocket, comptime T: type) *T {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(c.us_listen_socket_ext(this)));
     }
@@ -38,6 +41,7 @@ pub const ListenSocket = opaque {
     pub fn addServerName(this: *ListenSocket, hostname: [*:0]const u8, ssl_ctx: *uws.SslCtx, user: anytype) bool {
         const U = @TypeOf(user);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const erased: ?*anyopaque = if (U == @TypeOf(null)) null else @ptrCast(@constCast(user));
         return c.us_listen_socket_add_server_name(this, hostname, ssl_ctx, erased) == 0;
     }
@@ -47,6 +51,7 @@ pub const ListenSocket = opaque {
     }
 
     pub fn findServerNameUserdata(this: *ListenSocket, comptime T: type, hostname: [*:0]const u8) ?*T {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(c.us_listen_socket_find_server_name_userdata(this, hostname)));
     }

@@ -193,6 +193,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
             const relative_path, const depth = Lockfile.Tree.relativePathAndDepth(
                 this,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(tree_id),
                 &path_buf,
                 &depth_buf,
@@ -241,6 +242,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         for (0..dependencies.len) |dep_id| {
             const dep = dependencies[dep_id];
             const res = resolutions[dep_id];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try jsonStringifyDependency(this, w, @intCast(dep_id), dep, res);
         }
@@ -389,6 +391,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         defer w.endObject() catch {};
 
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.workspace_paths.keys(), this.workspace_paths.values()) |k, v| {
             const len = std.fmt.printInt(&buf, k, 10, .lower, .{});
             try w.objectField(buf[0..len]);
@@ -401,6 +404,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         defer w.endObject() catch {};
 
         // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (this.workspace_versions.keys(), this.workspace_versions.values()) |k, v| {
             const len = std.fmt.printInt(&buf, k, 10, .lower, .{});
             try w.objectField(buf[0..len]);

@@ -14,6 +14,8 @@ pub const Row = struct {
         if (cached_structure) |c| {
             if (c.fields) |f| {
                 names = f.ptr;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 names_count = @truncate(f.len);
             }
         }
@@ -23,6 +25,8 @@ pub const Row = struct {
             array,
             structure,
             this.values.ptr,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(this.values.len),
             flags,
             @intFromEnum(result_mode),
@@ -32,6 +36,8 @@ pub const Row = struct {
     }
 
     pub fn deinit(this: *Row, allocator: std.mem.Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.values) |*value| {
             value.deinit();
         }
@@ -86,6 +92,8 @@ pub const Row = struct {
                 if (column.flags.UNSIGNED) {
                     const val: u64 = std.fmt.parseInt(u64, value.slice(), 10) catch 0;
                     if (val <= std.math.maxInt(u32)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         cell.* = SQLDataCell{ .tag = .uint4, .value = .{ .uint4 = @intCast(val) } };
                         return;
                     }
@@ -96,6 +104,8 @@ pub const Row = struct {
                 } else {
                     const val: i64 = std.fmt.parseInt(i64, value.slice(), 10) catch 0;
                     if (val >= std.math.minInt(i32) and val <= std.math.maxInt(i32)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         cell.* = SQLDataCell{ .tag = .int4, .value = .{ .int4 = @intCast(val) } };
                         return;
                     }
@@ -158,13 +168,17 @@ pub const Row = struct {
         const cells = try allocator.alloc(SQLDataCell, this.columns.len);
         @memset(cells, SQLDataCell{ .tag = .null, .value = .{ .null = 0 } });
         errdefer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
             for (cells) |*value| {
                 value.deinit();
             }
             allocator.free(cells);
         }
 
-        for (cells, 0..) |*value, index| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (cells, 0..) |*value, index| {
             if (decodeLengthInt(reader.peek())) |result| {
                 const column = this.columns[index];
                 if (result.value == 0xfb) {
@@ -179,6 +193,8 @@ pub const Row = struct {
                         value.* = SQLDataCell.raw(&data);
                     } else {
                         reader.skip(result.bytes_read);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         var string_data = try reader.read(@intCast(result.value));
                         defer string_data.deinit();
                         this.parseValueAndSetCell(value, &column, &string_data);
@@ -188,6 +204,8 @@ pub const Row = struct {
                     // The indexed columns can be out of order.
                     .index => |i| i,
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     else => @intCast(index),
                 };
                 value.isIndexedColumn = switch (column.name_or_index) {
@@ -215,6 +233,8 @@ pub const Row = struct {
         const cells = try allocator.alloc(SQLDataCell, this.columns.len);
         @memset(cells, SQLDataCell{ .tag = .null, .value = .{ .null = 0 } });
         errdefer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
             for (cells) |*value| {
                 value.deinit();
             }
@@ -223,8 +243,12 @@ pub const Row = struct {
         // Skip first 2 bits of null bitmap (reserved)
         const bitmap_offset: usize = 2;
 
-        for (cells, 0..) |*value, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (cells, 0..) |*value, i| {
             const byte_pos = (bitmap_offset + i) >> 3;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const bit_pos = @as(u3, @truncate((bitmap_offset + i) & 7));
             const is_null = (null_bitmap.slice()[byte_pos] & (@as(u8, 1) << bit_pos)) != 0;
 
@@ -239,6 +263,8 @@ pub const Row = struct {
                 // The indexed columns can be out of order.
                 .index => |idx| idx,
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 else => @intCast(i),
             };
             value.isIndexedColumn = switch (column.name_or_index) {

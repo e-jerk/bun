@@ -120,6 +120,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
         pub fn ssl(this: ThisSocket) ?*BoringSSL.SSL {
             if (comptime is_ssl) {
                 if (this.getNativeHandle()) |handle| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     return @as(*BoringSSL.SSL, @ptrCast(handle));
                 }
                 return null;
@@ -128,11 +130,17 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
         }
 
         pub fn getNativeHandle(this: ThisSocket) ?*NativeSocketHandleType(is_ssl) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(switch (this.socket) {
                 .connected => |socket| socket.getNativeHandle(),
                 .connecting => |socket| socket.getNativeHandle(),
                 .detached => null,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .upgradedDuplex => |socket| if (is_ssl) @as(*anyopaque, @ptrCast(socket.ssl() orelse return null)) else null,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .pipe => |socket| if (is_ssl and Environment.isWindows) @as(*anyopaque, @ptrCast(socket.ssl() orelse return null)) else null,
             } orelse return null);
         }
@@ -177,6 +185,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(this: ThisSocket, data: []const u8) i32 {
             return switch (this.socket) {
                 .upgradedDuplex => |socket| socket.encodeAndWrite(data),
@@ -186,6 +196,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeFd(this: ThisSocket, data: []const u8, file_descriptor: bun.FD) i32 {
             return switch (this.socket) {
                 .upgradedDuplex, .pipe => this.write(data),
@@ -194,6 +206,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn rawWrite(this: ThisSocket, data: []const u8) i32 {
             return switch (this.socket) {
                 .connected => |socket| socket.rawWrite(data),
@@ -287,6 +301,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn remoteAddress(this: ThisSocket, buf: []u8) ?[]const u8 {
             return switch (this.socket) {
                 .connected => |sock| sock.remoteAddress(buf) catch |e| {
@@ -296,6 +312,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn localAddress(this: ThisSocket, buf: []u8) ?[]const u8 {
             return switch (this.socket) {
                 .connected => |sock| sock.localAddress(buf) catch |e| {
@@ -339,6 +357,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
 
         /// Connect via a `SocketGroup` and stash `owner` in the socket ext.
         /// Replaces the deleted `connectAnon`/`connectPtr`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn connectGroup(
             g: *SocketGroup,
             kind: SocketKind,
@@ -360,12 +380,14 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             // SocketGroup.connect needs a NUL-terminated host.
             var stack: [256]u8 = undefined;
             const hostZ: [:0]const u8 = if (host.len < stack.len) blk: {
-                @memcpy(stack[0..host.len], host);
+                safe.SimdUtils.copy(stack[0..host.len], host);
                 stack[host.len] = 0;
                 break :blk stack[0..host.len :0];
             } else bun.handleOom(bun.default_allocator.dupeZ(u8, host));
             defer if (hostZ.ptr != &stack) bun.default_allocator.free(hostZ);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return switch (g.connect(kind, ssl_ctx, hostZ, @intCast(port), opts, @sizeOf(?*Owner))) {
                 .failed => error.FailedToOpenSocket,
                 .socket => |s| blk: {
@@ -379,6 +401,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn connectUnixGroup(
             g: *SocketGroup,
             kind: SocketKind,
@@ -397,6 +421,8 @@ pub fn NewSocketHandler(comptime is_ssl: bool) type {
 
         /// Move an open socket into a new group/kind, stashing `owner` in the
         /// ext. Replaces `Socket.adoptPtr`.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn adoptGroup(
             tcp: *us_socket_t,
             g: *SocketGroup,
@@ -577,6 +603,8 @@ pub const AnySocket = union(enum) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(this: AnySocket, data: []const u8) i32 {
         return switch (this) {
             .SocketTCP => |sock| sock.write(data),

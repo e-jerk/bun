@@ -97,7 +97,11 @@ pub fn addSubnet(this: *@This(), globalThis: *jsc.JSGlobalObject, callframe: *js
     };
     var prefix: u8 = 0;
     switch (network.sin.family) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         std.posix.AF.INET => prefix = @intCast(try validators.validateInt32(globalThis, prefix_js, "prefix", .{}, 0, 32)),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         std.posix.AF.INET6 => prefix = @intCast(try validators.validateInt32(globalThis, prefix_js, "prefix", .{}, 0, 128)),
         else => {},
     }
@@ -123,6 +127,8 @@ pub fn check(this: *@This(), globalThis: *jsc.JSGlobalObject, callframe: *jsc.Ca
     });
     this.mutex.lock();
     defer this.mutex.unlock();
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.da_rules.items) |*item| {
         switch (item.*) {
             .addr => |*a| {
@@ -138,16 +144,24 @@ pub fn check(this: *@This(), globalThis: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (address.as_v4()) |ip_addr| if (s.network.as_v4()) |subnet_addr| {
                     if (s.prefix == 32) if (ip_addr == subnet_addr) (return .true) else continue;
                     const one: u32 = 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const mask_addr = ((one << @intCast(s.prefix)) - 1) << @intCast(32 - s.prefix);
                     const ip_net: u32 = @byteSwap(ip_addr) & mask_addr;
                     const subnet_net: u32 = @byteSwap(subnet_addr) & mask_addr;
                     if (ip_net == subnet_net) return .true;
                 };
                 if (address.sin.family == std.posix.AF.INET6 and s.network.sin.family == std.posix.AF.INET6) {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
                     const ip_addr: u128 = @bitCast(address.sin6.addr);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
                     const subnet_addr: u128 = @bitCast(s.network.sin6.addr);
                     if (s.prefix == 128) if (ip_addr == subnet_addr) (return .true) else continue;
                     const one: u128 = 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const mask_addr = ((one << @intCast(s.prefix)) - 1) << @intCast(128 - s.prefix);
                     const ip_net: u128 = @byteSwap(ip_addr) & mask_addr;
                     const subnet_net: u128 = @byteSwap(subnet_addr) & mask_addr;
@@ -166,6 +180,8 @@ pub fn rules(this: *@This(), globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JS
 
     this.mutex.lock();
     defer this.mutex.unlock();
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.da_rules.items) |*rule| {
         switch (rule.*) {
             .addr => |*a| {
@@ -202,7 +218,11 @@ const StructuredCloneWriter = struct {
     pub const Writer = @import("std-io-compat").MakeGenericWriter(@This(), Error, write);
     pub const Error = error{};
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn write(this: StructuredCloneWriter, bytes: []const u8) Error!usize {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         this.impl(this.ctx, bytes.ptr, @as(u32, @truncate(bytes.len)));
         return bytes.len;
     }
@@ -242,6 +262,8 @@ fn _compare(l: *const sockaddr, r: *const sockaddr) ?std.math.Order {
 }
 
 fn _compare_ipv6(l: *const sockaddr.in6, r: *const sockaddr.in6) std.math.Order {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return std.math.order(@byteSwap((@as(u128, @bitCast(l.addr)))), @byteSwap((@as(u128, @bitCast(r.addr)))));
 }
 

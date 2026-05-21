@@ -72,6 +72,8 @@ pub fn toJSByParseJSON(self: *String, globalObject: *jsc.JSGlobalObject) bun.JSE
     return bun.cpp.BunString__toJSON(globalObject, self);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn createUTF8ForJS(globalObject: *jsc.JSGlobalObject, utf8_slice: []const u8) bun.JSError!jsc.JSValue {
     jsc.markBinding(@src());
     return bun.cpp.BunString__createUTF8ForJS(globalObject, utf8_slice.ptr, utf8_slice.len);

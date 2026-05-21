@@ -250,6 +250,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_build_tests.step);
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn buildBuildConfig(
     allocator: std.mem.Allocator,
     fields_0: ?[]const []const u8,
@@ -329,6 +331,8 @@ fn buildBuildConfig(
         extensions_9,
     };
 
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (fields_lists, extensions_lists) |fields_opt, extensions_opt| {
         if (fields_opt) |fields| {
             writer.writeAll(
@@ -615,7 +619,7 @@ test "simple build config with just fields/fields_0" {
         \\
     ;
 
-    try std.testing.expect(std.mem.eql(u8, build_config, expected));
+    try std.testing.expect(safe.SimdUtils.eql(build_config, expected));
 }
 
 test "complex build config with all fields_0 through fields_9 and extensions_0 through extensions_9" {

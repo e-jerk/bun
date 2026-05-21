@@ -91,14 +91,20 @@ pub fn asUSockets(this: *const SSLConfig) uws.SocketContext.BunSocketContextOpti
 
     if (this.key) |key| {
         ctx_opts.key = key.ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.key_count = @intCast(key.len);
     }
     if (this.cert) |cert| {
         ctx_opts.cert = cert.ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.cert_count = @intCast(cert.len);
     }
     if (this.ca) |ca| {
         ctx_opts.ca = ca.ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.ca_count = @intCast(ca.len);
     }
 
@@ -133,7 +139,7 @@ pub fn forClientVerification(this: SSLConfig) SSLConfig {
 
 pub fn isSame(this: *const SSLConfig, other: *const SSLConfig) bool {
     inline for (comptime std.meta.fields(SSLConfig)) |field| {
-        if (comptime std.mem.eql(u8, field.name, "cached_hash")) continue;
+        if (comptime safe.SimdUtils.eql(field.name, "cached_hash")) continue;
         const first = @field(this, field.name);
         const second = @field(other, field.name);
         switch (field.type) {
@@ -151,7 +157,9 @@ pub fn isSame(this: *const SSLConfig, other: *const SSLConfig) bool {
                 if (first) |slice1| {
                     const slice2 = second orelse return false;
                     if (slice1.len != slice2.len) return false;
-                    for (slice1, slice2) |a, b| {
+                    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (slice1, slice2) |a, b| {
                         if (!stringsEqual(a, b)) return false;
                     }
                 } else {
@@ -221,6 +229,8 @@ pub fn deinit(this: *SSLConfig) void {
 fn cloneStrings(slice: ?[][*:0]const u8) ?[][*:0]const u8 {
     const inner = slice orelse return null;
     const result = bun.handleOom(bun.default_allocator.alloc([*:0]const u8, inner.len));
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (inner, result) |string, *out| {
         out.* = bun.handleOom(bun.default_allocator.dupeZ(u8, std.mem.span(string)));
     }
@@ -260,7 +270,7 @@ pub fn contentHash(this: *SSLConfig) u64 {
     if (this.cached_hash != 0) return this.cached_hash;
     var hasher = std.hash.Wyhash.init(0);
     inline for (comptime std.meta.fields(SSLConfig)) |field| {
-        if (comptime std.mem.eql(u8, field.name, "cached_hash")) continue;
+        if (comptime safe.SimdUtils.eql(field.name, "cached_hash")) continue;
         const value = @field(this, field.name);
         switch (field.type) {
             ?[*:0]const u8 => {
@@ -297,6 +307,8 @@ pub fn contentHash(this: *SSLConfig) u64 {
 pub const GlobalRegistry = struct {
     const MapContext = struct {
         pub fn hash(_: @This(), key: *SSLConfig) u32 {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(key.contentHash());
         }
         pub fn eql(_: @This(), a: *SSLConfig, b: *SSLConfig, _: usize) bool {
@@ -457,6 +469,8 @@ pub fn fromGenerated(
     return if (any) result else null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn handlePath(
     global: *jsc.JSGlobalObject,
     comptime field: []const u8,
@@ -473,6 +487,8 @@ fn handlePath(
     return name;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn handleFileForField(
     global: *jsc.JSGlobalObject,
     comptime field: []const u8,
@@ -525,6 +541,8 @@ fn handleFileArray(
         }
         result.deinit();
     }
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (elements) |*elem| {
         result.appendAssumeCapacity(try handleSingleFile(global, switch (elem.*) {
             .string => |*val| .{ .string = val.get() },

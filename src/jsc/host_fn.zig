@@ -403,6 +403,8 @@ pub const DOMEffect = struct {
     };
 };
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallArgumentType(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
     return switch (ChildType) {
@@ -416,6 +418,8 @@ fn DOMCallArgumentType(comptime Type: type) []const u8 {
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallArgumentTypeWrapper(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
     return switch (ChildType) {
@@ -430,6 +434,8 @@ fn DOMCallArgumentTypeWrapper(comptime Type: type) []const u8 {
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallResultType(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
     return switch (ChildType) {
@@ -522,7 +528,9 @@ pub fn wrapInstanceMethod(
             var exception_value = [_]jsc.C.JSValueRef{null};
             const exception: jsc.C.ExceptionRef = if (comptime has_exception_ref) &exception_value else undefined;
 
-            inline for (FunctionTypeInfo.params, 0..) |param, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    inline for (FunctionTypeInfo.params, 0..) |param, i| {
                 const ArgType = param.type.?;
                 switch (ArgType) {
                     *Container => {
@@ -670,7 +678,9 @@ pub fn wrapStaticMethod(
             var iter = jsc.CallFrame.ArgumentsSlice.init(globalThis.bunVM(), arguments.slice());
             var args: Args = undefined;
 
-            inline for (FunctionTypeInfo.params, 0..) |param, i| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    inline for (FunctionTypeInfo.params, 0..) |param, i| {
                 const ArgType = param.type.?;
                 switch (param.type.?) {
                     *jsc.JSGlobalObject => {

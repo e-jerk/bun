@@ -24,7 +24,6 @@ pub const SASLStatus = enum {
     @"continue",
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn hmac(password: []const u8, data: []const u8) ?[32]u8 {
     var buf = std.mem.zeroes([bun.BoringSSL.c.EVP_MAX_MD_SIZE]u8);
 
@@ -35,7 +34,6 @@ fn hmac(password: []const u8, data: []const u8) ?[32]u8 {
     return buf[0..32].*;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn computeSaltedPassword(this: *SASL, salt_bytes: []const u8, iteration_count: u32, connection: *PostgresSQLConnection) !void {
     this.salted_password_created = true;
     if (Crypto.EVP.pbkdf2(&this.salted_password_bytes, connection.password, salt_bytes, iteration_count, .sha256) == null) {
@@ -43,25 +41,21 @@ pub fn computeSaltedPassword(this: *SASL, salt_bytes: []const u8, iteration_coun
     }
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn saltedPassword(this: *const SASL) []const u8 {
     assert(this.salted_password_created);
     return this.salted_password_bytes[0..salted_password_byte_len];
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn serverSignature(this: *const SASL) []const u8 {
     assert(this.server_signature_len > 0);
     return this.server_signature_base64_bytes[0..this.server_signature_len];
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn computeServerSignature(this: *SASL, auth_string: []const u8) !void {
     assert(this.server_signature_len == 0);
 
     const server_key = hmac(this.saltedPassword(), "Server Key") orelse return error.InvalidServerKey;
     const server_signature_bytes = hmac(&server_key, auth_string) orelse return error.InvalidServerSignature;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.server_signature_len = @intCast(bun.base64.encode(&this.server_signature_base64_bytes, &server_signature_bytes));
 }
 
@@ -69,19 +63,16 @@ pub fn clientKey(this: *const SASL) [32]u8 {
     return hmac(this.saltedPassword(), "Client Key").?;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn clientKeySignature(_: *const SASL, client_key: []const u8, auth_string: []const u8) [32]u8 {
     var sha_digest = std.mem.zeroes(bun.sha.SHA256.Digest);
     bun.sha.SHA256.hash(client_key, &sha_digest, jsc.VirtualMachine.get().rareData().boringEngine());
     return hmac(&sha_digest, auth_string).?;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn nonce(this: *SASL) []const u8 {
     if (this.nonce_len == 0) {
         var bytes: [nonce_byte_len]u8 = .{0} ** nonce_byte_len;
         bun.csprng(&bytes);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.nonce_len = @intCast(bun.base64.encode(&this.nonce_base64_bytes, &bytes));
     }
     return this.nonce_base64_bytes[0..this.nonce_len];

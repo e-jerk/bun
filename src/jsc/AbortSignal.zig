@@ -26,6 +26,8 @@ pub const AbortSignal = opaque {
             }
         };
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return this.addListener(@as(?*anyopaque, @ptrCast(ctx)), Wrapper.callback);
     }
 
@@ -172,6 +174,8 @@ pub const AbortSignal = opaque {
                 .signal = signal_,
                 .generation = vm.test_isolation_generation,
                 .event_loop_timer = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .next = bun.timespec.now(.allow_mocked_time).addMs(@intCast(milliseconds)),
                     .tag = .AbortSignalTimeout,
                     .state = .CANCELLED,

@@ -30,6 +30,7 @@ pub const Timer = opaque {
         const value_ptr = c.us_timer_ext(this);
         @setRuntimeSafety(false);
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         @as(*@TypeOf(ptr), @ptrCast(@alignCast(value_ptr))).* = ptr;
     }
 
@@ -40,11 +41,13 @@ pub const Timer = opaque {
 
     pub fn ext(this: *Timer, comptime Type: type) ?*Type {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @as(*Type, @ptrCast(@alignCast(c.us_timer_ext(this).*.?)));
     }
 
     pub fn as(this: *Timer, comptime Type: type) Type {
         @setRuntimeSafety(false);
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @as(*?Type, @ptrCast(@alignCast(c.us_timer_ext(this)))).*.?;
     }

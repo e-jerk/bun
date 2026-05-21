@@ -100,6 +100,7 @@ pub const OperatingSystem = enum {
 
     /// user-facing name with capitalization
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn displayString(self: OperatingSystem) []const u8 {
         return switch (self) {
             .mac => "macOS",
@@ -111,6 +112,7 @@ pub const OperatingSystem = enum {
     }
 
     /// same format as `process.platform`
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn nameString(self: OperatingSystem) []const u8 {
         return switch (self) {
@@ -133,6 +135,7 @@ pub const OperatingSystem = enum {
     }
 
     /// npm package name, `@oven-sh/bun-{os}-{arch}`
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn npmName(self: OperatingSystem) []const u8 {
         return switch (self) {
@@ -164,6 +167,7 @@ pub const Architecture = enum {
     wasm,
 
     /// npm package name, `@oven-sh/bun-{os}-{arch}`
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn npmName(this: Architecture) []const u8 {
         return switch (this) {

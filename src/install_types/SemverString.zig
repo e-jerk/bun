@@ -10,7 +10,6 @@ pub const String = extern struct {
     pub const empty: String = .{};
 
     /// Create an inline string
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn from(comptime inlinable_buffer: []const u8) String {
         comptime {
             if (inlinable_buffer.len > max_inline_len or
@@ -125,7 +124,6 @@ pub const String = extern struct {
         big,
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn fmt(self: *const String, buf: []const u8) Formatter {
         return Formatter{
             .buf = buf,
@@ -144,7 +142,6 @@ pub const String = extern struct {
     };
 
     /// Escapes for json. Defaults to quoting the string.
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn fmtJson(self: *const String, buf: []const u8, opts: JsonFormatter.Options) JsonFormatter {
         return .{
             .buf = buf,
@@ -167,7 +164,6 @@ pub const String = extern struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn fmtStorePath(self: *const String, buf: []const u8) StorePathFormatter {
         return .{
             .buf = buf,
@@ -203,7 +199,6 @@ pub const String = extern struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn order(
         lhs: *const String,
         rhs: *const String,
@@ -213,7 +208,6 @@ pub const String = extern struct {
         return strings.order(lhs.slice(lhs_buf), rhs.slice(rhs_buf));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn canInline(buf: []const u8) bool {
         return switch (buf.len) {
             0...max_inline_len - 1 => true,
@@ -226,7 +220,6 @@ pub const String = extern struct {
         return this.bytes[max_inline_len - 1] & 0x80 == 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn sliced(this: *const String, buf: []const u8) SlicedString {
         return if (this.isInline())
             SlicedString.init(this.slice(""), this.slice(""))
@@ -276,7 +269,6 @@ pub const String = extern struct {
 
         pub fn hash(ctx: ArrayHashContext, arg: String) u32 {
             const str = arg.slice(ctx.arg_buf);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(bun.hash(str)));
         }
     };
@@ -306,7 +298,6 @@ pub const String = extern struct {
             // This should only happen for non-ascii strings that are exactly 8 bytes.
             // so that's an edge-case
             if ((in[max_inline_len - 1]) >= 128)
-// safe-transpile: @bitCast requires manual review
                 @as(String, @bitCast((@as(
                     u64,
                     0,
@@ -314,10 +305,8 @@ pub const String = extern struct {
                     u64,
                     @as(
                         max_addressable_space,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         @truncate(@as(
                             u64,
-// safe-transpile: @bitCast requires manual review
                             @bitCast(Pointer.init(buf, in)),
                         )),
                     ),
@@ -327,7 +316,6 @@ pub const String = extern struct {
 
             else => @as(
                 String,
-// safe-transpile: @bitCast requires manual review
                 @bitCast((@as(
                     u64,
                     0,
@@ -335,10 +323,8 @@ pub const String = extern struct {
                     u64,
                     @as(
                         max_addressable_space,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         @truncate(@as(
                             u64,
-// safe-transpile: @bitCast requires manual review
                             @bitCast(Pointer.init(buf, in)),
                         )),
                     ),
@@ -400,14 +386,11 @@ pub const String = extern struct {
     ) OOM!String {
         try buf.appendSlice(allocator, in);
         const in_buf = buf.items[buf.items.len - in.len ..];
-// safe-transpile: @bitCast requires manual review
         return @bitCast((@as(u64, 0) | @as(u64, @as(max_addressable_space, @truncate(@as(u64, @bitCast(Pointer.init(buf.items, in_buf))))))) | 1 << 63);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(this: String, that: String, this_buf: []const u8, that_buf: []const u8) bool {
         if (this.isInline() and that.isInline()) {
-// safe-transpile: @bitCast requires manual review
             return @as(u64, @bitCast(this.bytes)) == @as(u64, @bitCast(that.bytes));
         } else if (this.isInline() != that.isInline()) {
             return false;
@@ -419,7 +402,6 @@ pub const String = extern struct {
     }
 
     pub inline fn isEmpty(this: String) bool {
-// safe-transpile: @bitCast requires manual review
         return @as(u64, @bitCast(this.bytes)) == @as(u64, 0);
     }
 
@@ -462,16 +444,13 @@ pub const String = extern struct {
             }
 
             return Pointer{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .off = @as(u32, @truncate(@intFromPtr(in.ptr) - @intFromPtr(buf.ptr))),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(in.len)),
             };
         }
     };
 
     pub inline fn ptr(this: String) Pointer {
-// safe-transpile: @bitCast requires manual review
         return @as(Pointer, @bitCast(@as(u64, @as(u63, @truncate(@as(u64, @bitCast(this)))))));
     }
 
@@ -512,7 +491,6 @@ pub const String = extern struct {
 
         pub const StringPool = std.HashMap(u64, String, IdentityContext(u64), 80);
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub inline fn stringHash(buf: []const u8) u64 {
             return bun.Wyhash11.hash(0, buf);
         }
@@ -529,7 +507,6 @@ pub const String = extern struct {
             }
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
         pub inline fn allocatedSlice(this: *Builder) []u8 {
             return if (this.cap > 0)
                 this.ptr.?[0..this.cap]

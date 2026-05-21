@@ -33,6 +33,8 @@ pub fn finalize(ctx: *ErrorReportRequest) void {
     bun.destroy(ctx);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !void {
     // .finalize has to be called last, but only in the non-error path.
     var should_finalize_self = false;
@@ -94,6 +96,8 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
     // HMR chunks use this too, but currently do not host their JS code.
     var parsed_source_maps: AutoArrayHashMapUnmanaged(SourceMapStore.Key, ?SourceMapStore.GetResult) = .empty;
     try parsed_source_maps.ensureTotalCapacity(temp_alloc, 4);
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     defer for (parsed_source_maps.values()) |*value| {
         if (value.*) |*v| v.deinit(temp_alloc);
     };
@@ -102,6 +106,8 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
     var first_line_of_interest: usize = 0;
     var top_frame_position: jsc.ZigStackFramePosition = undefined;
     var region_of_interest_line: u32 = 0;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (frames.items) |*frame| {
         const source_url = frame.source_url.value.ZigString.slice();
         // The browser code strips "http://localhost:3000" when the string
@@ -158,6 +164,8 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
             };
             const index = remapped_position.source_index;
             if (index >= 1 and (index - 1) < result.file_paths.len) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const abs_path = result.file_paths[@intCast(index - 1)];
                 frame.source_url = .init(abs_path);
                 const relative_path_buf = bun.path_buffer_pool.get();
@@ -169,15 +177,23 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
                 frame.remapped = true;
 
                 if (runtime_lines == null) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const file = result.entry_files.get(@intCast(index - 1));
                     if (file.get()) |source_map| {
                         const json_encoded_source_code = source_map.quotedContents();
                         // First line of interest is two above the target line.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const target_line = @as(usize, @intCast(frame.position.line.zeroBased()));
                         first_line_of_interest = target_line -| 2;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         region_of_interest_line = @intCast(target_line - first_line_of_interest);
                         runtime_lines = try extractJsonEncodedSourceCode(
                             json_encoded_source_code,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @intCast(first_line_of_interest),
                             5,
                             arena.allocator(),
@@ -249,6 +265,8 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
         try w.writeInt(i32, frame.position.column.oneBased(), .little);
 
         const function_name = frame.function_name.value.ZigString.slice();
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(function_name.len), .little);
         try w.writeAll(function_name);
 
@@ -257,9 +275,13 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
             const relative_path_buf = bun.path_buffer_pool.get();
             defer bun.path_buffer_pool.put(relative_path_buf);
             const file = ctx.dev.relativePath(relative_path_buf, src_to_write);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(file.len), .little);
             try w.writeAll(file);
         } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(src_to_write.len), .little);
             try w.writeAll(src_to_write);
         }
@@ -277,12 +299,22 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
             adjusted_lines.len -= 1;
         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u8, @intCast(adjusted_lines.len), .little);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(region_of_interest_line), .little);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(first_line_of_interest + 1), .little);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(top_frame_position.column.oneBased()), .little);
 
         for (adjusted_lines) |line| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(line.len), .little);
             try w.writeAll(line);
         }
@@ -297,6 +329,8 @@ pub fn runWithBody(ctx: *ErrorReportRequest, body: []const u8, r: AnyResponse) !
     should_finalize_self = true;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseId(source_url: []const u8, browser_url: []const u8) ?SourceMapStore.Key {
     if (!bun.strings.startsWith(source_url, browser_url))
         return null;
@@ -318,6 +352,8 @@ pub fn parseId(source_url: []const u8, browser_url: []const u8) ?SourceMapStore.
 }
 
 /// Instead of decoding the entire file, just decode the desired section.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn extractJsonEncodedSourceCode(contents: []const u8, target_line: u32, comptime n: usize, arena: Allocator) !?[n][]const u8 {
     var line: usize = 0;
     var prev: usize = 0;
@@ -353,6 +389,8 @@ fn extractJsonEncodedSourceCode(contents: []const u8, target_line: u32, comptime
     defer log.deinit();
 
     var result: [n][]const u8 = .{""} ** n;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (&result) |*decoded_line| {
         var has_extra_escapes = false;
         prev = 0;

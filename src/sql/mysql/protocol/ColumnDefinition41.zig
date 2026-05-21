@@ -34,10 +34,12 @@ pub const ColumnFlags = packed struct {
 
     pub fn toInt(this: ColumnFlags) u16 {
 // safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         return @bitCast(this);
     }
 
     pub fn fromInt(flags: u16) ColumnFlags {
+// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @bitCast(flags);
     }

@@ -118,6 +118,8 @@ pub const Value = union(Kind) {
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asSlice(v: Value) []const u8 {
         return switch (v) {
             .buffer => |buf| buf.bytes,
@@ -135,6 +137,8 @@ pub const Value = union(Kind) {
                     allocator: std.mem.Allocator,
 
                     fn onFree(ctx: *@This(), buffer: *anyopaque, len: u32) callconv(.c) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         ctx.allocator.free(@as([*]u8, @ptrCast(buffer))[0..len]);
                         bun.destroy(ctx);
                     }
@@ -248,6 +252,8 @@ pub fn init(options: Options) OutputFile {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeToDisk(f: OutputFile, root_dir: @import("std-fs-compat").FsDir, root_dir_path: []const u8) !void {
     switch (f.value) {
         .noop => {},
@@ -292,10 +298,14 @@ pub fn writeToDisk(f: OutputFile, root_dir: @import("std-fs-compat").FsDir, root
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn moveTo(file: *const OutputFile, _: string, rel_path: []const u8, _dir: FileDescriptorType) !void {
     try bun.sys.moveFileZ(file.value.move.dir, bun.sliceTo(&(try std.posix.toPosixPath(file.value.move.getPathname())), 0), _dir, bun.sliceTo(&(try std.posix.toPosixPath(rel_path)), 0));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyTo(file: *const OutputFile, _: string, rel_path: []const u8, dir: FileDescriptorType) !void {
     var path_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
     const rel_path_z = std.fmt.bufPrintZ(&path_buf, "{s}", .{rel_path}) catch unreachable;

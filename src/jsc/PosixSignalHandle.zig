@@ -49,6 +49,7 @@ export fn Bun__onPosixSignal(number: i32) void {
     if (comptime Environment.isPosix) {
         const vm = VirtualMachine.getMainThreadVM().?;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = vm.eventLoop().signal_handler.?.enqueue(@intCast(number));
     }
 }

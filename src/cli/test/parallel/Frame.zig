@@ -41,6 +41,7 @@ pub fn u32_(self: *Frame, v: u32) void {
     bun.handleOom(self.buf.appendSlice(bun.default_allocator, &le));
 }
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn str(self: *Frame, s: []const u8) void {
     // Never let a single frame exceed `max_payload` — the receiver treats that
     // as a corrupt-channel signal and closes, which would surface as a spurious
@@ -52,11 +53,13 @@ pub fn str(self: *Frame, s: []const u8) void {
     const room: usize = if (max_payload > used + headroom) max_payload - used - headroom else 0;
     if (s.len <= room) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.u32_(@intCast(s.len));
         bun.handleOom(self.buf.appendSlice(bun.default_allocator, s));
         return;
     }
     const keep: usize = if (room > trunc.len) room - trunc.len else 0;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.u32_(@intCast(keep + trunc.len));
     bun.handleOom(self.buf.appendSlice(bun.default_allocator, s[0..keep]));
@@ -65,7 +68,9 @@ pub fn str(self: *Frame, s: []const u8) void {
 /// Finalize the header and return the encoded bytes. Caller hands them to
 /// `Channel.send`. Valid until the next `begin()`.
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn finish(self: *Frame) []const u8 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const payload_len: u32 = @intCast(self.buf.items.len - 5);
     bun.assert(payload_len <= max_payload);
@@ -85,6 +90,7 @@ pub const Reader = struct {
         self.p = self.p[4..];
         return v;
     }
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn str(self: *Reader) []const u8 {
         const n = self.u32_();

@@ -145,7 +145,9 @@ pub const SlotCounts = struct {
     slots: Symbol.SlotNamespace.CountsArray = Symbol.SlotNamespace.CountsArray.initFill(0),
 
     pub fn unionMax(this: *SlotCounts, other: SlotCounts) void {
-        for (&this.slots.values, other.slots.values) |*a, b| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (&this.slots.values, other.slots.values) |*a, b| {
             if (a.* < b) a.* = b;
         }
     }
@@ -168,12 +170,16 @@ pub const NameMinifier = struct {
     pub fn numberToMinifiedName(this: *NameMinifier, name: *std.array_list.Managed(u8), _i: isize) !void {
         name.clearRetainingCapacity();
         var i = _i;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var j = @as(usize, @intCast(@mod(i, 54)));
         try name.appendSlice(this.head.items[j .. j + 1]);
         i = @divFloor(i, 54);
 
         while (i > 0) {
             i -= 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             j = @as(usize, @intCast(@mod(i, char_freq_count)));
             try name.appendSlice(this.tail.items[j .. j + 1]);
             i = @divFloor(i, char_freq_count);
@@ -182,6 +188,8 @@ pub const NameMinifier = struct {
 
     pub fn defaultNumberToMinifiedName(allocator: std.mem.Allocator, _i: isize) !string {
         var i = _i;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var j = @as(usize, @intCast(@mod(i, 54)));
         var name = std.array_list.Managed(u8).init(allocator);
         try name.appendSlice(default_head[j .. j + 1]);
@@ -189,6 +197,8 @@ pub const NameMinifier = struct {
 
         while (i > 0) {
             i -= 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             j = @as(usize, @intCast(@mod(i, char_freq_count)));
             try name.appendSlice(default_tail[j .. j + 1]);
             i = @divFloor(i, char_freq_count);
@@ -267,6 +277,8 @@ pub const InlinedEnumValue = struct {
     /// See JSCJSValue.h in WebKit for more details
     const double_encode_offset = 1 << 49;
     /// See PureNaN.h in WebKit for more details
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     const pure_nan: f64 = @bitCast(@as(u64, 0x7ff8000000000000));
 
     fn purifyNaN(value: f64) f64 {
@@ -275,13 +287,21 @@ pub const InlinedEnumValue = struct {
 
     pub fn encode(decoded: Decoded) InlinedEnumValue {
         const encoded: InlinedEnumValue = .{ .raw_data = switch (decoded) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .string => |ptr| @as(u48, @truncate(@intFromPtr(ptr))),
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             .number => |num| @as(u64, @bitCast(purifyNaN(num))) + double_encode_offset,
         } };
         if (Environment.allow_assert) {
             bun.assert(switch (encoded.decode()) {
                 .string => |str| str == decoded.string,
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
                 .number => |num| @as(u64, @bitCast(num)) ==
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
                     @as(u64, @bitCast(purifyNaN(decoded.number))),
             });
         }
@@ -290,6 +310,8 @@ pub const InlinedEnumValue = struct {
 
     pub fn decode(encoded: InlinedEnumValue) Decoded {
         if (encoded.raw_data > 0x0000FFFFFFFFFFFF) {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             return .{ .number = @bitCast(encoded.raw_data - double_encode_offset) };
         } else {
             return .{ .string = @ptrFromInt(encoded.raw_data) };
@@ -442,7 +464,9 @@ pub const DeclaredSymbol = struct {
         const refs = entries.items(.ref);
 
         // TODO: SIMD
-        for (is_top_level, refs) |top, ref| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (is_top_level, refs) |top, ref| {
             if (top) {
                 @call(bun.callmod_inline, Fn, .{ ctx, ref });
             }
@@ -644,6 +668,8 @@ pub fn NewBatcher(comptime Type: type) type {
         }
 
         pub fn eat(this: *@This(), value: Type) *Type {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as(*Type, @ptrCast(&this.head.eat1(value).ptr));
         }
 

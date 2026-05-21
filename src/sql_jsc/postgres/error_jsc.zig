@@ -1,6 +1,7 @@
 //! `createPostgresError` / `postgresErrorToJS` bridges.
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn createPostgresError(
     globalObject: *jsc.JSGlobalObject,
     message: []const u8,

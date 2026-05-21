@@ -213,7 +213,9 @@ pub fn scan(
                     if (st.star_name_loc != null and existing_items.count() > 0) {
                         const sorted = try allocator.alloc(string, existing_items.count());
                         defer allocator.free(sorted);
-                        for (sorted, existing_items.keys()) |*result, alias| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (sorted, existing_items.keys()) |*result, alias| {
                             result.* = alias;
                         }
                         strings.sortDesc(sorted);
@@ -352,6 +354,8 @@ pub fn scan(
                 record.flags.contains_import_star = record.flags.contains_import_star or st.star_name_loc != null;
                 record.flags.contains_default_alias = record.flags.contains_default_alias or st.default_name != null;
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                 for (st.items) |*item| {
                     record.flags.contains_default_alias = record.flags.contains_default_alias or strings.eqlComptime(item.alias, "default");
                     record.flags.contains_es_module_alias = record.flags.contains_es_module_alias or strings.eqlComptime(item.alias, "__esModule");

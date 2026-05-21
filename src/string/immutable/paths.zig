@@ -36,6 +36,8 @@ pub fn isWindowsAbsolutePathMissingDriveLetter(comptime T: type, chars: []const 
     return bun.path.windowsFilesystemRootT(T, chars).len == 1;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fromWPath(buf: []u8, utf16: []const u16) [:0]const u8 {
     bun.unsafeAssert(buf.len > 0);
     const to_copy = trimPrefixComptime(u16, utf16, bun.windows.long_path_prefix);
@@ -63,6 +65,8 @@ pub fn withoutNTPrefix(comptime T: type, path: []const T) []const T {
     return path;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toNTPath(wbuf: []u16, utf8: []const u8) [:0]u16 {
     if (!std.fs.path.isAbsoluteWindows(utf8)) {
         return toWPathNormalized(wbuf, utf8);
@@ -120,21 +124,21 @@ pub fn toNTPath16(wbuf: []u16, path: []const u16) [:0]u16 {
 
 pub fn addNTPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
     wbuf[0..bun.windows.nt_object_prefix.len].* = bun.windows.nt_object_prefix;
-    @memcpy(wbuf[bun.windows.nt_object_prefix.len..][0..utf16.len], utf16);
+    safe.SimdUtils.copy(wbuf[bun.windows.nt_object_prefix.len..][0..utf16.len], utf16);
     wbuf[utf16.len + bun.windows.nt_object_prefix.len] = 0;
     return wbuf[0 .. utf16.len + bun.windows.nt_object_prefix.len :0];
 }
 
 pub fn addLongPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
     wbuf[0..bun.windows.long_path_prefix.len].* = bun.windows.long_path_prefix;
-    @memcpy(wbuf[bun.windows.long_path_prefix.len..][0..utf16.len], utf16);
+    safe.SimdUtils.copy(wbuf[bun.windows.long_path_prefix.len..][0..utf16.len], utf16);
     wbuf[utf16.len + bun.windows.long_path_prefix.len] = 0;
     return wbuf[0 .. utf16.len + bun.windows.long_path_prefix.len :0];
 }
 
 pub fn addNTPathPrefixIfNeeded(wbuf: []u16, utf16: []const u16) [:0]u16 {
     if (hasPrefixComptimeType(u16, utf16, bun.windows.nt_object_prefix)) {
-        @memcpy(wbuf[0..utf16.len], utf16);
+        safe.SimdUtils.copy(wbuf[0..utf16.len], utf16);
         wbuf[utf16.len] = 0;
         return wbuf[0..utf16.len :0];
     }
@@ -148,6 +152,8 @@ pub fn addNTPathPrefixIfNeeded(wbuf: []u16, utf16: []const u16) [:0]u16 {
 // These are the same because they don't have rules like needing a trailing slash
 pub const toNTDir = toNTPath;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toExtendedPathNormalized(wbuf: []u16, utf8: []const u8) [:0]const u16 {
     bun.unsafeAssert(wbuf.len > 4);
     if (hasPrefixComptime(utf8, bun.windows.long_path_prefix_u8) or
@@ -159,6 +165,8 @@ pub fn toExtendedPathNormalized(wbuf: []u16, utf8: []const u8) [:0]const u16 {
     return wbuf[0 .. toWPathNormalized(wbuf[4..], utf8).len + 4 :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toWPathNormalizeAutoExtend(wbuf: []u16, utf8: []const u8) [:0]const u16 {
     if (std.fs.path.isAbsoluteWindows(utf8)) {
         return toExtendedPathNormalized(wbuf, utf8);
@@ -167,6 +175,8 @@ pub fn toWPathNormalizeAutoExtend(wbuf: []u16, utf8: []const u8) [:0]const u16 {
     return toWPathNormalized(wbuf, utf8);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toWPathNormalized(wbuf: []u16, utf8: []const u8) [:0]u16 {
     const renormalized = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(renormalized);
@@ -194,6 +204,8 @@ pub fn toWPathNormalized16(wbuf: []u16, path: []const u16) [:0]u16 {
     return wbuf[0..path_to_use.len :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toPathNormalized(buf: []u8, utf8: []const u8) [:0]const u8 {
     const renormalized = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(renormalized);
@@ -213,7 +225,9 @@ pub fn normalizeSlashesOnlyT(comptime T: type, buf: []T, path: []const T, compti
     const undesired_slash = if (desired_slash == '/') '\\' else '/';
 
     if (bun.strings.containsCharT(T, path, undesired_slash)) {
-        @memcpy(buf[0..path.len], path);
+        safe.SimdUtils.copy(buf[0..path.len], path);
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (buf[0..path.len]) |*c| {
             if (c.* == undesired_slash) {
                 c.* = desired_slash;
@@ -223,28 +237,38 @@ pub fn normalizeSlashesOnlyT(comptime T: type, buf: []T, path: []const T, compti
     }
 
     if (comptime always_copy) {
-        @memcpy(buf[0..path.len], path);
+        safe.SimdUtils.copy(buf[0..path.len], path);
         return buf[0..path.len];
     }
     return path;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeSlashesOnly(buf: []u8, utf8: []const u8, comptime desired_slash: u8) []const u8 {
     return normalizeSlashesOnlyT(u8, buf, utf8, desired_slash, false);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toWPath(wbuf: []u16, utf8: []const u8) [:0]u16 {
     return toWPathMaybeDir(wbuf, utf8, false);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toPath(buf: []u8, utf8: []const u8) [:0]u8 {
     return toPathMaybeDir(buf, utf8, false);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toWDirPath(wbuf: []u16, utf8: []const u8) [:0]const u16 {
     return toWPathMaybeDir(wbuf, utf8, true);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toKernel32Path(wbuf: []u16, utf8: []const u8) [:0]u16 {
     const path = if (hasPrefixComptime(utf8, bun.windows.nt_object_prefix_u8))
         utf8[bun.windows.nt_object_prefix_u8.len..]
@@ -269,6 +293,8 @@ fn isUNCPath(comptime T: type, path: []const T) bool {
         path[2] != '.';
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toWPathMaybeDir(wbuf: []u16, utf8: []const u8, comptime add_trailing_lash: bool) [:0]u16 {
     bun.unsafeAssert(wbuf.len > 0);
 
@@ -294,11 +320,13 @@ pub fn toWPathMaybeDir(wbuf: []u16, utf8: []const u8, comptime add_trailing_lash
 
     return wbuf[0..result.count :0];
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toPathMaybeDir(buf: []u8, utf8: []const u8, comptime add_trailing_lash: bool) [:0]u8 {
     bun.unsafeAssert(buf.len > 0);
 
     var len = utf8.len;
-    @memcpy(buf[0..len], utf8[0..len]);
+    safe.SimdUtils.copy(buf[0..len], utf8[0..len]);
 
     if (add_trailing_lash and len > 0 and buf[len - 1] != '\\') {
         buf[len] = '\\';
@@ -308,6 +336,8 @@ pub fn toPathMaybeDir(buf: []u8, utf8: []const u8, comptime add_trailing_lash: b
     return buf[0..len :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cloneNormalizingSeparators(
     allocator: std.mem.Allocator,
     input: []const u8,
@@ -337,6 +367,8 @@ pub fn cloneNormalizingSeparators(
     return buf[0 .. @intFromPtr(remain.ptr) - @intFromPtr(buf.ptr)];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pathContainsNodeModulesFolder(path: []const u8) bool {
     return strings.contains(path, comptime std.fs.path.sep_str ++ "node_modules" ++ std.fs.path.sep_str);
 }
@@ -345,6 +377,8 @@ pub fn charIsAnySlash(char: u8) callconv(bun.callconv_inline) bool {
     return char == '/' or char == '\\';
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn startsWithWindowsDriveLetter(s: []const u8) callconv(bun.callconv_inline) bool {
     return startsWithWindowsDriveLetterT(u8, s);
 }
@@ -356,6 +390,8 @@ pub fn startsWithWindowsDriveLetterT(comptime T: type, s: []const T) callconv(bu
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn withoutTrailingSlash(this: string) []const u8 {
     var href = this;
     while (href.len > 1 and (switch (href[href.len - 1]) {
@@ -369,6 +405,8 @@ pub fn withoutTrailingSlash(this: string) []const u8 {
 }
 
 /// Does not strip the device root (C:\ or \\Server\Share\ portion off of the path)
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn withoutTrailingSlashWindowsPath(input: string) []const u8 {
     if (Environment.isPosix or input.len < 3 or input[1] != ':')
         return withoutTrailingSlash(input);
@@ -390,17 +428,27 @@ pub fn withoutTrailingSlashWindowsPath(input: string) []const u8 {
     return path;
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn withoutLeadingSlash(this: string) []const u8 {
     return @import("std-fs-compat").trimLeft(u8, this, "/");
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn withoutLeadingPathSeparator(this: string) []const u8 {
     return @import("std-fs-compat").trimLeft(u8, this, &.{std.fs.path.sep});
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn removeLeadingDotSlash(slice: []const u8) callconv(bun.callconv_inline) []const u8 {
     if (slice.len >= 2) {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         if ((@as(u16, @bitCast(slice[0..2].*)) == comptime std.mem.readInt(u16, "./", .little)) or
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
             (Environment.isWindows and @as(u16, @bitCast(slice[0..2].*)) == comptime std.mem.readInt(u16, ".\\", .little)))
         {
             return slice[2..];

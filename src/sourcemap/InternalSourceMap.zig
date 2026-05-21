@@ -131,30 +131,44 @@ pub const SyncEntry = extern struct {
 };
 
 pub inline fn totalLen(self: InternalSourceMap) usize {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast(self.data[0..8].*));
 }
 
 pub inline fn mappingCount(self: InternalSourceMap) usize {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast(self.data[8..16].*));
 }
 
 pub inline fn inputLineCount(self: InternalSourceMap) usize {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast(self.data[16..24].*));
 }
 
 pub inline fn syncCount(self: InternalSourceMap) u32 {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(u32, @bitCast(self.data[24..28].*));
 }
 
 pub inline fn streamOffset(self: InternalSourceMap) u32 {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(u32, @bitCast(self.data[28..32].*));
 }
 
 pub fn syncEntry(self: InternalSourceMap, index: usize) SyncEntry {
     const off = header_size + index * @sizeOf(SyncEntry);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(SyncEntry, @bitCast(self.data[off..][0..@sizeOf(SyncEntry)].*));
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
 pub inline fn stream(self: InternalSourceMap) []const u8 {
     return self.data[self.streamOffset()..self.totalLen()];
 }
@@ -175,6 +189,8 @@ pub fn memoryCost(self: InternalSourceMap) usize {
 /// binary degrades to "no sourcemap". This does not walk per-window
 /// `SyncEntry.byte_offset`/section lengths; the blob is self-produced at build
 /// time, and a tampered executable already implies arbitrary execution.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isValidBlob(blob: []const u8) bool {
     if (blob.len < header_size) return false;
     const self = InternalSourceMap{ .data = blob.ptr };
@@ -218,10 +234,14 @@ const State = struct {
 };
 
 inline fn zigzagEncode(value: i32) u32 {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @bitCast((value << 1) ^ (value >> 31));
 }
 
 inline fn zigzagDecode(value: u32) i32 {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @as(i32, @bitCast(value >> 1)) ^ (-@as(i32, @bitCast(value & 1)));
 }
 
@@ -232,6 +252,8 @@ fn writeVarint(buf: [*]u8, signed: i32) usize {
     var v = zigzagEncode(signed);
     var i: usize = 0;
     while (true) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var byte: u8 = @intCast(v & 0x7f);
         v >>= 7;
         if (v != 0) byte |= 0x80;
@@ -241,6 +263,8 @@ fn writeVarint(buf: [*]u8, signed: i32) usize {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn readVarint(bytes: []const u8, pos: *usize) i32 {
     var i = pos.*;
     const first = bytes[i];
@@ -255,6 +279,8 @@ fn readVarint(bytes: []const u8, pos: *usize) i32 {
         if (i >= bytes.len or shift > 28) break;
         const byte = bytes[i];
         i += 1;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         result |= @as(u32, byte & 0x7f) << @as(u5, @intCast(shift));
         if (byte & 0x80 == 0) break;
         shift += 7;
@@ -264,6 +290,8 @@ fn readVarint(bytes: []const u8, pos: *usize) i32 {
 }
 
 inline fn testBit(base: [*]const u8, idx: usize) bool {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return (base[idx >> 3] >> @as(u3, @intCast(idx & 7))) & 1 != 0;
 }
 
@@ -301,6 +329,8 @@ const WindowReader = struct {
     gen_line_exc_next_idx: u8,
     delta_idx: u8,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parse(r: *WindowReader, bytes: []const u8, start: usize) void {
         const b = bytes.ptr + start;
         r.bytes = bytes;
@@ -313,8 +343,14 @@ const WindowReader = struct {
         r.flags = flags;
         r.delta_idx = 0;
 
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const gen_col_len: usize = @as(u16, @bitCast(b[win_hdr.gen_col_len_off..][0..2].*));
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const orig_line_len: usize = @as(u16, @bitCast(b[win_hdr.orig_line_len_off..][0..2].*));
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         const orig_col_len: usize = @as(u16, @bitCast(b[win_hdr.orig_col_len_off..][0..2].*));
 
         r.gen_col_pos = start + win_hdr.gen_col_lane_off;
@@ -412,24 +448,32 @@ pub const FindCache = struct {
     const Key = struct { data: ?[*]const u8 = null, sync_idx: u32 = 0 };
 
     pub fn invalidate(self: *FindCache, data: [*]const u8) void {
-        for (&self.keys, &self.slots) |*k, *s| if (k.data == data) {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (&self.keys, &self.slots) |*k, *s| if (k.data == data) {
             k.data = null;
             s.data = null;
         };
     }
 
     pub fn invalidateAll(self: *FindCache) void {
-        for (&self.keys, &self.slots) |*k, *s| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (&self.keys, &self.slots) |*k, *s| {
             k.data = null;
             s.data = null;
         }
     }
 
     inline fn slotFor(self: *FindCache, data: [*]const u8, sync_idx: u32) *FindCacheSlot {
-        for (&self.keys, 0..) |k, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (&self.keys, 0..) |k, i| {
             if (k.data == data and k.sync_idx == sync_idx) return &self.slots[i];
         }
-        for (&self.keys, 0..) |k, i| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (&self.keys, 0..) |k, i| {
             if (k.data == null) {
                 self.keys[i] = .{ .data = data, .sync_idx = sync_idx };
                 return &self.slots[i];
@@ -456,6 +500,8 @@ fn locateWindow(self: InternalSourceMap, target_line: i32, target_col: i32) ?u32
         }
     }
     if (lo == 0) return null;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(lo - 1);
 }
 
@@ -696,6 +742,8 @@ pub const Builder = struct {
         const n = self.pending_n;
         if (n == 0) return;
         const seed = self.pending[0];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const start_off: u32 = @intCast(self.win_stream.items.len);
         self.sync_entries.append(self.allocator, .{
             .generated_line = seed.generated_line,
@@ -710,7 +758,9 @@ pub const Builder = struct {
         var deltas: [sync_interval - 1]Delta = undefined;
         var flags: u8 = 0;
         var prev = seed;
-        for (self.pending[1..n], 0..) |cur, k| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (self.pending[1..n], 0..) |cur, k| {
             const d_gen_line = cur.generated_line - prev.generated_line;
             const d_gen_col = if (d_gen_line != 0) cur.generated_column else cur.generated_column - prev.generated_column;
             const d_orig_line = cur.original_line - prev.original_line;
@@ -738,31 +788,47 @@ pub const Builder = struct {
         var w: usize = win_hdr.gen_col_lane_off;
         for (0..n_deltas) |k| {
             const d = deltas[k];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const bit = @as(u8, 1) << @as(u3, @intCast(k & 7));
             if (d.d_gen_line >= 1) buf[win_hdr.gen_line_mask_off + (k >> 3)] |= bit;
             if (d.d_orig_line == d.d_gen_line) buf[win_hdr.orig_line_eq_mask_off + (k >> 3)] |= bit;
             if (d.d_orig_col == d.d_gen_col) buf[win_hdr.orig_col_eq_mask_off + (k >> 3)] |= bit;
             w += writeVarint(buf[w..].ptr, d.d_gen_col);
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const gen_col_len: u16 = @intCast(w - win_hdr.gen_col_lane_off);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         buf[win_hdr.gen_col_len_off..][0..2].* = @bitCast(gen_col_len);
 
         const orig_line_start = w;
         for (deltas[0..n_deltas]) |d| {
             if (d.d_orig_line != d.d_gen_line) w += writeVarint(buf[w..].ptr, d.d_orig_line);
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const orig_line_len: u16 = @intCast(w - orig_line_start);
         const orig_col_start = w;
         for (deltas[0..n_deltas]) |d| {
             if (d.d_orig_col != d.d_gen_col) w += writeVarint(buf[w..].ptr, d.d_orig_col);
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const orig_col_len: u16 = @intCast(w - orig_col_start);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         buf[win_hdr.orig_line_len_off..][0..2].* = @bitCast(orig_line_len);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         buf[win_hdr.orig_col_len_off..][0..2].* = @bitCast(orig_col_len);
 
         if (flags & flag_has_gen_line_exceptions != 0) {
             for (0..n_deltas) |k| {
                 if (deltas[k].d_gen_line > 1 or deltas[k].d_gen_line < 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     buf[w] = @intCast(k);
                     w += 1;
                     w += writeVarint(buf[w..].ptr, deltas[k].d_gen_line);
@@ -777,6 +843,8 @@ pub const Builder = struct {
             w += 8;
             for (0..n_deltas) |k| {
                 if (deltas[k].d_src_idx == 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     buf[mask_off + (k >> 3)] |= @as(u8, 1) << @as(u3, @intCast(k & 7));
                 }
             }
@@ -799,6 +867,8 @@ pub const Builder = struct {
         self.flushWindow();
 
         const sync_bytes = self.sync_entries.items.len * @sizeOf(SyncEntry);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const stream_offset: u32 = @intCast(header_size + sync_bytes);
         const total: usize = stream_offset + self.win_stream.items.len + stream_tail_pad;
 
@@ -807,12 +877,16 @@ pub const Builder = struct {
         const blob = out.list.items;
 
         @memset(blob[0..24], 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         blob[24..28].* = @bitCast(@as(u32, @intCast(self.sync_entries.items.len)));
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         blob[28..32].* = @bitCast(stream_offset);
         if (sync_bytes > 0) {
-            @memcpy(blob[header_size..][0..sync_bytes], std.mem.sliceAsBytes(self.sync_entries.items));
+            safe.SimdUtils.copy(blob[header_size..][0..sync_bytes], std.mem.sliceAsBytes(self.sync_entries.items));
         }
-        @memcpy(blob[stream_offset..][0..self.win_stream.items.len], self.win_stream.items);
+        safe.SimdUtils.copy(blob[stream_offset..][0..self.win_stream.items.len], self.win_stream.items);
         @memset(blob[total - stream_tail_pad ..][0..stream_tail_pad], 0);
 
         self.win_stream.clearAndFree(self.allocator);
@@ -831,6 +905,8 @@ pub const Builder = struct {
 /// 1-field segments are skipped (no original location). The 5th field
 /// (`name_index`) is decoded but discarded; nothing in the stack-trace remap
 /// path reads it.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fromVLQ(
     allocator: std.mem.Allocator,
     vlq: []const u8,
@@ -899,14 +975,24 @@ pub fn fromVLQ(
 
     const out = builder.finalize();
     const blob = out.list.items;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const total_len: u64 = @intCast(blob.len);
     const mapping_count: u64 = builder.count;
     const input_lines: u64 = @max(
         @as(u64, input_line_count_hint),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @as(u64, @intCast(max_original_line)) + 1,
     );
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     blob[0..8].* = @bitCast(total_len);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     blob[8..16].* = @bitCast(mapping_count);
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     blob[16..24].* = @bitCast(input_lines);
 
     const owned = out.list.toOwnedSlice(allocator) catch |err| bun.handleOom(err);

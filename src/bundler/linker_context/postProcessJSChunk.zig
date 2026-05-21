@@ -576,6 +576,8 @@ pub fn postProcessJSChunk(ctx: GenerateChunkCtx, worker: *ThreadPool.Worker, chu
     chunk.intermediate_output = c.breakOutputIntoPieces(
         worker.allocator,
         &j,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @as(u32, @truncate(ctx.chunks.len)),
     ) catch @panic("Unhandled out of memory error in breakOutputIntoPieces()");
 
@@ -739,7 +741,9 @@ pub fn generateEntryPointTailJS(
 
                         var had_default_export = false;
 
-                        for (sorted_and_filtered_export_aliases, 0..) |alias, i| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (sorted_and_filtered_export_aliases, 0..) |alias, i| {
                             var resolved_export = resolved_exports.get(alias).?;
 
                             had_default_export = had_default_export or strings.eqlComptime(alias, "default");

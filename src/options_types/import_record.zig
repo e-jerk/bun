@@ -61,10 +61,12 @@ pub const ImportKind = enum(u8) {
     };
 
 // safe-transpile: function returns small constant slice — consider zust.String
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn label(this: ImportKind) []const u8 {
         return all_labels.get(this);
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
 // safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn errorLabel(this: ImportKind) []const u8 {
         return error_labels.get(this);

@@ -1,3 +1,5 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn requireNotSubscriber(this: *JSValkeyClient, function_name: []const u8) bun.JSError!void {
     const fmt_string = "RedisClient.prototype.{s} cannot be called while in subscriber mode.";
 
@@ -6,6 +8,8 @@ fn requireNotSubscriber(this: *JSValkeyClient, function_name: []const u8) bun.JS
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn requireSubscriber(this: *JSValkeyClient, function_name: []const u8) bun.JSError!void {
     const fmt_string = "RedisClient.prototype.{s} can only be called while in subscriber mode.";
 
@@ -25,6 +29,8 @@ pub fn jsSend(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callfram
     var iter = try args_array.arrayIterator(globalObject);
     var args = try std.array_list.Managed(JSArgument).initCapacity(bun.default_allocator, iter.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -107,6 +113,8 @@ pub fn set(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe: 
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -282,6 +290,8 @@ pub fn srem(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe:
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -325,6 +335,8 @@ pub fn srandmember(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, cal
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -389,6 +401,8 @@ pub fn spop(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe:
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -434,6 +448,8 @@ pub fn sadd(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe:
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -509,6 +525,8 @@ pub fn hmget(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -624,6 +642,8 @@ pub fn hincrbyfloat(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, ca
     return promise.toJS();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn hsetImpl(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame, comptime command: []const u8) bun.JSError!JSValue {
     try requireNotSubscriber(this, command);
 
@@ -819,6 +839,8 @@ pub fn ping(this: *JSValkeyClient, globalObject: *jsc.JSGlobalObject, callframe:
         args_slice = message_buf[0..1];
     }
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args_slice) |*item| {
             item.deinit();
         }
@@ -996,6 +1018,8 @@ pub fn publish(
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var args = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), args_view.len);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (args.items) |*item| {
             item.deinit();
         }
@@ -1040,6 +1064,8 @@ pub fn subscribe(
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var redis_channels = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), 1);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (redis_channels.items) |*item| {
             item.deinit();
         }
@@ -1142,6 +1168,8 @@ pub fn unsubscribe(
     var stack_fallback = std.heap.stackFallback(512, bun.default_allocator);
     var redis_channels = try std.array_list.Managed(JSArgument).initCapacity(stack_fallback.get(), 1);
     defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
         for (redis_channels.items) |*item| {
             item.deinit();
         }
@@ -1297,6 +1325,8 @@ const compile = struct {
         dont_care,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn testCorrectState(
         this: *JSValkeyClient,
         js_client_prototype_function_name: []const u8,
@@ -1309,6 +1339,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"()"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1333,6 +1365,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(key: RedisKey)"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1363,6 +1397,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(key: RedisKey, ...args: RedisKey[])"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1380,6 +1416,8 @@ const compile = struct {
                 const arguments = callframe.arguments();
                 var args = try std.array_list.Managed(JSArgument).initCapacity(bun.default_allocator, arguments.len);
                 defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*item| {
                         item.deinit();
                     }
@@ -1411,6 +1449,8 @@ const compile = struct {
             }
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(key: RedisKey, value: RedisValue)"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1446,6 +1486,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(key: RedisKey, value: RedisValue, value2: RedisValue)"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1486,6 +1528,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(...strings: string[])"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1497,6 +1541,8 @@ const compile = struct {
 
                 var args = try std.array_list.Managed(JSArgument).initCapacity(bun.default_allocator, callframe.arguments().len);
                 defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*item| {
                         item.deinit();
                     }
@@ -1525,6 +1571,8 @@ const compile = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn @"(key: RedisKey, value: RedisValue, ...args: RedisValue)"(
         comptime name: []const u8,
         comptime command: []const u8,
@@ -1536,6 +1584,8 @@ const compile = struct {
 
                 var args = try std.array_list.Managed(JSArgument).initCapacity(bun.default_allocator, callframe.arguments().len);
                 defer {
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*item| {
                         item.deinit();
                     }

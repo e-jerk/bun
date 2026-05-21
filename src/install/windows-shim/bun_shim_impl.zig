@@ -106,6 +106,7 @@ const k32 = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn debug(comptime fmt: []const u8, args: anytype) void {
     comptime assert(builtin.mode == .Debug);
     if (!is_standalone) {
@@ -138,6 +139,7 @@ const FailReason = enum {
     InterpreterNotFoundBun,
     ElevationRequired,
 
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn getFormatTemplate(reason: FailReason) []const u8 {
         return switch (reason) {
@@ -181,6 +183,7 @@ const FailReason = enum {
                 const template = comptime getFormatTemplate(r) ++ "\n\n";
 
 // zust: use safe.String or safe.GuardedSlice for slice operations
+// zust: use safe.String or safe.GuardedSlice for slice operations
                 if (comptime std.mem.indexOf(u8, template, "{s}") != null) {
                     try writer.print(template, .{failure_reason_argument.?});
                     if (dbg) {
@@ -219,6 +222,7 @@ const FailReason = enum {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeToHandle(handle: w.HANDLE, data: []const u8) error{}!usize {
     var io: w.IO_STATUS_BLOCK = undefined;
     const rc = nt.NtWriteFile(
@@ -228,6 +232,7 @@ pub fn writeToHandle(handle: w.HANDLE, data: []const u8) error{}!usize {
         null,
         &io,
         data.ptr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(data.len),
         null,
@@ -323,10 +328,12 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
     const image_path_b_len = if (is_standalone) ImagePathName.Length else bun_ctx.base_path.len * 2;
     const image_path_u16 = (if (is_standalone) ImagePathName.Buffer.? else bun_ctx.base_path.ptr)[0 .. image_path_b_len / 2];
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const image_path_u8 = @as([*]u8, @ptrCast(if (is_standalone) ImagePathName.Buffer.? else bun_ctx.base_path.ptr))[0..image_path_b_len];
 
     const cmd_line_b_len = CommandLine.Length;
     const cmd_line_u16 = CommandLine.Buffer.?[0 .. cmd_line_b_len / 2];
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const cmd_line_u8 = @as([*]u8, @ptrCast(CommandLine.Buffer))[0..cmd_line_b_len];
 
@@ -341,12 +348,16 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
     var buf2: [buf2_u16_len]u16 = undefined;
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buf1_u8 = @as([*]u8, @ptrCast(&buf1[0]))[comptime buf1.len..];
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buf1_u16 = @as([*]u16, @ptrCast(&buf1[0]))[comptime buf1.len / 2..];
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buf2_u8 = @as([*]u8, @ptrCast(&buf2[0]))[comptime buf2.len..];
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buf2_u16 = @as([*:0]u16, @ptrCast(&buf2[0]))[comptime buf2.len / 2..];
 
@@ -355,6 +366,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
     //
     // BUF1: '\??\!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     if (is_standalone) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @as(*align(1) u64, @ptrCast(&buf1_u8[0])).* = @as(u64, @bitCast(nt_object_prefix));
     }
@@ -378,6 +390,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
     var io: w.IO_STATUS_BLOCK = undefined;
     if (is_standalone) {
         // BUF1: '\??\C:\Users\chloe\project\node_modules\.bin\hello.bunx!!!!!!!!!!!!!!!!!!!!!!'
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @as(*align(1) u64, @ptrCast(&buf1_u8[image_path_b_len + 2 * (nt_object_prefix.len - "exe".len)])).* = @as(u64, @bitCast([4]u16{ 'b', 'u', 'n', 'x' }));
 
@@ -540,6 +553,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
     // We are intentionally only reading one chunk. The metadata file is almost always going to be < 200 bytes
     // If this becomes a problem we will fix it.
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const read_status = nt.NtReadFile(metadata_handle, null, null, null, &io, read_ptr, @intCast(read_max_len), null, null);
     const read_len = switch (read_status) {
         .SUCCESS => io.Information,
@@ -561,9 +575,11 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
 
     read_ptr = @ptrFromInt(@intFromPtr(read_ptr) + read_len - @sizeOf(Flags));
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const flags: Flags = @as(*align(1) Flags, @ptrCast(read_ptr)).*;
 
     if (dbg) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const flags_u16: u16 = @as(*align(1) u16, @ptrCast(read_ptr)).*;
         debug("FlagsInt: {d}", .{flags_u16});
@@ -618,8 +634,10 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
             // BUF1: '\??"C:\Users\chloe\project\node_modules\my-cli\src\app.js" --flag#!!!!'
             //           ^ lpCommandLine                                               ^ null terminator
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*align(1) u16, @ptrCast(argument_start_ptr + user_arguments_u8.len)).* = 0;
 
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             break :spawn_command_line @ptrCast(@alignCast(buf1_u8 + 2 * (nt_object_prefix.len - "\"".len)));
         },
@@ -634,6 +652,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
             // BUF1: '\??\C:\Users\chloe\project\node_modules\my-cli\src\app.js"#node #####!!!!!!!!!!'
             //                                                                        ^ new read_ptr
             read_ptr = @ptrFromInt(@intFromPtr(read_ptr) - @sizeOf(ShebangMetadataPacked));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const shebang_metadata: ShebangMetadataPacked = @as(*align(1) ShebangMetadataPacked, @ptrCast(read_ptr)).*;
 
@@ -688,9 +707,11 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
             // BUF2: 'node !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
             read_ptr = @ptrFromInt(@intFromPtr(read_ptr) - shebang_arg_len_u8);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             safe.SimdUtils.copy(buf2_u8, @as([*]u8, @ptrCast(read_ptr))[0..shebang_arg_len_u8]);
 
             // BUF2: 'node "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*align(1) u16, @ptrCast(buf2_u8 + shebang_arg_len_u8)).* = '"';
 
@@ -703,6 +724,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
             const filename = buf1_u8[2 * nt_object_prefix.len ..][0..length_of_filename_u8];
             const filename_u16 = std.mem.bytesAsSlice(u16, filename);
             if (dbg) {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 debug("filename and quote: '{f}'", .{fmt16(@alignCast(filename_u16))});
                 if (filename_u16.len > 0) {
@@ -741,6 +763,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
                 //        |    the quote
                 //        shebang_arg_len
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 safe.SimdUtils.copy(@as([*]u8, @ptrCast(write_ptr)), user_arguments_u8);
                 write_ptr = @ptrFromInt(@intFromPtr(write_ptr) + user_arguments_u8.len);
             }
@@ -749,6 +772,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
             //                                                                            ^ null terminator
             write_ptr[0] = 0;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             break :spawn_command_line @ptrCast(buf2_u16);
         },
@@ -873,6 +897,7 @@ fn launcher(comptime mode: LauncherMode, bun_ctx: anytype) mode.RetType() {
                     failure_reason_argument = brk: {
                         var i: u32 = 0;
                         while (spawn_command_line[i] != ' ' and i < 512) : (i += 1) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             failure_reason_data[i] = @as(u7, @truncate(spawn_command_line[i]));
                         }

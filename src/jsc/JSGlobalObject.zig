@@ -49,6 +49,8 @@ pub const JSGlobalObject = opaque {
         return dt;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwTODO(this: *JSGlobalObject, msg: []const u8) bun.JSError {
         const err = this.createErrorInstance("{s}", .{msg});
         if (err == .zero) {
@@ -86,6 +88,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// "Expected {field} to be a {typename} for '{name}'."
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createInvalidArgumentType(
         this: *JSGlobalObject,
         comptime name_: []const u8,
@@ -100,6 +104,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// "Expected {field} to be a {typename} for '{name}'."
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentType(
         this: *JSGlobalObject,
         comptime name_: []const u8,
@@ -110,6 +116,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// "The {argname} argument is invalid. Received {value}"
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentValue(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -120,6 +128,8 @@ pub const JSGlobalObject = opaque {
         return this.ERR(.INVALID_ARG_VALUE, "The \"{s}\" argument is invalid. Received {f}", .{ argname, actual_string_value }).throw();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentValueCustom(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -135,6 +145,8 @@ pub const JSGlobalObject = opaque {
     /// Message depends on whether `expected` is present.
     /// - "The property "{argname}" is invalid. Received {value}"
     /// - "The property "{argname}" is invalid. Expected {expected}, received {value}"
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentPropertyValue(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -161,6 +173,8 @@ pub const JSGlobalObject = opaque {
         return str;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwIncompatibleOptionPair(
         this: *JSGlobalObject,
         opt1: []const u8,
@@ -183,6 +197,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// "The {argname} argument must be of type {typename}. Received {value}"
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentTypeValue(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -194,6 +210,8 @@ pub const JSGlobalObject = opaque {
         return this.ERR(.INVALID_ARG_TYPE, "The \"{s}\" argument must be of type {s}. Received {f}", .{ argname, typename, actual_string_value }).throw();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentTypeValue2(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -206,6 +224,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// "The <argname> argument must be one of type <typename>. Received <value>"
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentTypeValueOneOf(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -217,6 +237,8 @@ pub const JSGlobalObject = opaque {
         return this.ERR(.INVALID_ARG_TYPE, "The \"{s}\" argument must be one of type {s}. Received {f}", .{ argname, typename, actual_string_value }).throw();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidArgumentRangeValue(
         this: *JSGlobalObject,
         argname: []const u8,
@@ -226,6 +248,8 @@ pub const JSGlobalObject = opaque {
         return this.ERR(.OUT_OF_RANGE, "The \"{s}\" is out of range. {s}. Received {f}", .{ argname, typename, value }).throw();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwInvalidPropertyTypeValue(
         this: *JSGlobalObject,
         field: []const u8,
@@ -237,6 +261,8 @@ pub const JSGlobalObject = opaque {
         return this.ERR(.INVALID_ARG_TYPE, "The \"{s}\" property must be of type {s}. Received {s}", .{ field, typename, ty_str.slice() }).throw();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createNotEnoughArguments(
         this: *JSGlobalObject,
         comptime name_: []const u8,
@@ -247,6 +273,8 @@ pub const JSGlobalObject = opaque {
     }
 
     /// Not enough arguments passed to function named `name_`
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn throwNotEnoughArguments(
         this: *JSGlobalObject,
         comptime name_: []const u8,
@@ -624,11 +652,15 @@ pub const JSGlobalObject = opaque {
             //   make clean-jsc-bindings
             //   make bindings -j10
             if (jsc.VirtualMachine.VMHolder.vm) |vm_| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.assert(this.bunVMUnsafe() == @as(*anyopaque, @ptrCast(vm_)));
             } else {
                 @panic("This thread lacks a Bun VM");
             }
         }
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @as(*jsc.VirtualMachine, @ptrCast(@alignCast(this.bunVMUnsafe())));
     }
 
@@ -638,10 +670,14 @@ pub const JSGlobalObject = opaque {
     };
 
     pub fn tryBunVM(this: *JSGlobalObject) struct { *jsc.VirtualMachine, ThreadKind } {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const vmPtr = @as(*jsc.VirtualMachine, @ptrCast(@alignCast(this.bunVMUnsafe())));
 
         if (jsc.VirtualMachine.VMHolder.vm) |vm_| {
             if (comptime bun.Environment.allow_assert) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.assert(this.bunVMUnsafe() == @as(*anyopaque, @ptrCast(vm_)));
             }
         } else {
@@ -653,6 +689,8 @@ pub const JSGlobalObject = opaque {
 
     /// We can't do the threadlocal check when queued from another thread
     pub fn bunVMConcurrently(this: *JSGlobalObject) *jsc.VirtualMachine {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         return @as(*jsc.VirtualMachine, @ptrCast(@alignCast(this.bunVMUnsafe())));
     }
 
@@ -803,6 +841,8 @@ pub const JSGlobalObject = opaque {
             if (int < min_t or int > max_t) {
                 return this.throwRangeError(int, .{ .field_name = field_name, .min = min, .max = max });
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(int);
         }
 

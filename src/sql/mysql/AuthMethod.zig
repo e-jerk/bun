@@ -5,6 +5,7 @@ pub const AuthMethod = enum {
     sha256_password,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn scramble(this: AuthMethod, password: []const u8, auth_data: []const u8, buf: *[32]u8) ![]u8 {
         if (password.len == 0) {
             return &.{};

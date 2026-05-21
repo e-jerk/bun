@@ -3,6 +3,8 @@
 /// and is unreferenced after one of the two callbacks are called.
 ///
 /// See DevServer.zig's ErrorReportRequest for an example.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn BodyReaderMixin(
     Wrap: type,
     field: []const u8,
@@ -23,6 +25,8 @@ pub fn BodyReaderMixin(
             const Mixin = @This();
             const Response = @TypeOf(resp);
             const handlers = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 fn onDataGeneric(mixin: *Mixin, r: Response, chunk: []const u8, last: bool) void {
                     const any = uws.AnyResponse.init(r);
                     onData(mixin, any, chunk, last) catch |e| switch (e) {
@@ -39,6 +43,8 @@ pub fn BodyReaderMixin(
             resp.onAborted(*@This(), handlers.onAborted, ctx);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn onData(ctx: *@This(), resp: uws.AnyResponse, chunk: []const u8, last: bool) !void {
             if (last) {
                 // Free everything after

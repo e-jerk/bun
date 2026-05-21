@@ -44,10 +44,12 @@ pub fn init(gpa: std.mem.Allocator, bun_test_root: *bun_test.BunTestRoot) Collec
 pub fn deinit(this: *Collection) void {
     this.root_scope.destroy(this.bunTest().gpa);
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.describe_callback_queue.items) |*item| {
         item.deinit();
     }
     this.describe_callback_queue.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (this.current_scope_callback_queue.items) |*item| {
         item.deinit();

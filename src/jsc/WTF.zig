@@ -8,6 +8,7 @@ pub const WTF = struct {
     pub fn numberOfProcessorCores() u32 {
         jsc.markBinding(@src());
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@max(1, WTF__numberOfProcessorCores()));
     }
 
@@ -18,6 +19,7 @@ pub const WTF = struct {
         WTF__releaseFastMallocFreeMemoryForThisThread();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseDouble(buf: []const u8) !f64 {
         jsc.markBinding(@src());
@@ -37,6 +39,7 @@ pub const WTF = struct {
 
     // 2000-01-01T00:00:00.000Z -> 946684800000 (ms)
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseES5Date(buf: []const u8) !f64 {
         jsc.markBinding(@src());
 
@@ -53,6 +56,7 @@ pub const WTF = struct {
     extern fn Bun__writeHTTPDate(buffer: *[32]u8, length: usize, timestampMs: u64) c_int;
 
 // safe-transpile: function returns small constant slice — consider safe.String
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn writeHTTPDate(buffer: *[32]u8, timestampMs: u64) []u8 {
         if (timestampMs == 0) {
             return buffer[0..0];
@@ -63,6 +67,7 @@ pub const WTF = struct {
             return buffer[0..0];
         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return buffer[0..@intCast(res)];
     }

@@ -62,7 +62,9 @@ const EventIterator = struct {
         if (!this.hasNext) return null;
         const info_size = @sizeOf(w.FILE_NOTIFY_INFORMATION);
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const info: *w.FILE_NOTIFY_INFORMATION = @ptrCast(@alignCast(this.watcher.buf[this.offset..].ptr));
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const name_ptr: [*]u16 = @ptrCast(@alignCast(this.watcher.buf[this.offset + info_size ..]));
         const filename: []u16 = name_ptr[0 .. info.FileNameLength / @sizeOf(u16)];
@@ -83,9 +85,11 @@ const EventIterator = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn init(this: *WindowsWatcher, root: []const u8) !void {
     var pathbuf: bun.WPathBuffer = undefined;
     const wpath = bun.strings.toNTPath(&pathbuf, root);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     const path_len_bytes: u16 = @truncate(wpath.len * 2);
     var nt_name = w.UNICODE_STRING{
@@ -191,6 +195,7 @@ pub fn next(this: *WindowsWatcher, timeout: Timeout) bun.sys.Maybe(?EventIterato
             log("GetQueuedCompletionStatus returned no overlapped event", .{});
             return .{ .err = .{
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .errno = @truncate(@intFromEnum(bun.sys.E.INVAL)),
                 .syscall = .watch,
             } };
@@ -238,6 +243,7 @@ pub fn watchLoopCycle(this: *bun.Watcher) bun.sys.Maybe(void) {
             // - others that i'm not thinking of
 
             // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (item_paths, 0..) |path, item_idx| {
                 // check if the current change applies to this item
                 // if so, add it to the eventlist
@@ -258,6 +264,7 @@ pub fn watchLoopCycle(this: *bun.Watcher) bun.sys.Maybe(void) {
                     event_id = 0;
                 }
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.watch_events[event_id] = createWatchEvent(event, @truncate(item_idx));
                 event_id += 1;
@@ -289,6 +296,7 @@ fn processWatchEventBatch(this: *bun.Watcher, event_count: usize) bun.sys.Maybe(
     var last_event_index: usize = 0;
     var last_event_id: u32 = std.math.maxInt(u32);
 
+    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (all_events, 0..) |_, i| {
         if (all_events[i].index == last_event_id) {

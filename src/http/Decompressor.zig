@@ -14,6 +14,8 @@ pub const Decompressor = union(enum) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn updateBuffers(this: *Decompressor, encoding: Encoding, buffer: []const u8, body_out_str: *MutableString) !void {
         if (!encoding.isCompressed()) {
             return;
@@ -66,6 +68,8 @@ pub const Decompressor = union(enum) {
             .zlib => |reader| {
                 bun.assert(reader.zlib.avail_in == 0);
                 reader.zlib.next_in = buffer.ptr;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 reader.zlib.avail_in = @as(u32, @truncate(buffer.len));
 
                 const initial = body_out_str.list.items.len;
@@ -75,9 +79,15 @@ pub const Decompressor = union(enum) {
                     body_out_str.list.expandToCapacity();
                 }
                 reader.list = body_out_str.list;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 reader.zlib.next_out = @ptrCast(&body_out_str.list.items[initial]);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 reader.zlib.avail_out = @as(u32, @truncate(body_out_str.list.capacity - initial));
                 // we reset the total out so we can track how much we decompressed this time
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 reader.zlib.total_out = @truncate(initial);
             },
             .brotli => |reader| {
@@ -86,6 +96,8 @@ pub const Decompressor = union(enum) {
 
                 const initial = body_out_str.list.items.len;
                 reader.list = body_out_str.list;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 reader.total_out = @truncate(initial);
             },
             .zstd => |reader| {
@@ -94,6 +106,8 @@ pub const Decompressor = union(enum) {
 
                 const initial = body_out_str.list.items.len;
                 reader.list = body_out_str.list;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 reader.total_out = @truncate(initial);
             },
             else => @panic("Invalid encoding. This code should not be reachable"),

@@ -331,7 +331,9 @@ fn doWriteHeaders(this: *StaticRoute, resp: AnyResponse) void {
             const values: []const api.StringPointer = entries.items(.value);
             const buf = this.headers.buf.items;
 
-            for (names, values) |name, value| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (names, values) |name, value| {
                 s.writeHeader(name.slice(buf), value.slice(buf));
             }
             if (comptime tag != .H3) if (this.server) |srv| if (srv.h3AltSvc()) |alt|

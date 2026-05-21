@@ -50,10 +50,14 @@ pub fn LeadingZerosInt(comptime T: type) type {
 }
 
 pub inline fn fromInt(comptime T: type, bits: @typeInfo(T).@"struct".backing_integer.?) T {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @bitCast(bits);
 }
 
 pub inline fn asInt(comptime T: type, value: T) @typeInfo(T).@"struct".backing_integer.? {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return @bitCast(value);
 }
 

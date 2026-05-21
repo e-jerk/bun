@@ -88,6 +88,7 @@ pub const PosixLoop = extern struct {
         log("unref x {d}", .{count});
         this.num_polls -= count;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.active -|= @as(u32, @intCast(count));
     }
 
@@ -152,6 +153,7 @@ pub const PosixLoop = extern struct {
         const Handler = struct {
             pub fn callback(data: *anyopaque) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 deferCallback(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };
@@ -168,6 +170,7 @@ pub const PosixLoop = extern struct {
                 return c.uws_loop_removePostHandler(handler.loop, callback);
             }
             pub fn callback(data: *anyopaque, _: *Loop) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 callback_fn(@as(UserType, @ptrCast(@alignCast(data))));
             }
@@ -303,6 +306,7 @@ pub const WindowsLoop = extern struct {
         const Handler = struct {
             pub fn callback(data: *anyopaque) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 deferCallback(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };
@@ -327,6 +331,7 @@ pub const WindowsLoop = extern struct {
                 return c.uws_loop_removePostHandler(handler.loop, callback);
             }
             pub fn callback(data: *anyopaque, _: *Loop) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 callback_fn(@as(UserType, @ptrCast(@alignCast(data))));
             }

@@ -29,10 +29,14 @@ pub fn VersionType(comptime IntType: type) type {
         }
 
         /// Assumes that there is only one buffer for all the strings
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn sortGt(ctx: []const u8, lhs: This, rhs: This) bool {
             return orderFn(ctx, lhs, rhs) == .gt;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn orderFn(ctx: []const u8, lhs: This, rhs: This) std.math.Order {
             return lhs.order(rhs, ctx, ctx);
         }
@@ -41,10 +45,14 @@ pub fn VersionType(comptime IntType: type) type {
             return this.patch == 0 and this.minor == 0 and this.major == 0;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseUTF8(slice: []const u8) ParseResult {
             return parse(.{ .buf = slice, .slice = slice });
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn cloneInto(this: This, slice: []const u8, buf: *[]u8) This {
             return .{
                 .major = this.major,
@@ -140,7 +148,9 @@ pub fn VersionType(comptime IntType: type) type {
                         const other_pre = this.other.tag.pre.slice(this.other_buf);
 
                         var first = true;
-                        for (pre, 0..) |c, i| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (pre, 0..) |c, i| {
                             if (!set_color and i < other_pre.len and c != other_pre[i]) {
                                 set_color = true;
                                 try writer.writeAll(Output.prettyFmt("<r><b><red>", true));
@@ -163,7 +173,9 @@ pub fn VersionType(comptime IntType: type) type {
                         const other_build = this.other.tag.build.slice(this.other_buf);
 
                         var first = true;
-                        for (build, 0..) |c, i| {
+                        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (build, 0..) |c, i| {
                             if (!set_color and i < other_build.len and c != other_build[i]) {
                                 set_color = true;
                                 try writer.writeAll(Output.prettyFmt("<r><b><red>", true));
@@ -227,11 +239,15 @@ pub fn VersionType(comptime IntType: type) type {
                 null;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn count(this: *const This, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) void {
             if (this.tag.hasPre() and !this.tag.pre.isInline()) builder.count(this.tag.pre.slice(buf));
             if (this.tag.hasBuild() and !this.tag.build.isInline()) builder.count(this.tag.build.slice(buf));
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn append(this: *const This, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) This {
             var that = this.*;
 
@@ -421,6 +437,8 @@ pub fn VersionType(comptime IntType: type) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isTaggedVersionOnly(input: []const u8) bool {
             const version = strings.trim(input, &strings.whitespace_chars);
 
@@ -454,6 +472,8 @@ pub fn VersionType(comptime IntType: type) type {
             return .eq;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn order(
             lhs: This,
             rhs: This,
@@ -466,6 +486,8 @@ pub fn VersionType(comptime IntType: type) type {
             return lhs.tag.order(rhs.tag, lhs_buf, rhs_buf);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn orderWithoutBuild(
             lhs: This,
             rhs: This,
@@ -482,6 +504,8 @@ pub fn VersionType(comptime IntType: type) type {
             pre: ExternalString = ExternalString{},
             build: ExternalString = ExternalString{},
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn orderPre(lhs: Tag, rhs: Tag, lhs_buf: []const u8, rhs_buf: []const u8) std.math.Order {
                 const lhs_str = lhs.pre.slice(lhs_buf);
                 const rhs_str = rhs.pre.slice(rhs_buf);
@@ -537,6 +561,8 @@ var loop_limit: usize = 0;
                 unreachable;
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn order(
                 lhs: Tag,
                 rhs: Tag,
@@ -553,6 +579,8 @@ var loop_limit: usize = 0;
                 return lhs.build.order(&rhs.build, lhs_buf, rhs_buf);
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn orderWithoutBuild(
                 lhs: Tag,
                 rhs: Tag,
@@ -566,6 +594,8 @@ var loop_limit: usize = 0;
                 return lhs.pre.order(&rhs.pre, lhs_buf, rhs_buf);
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn cloneInto(this: Tag, slice: []const u8, buf: *[]u8) Tag {
                 var pre: String = this.pre.value;
                 var build: String = this.build.value;
@@ -697,6 +727,8 @@ var loop_limit: usize = 0;
                                     state = State.none;
                                 },
                             }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             result.len = @truncate(i);
                             break;
                         },
@@ -723,6 +755,8 @@ var loop_limit: usize = 0;
                         state = State.none;
                     },
                 }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 result.len = @as(u32, @truncate(i));
 
                 return result;
@@ -936,6 +970,8 @@ var loop_limit: usize = 0;
                 }
             }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             result.len = @as(u32, @intCast(i));
 
             return result;

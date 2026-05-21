@@ -351,7 +351,7 @@ pub const PatchTask = struct {
             // 5. Add bun tag
             const bun_tag_prefix = bun_hash_tag;
             var buntagbuf: BuntagHashBuf = undefined;
-            @memcpy(buntagbuf[0..bun_tag_prefix.len], bun_tag_prefix);
+            safe.SimdUtils.copy(buntagbuf[0..bun_tag_prefix.len], bun_tag_prefix);
             const hashlen = (std.fmt.bufPrint(buntagbuf[bun_tag_prefix.len..], "{x}", .{this.callback.apply.patch_hash}) catch unreachable).len;
             buntagbuf[bun_tag_prefix.len + hashlen] = 0;
             const buntagfd = switch (bun.sys.openat(
@@ -436,6 +436,8 @@ pub const PatchTask = struct {
             },
             .result => |s| s,
         };
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const size: u64 = @intCast(stat.size);
         if (size == 0) {
             log.addErrorFmt(
@@ -562,6 +564,8 @@ pub const PatchTask = struct {
                     // `PackageManager.cached_package_folder_name_buf` which may be
                     // modified
                     .cache_dir_subpath = bun.handleOom(pkg_manager.allocator.dupeZ(u8, stuff.cache_dir_subpath)),
+// zust: use safe.String or safe.GuardedSlice for slice operations
+// zust: use safe.String or safe.GuardedSlice for slice operations
                     .cache_dir_subpath_without_patch_hash = bun.handleOom(pkg_manager.allocator.dupeZ(u8, stuff.cache_dir_subpath[0 .. std.mem.indexOf(u8, stuff.cache_dir_subpath, "_patch_hash=") orelse @panic("This is a bug in Bun.")])),
                 },
             },

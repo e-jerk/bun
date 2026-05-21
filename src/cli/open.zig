@@ -219,6 +219,8 @@ pub const Editor = enum(u8) {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn open(
         editor: Editor,
         binary: string,
@@ -227,12 +229,12 @@ pub const Editor = enum(u8) {
         column: ?string,
         _: std.mem.Allocator,
     ) !void {
-        var spawned = try default_allocator.create(SpawnedEditorContext);
-        spawned.* = .{};
-        var file_path_buf_stream = @import("std-io-compat").fixedBufferStream(&spawned.file_path_buf);
+        var spawned = try safe.Box(SpawnedEditorContext).init(default_allocator, undefined);
+        spawned.ptr.* = .{};
+        var file_path_buf_stream = @import("std-io-compat").fixedBufferStream(&spawned.ptr.file_path_buf);
         var file_path_buf_writer = file_path_buf_stream.writer();
-        var args_buf = &spawned.buf;
-        errdefer default_allocator.destroy(spawned);
+        var args_buf = &spawned.ptr.buf;
+        errdefer _ = spawned.deinit();
 
         var i: usize = 0;
 
@@ -318,7 +320,7 @@ pub const Editor = enum(u8) {
         }
 
         // TODO: Re-implement editor spawning for Zig 0.16
-        default_allocator.destroy(spawned);
+        _ = spawned.deinit();
     }
     const SpawnedEditorContext = struct {
         file_path_buf: [1024 + bun.MAX_PATH_BYTES]u8 = undefined,
@@ -338,6 +340,8 @@ pub const EditorContext = struct {
     path: string = "",
     const Fs = @import("../resolver/fs.zig");
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) void {
         _openInEditor(this.path, editor_, blob, id, tmpdir, line, column) catch |err| {
             if (editor_ != .other) {
@@ -348,6 +352,8 @@ pub const EditorContext = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) !void {
         var basename_buf: [512]u8 = undefined;
         var basename = std.fs.path.basename(id);

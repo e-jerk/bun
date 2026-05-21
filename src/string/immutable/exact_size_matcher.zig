@@ -38,6 +38,7 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
                 1...max_bytes - 1 => {
                     var tmp: [max_bytes]u8 = undefined;
                     // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (str, 0..) |char, i| {
                         tmp[i] = std.ascii.toLower(char);
                     }
@@ -56,6 +57,7 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn case(comptime str: []const u8) T {
             if (str.len < max_bytes) {

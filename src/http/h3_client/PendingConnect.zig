@@ -19,6 +19,7 @@ pub fn register(session: *ClientSession, pc: *quic.PendingConnect, l: *uws.Loop)
     const self = bun.new(PendingConnect, .{ .session = session, .pc = pc, .loop_ptr = l });
     session.ref();
 // safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
     bun.dns.internal.registerQuic(@ptrCast(@alignCast(pc.addrinfo())), self);
 }
 

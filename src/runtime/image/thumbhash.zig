@@ -15,6 +15,8 @@
 /// AC counts)/2). Worst case (has_alpha, square) is 5+1+ceil((14+5+5+14)/2)=25.
 pub const max_len = 25;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encode(out: *[max_len]u8, w: u32, h: u32, rgba: []const u8) []u8 {
     bun.debugAssert(w > 0 and w <= 100 and h > 0 and h <= 100);
     bun.debugAssert(rgba.len == @as(usize, w) * h * 4);
@@ -29,6 +31,8 @@ pub fn encode(out: *[max_len]u8, w: u32, h: u32, rgba: []const u8) []u8 {
         avg[2] += a / 255.0 * @as(f32, @floatFromInt(rgba[i + 2]));
         avg[3] += a;
     }
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     if (avg[3] > 0) for (avg[0..3]) |*c| {
         c.* /= avg[3];
     };
@@ -72,14 +76,26 @@ pub fn encode(out: *[max_len]u8, w: u32, h: u32, rgba: []const u8) []u8 {
         (@as(u32, @intFromFloat(@round(31.5 + 31.5 * qc.dc))) << 12) |
         (@as(u32, @intFromFloat(@round(31 * lc.scale))) << 18) |
         (@as(u32, @intFromBool(has_alpha)) << 23);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const h16: u16 = @as(u16, @intCast(if (land) ly else lx)) |
         (@as(u16, @intFromFloat(@round(63 * pc.scale))) << 3) |
         (@as(u16, @intFromFloat(@round(63 * qc.scale))) << 9) |
         (@as(u16, @intFromBool(land)) << 15);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[0] = @truncate(h24);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[1] = @truncate(h24 >> 8);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[2] = @truncate(h24 >> 16);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[3] = @truncate(h16);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[4] = @truncate(h16 >> 8);
     var n: usize = 5;
     if (has_alpha) {
@@ -133,6 +149,8 @@ fn dct(chan: []const f32, w: u32, h: u32, nx: u32, ny: u32) Channel {
             }
         }
     }
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     if (c.scale > 0) for (c.ac[0..c.n]) |*f| {
         f.* = 0.5 + 0.5 / c.scale * f.*;
     };
@@ -141,6 +159,8 @@ fn dct(chan: []const f32, w: u32, h: u32, nx: u32, ny: u32) Channel {
 
 /// Decode `hash` to a ≤32px RGBA image. Returns `error.DecodeFailed` if the
 /// hash is too short. Output is `bun.default_allocator`-owned.
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(hash: []const u8) error{ DecodeFailed, OutOfMemory }!struct { rgba: []u8, w: u32, h: u32 } {
     if (hash.len < 5) return error.DecodeFailed;
     const h24: u32 = @as(u32, hash[0]) | @as(u32, hash[1]) << 8 | @as(u32, hash[2]) << 16;

@@ -215,6 +215,8 @@ fn eachImpl(
     var batch: Batch = .{};
     var offset = tasks.len;
 
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
     for (tasks) |*runner_task| {
         offset -= 1;
         runner_task.* = .{
@@ -332,6 +334,8 @@ pub const default_thread_stack_size = brk: {
 /// https://www.youtube.com/watch?v=ys3qcbO5KWw
 pub fn warm(self: *ThreadPool, count: u14) void {
     self.is_running.store(true, .monotonic);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     const target = @min(count, @as(u14, @truncate(self.max_threads)));
     var sync = self.sync.load(.monotonic);
     while (sync.spawned < target) {

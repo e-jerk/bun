@@ -43,6 +43,7 @@ pub const Raw = union(enum) {
 /// Match WebKit's parseRange (HTTPParsers.cpp): case-insensitive "bytes",
 /// optional whitespace before "=". https://fetch.spec.whatwg.org/#simple-range-header-value
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseRaw(header: []const u8) Raw {
     var rest = header;
     if (rest.len < 5 or !bun.strings.eqlCaseInsensitiveASCII(rest[0..5], "bytes", false)) return .none;
@@ -67,6 +68,7 @@ pub fn parseRaw(header: []const u8) Raw {
     return .{ .bounded = .{ .start = start, .end = end } };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parse(header: []const u8, total: u64) Result {
     return parseRaw(header).resolve(total);

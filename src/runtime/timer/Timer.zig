@@ -78,6 +78,8 @@ pub const All = struct {
             timer.in_heap = .regular;
 
             if (Environment.isWindows) {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
                 this.ensureUVTimer(@alignCast(@fieldParentPtr("timer", this)));
             }
         }
@@ -153,6 +155,8 @@ pub const All = struct {
 
     pub fn onUVTimer(uv_timer_t: *uv.Timer) callconv(.c) void {
         const all: *All = @fieldParentPtr("uv_timer", uv_timer_t);
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const vm: *VirtualMachine = @alignCast(@fieldParentPtr("timer", all));
         all.drainTimers(vm);
         all.ensureUVTimer(vm);
@@ -162,6 +166,8 @@ pub const All = struct {
         const old = this.immediate_ref_count;
         const new = old + delta;
         this.immediate_ref_count = new;
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const vm: *VirtualMachine = @alignCast(@fieldParentPtr("timer", this));
 
         if (old <= 0 and new > 0) {
@@ -192,6 +198,8 @@ pub const All = struct {
     }
 
     pub fn incrementTimerRef(this: *All, delta: i32) void {
+// safe-transpile: @alignCast requires manual review
+// safe-transpile: @alignCast requires manual review
         const vm: *jsc.VirtualMachine = @alignCast(@fieldParentPtr("timer", this));
 
         const old = this.active_timer_count;
@@ -294,7 +302,11 @@ pub const All = struct {
 
         if (quic_us) |us| if (us >= 0) {
             spec.* = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .sec = @intCast(@divTrunc(us, std.time.us_per_s)),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .nsec = @intCast(@mod(us, std.time.us_per_s) * std.time.ns_per_us),
             };
             return true;
@@ -305,7 +317,11 @@ pub const All = struct {
     fn clampToQuic(spec: *timespec, us: i64) void {
         const cur_us = @as(i64, spec.sec) * std.time.us_per_s + @divTrunc(spec.nsec, std.time.ns_per_us);
         if (us < cur_us) spec.* = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .sec = @intCast(@divTrunc(us, std.time.us_per_s)),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .nsec = @intCast(@mod(us, std.time.us_per_s) * std.time.ns_per_us),
         };
     }
@@ -552,7 +568,9 @@ pub const All = struct {
                         inline else => |encoding| {
                             // Call the function named for this encoding (.latin1(), etc.)
                             const slice = @field(bun.String, @tagName(encoding))(string);
-                            for (slice, 0..) |c, i| {
+                            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (slice, 0..) |c, i| {
                                 if (c < '0' or c > '9') {
                                     // Non-digit characters are not allowed
                                     return;
@@ -650,6 +668,8 @@ pub const ID = extern struct {
     kind: Kind.Big = .setTimeout,
 
     pub inline fn asyncID(this: ID) u64 {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
         return @bitCast(this);
     }
 

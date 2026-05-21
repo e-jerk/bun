@@ -302,12 +302,18 @@ pub fn create(
         // 1 - the Server handler.
         .ref_count = .initExactRefs(3),
         .upgrade_context = .{
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .context = @ptrCast(upgrade_ctx),
             .request = request,
         },
         .server = AnyServer{ .ptr = AnyServer.Ptr.from(@ptrFromInt(any_server_tag)) },
         .raw_response = switch (is_ssl != 0) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             true => uws.AnyResponse{ .SSL = @ptrCast(response_ptr) },
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             false => uws.AnyResponse{ .TCP = @ptrCast(response_ptr) },
         },
         .body_read_state = if (has_body.*) .pending else .none,
@@ -352,6 +358,8 @@ pub fn getFinished(this: *const NodeHTTPResponse, _: *jsc.JSGlobalObject) jsc.JS
 }
 
 pub fn getFlags(this: *const NodeHTTPResponse, _: *jsc.JSGlobalObject) jsc.JSValue {
+// safe-transpile: @bitCast requires manual review
+// safe-transpile: @bitCast requires manual review
     return jsc.JSValue.jsNumber(@as(u8, @bitCast(this.flags)));
 }
 
@@ -482,6 +490,8 @@ pub fn writeHead(this: *NodeHTTPResponse, globalObject: *jsc.JSGlobalObject, cal
 
     do_it: {
         if (status_message_slice.len == 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (HTTPStatusText.get(@intCast(status_code))) |status_message| {
                 writeHeadInternal(this.raw_response.?, globalObject, status_message, headers_object_value);
                 break :do_it;
@@ -498,10 +508,16 @@ pub fn writeHead(this: *NodeHTTPResponse, globalObject: *jsc.JSGlobalObject, cal
     return .js_undefined;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeHeadInternal(response: uws.AnyResponse, globalObject: *jsc.JSGlobalObject, status_message: []const u8, headers: jsc.JSValue) void {
     log("writeHeadInternal({s})", .{status_message});
     switch (response) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .TCP => NodeHTTPServer__writeHead_http(globalObject, status_message.ptr, status_message.len, headers, @ptrCast(response.TCP)),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .SSL => NodeHTTPServer__writeHead_https(globalObject, status_message.ptr, status_message.len, headers, @ptrCast(response.SSL)),
         .H3 => bun.Output.panic("node:http does not support HTTP/3 responses", .{}),
     }
@@ -713,6 +729,8 @@ pub fn abort(this: *NodeHTTPResponse, _: *jsc.JSGlobalObject, _: *jsc.CallFrame)
     return .js_undefined;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn onBufferRequestBodyWhilePaused(this: *NodeHTTPResponse, chunk: []const u8, last: bool) void {
     log("onBufferRequestBodyWhilePaused({d}, {})", .{ chunk.len, last });
     bun.handleOom(this.buffered_request_body_data_during_pause.appendSlice(
@@ -728,6 +746,8 @@ fn onBufferRequestBodyWhilePaused(this: *NodeHTTPResponse, chunk: []const u8, la
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn getBytes(this: *NodeHTTPResponse, globalThis: *jsc.JSGlobalObject, chunk: []const u8) jsc.JSValue {
     // TODO: we should have a error event for this but is better than ignoring it
     // right now the socket instead of emitting an error event it will reportUncaughtException
@@ -743,8 +763,8 @@ fn getBytes(this: *NodeHTTPResponse, globalThis: *jsc.JSGlobalObject, chunk: []c
 
             defer this.buffered_request_body_data_during_pause.clearAndFree(bun.default_allocator);
             var input = array_buffer.slice();
-            @memcpy(input[0..this.buffered_request_body_data_during_pause.len], this.buffered_request_body_data_during_pause.slice());
-            @memcpy(input[this.buffered_request_body_data_during_pause.len..], chunk);
+            zust.SimdUtils.copy(input[0..this.buffered_request_body_data_during_pause.len], this.buffered_request_body_data_during_pause.slice());
+            zust.SimdUtils.copy(input[this.buffered_request_body_data_during_pause.len..], chunk);
             break :brk buffer;
         }
 
@@ -763,6 +783,8 @@ fn getBytes(this: *NodeHTTPResponse, globalThis: *jsc.JSGlobalObject, chunk: []c
     return bytes;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn onDataOrAborted(this: *NodeHTTPResponse, chunk: []const u8, last: bool, event: AbortEvent, thisValue: jsc.JSValue) void {
     log("onDataOrAborted({d}, {})", .{ chunk.len, last });
     if (last) {
@@ -799,6 +821,8 @@ fn onDataOrAborted(this: *NodeHTTPResponse, chunk: []const u8, last: bool, event
     }
 }
 pub const BUN_DEBUG_REFCOUNT_NAME = "NodeHTTPServerResponse";
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onData(this: *NodeHTTPResponse, chunk: []const u8, last: bool) void {
     log("onData({d} bytes, is_last = {d})", .{ chunk.len, @intFromBool(last) });
 
@@ -975,6 +999,8 @@ fn writeOrEnd(
                     raw_response.onWritable(*NodeHTTPResponse, onDrain, this);
                 }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return jsc.JSValue.jsNumberFromInt64(-@as(i64, @intCast(@min(written, std.math.maxInt(i64)))));
             },
         }
@@ -1163,6 +1189,8 @@ export fn NodeHTTPResponse__setTimeout(this: *NodeHTTPResponse, seconds: jsc.JSV
         return false;
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     this.raw_response.?.timeout(@intCast(@min(seconds.to(c_uint), 255)));
     return true;
 }

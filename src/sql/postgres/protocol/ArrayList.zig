@@ -5,10 +5,12 @@ pub fn offset(this: @This()) usize {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(this: @This(), bytes: []const u8) AnyPostgresError!void {
     try this.array.appendSlice(bytes);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pwrite(this: @This(), bytes: []const u8, i: usize) AnyPostgresError!void {
     safe.SimdUtils.copy(this.array.items[i..][0..bytes.len], bytes);

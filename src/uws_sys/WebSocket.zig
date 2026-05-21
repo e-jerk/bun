@@ -4,10 +4,12 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
 
         pub fn raw(this: *WebSocket) *RawWebSocket {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as(*RawWebSocket, @ptrCast(this));
         }
         pub fn as(this: *WebSocket, comptime Type: type) ?*Type {
             @setRuntimeSafety(false);
+// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             return @as(?*Type, @ptrCast(@alignCast(c.uws_ws_get_user_data(ssl_flag, this.raw()))));
         }
@@ -16,9 +18,11 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
             return c.uws_ws_close(ssl_flag, this.raw());
         }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn send(this: *WebSocket, message: []const u8, opcode: Opcode) SendStatus {
             return c.uws_ws_send(ssl_flag, this.raw(), message.ptr, message.len, opcode);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn sendWithOptions(this: *WebSocket, message: []const u8, opcode: Opcode, compress: bool, fin: bool) SendStatus {
             return c.uws_ws_send_with_options(ssl_flag, this.raw(), message.ptr, message.len, opcode, compress, fin);
@@ -29,9 +33,11 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn sendLastFragment(this: *WebSocket, message: []const u8, compress: bool) SendStatus {
             return c.uws_ws_send_last_fragment(ssl_flag, this.raw(), message.ptr, message.len, compress);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn end(this: *WebSocket, code: i32, message: []const u8) void {
             return c.uws_ws_end(ssl_flag, this.raw(), code, message.ptr, message.len);
@@ -47,13 +53,16 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
             return c.uws_ws_cork(ssl_flag, this.raw(), Wrapper.wrap, ctx);
         }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn subscribe(this: *WebSocket, topic: []const u8) bool {
             return c.uws_ws_subscribe(ssl_flag, this.raw(), topic.ptr, topic.len);
         }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn unsubscribe(this: *WebSocket, topic: []const u8) bool {
             return c.uws_ws_unsubscribe(ssl_flag, this.raw(), topic.ptr, topic.len);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn isSubscribed(this: *WebSocket, topic: []const u8) bool {
             return c.uws_ws_is_subscribed(ssl_flag, this.raw(), topic.ptr, topic.len);
@@ -61,9 +70,11 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
         // getTopicsAsJSArray: use AnyWebSocket.getTopicsAsJSArray (src/runtime/socket/uws_jsc.zig)
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn publish(this: *WebSocket, topic: []const u8, message: []const u8) bool {
             return c.uws_ws_publish(ssl_flag, this.raw(), topic.ptr, topic.len, message.ptr, message.len);
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn publishWithOptions(this: *WebSocket, topic: []const u8, message: []const u8, opcode: Opcode, compress: bool) bool {
             return c.uws_ws_publish_with_options(ssl_flag, this.raw(), topic.ptr, topic.len, message.ptr, message.len, opcode, compress);
@@ -71,6 +82,7 @@ pub fn NewWebSocket(comptime ssl_flag: c_int) type {
         pub fn getBufferedAmount(this: *WebSocket) u32 {
             return c.uws_ws_get_buffered_amount(ssl_flag, this.raw());
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn getRemoteAddress(this: *WebSocket, buf: []u8) []u8 {
             var ptr: [*]u8 = undefined;
@@ -92,6 +104,7 @@ pub const RawWebSocket = opaque {
     ///
     ///   (struct us_socket_t *)socket
     pub fn asSocket(this: *RawWebSocket) *uws.Socket {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as(*uws.Socket, @ptrCast(this));
     }
@@ -128,6 +141,7 @@ pub const AnyWebSocket = union(enum) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn send(this: AnyWebSocket, message: []const u8, opcode: Opcode, compress: bool, fin: bool) SendStatus {
         return switch (this) {
             .ssl => c.uws_ws_send_with_options(1, this.ssl.raw(), message.ptr, message.len, opcode, compress, fin),
@@ -135,12 +149,14 @@ pub const AnyWebSocket = union(enum) {
         };
     }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn sendLastFragment(this: AnyWebSocket, message: []const u8, compress: bool) SendStatus {
         switch (this) {
             .tcp => return c.uws_ws_send_last_fragment(0, this.raw(), message.ptr, message.len, compress),
             .ssl => return c.uws_ws_send_last_fragment(1, this.raw(), message.ptr, message.len, compress),
         }
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn end(this: AnyWebSocket, code: i32, message: []const u8) void {
         switch (this) {
@@ -162,6 +178,7 @@ pub const AnyWebSocket = union(enum) {
         }
     }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn subscribe(this: AnyWebSocket, topic: []const u8) bool {
         return switch (this) {
             .ssl => c.uws_ws_subscribe(1, this.ssl.raw(), topic.ptr, topic.len),
@@ -169,12 +186,14 @@ pub const AnyWebSocket = union(enum) {
         };
     }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn unsubscribe(this: AnyWebSocket, topic: []const u8) bool {
         return switch (this) {
             .ssl => c.uws_ws_unsubscribe(1, this.raw(), topic.ptr, topic.len),
             .tcp => c.uws_ws_unsubscribe(0, this.raw(), topic.ptr, topic.len),
         };
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn isSubscribed(this: AnyWebSocket, topic: []const u8) bool {
         return switch (this) {
@@ -187,6 +206,7 @@ pub const AnyWebSocket = union(enum) {
     //     return uws_ws_iterate_topics(ssl_flag, this.raw(), callback: ?*const fn ([*c]const u8, usize, ?*anyopaque) callconv(.c) void, user_data: ?*anyopaque) void;
     // }
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn publish(this: AnyWebSocket, topic: []const u8, message: []const u8, opcode: Opcode, compress: bool) bool {
         return switch (this) {
             .ssl => c.uws_ws_publish_with_options(1, this.ssl.raw(), topic.ptr, topic.len, message.ptr, message.len, opcode, compress),
@@ -195,8 +215,10 @@ pub const AnyWebSocket = union(enum) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn publishWithOptions(ssl: bool, app: *anyopaque, topic: []const u8, message: []const u8, opcode: Opcode, compress: bool) bool {
         return switch (ssl) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             inline else => |tls| uws.NewApp(tls).publishWithOptions(@ptrCast(app), topic, message, opcode, compress),
         };
@@ -209,6 +231,7 @@ pub const AnyWebSocket = union(enum) {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getRemoteAddress(this: AnyWebSocket, buf: []u8) []u8 {
         return switch (this) {
@@ -249,6 +272,7 @@ pub const WebSocketBehavior = extern struct {
 
             pub fn onOpen(raw_ws: *RawWebSocket) callconv(.c) void {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
                 @call(bun.callmod_inline, Type.onOpen, .{
@@ -258,6 +282,7 @@ pub const WebSocketBehavior = extern struct {
             }
 
             pub fn onMessage(raw_ws: *RawWebSocket, message: [*c]const u8, length: usize, opcode: Opcode) callconv(.c) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
@@ -271,6 +296,7 @@ pub const WebSocketBehavior = extern struct {
 
             pub fn onDrain(raw_ws: *RawWebSocket) callconv(.c) void {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
                 @call(bun.callmod_inline, Type.onDrain, .{
@@ -280,6 +306,7 @@ pub const WebSocketBehavior = extern struct {
             }
 
             pub fn onPing(raw_ws: *RawWebSocket, message: [*c]const u8, length: usize) callconv(.c) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
@@ -292,6 +319,7 @@ pub const WebSocketBehavior = extern struct {
 
             pub fn onPong(raw_ws: *RawWebSocket, message: [*c]const u8, length: usize) callconv(.c) void {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
                 @call(bun.callmod_inline, Type.onPong, .{
@@ -302,6 +330,7 @@ pub const WebSocketBehavior = extern struct {
             }
 
             pub fn onClose(raw_ws: *RawWebSocket, code: i32, message: [*c]const u8, length: usize) callconv(.c) void {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ws = @unionInit(AnyWebSocket, active_field_name, @as(*WebSocket, @ptrCast(raw_ws)));
                 const this = ws.as(Type).?;
@@ -316,6 +345,7 @@ pub const WebSocketBehavior = extern struct {
             pub fn onUpgrade(ptr: *anyopaque, res: *uws_res, req: *Request, context: *uws.WebSocketUpgradeContext, id: usize) callconv(.c) void {
                 @call(bun.callmod_inline, Server.onWebSocketUpgrade, .{
                     bun.cast(*Server, ptr),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     @as(*NewApp(is_ssl).Response, @ptrCast(res)),
                     req,

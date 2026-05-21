@@ -2,6 +2,8 @@
 //! their own fragments to a shared temp dir; the coordinator stitches them
 //! into a single document/report after `drive()` completes.
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn attrValue(head: []const u8, comptime name: []const u8) u32 {
     const needle = " " ++ name ++ "=\"";
     const start = (bun.strings.indexOf(head, needle) orelse return 0) + needle.len;
@@ -9,6 +11,8 @@ fn attrValue(head: []const u8, comptime name: []const u8) u32 {
     return std.fmt.parseInt(u32, head[start..end], 10) catch 0;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn mergeJUnitFragments(coord: *Coordinator, outfile: []const u8, summary: *const TestRunner.Summary) void {
     var body: std.ArrayListUnmanaged(u8) = .empty;
     defer body.deinit(bun.default_allocator);
@@ -171,6 +175,8 @@ pub fn mergeCoverageFragments(paths: []const []const u8, opts: *TestCommand.Code
                 const buf = bun.handleOom(arena.alloc(u8, 64 * 1024));
                 var bw = f.writer().adaptToNewApi(buf);
                 const w = &bw.new_interface;
+// safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
                 for (by_file.values()) |*fc| {
                     const sorted = bun.handleOom(arena.dupe(u32, fc.da.keys()));
                     std.sort.pdq(u32, sorted, {}, std.sort.asc(u32));
@@ -188,6 +194,8 @@ pub fn mergeCoverageFragments(paths: []const []const u8, opts: *TestCommand.Code
     var avg = CoverageFraction{ .functions = 0, .lines = 0, .stmts = 0 };
     var avg_n: f64 = 0;
     const fracs = bun.handleOom(arena.alloc(CoverageFraction, by_file.count()));
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (by_file.values(), fracs) |*fc, *frac| {
         const lf: f64 = @floatFromInt(fc.da.count());
         const lh_: f64 = @floatFromInt(fc.lh());
@@ -224,7 +232,9 @@ pub fn mergeCoverageFragments(paths: []const []const u8, opts: *TestCommand.Code
         sep(console, max_len, enable_colors);
 
         var body = std.Io.Writer.Allocating.init(arena);
-        for (by_file.values(), fracs) |*fc, frac| {
+        // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (by_file.values(), fracs) |*fc, frac| {
             CoverageReportText.writeFormatWithValues(fc.path, max_len, frac, base, frac.failing, &body.writer, true, enable_colors) catch {};
             body.writer.writeAll(Output.prettyFmt("<r><d> | <r>", enable_colors)) catch {};
 

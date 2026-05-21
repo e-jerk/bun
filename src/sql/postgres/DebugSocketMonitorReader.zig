@@ -18,6 +18,7 @@ pub fn load() void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(data: []const u8) void {
     file.writeAll(data) catch {};
 }

@@ -6,6 +6,8 @@ pub fn findAllImportedPartsInJSOrder(this: *LinkerContext, temp_allocator: std.m
     var parts_prefix_shared = std.array_list.Managed(PartRange).init(temp_allocator);
     defer part_ranges_shared.deinit();
     defer parts_prefix_shared.deinit();
+    // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, index| {
         switch (chunk.content) {
             .javascript => {
@@ -13,6 +15,8 @@ pub fn findAllImportedPartsInJSOrder(this: *LinkerContext, temp_allocator: std.m
                     chunk,
                     &part_ranges_shared,
                     &parts_prefix_shared,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @intCast(index),
                 );
             },
@@ -106,7 +110,11 @@ pub fn findImportedPartsInJSOrder(
 
             const records = v.import_records[source_index].slice();
 
-            for (parts, 0..) |part, part_index_| {
+            // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
+    for (parts, 0..) |part, part_index_| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 const part_index = @as(u32, @truncate(part_index_));
                 const is_part_in_this_chunk = is_file_in_chunk and part.is_live;
                 for (part.import_record_indices.slice()) |record_id| {
@@ -152,6 +160,8 @@ pub fn findImportedPartsInJSOrder(
                         .{
                             .source_index = Index.init(source_index),
                             .part_index_begin = 0,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .part_index_end = @as(u32, @truncate(parts.len)),
                         },
                     ) catch |err| bun.handleOom(err);

@@ -97,9 +97,11 @@ pub extern fn simdutf__utf16_length_from_latin1(input: [*]const u8, length: usiz
 pub const validate = struct {
     pub const with_errors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn utf8(input: []const u8) SIMDUTFResult {
             return simdutf__validate_utf8_with_errors(input.ptr, input.len);
         }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn ascii(input: []const u8) SIMDUTFResult {
             return simdutf__validate_ascii_with_errors(input.ptr, input.len);
@@ -113,9 +115,11 @@ pub const validate = struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn utf8(input: []const u8) bool {
         return simdutf__validate_utf8(input.ptr, input.len);
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn ascii(input: []const u8) bool {
         jsc.markBinding(@src());
@@ -133,6 +137,7 @@ pub const convert = struct {
     pub const latin1 = struct {
         pub const to = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn utf8(input: []const u8, output: []u8) usize {
                 return simdutf__convert_latin1_to_utf8(input.ptr, input.len, output.ptr);
             }
@@ -144,9 +149,11 @@ pub const convert = struct {
             pub const utf16 = struct {
                 pub const with_errors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn le(input: []const u8, output: []u16) SIMDUTFResult {
                         return simdutf__convert_utf8_to_utf16le_with_errors(input.ptr, input.len, output.ptr);
                     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn be(input: []const u8, output: []u16) SIMDUTFResult {
                         return simdutf__convert_utf8_to_utf16be_with_errors(input.ptr, input.len, output.ptr);
@@ -154,9 +161,11 @@ pub const convert = struct {
                 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn le(input: []const u8, output: []u16) usize {
                     return simdutf__convert_utf8_to_utf16le(input.ptr, input.len, output.ptr);
                 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn be(input: []const u8, output: []u16) usize {
                     return simdutf__convert_utf8_to_utf16be(input.ptr, input.len, output.ptr);
@@ -166,9 +175,11 @@ pub const convert = struct {
             pub const utf32 = struct {
                 pub const with_errors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn le(input: []const u8, output: []u32) SIMDUTFResult {
                         return simdutf__convert_utf8_to_utf32_with_errors(input.ptr, input.len, output.ptr);
                     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn be(input: []const u8, output: []u32) SIMDUTFResult {
                         return simdutf__convert_utf8_to_utf32_with_errors(input.ptr, input.len, output.ptr);
@@ -176,9 +187,11 @@ pub const convert = struct {
                 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn le(input: []const u8, output: []u32) usize {
                     return simdutf__convert_valid_utf8_to_utf32(input.ptr, input.len, output.ptr);
                 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn be(input: []const u8, output: []u32) usize {
                     return simdutf__convert_valid_utf8_to_utf32(input.ptr, input.len, output.ptr);
@@ -192,9 +205,11 @@ pub const convert = struct {
             pub const utf8 = struct {
                 pub const with_errors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn le(input: []const u16, output: []u8) SIMDUTFResult {
                         return simdutf__convert_utf16le_to_utf8_with_errors(input.ptr, input.len, output.ptr);
                     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn be(input: []const u16, output: []u8) SIMDUTFResult {
                         return simdutf__convert_utf16be_to_utf8_with_errors(input.ptr, input.len, output.ptr);
@@ -202,9 +217,11 @@ pub const convert = struct {
                 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn le(input: []const u16, output: []u8) usize {
                     return simdutf__convert_valid_utf16le_to_utf8(input.ptr, input.len, output.ptr);
                 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn be(input: []const u16, output: []u8) usize {
                     return simdutf__convert_valid_utf16be_to_utf8(input.ptr, input.len, output.ptr);
@@ -236,9 +253,11 @@ pub const convert = struct {
             pub const utf8 = struct {
                 pub const with_errors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn le(input: []const u32, output: []u8) SIMDUTFResult {
                         return simdutf__convert_utf32_to_utf8_with_errors(input.ptr, input.len, output.ptr);
                     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn be(input: []const u32, output: []u8) SIMDUTFResult {
                         return simdutf__convert_utf32_to_utf8_with_errors(input.ptr, input.len, output.ptr);
@@ -246,9 +265,11 @@ pub const convert = struct {
                 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn le(input: []const u32, output: []u8) usize {
                     return simdutf__convert_valid_utf32_to_utf8(input.ptr, input.len, output.ptr);
                 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn be(input: []const u32, output: []u8) usize {
                     return simdutf__convert_valid_utf32_to_utf8(input.ptr, input.len, output.ptr);
@@ -291,6 +312,7 @@ pub const length = struct {
             };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn latin1(input: []const u8) usize {
                 return simdutf__utf8_length_from_latin1(input.ptr, input.len);
             }
@@ -305,6 +327,7 @@ pub const length = struct {
     pub const utf16 = struct {
         pub const from = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn utf8(input: []const u8) usize {
                 if (@inComptime()) {
                     return @import("std").unicode.utf8CountCodepoints(input) catch @compileError("Invalid UTF-8");
@@ -318,6 +341,7 @@ pub const length = struct {
             }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn latin1(input: []const u8) usize {
                 return simdutf__utf16_length_from_latin1(input.ptr, input.len);
             }
@@ -328,10 +352,12 @@ pub const length = struct {
         pub const from = struct {
             pub const utf8 = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn le(input: []const u8) usize {
                     jsc.markBinding(@src());
                     return simdutf__utf32_length_from_utf8(input.ptr, input.len);
                 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn be(input: []const u8) usize {
                     return simdutf__utf32_length_from_utf8(input.ptr, input.len);
@@ -353,6 +379,7 @@ pub const length = struct {
 };
 
 pub const trim = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn utf8_len(buf: []const u8) usize {
         const len = buf.len;
@@ -408,6 +435,7 @@ pub const trim = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn utf8(buf: []const u8) []const u8 {
         return buf[0..utf8_len(buf)];
     }
@@ -420,6 +448,7 @@ pub const base64 = struct {
     extern fn simdutf__base64_length_from_binary(length: usize, options: c_int) usize;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encode(input: []const u8, output: []u8, is_urlsafe: bool) usize {
         return simdutf__base64_encode(input.ptr, input.len, output.ptr, @intFromBool(is_urlsafe));
     }
@@ -429,10 +458,12 @@ pub const base64 = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decode(input: []const u8, output: []u8, is_urlsafe: bool) SIMDUTFResult {
         return simdutf__base64_decode_from_binary(input.ptr, input.len, output.ptr, output.len, @intFromBool(is_urlsafe));
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decode16(input: []const u16, output: []u8, is_urlsafe: bool) SIMDUTFResult {
         return simdutf__base64_decode_from_binary16(input.ptr, input.len, output.ptr, output.len, @intFromBool(is_urlsafe));

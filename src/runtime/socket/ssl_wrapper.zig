@@ -125,6 +125,8 @@ pub fn SSLWrapper(comptime T: type) type {
             // start the handshake
             this.handleTraffic();
         }
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn startWithPayload(this: *This, payload: []const u8) void {
             this.handlers.onOpen(this.handlers.ctx);
             this.receiveData(payload);
@@ -137,6 +139,8 @@ pub fn SSLWrapper(comptime T: type) type {
             // We cannot shutdown read in SSL, the read direction is closed by the peer.
             // So we just ignore the onData data, we still wanna to wait until we received the shutdown
             const DummyReadHandler = struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 fn onData(_: T, _: []const u8) void {}
             };
             this.handlers.onData = DummyReadHandler.onData;
@@ -196,6 +200,8 @@ pub fn SSLWrapper(comptime T: type) type {
             this.handleTraffic();
             const ssl = this.ssl orelse return 0;
             const pending = BoringSSL.BIO_ctrl_pending(BoringSSL.SSL_get_wbio(ssl));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (pending > 0) return @intCast(pending);
             return 0;
         }
@@ -232,10 +238,14 @@ pub fn SSLWrapper(comptime T: type) type {
         }
 
         // Receive data from the network (encrypted data)
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn receiveData(this: *This, data: []const u8) void {
             const ssl = this.ssl orelse return;
 
             const input = BoringSSL.SSL_get_rbio(ssl) orelse return;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const written = BoringSSL.BIO_write(input, data.ptr, @as(c_int, @intCast(data.len)));
             if (written > -1) {
                 this.handleTraffic();
@@ -243,6 +253,8 @@ pub fn SSLWrapper(comptime T: type) type {
         }
 
         // Send data to the network (unencrypted data)
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeData(this: *This, data: []const u8) !usize {
             const ssl = this.ssl orelse return error.ConnectionClosed;
 
@@ -254,6 +266,8 @@ pub fn SSLWrapper(comptime T: type) type {
                 this.handleTraffic();
                 return 0;
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const written = BoringSSL.SSL_write(ssl, data.ptr, @as(c_int, @intCast(data.len)));
             if (written <= 0) {
                 const err = BoringSSL.SSL_get_error(ssl, written);
@@ -275,6 +289,8 @@ pub fn SSLWrapper(comptime T: type) type {
                 return error.ConnectionClosed;
             }
             this.handleTraffic();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return @intCast(written);
         }
 
@@ -300,6 +316,8 @@ pub fn SSLWrapper(comptime T: type) type {
             this.handlers.onHandshake(this.handlers.ctx, success, result);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn triggerWannaWriteCallback(this: *This, data: []const u8) void {
             if (this.flags.closed_notified) return;
 
@@ -307,6 +325,8 @@ pub fn SSLWrapper(comptime T: type) type {
             this.handlers.write(this.handlers.ctx, data);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn triggerDataCallback(this: *This, data: []const u8) void {
             if (this.flags.closed_notified) return;
 
@@ -416,6 +436,8 @@ while (true) : (__loop_limit_1 += 1) {
                 const ssl = this.ssl orelse return false;
 
                 const available = buffer[read..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const just_read = BoringSSL.SSL_read(ssl, available.ptr, @intCast(available.len));
                 log("just read {d}", .{just_read});
                 if (just_read <= 0) {
@@ -464,6 +486,8 @@ while (true) : (__loop_limit_1 += 1) {
 
                 this.handleEndOfRenegotiation();
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 read += @intCast(just_read);
                 if (read == buffer.len) {
                     log("triggering data callback (read {d}) and resetting read buffer", .{read});
@@ -494,8 +518,12 @@ while (true) : (__loop_limit_2 += 1) {
                 const ssl = this.ssl orelse return;
                 const output = BoringSSL.SSL_get_wbio(ssl) orelse return;
                 const available = buffer[read..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const just_read = BoringSSL.BIO_read(output, available.ptr, @intCast(available.len));
                 if (just_read > 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     read += @intCast(just_read);
                     if (read == buffer.len) {
                         this.triggerWannaWriteCallback(buffer[0..read]);

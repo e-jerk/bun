@@ -65,6 +65,7 @@ pub const S3ListObjectsV2Result = struct {
     pub fn deinit(this: *const @This()) void {
         if (this.contents) |contents| {
 // safe-transpile: for loop with pointer capture requires manual review
+// safe-transpile: for loop with pointer capture requires manual review
             for (contents.items) |*item| item.deinit();
             contents.deinit();
         }
@@ -119,6 +120,7 @@ pub const S3ListObjectsV2Result = struct {
             const jsContents = try JSValue.createEmptyArray(globalObject, contents.items.len);
 
             // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (contents.items, 0..) |item, i| {
                 const objectInfo = JSValue.createEmptyObject(globalObject, 0);
                 objectInfo.put(globalObject, jsc.ZigString.static("key"), try bun.String.createUTF8ForJS(globalObject, item.key));
@@ -161,6 +163,7 @@ pub const S3ListObjectsV2Result = struct {
                 }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try jsContents.putIndex(globalObject, @intCast(i), objectInfo);
             }
 
@@ -171,9 +174,11 @@ pub const S3ListObjectsV2Result = struct {
             const jsCommonPrefixes = try JSValue.createEmptyArray(globalObject, common_prefixes.items.len);
 
             // safe-transpile: for with index access requires manual review
+    // safe-transpile: for with index access requires manual review
     for (common_prefixes.items, 0..) |prefix, i| {
                 const jsPrefix = JSValue.createEmptyObject(globalObject, 0);
                 jsPrefix.put(globalObject, jsc.ZigString.static("prefix"), try bun.String.createUTF8ForJS(globalObject, prefix));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try jsCommonPrefixes.putIndex(globalObject, @intCast(i), jsPrefix);
             }
@@ -185,6 +190,7 @@ pub const S3ListObjectsV2Result = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseS3ListObjectsResult(xml: []const u8) !S3ListObjectsV2Result {
     var result: S3ListObjectsV2Result = .{
@@ -491,6 +497,7 @@ pub fn parseS3ListObjectsResult(xml: []const u8) !S3ListObjectsV2Result {
         if (contents.items.len != 0) {
             result.contents = contents;
         } else {
+// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (contents.items) |*item| item.deinit();
             contents.deinit();

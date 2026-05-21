@@ -138,10 +138,8 @@ pub fn reset(this: *EVP, engine: *BoringSSL.ENGINE) void {
     _ = BoringSSL.EVP_DigestInit_ex(&this.ctx, this.md, engine);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash(this: *EVP, engine: *BoringSSL.ENGINE, input: []const u8, output: []u8) ?u32 {
     BoringSSL.ERR_clear_error();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var outsize: c_uint = @min(@as(u16, @truncate(output.len)), this.size());
     if (BoringSSL.EVP_Digest(input.ptr, input.len, output.ptr, &outsize, this.md, engine) != 1) {
         return null;
@@ -150,10 +148,8 @@ pub fn hash(this: *EVP, engine: *BoringSSL.ENGINE, input: []const u8, output: []
     return outsize;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn final(this: *EVP, engine: *BoringSSL.ENGINE, output: []u8) []u8 {
     BoringSSL.ERR_clear_error();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var outsize: u32 = @min(@as(u16, @truncate(output.len)), this.size());
     if (BoringSSL.EVP_DigestFinal_ex(
         &this.ctx,
@@ -168,14 +164,12 @@ pub fn final(this: *EVP, engine: *BoringSSL.ENGINE, output: []u8) []u8 {
     return output[0..outsize];
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn update(this: *EVP, input: []const u8) void {
     BoringSSL.ERR_clear_error();
     _ = BoringSSL.EVP_DigestUpdate(&this.ctx, input.ptr, input.len);
 }
 
 pub fn size(this: *const EVP) u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u16, @truncate(BoringSSL.EVP_MD_CTX_size(&this.ctx)));
 }
 
@@ -188,7 +182,6 @@ pub fn copy(this: *const EVP, engine: *BoringSSL.ENGINE) error{OutOfMemory}!EVP 
     return new;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn byNameAndEngine(engine: *BoringSSL.ENGINE, name: []const u8) ?EVP {
     if (Algorithm.map.getWithEql(name, strings.eqlCaseInsensitiveASCIIIgnoreLength)) |algorithm| {
         if (algorithm.md()) |md| {

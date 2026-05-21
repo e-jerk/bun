@@ -20,6 +20,7 @@ const codepoint_mask: u32 = 0x00ffffff;
 /// Extract the raw codepoint value from a map entry.
 inline fn rawCodepoint(entry: MapEntry) u21 {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(entry & codepoint_mask);
 }
 

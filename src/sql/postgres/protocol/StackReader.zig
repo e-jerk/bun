@@ -13,6 +13,7 @@ pub fn ensureLength(this: @This(), length: usize) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(buffer: []const u8, offset: *usize, message_start: *usize) NewReader(StackReader) {
     return .{
         .wrapped = .{
@@ -23,6 +24,7 @@ pub fn init(buffer: []const u8, offset: *usize, message_start: *usize) NewReader
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn peek(this: StackReader) []const u8 {
     return this.buffer[this.offset.*..];
