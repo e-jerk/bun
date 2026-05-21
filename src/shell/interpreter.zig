@@ -1592,7 +1592,7 @@ pub fn StatePtrUnion(comptime TypesValue: anytype) type {
             if (comptime bun.Environment.enableAllocScopes) {
                 return bun.handleOom(this.allocator().create(Ty));
             }
-            return bun.handleOom(zust.Box(Ty).init(bun.default_allocator, undefined));
+            return bun.handleOom(zust.Box(Ty).init(bun.default_allocator, undefined)).ptr;
         }
 
         pub fn destroy(this: @This(), ptr: anytype) void {

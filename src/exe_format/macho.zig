@@ -84,7 +84,7 @@ pub const MachoFile = struct {
         const header: *const macho.mach_header_64 = @ptrCast(@alignCast(data.items.ptr));
 
         const self = try safe.Box(MachoFile).init(allocator, undefined);
-        defer _ = self.deinit();
+        errdefer _ = self.deinit();
 
         self.ptr.* = .{
             .header = header.*,
@@ -472,7 +472,7 @@ pub const MachoFile = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(allocator: Allocator, obj: []const u8) !*MachoSigner {
             var self = try safe.Box(MachoSigner).init(allocator, undefined);
-            defer _ = self.deinit();
+            errdefer _ = self.deinit();
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const header = @as(*align(1) const macho.mach_header_64, @ptrCast(obj.ptr)).*;

@@ -29,7 +29,7 @@ pub const ElfFile = struct {
         try data.appendSlice(elf_data);
 
         const self = try safe.Box(ElfFile).init(allocator, undefined);
-        defer _ = self.deinit();
+        errdefer _ = self.deinit();
 
         self.ptr.* = .{
             .data = data,

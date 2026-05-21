@@ -80,7 +80,7 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
             log("init", .{});
             // Avoid initializing the entire struct.
             const prealloc = bun.handleOom(zust.Box(PreAlloc).init(backing_allocator, undefined));
-            @memset(std.mem.asBytes(prealloc.ptr), 0);
+            prealloc.ptr.zero();
 
             return &prealloc.ptr.metadata;
         }

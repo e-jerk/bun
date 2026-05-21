@@ -233,7 +233,7 @@ pub const PEFile = struct {
         try data.appendSlice(pe_data);
 
         const self = try safe.Box(PEFile).init(allocator, undefined);
-        defer _ = self.deinit();
+        errdefer _ = self.deinit();
 
         // 2. Validate DOS header
         if (data.items.len < @sizeOf(DOSHeader)) {

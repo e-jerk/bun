@@ -88,7 +88,7 @@ pub const ModuleInfoDeserialized = struct {
         errdefer gpa.free(duped);
         var rem: []const u8 = duped;
         const res = try safe.Box(ModuleInfoDeserialized).init(gpa, undefined);
-        defer _ = res.deinit();
+        errdefer _ = res.deinit();
 
         const record_kinds_len = std.mem.readInt(u32, try eatC(&rem, 4), .little);
         const record_kinds = std.mem.bytesAsSlice(RecordKind, try eat(&rem, record_kinds_len * @sizeOf(RecordKind)));

@@ -2040,12 +2040,9 @@ pub fn openDirForPath(file_path: [:0]const u8) !@import("std-fs-compat").Dir {
     const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
     const flags: u32 = O.CLOEXEC | O.NOCTTY | O.DIRECTORY | O_PATH;
 
-    const fd = switch (bun.sys.openA(file_path, O.toPacked(flags), 0)) {
-        .result => |f| f,
-        .err => |err| return err.toZigErr(),
-    };
+    const fd = try std.posix.openZ(file_path, @bitCast(O.toPacked(flags)), 0);
     return @import("std-fs-compat").Dir{
-        .fd = fd.value.as_system,
+        .fd = fd,
     };
 }
 
@@ -2897,13 +2894,13 @@ pub inline fn new(comptime T: type, init: T) *T {
 }
 
 /// Error-returning version of `new`.
-pub inline fn tryNew(comptime T: type, init: T) OOM!*T {
+    pub inline fn tryNew(comptime T: type, init: T) OOM!*T {
     const pointer = if (heap_breakdown.enabled)
         try heap_breakdown.getZoneT(T).tryCreate(T, init)
     else pointer: {
         const pointer = try safe.Box(T).init(default_allocator, undefined);
-        pointer.* = init;
-        break :pointer pointer;
+        pointer.ptr.* = init;
+        break :pointer pointer.ptr;
     };
 
     if (comptime Environment.allow_assert) {

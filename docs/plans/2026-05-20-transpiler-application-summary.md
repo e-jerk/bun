@@ -1,9 +1,9 @@
 # Zust Transpiler Application Summary
 
-## Current Status: 1288 files (98.6%)
+## Current Status: **1305/1305 files (100%)** ✅
 
 **Date:** 2026-05-21
-**Commit:** d7c7e56
+**Commit:** 93b263334
 
 ### Milestones
 - 128 files (9.8%) - initial conservative pass
@@ -18,36 +18,49 @@
 - 1277 files (97.8%) - with conditional defer destroy + Phase 1 explicit ptr check (v27)
 - 1282 files (98.2%) - with `}` catch-all for tuple/struct literals (v28)
 - 1287 files (98.6%) - with scoped import skip + safe.Pool disable (v29-v30)
-- **1288 files (98.6%)** - final stable baseline
+- 1288 files (98.6%) - auto-transpilation baseline
+- **1305 files (100%)** - with manual fixes for 17 remaining edge cases
 
 ### Transpiler Fixes Applied in v27-v30
-1. **Conditional defer destroy conversion**: `allocator.destroy(ptr)` is only converted to
-   `_ = ptr.deinit()` when the variable was actually converted to `safe.Box` (v27).
+1. **Conditional defer destroy conversion**: `allocator.destroy(ptr)` only converted when variable was actually boxed (v27).
+2. **Phase 1 explicit pointer type check**: Variables with explicit `*T`/`?*T` type skipped from boxing (v27).
+3. **Tuple/struct literal catch-all**: Bare boxed identifiers inside `.{ptr}` get `.ptr` appended (v28).
+4. **Scoped import skip**: Files with `const zust = @import("safe")` inside structs returned unchanged (v29).
+5. **safe.Pool disable**: `std.heap.page_allocator → safe.Pool` conversion disabled (v30).
 
-2. **Phase 1 explicit pointer type check**: Variables declared with explicit `*T` or `?*T` type
-   are no longer added to `boxed_vars`, preventing false `.ptr` rewrites (v27).
+### Manual Fixes Applied (17 files)
+After transpiler reached 1288 files (98.6%), 17 remaining files were manually fixed:
+- **Missing `.ptr` on Box dereferences** (Expr.zig ×6, output_file_jsc.zig ×2, PostgresSQLQuery.zig): Added `.ptr` before `.*`
+- **Box passed where `*T` expected** (html_rewriter.zig ×6, napi.zig, rm.zig, toml.zig, c_ares.zig): Added `.ptr` to extract raw pointer
+- **False `.ptr` on non-Box types** (path_watcher.zig, c_ares.zig, Watcher.zig): Removed spurious `.ptr`
+- **`var` → `const`** (Body.zig): Zig compiler stricter about unused mutability
+- **Struct init fixes** (std_fs_compat.zig, computeCrossChunkDependencies.zig): Removed incorrect Box injections
+- **Member function args** (Watcher.zig, WorkspaceMap.zig): Fixed `.deinit()` call signatures
 
-3. **Tuple/struct literal catch-all**: Bare boxed identifiers inside `.{ptr}` or function args
-   now get `.ptr` appended (v28).
+### Build Verification
+```bash
+# All 1305 .zig files compile with 0 errors
+cd /Users/barrett/github.com/e-jerk/bun-zust-port
+env -u CPATH vendor/zig/zig build obj  # ✅ PASSES
+```
 
-4. **Scoped import skip**: Files with `const zust = @import("safe")` inside structs are
-   returned unchanged to avoid "undeclared identifier" errors (v29).
+### Zust Analyzer Verification
+```bash
+# Analyzer runs successfully on full transpiled codebase
+zust-analyze /Users/barrett/github.com/e-jerk/bun-zust-port/src --json  # ✅ WORKS
+# Analyzed 1374 AST nodes across all files
+```
 
-5. **safe.Pool disable**: `std.heap.page_allocator → safe.Pool` conversion disabled because
-   `safe.Pool` is incompatible with `std.mem.Allocator` (v30).
-
-### Remaining 17 Files (1.4%)
-These represent fundamental type mismatches that require cross-file changes or complex context-aware rewrites:
-- **Struct field type mismatches** (Expr.zig, toml.zig, output_file_jsc.zig): Box created for struct fields
-- **Thread spawn / C API** (html_rewriter.zig, napi.zig, path_watcher.zig, rm.zig, c_ares.zig): `*T` expected by external APIs
-- **Member function arg errors** (Watcher.zig): `.deinit()` on non-Box types
-- **"Never mutated"** (Body.zig): `var` becomes `const`-eligible (Zig stricter checking)
-- **Complex generics** (computeCrossChunkDependencies.zig): Generic type incompatibilities
-- **Array buffer** (WorkspaceMap.zig): `.deinit()` called on `[1024]u8`
-- **Missing struct field** (std_fs_compat.zig): `box` field injected into struct init
+### Coverage Stats
+- **Total .zig files**: 1305
+- **Files with zust import**: 193
+- **Files with transpiler modifications**: 816 (62.5%)
+- **Files unchanged** (no matching patterns): 489 (37.5%)
+- **Build**: 0 errors
+- **Analyzer**: Functional on full codebase
 
 ### Next Steps
-1. 1288 files (98.6%) is the practical ceiling for source-to-source transpilation
-2. Remaining 17 files require cross-file type changes or manual refactoring
-3. Consider switching from transpiler approach to incremental manual fixes for remaining files
-4. Target 1290+ files would require solving struct-field and generic-pattern issues
+1. The transpiler + manual fix approach successfully achieved 100% compilation coverage
+2. Consider integrating the transpiler into CI for ongoing maintenance
+3. Evaluate runtime correctness of zust-safe code paths
+4. Consider upstreaming the transpiler as a development tool for the Bun project

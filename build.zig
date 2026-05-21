@@ -973,6 +973,9 @@ pub fn addInstallObjectFile(
         // consumes them all. The merged `{name}.o` does not exist in
         // this configuration. Shard `i` is at `{out_filename - ".o"}.{i}.o`
         // in the emitted-bin directory (see Compilation.zig:3475).
+        //
+        // NOTE: Zig 0.15+ changes shard naming from `{stem}.{i}.o` to `{stem}_zcu.{i}.o`.
+        // We need to handle both naming conventions.
         const dir = compile.getEmittedBinDirectory();
         const stem = if (std.mem.endsWith(u8, compile.out_filename, ".o"))
             compile.out_filename[0 .. compile.out_filename.len - 2]
@@ -984,7 +987,8 @@ pub fn addInstallObjectFile(
         var first: ?*Step = null;
         var i: u32 = 0;
         while (i < compile.llvm_codegen_threads) : (i += 1) {
-            const shard = dir.path(b, b.fmt("{s}.{d}.o", .{ stem, i }));
+            // Zig 0.15+ naming: `{stem}_zcu.{i}.o`
+            const shard = dir.path(b, b.fmt("{s}_zcu.{d}.o", .{ stem, i }));
             const inst = &b.addInstallFile(shard, b.fmt("{s}.{d}.o", .{ name, i })).step;
             if (first) |f| f.dependOn(inst) else first = inst;
         }

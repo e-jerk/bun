@@ -51,7 +51,61 @@ pub const Address = extern union {
                 });
             },
             std.posix.AF.INET6 => {
-                try writer.print("[{any}]:{d}", .{ self.in6.addr, std.mem.bigToNative(u16, self.in6.port) });
+                const port = std.mem.bigToNative(u16, self.in6.port);
+                const addr = self.in6.addr;
+                if (std.mem.eql(u8, addr[0..12], &[_]u8{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff })) {
+                    try writer.print("[::ffff:{d}.{d}.{d}.{d}]:{d}", .{
+                        addr[12], addr[13], addr[14], addr[15], port,
+                    });
+                    return;
+                }
+                const big_endian_parts = @as(*align(1) const [8]u16, @ptrCast(&addr));
+                const native_endian_parts = blk: {
+                    var buf: [8]u16 = undefined;
+                    for (big_endian_parts, 0..) |part, i| {
+                        buf[i] = std.mem.bigToNative(u16, part);
+                    }
+                    break :blk buf;
+                };
+
+                var longest_start: usize = 8;
+                var longest_len: usize = 0;
+                var current_start: usize = 0;
+                var current_len: usize = 0;
+                for (native_endian_parts, 0..) |part, i| {
+                    if (part == 0) {
+                        if (current_len == 0) current_start = i;
+                        current_len += 1;
+                        if (current_len > longest_len) {
+                            longest_start = current_start;
+                            longest_len = current_len;
+                        }
+                    } else {
+                        current_len = 0;
+                    }
+                }
+                if (longest_len < 2) {
+                    longest_start = 8;
+                    longest_len = 0;
+                }
+
+                try writer.writeAll("[");
+                var i: usize = 0;
+                var abbrv = false;
+                while (i < native_endian_parts.len) : (i += 1) {
+                    if (i == longest_start) {
+                        if (!abbrv) {
+                            try writer.writeAll(if (i == 0) "::" else ":");
+                            abbrv = true;
+                        }
+                        i += longest_len - 1;
+                        continue;
+                    }
+                    if (abbrv) abbrv = false;
+                    try writer.print("{x}", .{native_endian_parts[i]});
+                    if (i != native_endian_parts.len - 1) try writer.writeAll(":");
+                }
+                try writer.print("]:{d}", .{port});
             },
             else => try writer.writeAll("<unknown address family>"),
         }

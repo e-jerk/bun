@@ -224,7 +224,7 @@ fn makeGlobWalker(
     const only_files = matchOpts.only_files;
 
     var globWalker = try zust.Box(GlobWalker).init(alloc, undefined);
-    defer _ = globWalker.deinit();
+    errdefer _ = globWalker.deinit();
     globWalker.ptr.* = .{};
 
     if (cwd != null) {
