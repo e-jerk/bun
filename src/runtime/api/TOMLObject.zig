@@ -23,8 +23,8 @@ pub fn parse(
     const allocator = arena.allocator();
     defer arena.deinit();
 
-    var ast_memory_allocator = bun.handleOom(allocator.create(ast.ASTMemoryAllocator));
-    var ast_scope = ast_memory_allocator.enter(allocator);
+    var ast_memory_allocator = bun.handleOom(safe.Box(ast.ASTMemoryAllocator).init(allocator, undefined));
+    var ast_scope = ast_memory_allocator.ptr.enter(allocator);
     defer ast_scope.exit();
 
     var log = logger.Log.init(default_allocator);

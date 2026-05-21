@@ -13,6 +13,7 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
         any_task: AnyTaskWithExtraContext,
         wrapped: *Ptr,
         pub fn function(this: *anyopaque, extra: *anyopaque) void {
+// safe-transpile: @alignCast requires manual review
             const that: *@This() = @ptrCast(@alignCast(this));
             defer _ = that.deinit();
             const ctx = that.wrapped;
@@ -22,17 +23,18 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
             bun.default_allocator.destroy(this);
         }
     };
-    const task = bun.handleOom(bun.default_allocator.create(Wrapper));
-    task.* = Wrapper{
+    const task = bun.handleOom(zust.Box(Wrapper).init(bun.default_allocator, undefined));
+    task.ptr.* = Wrapper{
         .any_task = AnyTaskWithExtraContext{
             .callback = &Wrapper.function,
-            .ctx = task,
+            .ctx = task.ptr,
         },
         .wrapped = ptr,
     };
-    return &task.any_task;
+    return &task.ptr.any_task;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn from(this: *@This(), of: anytype, comptime field: []const u8) *@This() {
     const TheTask = New(std.meta.Child(@TypeOf(of)), void, @field(std.meta.Child(@TypeOf(of)), field));
     this.* = TheTask.init(of);
@@ -60,7 +62,9 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
                 bun.callmod_inline,
                 Callback,
                 .{
+// safe-transpile: @alignCast requires manual review
                     @as(*Type, @ptrCast(@alignCast(this.?))),
+// safe-transpile: @alignCast requires manual review
                     @as(*ContextType, @ptrCast(@alignCast(extra.?))),
                 },
             );

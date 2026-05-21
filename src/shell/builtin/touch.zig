@@ -90,6 +90,7 @@ pub fn onIOWriterChunk(this: *Touch, _: usize, e: ?jsc.SystemError) Yield {
     return this.next();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFailingError(this: *Touch, buf: []const u8, exit_code: ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_write_err;
@@ -133,6 +134,7 @@ pub const ShellTouchOutputTask = OutputTask(Touch, .{
 });
 
 const ShellTouchOutputTaskVTable = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeErr(this: *Touch, childptr: anytype, errbuf: []const u8) ?Yield {
         this.state.exec.output_waiting += 1;
         if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -190,8 +192,8 @@ pub const ShellTouchTask = struct {
     }
 
     pub fn create(touch: *Touch, opts: Opts, filepath: [:0]const u8, cwd_path: [:0]const u8) *ShellTouchTask {
-        const task = bun.handleOom(bun.default_allocator.create(ShellTouchTask));
-        task.* = ShellTouchTask{
+        const task = bun.handleOom(safe.Box(ShellTouchTask).init(bun.default_allocator, undefined));
+        task.ptr.* = ShellTouchTask{
             .touch = touch,
             .opts = opts,
             .cwd_path = cwd_path,
@@ -199,7 +201,7 @@ pub const ShellTouchTask = struct {
             .event_loop = touch.bltn().eventLoop(),
             .concurrent_task = jsc.EventLoopTask.fromEventLoop(touch.bltn().eventLoop()),
         };
-        return task;
+        return task.ptr;
     }
 
     pub fn schedule(this: *@This()) void {
@@ -317,6 +319,7 @@ const Opts = struct {
         return Parse.parseFlags(opts, args);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         _ = this;
         if (bun.strings.eqlComptime(flag, "--no-create")) {
@@ -346,6 +349,7 @@ const Opts = struct {
         return null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         _ = this;
         switch (char) {
@@ -380,6 +384,7 @@ const Opts = struct {
 };
 
 pub inline fn bltn(this: *Touch) *Builtin {
+// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("touch", this));
     return @fieldParentPtr("impl", impl);
 }

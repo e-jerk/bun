@@ -22,6 +22,7 @@ pub const SubscriptionCtx = struct {
     }
 
     fn parent(this: *SubscriptionCtx) *JSValkeyClient {
+// safe-transpile: @alignCast requires manual review
         return @alignCast(@fieldParentPtr("_subscription_ctx", this));
     }
 
@@ -36,6 +37,7 @@ pub const SubscriptionCtx = struct {
     pub fn channelsSubscribedToCount(this: *Self, globalObject: *jsc.JSGlobalObject) bun.JSError!u32 {
         const count = try this.subscriptionCallbackMap().size(globalObject);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(count);
     }
 
@@ -378,6 +380,7 @@ pub const JSValkeyClient = struct {
                     if (port_value > 65535) {
                         return globalObject.throwInvalidArguments("Invalid port number in URL. Port must be a number between 0 and 65535", .{});
                     }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :brk @as(u16, @intCast(port_value));
                 }
             },
@@ -744,6 +747,7 @@ pub const JSValkeyClient = struct {
         const vm = this.client.vm;
 
         // Set up timer and add to event loop
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         timer.next = bun.timespec.msFromNow(.allow_mocked_time, @intCast(next_timeout_ms));
         vm.timer.insert(timer);
         this.ref();
@@ -1036,6 +1040,7 @@ pub const JSValkeyClient = struct {
         this.clientFail("Connection timeout", protocol.RedisError.ConnectionClosed);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clientFail(this: *JSValkeyClient, message: []const u8, err: protocol.RedisError) bun.JSTerminated!void {
         try this.client.fail(message, err);
     }
@@ -1071,14 +1076,14 @@ pub const JSValkeyClient = struct {
                 self.ctx.deref();
             }
         };
-        var holder = bun.handleOom(bun.default_allocator.create(Holder));
-        holder.* = .{
+        var holder = bun.handleOom(safe.Box(Holder).init(bun.default_allocator, undefined));
+        holder.ptr.* = .{
             .ctx = this,
             .task = undefined,
         };
-        holder.task = jsc.AnyTask.New(Holder, Holder.run).init(holder);
+        holder.ptr.task = jsc.AnyTask.New(Holder, Holder.run).init(holder.ptr);
 
-        this.client.vm.enqueueTask(jsc.Task.init(&holder.task));
+        this.client.vm.enqueueTask(jsc.Task.init(&holder.ptr.task));
     }
 
     pub fn finalize(this: *JSValkeyClient) void {
@@ -1183,6 +1188,7 @@ pub const JSValkeyClient = struct {
 
         // Add queue sizes
         memory_cost += this.client.in_flight.count * @sizeOf(valkey.Command.PromisePair);
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.client.queue.readableSlice(0)) |*command| {
             memory_cost += command.serialized_data.len;
         }
@@ -1482,6 +1488,7 @@ pub fn SocketHandler(comptime ssl: bool) type {
                     // fall back to the host from the connection URL. Unix-domain
                     // sockets have no hostname to verify, so skip the identity check
                     // for redis+tls+unix:// / valkey+tls+unix:// connections.
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr: *BoringSSL.c.SSL = @ptrCast(this.client.socket.getNativeHandle());
                     var hostname: []const u8 = if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername|
                         servername[0..bun.len(servername)]
@@ -1583,6 +1590,7 @@ pub fn SocketHandler(comptime ssl: bool) type {
             // Handle socket timeout
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(this: *JSValkeyClient, socket: SocketType, data: []const u8) void {
             // Ensure the socket pointer is updated.
             this.client.socket = _socket(socket);

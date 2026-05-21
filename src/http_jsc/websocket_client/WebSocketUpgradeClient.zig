@@ -168,7 +168,8 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
 
             // Check if user provided a custom protocol for subprotocols validation
             var protocol_for_subprotocols: []const u8 = client_protocol_slice.slice();
-            for (extra_headers.names(), extra_headers.values()) |name, value| {
+            // safe-transpile: for with index access requires manual review
+    for (extra_headers.names(), extra_headers.values()) |name, value| {
                 if (strings.eqlCaseInsensitiveASCII(name, "sec-websocket-protocol", true)) {
                     protocol_for_subprotocols = value;
                     break;
@@ -494,6 +495,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                         this.fail(ErrorCode.tls_handshake_failed);
                         return;
                     }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr = @as(*BoringSSL.c.SSL, @ptrCast(socket.getNativeHandle()));
                     if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername| {
                         const hostname = servername[0..bun.len(servername)];
@@ -537,6 +539,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 return;
             }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.input_body_buf[@as(usize, @intCast(wrote))..];
         }
 
@@ -544,6 +547,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             return socket.socket.eq(this.tcp.socket);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleData(this: *HTTPClient, socket: Socket, data: []const u8) void {
             log("onData", .{});
 
@@ -621,9 +625,11 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 }
             };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.processResponse(response, body[@as(usize, @intCast(response.bytes_read))..]);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn handleProxyResponse(this: *HTTPClient, socket: Socket, data: []const u8) void {
             log("handleProxyResponse", .{});
 
@@ -677,6 +683,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             // Clear the body buffer for WebSocket handshake
             this.body.clearRetainingCapacity();
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const remain_buf = body[@as(usize, @intCast(response.bytes_read))..];
 
             // Safely unwrap proxy state - it must exist if we're in proxy_handshake state
@@ -709,6 +716,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 return;
             }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.input_body_buf[@as(usize, @intCast(wrote))..];
 
             // If there's remaining data after the proxy response, process it
@@ -718,6 +726,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
         }
 
         /// Start TLS handshake inside the proxy tunnel for wss:// connections
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn startProxyTLSHandshake(this: *HTTPClient, socket: Socket, initial_data: []const u8) void {
             log("startProxyTLSHandshake", .{});
 
@@ -794,6 +803,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
         }
 
         /// Called by WebSocketProxyTunnel with decrypted data from the TLS tunnel
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleDecryptedData(this: *HTTPClient, data: []const u8) void {
             log("handleDecryptedData: {} bytes", .{data.len});
 
@@ -829,6 +839,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 }
             };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.processResponse(response, body[@as(usize, @intCast(response.bytes_read))..]);
         }
 
@@ -837,6 +848,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             this.terminate(ErrorCode.ended);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn processResponse(this: *HTTPClient, response: PicoHTTP.Response, remain_buf: []const u8) void {
             var upgrade_header = PicoHTTP.Header{ .name = "", .value = "" };
             var connection_header = PicoHTTP.Header{ .name = "", .value = "" };
@@ -1021,6 +1033,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                     this.terminate(ErrorCode.invalid_response);
                     return;
                 };
+// safe-transpile: @memcpy requires manual review
                 @memcpy(overflow, remain_buf);
             }
 
@@ -1139,6 +1152,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 this.terminate(ErrorCode.failed_to_write);
                 return;
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.to_send[@min(@as(usize, @intCast(wrote)), this.to_send.len)..];
         }
         pub fn handleTimeout(
@@ -1246,6 +1260,7 @@ const Headers8Bit = struct {
     }
 
     pub fn deinit(self: Headers8Bit) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (self.slices) |*s| s.deinit();
         if (self.slices.len > 0) {
             self.allocator.free(self.slices);
@@ -1269,7 +1284,8 @@ const Headers8Bit = struct {
         };
         errdefer headers.deinit();
 
-        for (self.name_slices, self.value_slices) |name, value| {
+        // safe-transpile: for with index access requires manual review
+    for (self.name_slices, self.value_slices) |name, value| {
             try headers.append(name, value);
         }
 
@@ -1278,6 +1294,7 @@ const Headers8Bit = struct {
 };
 
 /// Build HTTP CONNECT request for proxy tunneling
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn buildConnectRequest(
     target_host: []const u8,
     target_port: u16,
@@ -1310,7 +1327,8 @@ fn buildConnectRequest(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        for (names, 0..) |name_ptr, idx| {
+        // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name_ptr, idx| {
             // Skip Proxy-Authorization if user provided one (we already added it)
             const name = hdrs.asStr(name_ptr);
             if (proxy_authorization != null and strings.eqlCaseInsensitiveASCII(name, "proxy-authorization", true)) {
@@ -1331,6 +1349,7 @@ const BuildRequestResult = struct {
     expected_accept: [28]u8,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn buildRequestBody(
     vm: *jsc.VirtualMachine,
     pathname: []const u8,
@@ -1353,6 +1372,7 @@ fn buildRequestBody(
     var user_protocol: ?[]const u8 = null;
     var user_authorization: bool = false;
 
+    // safe-transpile: for with index access requires manual review
     for (extra_headers.names(), extra_headers.values()) |name_slice, value| {
         if (user_host == null and strings.eqlCaseInsensitiveASCII(name_slice, "host", true)) {
             user_host = value;
@@ -1422,6 +1442,7 @@ fn buildRequestBody(
         }
     }
 
+    // safe-transpile: for with index access requires manual review
     for (extra_headers.names(), extra_headers.values()) |name_slice, value| {
         if (strings.eqlCaseInsensitiveASCII(name_slice, "host", true) or
             strings.eqlCaseInsensitiveASCII(name_slice, "connection", true) or
@@ -1481,6 +1502,7 @@ fn buildRequestBody(
 
 /// Compute the expected Sec-WebSocket-Accept value per RFC 6455 §4.2.2:
 /// base64(SHA-1(key ++ "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn computeAcceptValue(key: []const u8) [28]u8 {
     const websocket_guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     var hasher = bun.sha.Hashers.SHA1.init();
@@ -1513,9 +1535,9 @@ pub fn parseSSLConfig(
 
     if (config_opt) |config| {
         // Allocate on heap and return pointer (ownership transferred to caller)
-        const config_ptr = bun.handleOom(bun.default_allocator.create(SSLConfig));
-        config_ptr.* = config;
-        return config_ptr;
+        const config_ptr = bun.handleOom(safe.Box(SSLConfig).init(bun.default_allocator, undefined));
+        config_ptr.ptr.* = config;
+        return config_ptr.ptr;
     }
 
     // No TLS options provided or all defaults, return null

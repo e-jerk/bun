@@ -545,8 +545,11 @@ fn getAST(
                     // Generate a single part that depends on all the import records.
                     // This is to ensure that we generate a JavaScript bundle containing all the user's code.
                     var import_record_indices = try Part.ImportRecordIndices.initCapacity(allocator, scanner.import_records.len);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     import_record_indices.len = @truncate(scanner.import_records.len);
-                    for (import_record_indices.slice(), 0..) |*import_record, index| {
+                    // safe-transpile: for with index access requires manual review
+    for (import_record_indices.slice(), 0..) |*import_record, index| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         import_record.* = @intCast(index);
                     }
                     break :brk2 import_record_indices;
@@ -1404,9 +1407,9 @@ pub fn runFromThreadPool(this: *ParseTask) void {
         }
     };
 
-    const result = bun.handleOom(bun.default_allocator.create(Result));
+    const result = bun.handleOom(safe.Box(Result).init(bun.default_allocator, undefined));
 
-    result.* = .{
+    result.ptr.* = .{
         .ctx = this.ctx,
         .task = .{},
         .value = value,
@@ -1419,13 +1422,13 @@ pub fn runFromThreadPool(this: *ParseTask) void {
 
     switch (worker.ctx.loop().*) {
         .js => |jsc_event_loop| {
-            jsc_event_loop.enqueueTaskConcurrent(jsc.ConcurrentTask.fromCallback(result, onComplete));
+            jsc_event_loop.enqueueTaskConcurrent(jsc.ConcurrentTask.fromCallback(result.ptr, onComplete));
         },
         .mini => |*mini| {
             mini.enqueueTaskConcurrentWithExtraCtx(
                 Result,
                 BundleV2,
-                result,
+                result.ptr,
                 BundleV2.onParseTaskComplete,
                 .task,
             );

@@ -21,13 +21,14 @@ const Node = struct {
     slice: []const u8 = "",
     next: ?*Node = null,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(joiner_alloc: Allocator, slice: []const u8, slice_alloc: ?Allocator) *Node {
-        const node = bun.handleOom(joiner_alloc.create(Node));
-        node.* = .{
+        const node = bun.handleOom(safe.Box(Node).init(joiner_alloc, undefined));
+        node.ptr.* = .{
             .slice = slice,
             .allocator = NullableAllocator.init(slice_alloc),
         };
-        return node;
+        return node.ptr;
     }
 
     pub fn deinit(node: *Node, joiner_alloc: Allocator) void {
@@ -43,11 +44,13 @@ pub const Watcher = struct {
 };
 
 /// `data` is expected to live until `.done` is called
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pushStatic(this: *StringJoiner, data: []const u8) void {
     this.push(data, null);
 }
 
 /// `data` is cloned
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pushCloned(this: *StringJoiner, data: []const u8) void {
     if (data.len == 0) return;
     this.push(
@@ -56,6 +59,7 @@ pub fn pushCloned(this: *StringJoiner, data: []const u8) void {
     );
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn push(this: *StringJoiner, data: []const u8, allocator: ?Allocator) void {
     if (data.len == 0) return;
     this.len += data.len;
@@ -80,6 +84,7 @@ pub fn push(this: *StringJoiner, data: []const u8, allocator: ?Allocator) void {
 }
 
 /// This deinits the string joiner on success, the new string is owned by `allocator`
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn done(this: *StringJoiner, allocator: Allocator) ![]u8 {
     var current: ?*Node = this.head orelse {
         assert(this.tail == null);
@@ -91,6 +96,7 @@ pub fn done(this: *StringJoiner, allocator: Allocator) ![]u8 {
 
     var remaining = slice;
     while (current) |node| {
+// safe-transpile: @memcpy requires manual review
         @memcpy(remaining[0..node.slice.len], node.slice);
         remaining = remaining[node.slice.len..];
 
@@ -119,6 +125,7 @@ pub fn deinit(this: *StringJoiner) void {
 }
 
 /// Same as `.done`, but appends extra slice `end`
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn doneWithEnd(this: *StringJoiner, allocator: Allocator, end: []const u8) ![]u8 {
     var current: ?*Node = this.head orelse {
         assert(this.tail == null);
@@ -135,6 +142,7 @@ pub fn doneWithEnd(this: *StringJoiner, allocator: Allocator, end: []const u8) !
 
     var remaining = slice;
     while (current) |node| {
+// safe-transpile: @memcpy requires manual review
         @memcpy(remaining[0..node.slice.len], node.slice);
         remaining = remaining[node.slice.len..];
 
@@ -144,6 +152,7 @@ pub fn doneWithEnd(this: *StringJoiner, allocator: Allocator, end: []const u8) !
     }
 
     bun.assert(remaining.len == end.len);
+// safe-transpile: @memcpy requires manual review
     @memcpy(remaining, end);
 
     return slice;
@@ -162,6 +171,7 @@ pub fn ensureNewlineAtEnd(this: *StringJoiner) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn contains(this: *const StringJoiner, slice: []const u8) bool {
     var el = this.head;
     while (el) |node| {

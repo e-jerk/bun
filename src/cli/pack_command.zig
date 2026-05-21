@@ -580,7 +580,6 @@ const zust = @import("safe");
                 while (scoped_iter.next().unwrap() catch null) |sub_entry| {
                     const entry_name = try entrySubpath(ctx.allocator, _entry_name, sub_entry.name.slice());
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (ctx.bundled_deps.items) |*dep| {
                         bun.assertWithLocation(dep.from_root_package_json, @src());
                         if (!strings.eqlLong(entry_name, dep.name, true)) continue;
@@ -611,7 +610,6 @@ const zust = @import("safe");
                 }
             } else {
                 const entry_name = _entry_name;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (ctx.bundled_deps.items) |*dep| {
                     bun.assertWithLocation(dep.from_root_package_json, @src());
                     if (!strings.eqlLong(entry_name, dep.name, true)) continue;
@@ -745,7 +743,6 @@ const zust = @import("safe");
                                         dep_dir_depth -= 2;
                                         const node_modules_end = node_modules_start + "node_modules".len;
                                         dep_subpath[node_modules_end] = '/';
-// safe-transpile: @memcpy requires manual review
                                         @memcpy(dep_subpath[node_modules_end + 1 ..][0..dep_name.len], dep_name);
                                         dep_subpath[node_modules_end + 1 + dep_name.len] = 0;
                                         const parent_dep_subpath = dep_subpath[0 .. node_modules_end + 1 + dep_name.len :0];
@@ -940,7 +937,6 @@ const zust = @import("safe");
                     if (json.get("dependencies")) |dependencies_expr| {
                         switch (dependencies_expr.data) {
                             .e_object => |dependencies| {
-// safe-transpile: for loop with pointer capture requires manual review
                                 for (dependencies.properties.slice()) |*dependency| {
                                     if (dependency.key == null) continue;
                                     if (dependency.value == null) continue;
@@ -1383,7 +1379,6 @@ const zust = @import("safe");
             // so we need to convert the path before removing.
             var cache_key_buf: if (Environment.isWindows) PathBuffer else void = undefined;
             const cache_key = if (comptime Environment.isWindows) blk: {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(cache_key_buf[0..abs_package_json_path.len], abs_package_json_path);
                 bun.path.dangerouslyConvertPathToPosixInPlace(u8, cache_key_buf[0..abs_package_json_path.len]);
                 break :blk cache_key_buf[0..abs_package_json_path.len];
@@ -1433,7 +1428,6 @@ const zust = @import("safe");
 
         var root_dir = root_dir: {
             var path_buf: PathBuffer = undefined;
-// safe-transpile: @memcpy requires manual review
             @memcpy(path_buf[0..abs_workspace_path.len], abs_workspace_path);
             path_buf[abs_workspace_path.len] = 0;
             break :root_dir bun.openDirAbsolute(path_buf[0..abs_workspace_path.len :0]) catch |err| {
@@ -1751,7 +1745,6 @@ const zust = @import("safe");
                     Global.crash();
                 };
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try pack_list.append(ctx.allocator, .{ .subpath = item.path, .size = @intCast(stat.size) });
 
                 entry = try addArchiveEntry(
@@ -1959,7 +1952,6 @@ const zust = @import("safe");
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn tarballDestination(
         pack_destination: string,
         pack_filename: string,
@@ -2074,11 +2066,9 @@ const zust = @import("safe");
         };
 
         entry.setPathname(package_prefix ++ "package.json");
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setSize(@intCast(edited_package_json.len));
         // https://github.com/libarchive/libarchive/blob/898dc8319355b7e985f68a9819f182aaed61b53a/libarchive/archive_entry.h#L185
         entry.setFiletype(0o100000);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setPerm(@intCast(stat.mode));
         // '1985-10-26T08:15:00.000Z'
         // https://github.com/npm/cli/blob/ec105f400281a5bfd17885de1ea3d54d0c231b27/node_modules/pacote/lib/util/tar-create-options.js#L28
@@ -2092,13 +2082,11 @@ const zust = @import("safe");
             else => {},
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         ctx.stats.unpacked_size += @intCast(archive.writeData(edited_package_json));
 
         return entry.clear();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn addArchiveEntry(
         ctx: *Context,
         file: FD,
@@ -2121,17 +2109,14 @@ const zust = @import("safe");
             entry.setPathname(pathname);
         print_buf_writer.context.clearRetainingCapacity();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setSize(@intCast(stat.size));
 
         // https://github.com/libarchive/libarchive/blob/898dc8319355b7e985f68a9819f182aaed61b53a/libarchive/archive_entry.h#L185
         entry.setFiletype(0o100000);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var perm: bun.Mode = @intCast(stat.mode);
         // https://github.com/npm/cli/blob/ec105f400281a5bfd17885de1ea3d54d0c231b27/node_modules/pacote/lib/util/tar-create-options.js#L20
         if (isPackageBin(bins, filename)) perm |= 0o111;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setPerm(@intCast(perm));
 
         // '1985-10-26T08:15:00.000Z'
@@ -2156,7 +2141,6 @@ const zust = @import("safe");
             Global.crash();
         };
         while (read > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             ctx.stats.unpacked_size += @intCast(archive.writeData(read_buf[0..read]));
             read = file_reader.read(read_buf) catch |err| {
                 Output.err(err, "failed to read file: \"{s}\"", .{filename});
@@ -2183,7 +2167,6 @@ const zust = @import("safe");
             if (json.root.get(dependency_group)) |dependencies_expr| {
                 switch (dependencies_expr.data) {
                     .e_object => |dependencies| {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (dependencies.properties.slice()) |*dependency| {
                             if (dependency.key == null) continue;
                             if (dependency.value == null) continue;
@@ -2405,7 +2388,6 @@ const zust = @import("safe");
             const buf = try allocator.alloc(u8, length);
             const start_index = @intFromBool(add_negate);
             const end = start_index + remain.len;
-// safe-transpile: @memcpy requires manual review
             @memcpy(buf[start_index..end], remain);
             if (add_negate) {
                 buf[0] = '!';
@@ -2551,7 +2533,6 @@ const zust = @import("safe");
         }
 
         pub fn deinit(this: *const IgnorePatterns, allocator: std.mem.Allocator) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.list) |*pattern_info| {
                 pattern_info.glob.deinit(allocator);
             }
@@ -2576,7 +2557,6 @@ const zust = @import("safe");
                 Global.crash();
             };
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             ctx.stats.unpacked_size += @intCast(package_json_stat.size);
 
             Output.prettyln("\n" ++ packed_fmt, .{
@@ -2594,7 +2574,6 @@ const zust = @import("safe");
                     Global.crash();
                 };
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 ctx.stats.unpacked_size += @intCast(stat.size);
 
                 Output.prettyln(packed_fmt, .{
@@ -2634,7 +2613,6 @@ const zust = @import("safe");
 
     /// Some files are always packed, even if they are explicitly ignored or not
     /// included in package.json "files".
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn isUnconditionallyIncludedFile(filename: []const u8) bool {
         return filename.len > 5 and (stringsEql(filename, "package.json") or
             isSpecialFileOrVariant(filename, "LICENSE") or
@@ -2648,7 +2626,6 @@ const zust = @import("safe");
     else
         strings.eqlCaseInsensitiveASCIIICheckLength;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn isSpecialFileOrVariant(filename: []const u8, comptime name: []const u8) callconv(bun.callconv_inline) bool {
         return switch (filename.len) {
             inline 0...name.len - 1 => false,
@@ -2767,7 +2744,6 @@ pub const bindings = struct {
                 .eof => unreachable,
                 .retry => continue,
                 .failed, .fatal => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     return global.throw("failed to read archive header: {s}", .{Archive.errorString(@ptrCast(archive))});
                 },
                 else => {
@@ -2789,7 +2765,6 @@ pub const bindings = struct {
                     };
 
                     if (kind == .file) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const size: usize = @intCast(archive_entry.size());
                         bun.handleOom(read_buf.resize(size));
                         defer read_buf.clearRetainingCapacity();
@@ -2800,11 +2775,9 @@ pub const bindings = struct {
                             defer pathname_utf8.deinit();
                             return global.throw("failed to read archive entry \"{s}\": {s}", .{
                                 pathname_utf8.slice(),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                 Archive.errorString(@ptrCast(archive)),
                             });
                         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         read_buf.items.len = @intCast(read);
                         entry_info.contents = String.cloneUTF8(read_buf.items);
                     }
@@ -2829,8 +2802,7 @@ pub const bindings = struct {
 
         const entries = try JSArray.createEmpty(global, entries_info.items.len);
 
-        // safe-transpile: for with index access requires manual review
-    for (entries_info.items, 0..) |entry, i| {
+        for (entries_info.items, 0..) |entry, i| {
             const obj = JSValue.createEmptyObject(global, 0);
             obj.put(global, "pathname", try entry.pathname.toJS(global));
             obj.put(global, "kind", try entry.kind.toJS(global));
@@ -2838,7 +2810,6 @@ pub const bindings = struct {
             if (entry.contents) |contents| {
                 obj.put(global, "contents", try contents.toJS(global));
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try entries.putIndex(global, @intCast(i), obj);
         }
 

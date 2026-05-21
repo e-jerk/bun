@@ -59,8 +59,8 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
         if (debugger.wait_for_connection == .shortly) {
             uv.uv_update_time(this.uvLoop());
             var timer = bun.handleOom(safe.Box(uv.Timer).init(bun.default_allocator, undefined));
-            timer.* = std.mem.zeroes(uv.Timer);
-            timer.init(this.uvLoop());
+            timer.ptr.* = std.mem.zeroes(uv.Timer);
+            timer.ptr.init(this.uvLoop());
             const onDebuggerTimer = struct {
                 fn call(handle: *uv.Timer) callconv(.c) void {
                     const vm = VirtualMachine.get();
@@ -74,8 +74,8 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                     bun.default_allocator.destroy(@as(*uv.Timer, @ptrCast(@alignCast(handle))));
                 }
             }.call;
-            timer.start(wait_for_connection_delay_ms, 0, &onDebuggerTimer);
-            timer.ref();
+            timer.ptr.start(wait_for_connection_delay_ms, 0, &onDebuggerTimer);
+            timer.ptr.ref();
         }
     }
 

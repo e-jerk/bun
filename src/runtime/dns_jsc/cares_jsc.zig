@@ -4,6 +4,7 @@
 
 // ── struct_hostent ─────────────────────────────────────────────────────────
 const zust = @import("safe");
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn hostentToJSResponse(this: *c_ares.struct_hostent, _: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime lookup_name: []const u8) bun.JSError!jsc.JSValue {
     if (comptime strings.eqlComptime(lookup_name, "cname")) {
         // A cname lookup always returns a single record but we follow the common API here.
@@ -36,6 +37,7 @@ pub fn hostentToJSResponse(this: *c_ares.struct_hostent, _: std.mem.Allocator, g
 }
 
 // ── hostent_with_ttls ──────────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn hostentWithTtlsToJSResponse(this: *c_ares.hostent_with_ttls, _: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime lookup_name: []const u8) bun.JSError!jsc.JSValue {
     if (comptime strings.eqlComptime(lookup_name, "a") or strings.eqlComptime(lookup_name, "aaaa")) {
         if (this.hostent.h_addr_list == null) {
@@ -125,6 +127,7 @@ pub fn addrInfoToJSArray(addr_info: *c_ares.AddrInfo, globalThis: *jsc.JSGlobalO
 }
 
 // ── struct_ares_caa_reply ──────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn caaReplyToJSResponse(this: *c_ares.struct_ares_caa_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -165,6 +168,7 @@ pub fn caaReplyToJS(this: *c_ares.struct_ares_caa_reply, globalThis: *jsc.JSGlob
 }
 
 // ── struct_ares_srv_reply ──────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn srvReplyToJSResponse(this: *c_ares.struct_ares_srv_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -206,6 +210,7 @@ pub fn srvReplyToJS(this: *c_ares.struct_ares_srv_reply, globalThis: *jsc.JSGlob
 }
 
 // ── struct_ares_mx_reply ───────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn mxReplyToJSResponse(this: *c_ares.struct_ares_mx_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -244,6 +249,7 @@ pub fn mxReplyToJS(this: *c_ares.struct_ares_mx_reply, globalThis: *jsc.JSGlobal
 }
 
 // ── struct_ares_txt_reply ──────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn txtReplyToJSResponse(this: *c_ares.struct_ares_txt_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -277,6 +283,7 @@ pub fn txtReplyToJS(this: *c_ares.struct_ares_txt_reply, globalThis: *jsc.JSGlob
     return array;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn txtReplyToJSForAny(this: *c_ares.struct_ares_txt_reply, _: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var count: usize = 0;
     var txt: ?*c_ares.struct_ares_txt_reply = this;
@@ -300,6 +307,7 @@ pub fn txtReplyToJSForAny(this: *c_ares.struct_ares_txt_reply, _: std.mem.Alloca
 }
 
 // ── struct_ares_naptr_reply ────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn naptrReplyToJSResponse(this: *c_ares.struct_ares_naptr_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -352,6 +360,7 @@ pub fn naptrReplyToJS(this: *c_ares.struct_ares_naptr_reply, globalThis: *jsc.JS
 }
 
 // ── struct_ares_soa_reply ──────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn soaReplyToJSResponse(this: *c_ares.struct_ares_soa_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -383,6 +392,7 @@ pub fn soaReplyToJS(this: *c_ares.struct_ares_soa_reply, globalThis: *jsc.JSGlob
 }
 
 // ── struct_any_reply ───────────────────────────────────────────────────────
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn anyReplyToJSResponse(this: *c_ares.struct_any_reply, parent_allocator: std.mem.Allocator, globalThis: *jsc.JSGlobalObject, comptime _: []const u8) bun.JSError!jsc.JSValue {
     var stack = std.heap.stackFallback(2048, parent_allocator);
     var arena = bun.ArenaAllocator.init(stack.get());
@@ -393,6 +403,7 @@ pub fn anyReplyToJSResponse(this: *c_ares.struct_any_reply, parent_allocator: st
     return this.toJS(globalThis, allocator);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn anyReplyAppend(globalThis: *jsc.JSGlobalObject, array: jsc.JSValue, i: *u32, response: jsc.JSValue, comptime lookup_name: []const u8) bun.JSError!void {
     const transformed = if (response.isString())
         (try jsc.JSObject.create(.{
@@ -404,6 +415,7 @@ fn anyReplyAppend(globalThis: *jsc.JSGlobalObject, array: jsc.JSValue, i: *u32, 
     };
 
     var upper = comptime lookup_name[0..lookup_name.len].*;
+// safe-transpile: for loop with pointer capture requires manual review
     inline for (&upper) |*char| {
         char.* = std.ascii.toUpper(char.*);
     }
@@ -413,6 +425,7 @@ fn anyReplyAppend(globalThis: *jsc.JSGlobalObject, array: jsc.JSValue, i: *u32, 
     i.* += 1;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn anyReplyAppendAll(globalThis: *jsc.JSGlobalObject, allocator: std.mem.Allocator, array: jsc.JSValue, i: *u32, reply: anytype, comptime lookup_name: []const u8) bun.JSError!void {
     const response: jsc.JSValue = try if (comptime @hasDecl(@TypeOf(reply.*), "toJSForAny"))
         reply.toJSForAny(allocator, globalThis, lookup_name)
@@ -463,6 +476,7 @@ pub const ErrorDeferred = struct {
 
     pub const new = bun.TrivialNew(@This());
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(errno: c_ares.Error, syscall: []const u8, hostname: ?bun.String, promise: jsc.JSPromise.Strong) *ErrorDeferred {
         return ErrorDeferred.new(.{
             .errno = errno,
@@ -502,11 +516,11 @@ pub const ErrorDeferred = struct {
             }
         };
 
-        const context = bun.handleOom(bun.default_allocator.create(Context));
-        context.deferred = this;
-        context.globalThis = globalThis;
+        const context = bun.handleOom(zust.Box(Context).init(bun.default_allocator, undefined));
+        context.ptr.deferred = this;
+        context.ptr.globalThis = globalThis;
         // TODO(@heimskr): new custom Task type
-        globalThis.bunVM().enqueueTask(jsc.ManagedTask.New(Context, Context.callback).init(context));
+        globalThis.bunVM().enqueueTask(jsc.ManagedTask.New(Context, Context.callback).init(context.ptr));
     }
 
     pub fn deinit(this: *@This()) void {
@@ -518,6 +532,7 @@ pub const ErrorDeferred = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn errorToDeferred(this: c_ares.Error, syscall: []const u8, hostname: ?[]const u8, promise: *jsc.JSPromise.Strong) *ErrorDeferred {
     const host_string: ?bun.String = if (hostname) |host|
         bun.String.cloneUTF8(host)
@@ -538,6 +553,7 @@ pub fn errorToJSWithSyscall(this: c_ares.Error, globalThis: *jsc.JSGlobalObject,
     return instance;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn errorToJSWithSyscallAndHostname(this: c_ares.Error, globalThis: *jsc.JSGlobalObject, comptime syscall: [:0]const u8, hostname: []const u8) bun.JSError!jsc.JSValue {
     const instance = (jsc.SystemError{
         .errno = @intFromEnum(this),

@@ -102,12 +102,12 @@ pub const StatWatcherScheduler = struct {
                 self.scheduler.setTimer(self.scheduler.getInterval());
             }
         };
-        const holder = bun.handleOom(bun.default_allocator.create(Holder));
-        holder.* = .{
+        const holder = bun.handleOom(safe.Box(Holder).init(bun.default_allocator, undefined));
+        holder.ptr.* = .{
             .scheduler = this,
-            .task = jsc.AnyTask.New(Holder, Holder.updateTimer).init(holder),
+            .task = jsc.AnyTask.New(Holder, Holder.updateTimer).init(holder.ptr),
         };
-        this.vm.enqueueTaskConcurrent(jsc.ConcurrentTask.create(jsc.Task.init(&holder.task)));
+        this.vm.enqueueTaskConcurrent(jsc.ConcurrentTask.create(jsc.Task.init(&holder.ptr.task)));
     }
 
     pub fn timerCallback(this: *StatWatcherScheduler) void {
@@ -124,6 +124,7 @@ pub const StatWatcherScheduler = struct {
     }
 
     pub fn workPoolCallback(task: *jsc.WorkPoolTask) void {
+// safe-transpile: @alignCast requires manual review
         var this: *StatWatcherScheduler = @alignCast(@fieldParentPtr("task", task));
         // ref'd when the timer was scheduled
         defer this.deref();
@@ -134,6 +135,7 @@ pub const StatWatcherScheduler = struct {
         log("pop batch of {d} watchers", .{batch.count});
         var iter = batch.iterator();
         var min_interval: i32 = std.math.maxInt(i32);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var closest_next_check: u64 = @intCast(min_interval);
         var contain_watchers = false;
         while (iter.next()) |watcher| {
@@ -144,6 +146,7 @@ pub const StatWatcherScheduler = struct {
             contain_watchers = true;
 
             const time_since = now.since(watcher.last_check);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const interval = @as(u64, @intCast(watcher.interval)) * 1_000_000;
 
             if (time_since >= interval -| 500) {
@@ -159,6 +162,7 @@ pub const StatWatcherScheduler = struct {
 
         if (contain_watchers) {
             // choose the smallest interval or the closest time to the next check
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.setInterval(@min(min_interval, @as(i32, @intCast(closest_next_check))));
         } else {
             // we do not have watchers, we can stop the timer
@@ -520,11 +524,12 @@ pub const StatWatcher = struct {
 
         const alloc_file_path = try bun.default_allocator.allocSentinel(u8, file_path.len, 0);
         errdefer bun.default_allocator.free(alloc_file_path);
+// safe-transpile: @memcpy requires manual review
         @memcpy(alloc_file_path, file_path);
 
-        var this = try bun.default_allocator.create(StatWatcher);
+        var this = try safe.Box(StatWatcher).init(bun.default_allocator, undefined);
         const vm = args.global_this.bunVM();
-        this.* = .{
+        this.ptr.* = .{
             .ctx = vm,
             .persistent = args.persistent,
             .bigint = args.bigint,
@@ -540,19 +545,19 @@ pub const StatWatcher = struct {
             .scheduler = vm.rareData().nodeFSStatWatcherScheduler(vm),
             .ref_count = .init(),
         };
-        errdefer this.deinit();
+        errdefer this.ptr.deinit();
 
-        if (this.persistent) {
-            this.poll_ref.ref(this.ctx);
+        if (this.ptr.persistent) {
+            this.ptr.poll_ref.ref(this.ptr.ctx);
         }
 
-        const js_this = StatWatcher.toJS(this, this.globalThis);
-        this.this_value = .initStrong(js_this, this.globalThis);
-        js.listenerSetCached(js_this, this.globalThis, args.listener);
-        if (vm.test_isolation_enabled) vm.rareData().addStatWatcherForIsolation(this);
-        InitialStatTask.createAndSchedule(this);
+        const js_this = StatWatcher.toJS(this.ptr, this.ptr.globalThis);
+        this.ptr.this_value = .initStrong(js_this, this.ptr.globalThis);
+        js.listenerSetCached(js_this, this.ptr.globalThis, args.listener);
+        if (vm.test_isolation_enabled) vm.rareData().addStatWatcherForIsolation(this.ptr);
+        InitialStatTask.createAndSchedule(this.ptr);
 
-        return this;
+        return this.ptr;
     }
 };
 

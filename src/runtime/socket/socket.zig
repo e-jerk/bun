@@ -1647,8 +1647,8 @@ pub fn NewSocket(comptime ssl: bool) type {
                 defer if (err != 0) BoringSSL.ERR_clear_error();
                 // tls.deinit drops the owned_ctx ref
                 tls.deref();
-                _ = handlers_ptr.deinit();
-                defer _ = handlers_ptr.deinit();
+                _ = handlers_ptr.ptr.deinit();
+                defer _ = handlers_ptr.ptr.deinit();
                 if (err != 0 and !globalObject.hasException()) {
                     return globalObject.throwValue(bun.BoringSSL.ERR_toJS(globalObject, err));
                 }

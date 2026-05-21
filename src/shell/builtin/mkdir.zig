@@ -30,6 +30,7 @@ pub fn onIOWriterChunk(this: *Mkdir, _: usize, e: ?jsc.SystemError) Yield {
     return this.next();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFailingError(this: *Mkdir, buf: []const u8, exit_code: ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_write_err;
@@ -129,6 +130,7 @@ pub const ShellMkdirOutputTask = OutputTask(Mkdir, .{
 });
 
 const ShellMkdirOutputTaskVTable = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeErr(this: *Mkdir, childptr: anytype, errbuf: []const u8) ?Yield {
         this.state.exec.output_waiting += 1;
         if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -200,9 +202,9 @@ pub const ShellMkdirTask = struct {
         filepath: [:0]const u8,
         cwd_path: [:0]const u8,
     ) *ShellMkdirTask {
-        const task = bun.handleOom(bun.default_allocator.create(ShellMkdirTask));
+        const task = bun.handleOom(safe.Box(ShellMkdirTask).init(bun.default_allocator, undefined));
         const evtloop = mkdir.bltn().parentCmd().base.eventLoop();
-        task.* = ShellMkdirTask{
+        task.ptr.* = ShellMkdirTask{
             .mkdir = mkdir,
             .opts = opts,
             .cwd_path = cwd_path,
@@ -211,7 +213,7 @@ pub const ShellMkdirTask = struct {
             .event_loop = evtloop,
             .concurrent_task = jsc.EventLoopTask.fromEventLoop(evtloop),
         };
-        return task;
+        return task.ptr;
     }
 
     pub fn schedule(this: *@This()) void {
@@ -331,6 +333,7 @@ const Opts = struct {
         return Parse.parseFlags(opts, args);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         if (bun.strings.eqlComptime(flag, "--mode")) {
             return .{ .unsupported = "--mode" };
@@ -345,6 +348,7 @@ const Opts = struct {
         return null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         switch (char) {
             'm' => {
@@ -366,6 +370,7 @@ const Opts = struct {
 };
 
 pub inline fn bltn(this: *Mkdir) *Builtin {
+// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("mkdir", this));
     return @fieldParentPtr("impl", impl);
 }

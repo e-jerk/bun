@@ -662,12 +662,12 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
             default_data.ensureStillAlive();
 
             const handlers_ptr = bun.handleOom(zust.Box(Handlers).init(handlers.vm.allocator, undefined));
-            handlers_ptr.* = handlers.*;
-            handlers_ptr.mode = .client;
+            handlers_ptr.ptr.* = handlers.*;
+            handlers_ptr.ptr.mode = .client;
 
             var promise = jsc.JSPromise.create(globalObject);
             const promise_value = promise.toJS();
-            handlers_ptr.promise.set(globalObject, promise_value);
+            handlers_ptr.ptr.promise.set(globalObject, promise_value);
 
             if (ssl_enabled) {
                 var tls = if (prev_maybe_tls) |prev| blk: {
@@ -676,7 +676,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                         defer _ = prev_handlers.deinit();
                     }
                     bun.assert(prev.this_value.isNotEmpty());
-                    prev.handlers = handlers_ptr;
+                    prev.handlers = handlers_ptr.ptr;
                     bun.assert(prev.socket.socket == .detached);
                     // Free old resources before reassignment to prevent memory leaks
                     // when sockets are reused for reconnection (common with MongoDB driver)
@@ -697,7 +697,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                     break :blk prev;
                 } else TLSSocket.new(.{
                     .ref_count = .init(),
-                    .handlers = handlers_ptr,
+                    .handlers = handlers_ptr.ptr,
                     .socket = TLSSocket.Socket.detached,
                     .connection = connection,
                     .protos = if (ssl) |s| s.takeProtos() else null,
@@ -739,7 +739,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                         prev_handlers.deinit();
                         defer _ = prev_handlers.deinit();
                     }
-                    prev.handlers = handlers_ptr;
+                    prev.handlers = handlers_ptr.ptr;
                     bun.assert(prev.socket.socket == .detached);
                     // Adopt `connection` (heap-owned for .unix) so the socket's
                     // deinit frees it; matches the TLS arm above and the
@@ -754,7 +754,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                     break :blk prev;
                 } else TCPSocket.new(.{
                     .ref_count = .init(),
-                    .handlers = handlers_ptr,
+                    .handlers = handlers_ptr.ptr,
                     .socket = TCPSocket.Socket.detached,
                     .connection = connection,
                     .protos = null,

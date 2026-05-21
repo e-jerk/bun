@@ -289,9 +289,9 @@ pub const Source = union(enum) {
         log("openFile (fd = {f})", .{fd});
         const file = bun.handleOom(zust.Box(Source.File).init(bun.default_allocator, undefined));
 
-        file.* = std.mem.zeroes(Source.File);
-        file.file = fd.uv();
-        return file;
+        file.ptr.* = std.mem.zeroes(Source.File);
+        file.ptr.file = fd.uv();
+        return file.ptr;
     }
 
     pub fn open(loop: *uv.Loop, fd: bun.FD) bun.sys.Maybe(Source) {

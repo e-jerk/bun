@@ -914,8 +914,8 @@ pub fn parse(
     defer arena.deinit();
     const allocator = arena.allocator();
 
-    var ast_memory_allocator = bun.handleOom(allocator.create(ast.ASTMemoryAllocator));
-    var ast_scope = ast_memory_allocator.enter(allocator);
+    var ast_memory_allocator = bun.handleOom(safe.Box(ast.ASTMemoryAllocator).init(allocator, undefined));
+    var ast_scope = ast_memory_allocator.ptr.enter(allocator);
     defer ast_scope.exit();
 
     const input_value = callFrame.argumentsAsArray(1)[0];
@@ -1012,7 +1012,9 @@ const ParserCtx = struct {
                 args.append(arr);
                 try ctx.seen_objects.put(expr.data.e_array, arr);
 
-                for (expr.data.e_array.slice(), 0..) |item, _i| {
+                // safe-transpile: for with index access requires manual review
+    for (expr.data.e_array.slice(), 0..) |item, _i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const i: u32 = @intCast(_i);
                     const value = try ctx.toJS(args, item);
                     try arr.putIndex(ctx.global, i, value);

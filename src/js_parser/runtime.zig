@@ -1,3 +1,4 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn embedDebugFallback(comptime msg: []const u8, comptime code: []const u8) []const u8 {
     const FallbackMessage = struct {
         pub var has_printed = false;
@@ -31,6 +32,7 @@ pub const Fallback = struct {
         pub const Base64Encoder = struct {
             const alphabet_chars = std.base64.standard_alphabet_chars;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn encode(source: []const u8, comptime Writer: type, writer: Writer) !void {
                 var acc: u12 = 0;
                 var acc_len: u4 = 0;
@@ -39,10 +41,12 @@ pub const Fallback = struct {
                     acc_len += 8;
                     while (acc_len >= 6) {
                         acc_len -= 6;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         try writer.writeByte(alphabet_chars[@as(u6, @truncate((acc >> acc_len)))]);
                     }
                 }
                 if (acc_len > 0) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     try writer.writeByte(alphabet_chars[@as(u6, @truncate((acc << 6 - acc_len)))]);
                 }
             }
@@ -74,6 +78,7 @@ pub const Fallback = struct {
     var version_hash_int: u32 = 0;
     pub fn versionHash() u32 {
         if (version_hash_int == 0) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             version_hash_int = @as(u32, @truncate(std.fmt.parseInt(u64, version(), 16) catch unreachable));
         }
         return version_hash_int;
@@ -138,6 +143,7 @@ pub const Runtime = struct {
 
     pub fn versionHash() u32 {
         const hash = bun.Wyhash11.hash(0, sourceCode());
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @truncate(hash);
     }
 
@@ -233,18 +239,18 @@ pub const Runtime = struct {
                 return &empty_bundler_feature_flags;
             }
 
-            const set = bun.handleOom(allocator.create(bun.StringSet));
-            set.* = bun.StringSet.init(allocator);
+            const set = bun.handleOom(safe.Box(bun.StringSet).init(allocator, undefined));
+            set.ptr.* = bun.StringSet.init(allocator);
             for (feature_flags) |flag| {
-                bun.handleOom(set.insert(flag));
+                bun.handleOom(set.ptr.insert(flag));
             }
-            set.map.sort(struct {
+            set.ptr.map.sort(struct {
                 keys: []const []const u8,
                 pub fn lessThan(ctx: @This(), a: usize, b: usize) bool {
                     return std.mem.lessThan(u8, ctx.keys[a], ctx.keys[b]);
                 }
-            }{ .keys = set.map.keys() });
-            return set;
+            }{ .keys = set.ptr.map.keys() });
+            return set.ptr;
         }
 
         const hash_fields_for_runtime_transpiler = .{
@@ -273,7 +279,8 @@ pub const Runtime = struct {
             bun.assert(this.runtime_transpiler_cache != null);
 
             var bools: [std.meta.fieldNames(@TypeOf(hash_fields_for_runtime_transpiler)).len]bool = undefined;
-            inline for (hash_fields_for_runtime_transpiler, 0..) |field, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (hash_fields_for_runtime_transpiler, 0..) |field, i| {
                 bools[i] = @field(this, @tagName(field));
             }
 
@@ -407,6 +414,7 @@ pub const Runtime = struct {
             @setEvalBranchQuota(1000000);
             var list = all;
             const Sorter = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 fn compare(_: void, a: []const u8, b: []const u8) bool {
                     return std.mem.order(u8, a, b) == .lt;
                 }
@@ -420,8 +428,10 @@ pub const Runtime = struct {
         pub const all_sorted_index = brk: {
             @setEvalBranchQuota(1000000);
             var out: [all.len]usize = undefined;
-            for (all, 0..) |name, i| {
-                for (all_sorted, 0..) |cmp, j| {
+            // safe-transpile: for with index access requires manual review
+    for (all, 0..) |name, i| {
+                // safe-transpile: for with index access requires manual review
+    for (all_sorted, 0..) |cmp, j| {
                     if (strings.eqlComptime(name, cmp)) {
                         out[i] = j;
                         break;

@@ -77,6 +77,7 @@ pub const CronRegisterJob = struct {
     pub const onReaderError = CronJobBase(CronRegisterJob).onReaderError;
     pub const onProcessExit = CronJobBase(CronRegisterJob).onProcessExit;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn setErr(this: *CronRegisterJob, comptime fmt: []const u8, args: anytype) void {
         if (this.err_msg == null)
             this.err_msg = std.fmt.allocPrint(bun.default_allocator, fmt, args) catch null;
@@ -105,6 +106,7 @@ pub const CronRegisterJob = struct {
                     // a clear message instead of the raw schtasks output.
                     if (comptime bun.Environment.isWindows) {
                         if (this.state == .installing_crontab and
+// zust: use zust.String or zust.GuardedSlice for slice operations
                             std.mem.indexOf(u8, stderr_output, "No mapping between account names") != null)
                         {
                             this.setErr(
@@ -474,8 +476,8 @@ pub const CronRegisterJob = struct {
             bun.default_allocator.free(abs_path);
             return globalObject.throwInvalidArguments("Bun executable path '{s}' contains characters (' or %) that cannot be safely embedded in a crontab entry", .{bun_exe});
         }
-        const job = bun.handleOom(bun.default_allocator.create(CronRegisterJob));
-        job.* = .{
+        const job = bun.handleOom(zust.Box(CronRegisterJob).init(bun.default_allocator, undefined));
+        job.ptr.* = .{
             .global = globalObject,
             .bun_exe = bun_exe,
             .abs_path = abs_path,
@@ -485,15 +487,15 @@ pub const CronRegisterJob = struct {
             .promise = jsc.JSPromise.Strong.init(globalObject),
         };
 
-        const promise_value = job.promise.value();
-        job.poll.ref(jsc.VirtualMachine.get());
+        const promise_value = job.ptr.promise.value();
+        job.ptr.poll.ref(jsc.VirtualMachine.get());
 
         if (comptime bun.Environment.isMac)
-            job.startMac()
+            job.ptr.startMac()
         else if (comptime bun.Environment.isWindows)
-            job.startWindows()
+            job.ptr.startWindows()
         else
-            job.startLinux();
+            job.ptr.startLinux();
 
         return promise_value;
     }
@@ -573,6 +575,7 @@ pub const CronRemoveJob = struct {
     pub const onReaderError = CronJobBase(CronRemoveJob).onReaderError;
     pub const onProcessExit = CronJobBase(CronRemoveJob).onProcessExit;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn setErr(this: *CronRemoveJob, comptime fmt: []const u8, args: anytype) void {
         if (this.err_msg == null)
             this.err_msg = std.fmt.allocPrint(bun.default_allocator, fmt, args) catch null;
@@ -772,21 +775,21 @@ pub const CronRemoveJob = struct {
         if (!validateTitle(title_slice.slice()))
             return globalObject.throwInvalidArguments("Cron title must contain only alphanumeric characters, hyphens, and underscores", .{});
 
-        const job = bun.handleOom(bun.default_allocator.create(CronRemoveJob));
-        job.* = .{
+        const job = bun.handleOom(zust.Box(CronRemoveJob).init(bun.default_allocator, undefined));
+        job.ptr.* = .{
             .global = globalObject,
             .title = bun.handleOom(bun.default_allocator.dupeZ(u8, title_slice.slice())),
             .promise = jsc.JSPromise.Strong.init(globalObject),
         };
 
-        const promise_value = job.promise.value();
-        job.poll.ref(jsc.VirtualMachine.get());
+        const promise_value = job.ptr.promise.value();
+        job.ptr.poll.ref(jsc.VirtualMachine.get());
         if (comptime bun.Environment.isMac)
-            job.startMac()
+            job.ptr.startMac()
         else if (comptime bun.Environment.isWindows)
-            job.startWindows()
+            job.ptr.startWindows()
         else
-            job.startLinux();
+            job.ptr.startLinux();
         return promise_value;
     }
 
@@ -1197,13 +1200,16 @@ fn spawnCmdGeneric(comptime Self: type, this: *Self, argv: anytype, stdin_opt: b
     var envp_arena = std.heap.ArenaAllocator.init(bun.default_allocator);
     defer envp_arena.deinit();
     const envp: [*:null]?[*:0]const u8 = if (comptime bun.Environment.isPosix)
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(@constCast(std.c.environ))
     else
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast((jsc.VirtualMachine.get().transpiler.env.map.createNullDelimitedEnvMap(envp_arena.allocator()) catch {
             this.setErr("Failed to create environment block", .{});
             this.finish();
             return;
         }).ptr);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     var spawned = (bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), envp) catch |e| {
         this.setErr("Failed to spawn process: {s}", .{@errorName(e)});
         this.finish();
@@ -1276,6 +1282,7 @@ fn getUid() u32 {
 }
 
 /// Validate title: only [a-zA-Z0-9_-], non-empty.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn validateTitle(title: []const u8) bool {
     if (title.len == 0) return false;
     for (title) |c| {
@@ -1285,6 +1292,7 @@ fn validateTitle(title: []const u8) bool {
 }
 
 /// Filter crontab content, removing any entry with matching title marker.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn filterCrontab(content: []const u8, title: [:0]const u8, result: *std.array_list.Managed(u8)) !void {
     const marker = try std.fmt.allocPrint(bun.default_allocator, "# bun-cron: {s}", .{title});
     defer bun.default_allocator.free(marker);
@@ -1306,6 +1314,7 @@ fn filterCrontab(content: []const u8, title: [:0]const u8, result: *std.array_li
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn resolvePath(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame, path: []const u8) ![:0]const u8 {
     const vm = globalObject.bunVM();
     const srcloc = callframe.getCallerSrcLoc(globalObject);
@@ -1320,6 +1329,7 @@ fn resolvePath(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame, pat
 }
 
 /// XML-escape a string for safe embedding in plist XML.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn xmlEscape(input: []const u8) ![]const u8 {
     var needs_escape = false;
     for (input) |c| {
@@ -1345,6 +1355,7 @@ fn xmlEscape(input: []const u8) ![]const u8 {
     return result.toOwnedSlice();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
     var fields: [5][]const u8 = undefined;
     var count: usize = 0;
@@ -1358,9 +1369,11 @@ fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
 
     // Parse each field into a list of integer values (or null for "*")
     var field_values: [5]?[]const i32 = .{ null, null, null, null, null };
+// safe-transpile: for loop with pointer capture requires manual review
     defer for (&field_values) |*fv| {
         if (fv.*) |v| bun.default_allocator.free(v);
     };
+    // safe-transpile: for with index access requires manual review
     for (fields[0..5], &field_values) |field, *fv| {
         if (bun.strings.eql(field, "*")) continue;
         var vals = std.array_list.Managed(i32).init(bun.default_allocator);
@@ -1397,7 +1410,8 @@ fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
         // Single dict, no product needed
         const plist_keys = [_][]const u8{ "Minute", "Hour", "Day", "Month", "Weekday" };
         try result.appendSlice("    <dict>\n");
-        for (field_values, plist_keys) |fv, key| {
+        // safe-transpile: for with index access requires manual review
+    for (field_values, plist_keys) |fv, key| {
             if (fv) |vals| {
                 if (vals.len == 1) {
                     try appendCalendarKey(&result, key, vals[0]);
@@ -1424,6 +1438,7 @@ fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
     return result.toOwnedSlice();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn appendCalendarKey(result: *std.array_list.Managed(u8), key: []const u8, val: i32) !void {
     const line = try std.fmt.allocPrint(bun.default_allocator, "        <key>{s}</key>\n        <integer>{d}</integer>\n", .{ key, val });
     defer bun.default_allocator.free(line);
@@ -1473,6 +1488,7 @@ fn emitCalendarDicts(result: *std.array_list.Managed(u8), field_values: [5]?[]co
 
 /// Build a Windows Task Scheduler XML definition from a parsed cron expression.
 /// Uses TimeTrigger+Repetition for simple intervals, CalendarTrigger for complex schedules.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn cronToTaskXml(
     cron: CronExpression,
     bun_exe: []const u8,
@@ -1570,6 +1586,7 @@ fn cronToTaskXml(
                 mins_bits &= mins_bits - 1;
                 var sb_buf: [32]u8 = undefined;
                 const sb = std.fmt.bufPrint(&sb_buf, "2000-01-01T{d:0>2}:{d:0>2}:00", .{
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @as(u32, @intCast(h)), @as(u32, @intCast(m)),
                 }) catch return error.InvalidCron;
 
@@ -1645,6 +1662,7 @@ fn appendDaysOfMonthXml(xml: *std.array_list.Managed(u8), days: u32) !void {
     try xml.appendSlice("        <DaysOfMonth>\n");
     var buf: [32]u8 = undefined;
     for (1..32) |day| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (days & (@as(u32, 1) << @intCast(day)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <Day>{d}</Day>\n", .{day}) catch return error.InvalidCron;
             try xml.appendSlice(line);
@@ -1657,6 +1675,7 @@ fn appendMonthsXml(xml: *std.array_list.Managed(u8), months: u16) !void {
     try xml.appendSlice("        <Months>\n");
     var buf: [32]u8 = undefined;
     for (1..13) |mo| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (months & (@as(u16, 1) << @intCast(mo)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <{s}/>\n", .{month_names[mo]}) catch return error.InvalidCron;
             try xml.appendSlice(line);
@@ -1670,6 +1689,7 @@ fn appendDaysOfWeekXml(xml: *std.array_list.Managed(u8), weekdays: u8) !void {
     try xml.appendSlice("        <DaysOfWeek>\n");
     var buf: [32]u8 = undefined;
     for (0..7) |d| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (weekdays & (@as(u8, 1) << @intCast(d)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <{s}/>\n", .{day_names[d]}) catch return error.InvalidCron;
             try xml.appendSlice(line);
@@ -1686,6 +1706,7 @@ const ScheduleType = union(enum) {
     by_month_all_days: u16, // months bitmask (daily with month restriction)
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn appendCalendarTriggerWithSchedule(xml: *std.array_list.Managed(u8), _: std.mem.Allocator, start_boundary: []const u8, sched: ScheduleType) !void {
     try xml.appendSlice("    <CalendarTrigger>\n");
     var sb_buf: [80]u8 = undefined;
@@ -1750,11 +1771,13 @@ fn computeStepInterval(comptime T: type, bits: T, _: u7, max: u7) ?u32 {
     return step;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn allocPrintZ(allocator: std.mem.Allocator, comptime fmt: []const u8, args: anytype) std.mem.Allocator.Error![:0]const u8 {
     return std.fmt.allocPrintSentinel(allocator, fmt, args, 0);
 }
 
 /// Create a temp file path with a random suffix to avoid TOCTOU/symlink attacks.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn makeTempPath(comptime prefix: []const u8) ![:0]const u8 {
     var name_buf: bun.PathBuffer = undefined;
     const name = bun.fs.FileSystem.tmpname(prefix ++ "tmp", &name_buf, bun.fastRandom()) catch return error.OutOfMemory;

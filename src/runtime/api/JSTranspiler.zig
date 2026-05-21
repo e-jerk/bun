@@ -324,6 +324,7 @@ pub const Config = struct {
                     var length_iter = iter;
                     while (try length_iter.next()) |value| {
                         if (value.isString()) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             const length: u32 = @truncate(try value.getLength(globalThis));
                             string_count += @intFromBool(length > 0);
                             total_name_buf_len += length;
@@ -496,8 +497,8 @@ pub const TransformTask = struct {
         defer arena.deinit();
 
         const allocator = arena.allocator();
-        var ast_memory_allocator = bun.handleOom(allocator.create(JSAst.ASTMemoryAllocator));
-        var ast_scope = ast_memory_allocator.enter(allocator);
+        var ast_memory_allocator = bun.handleOom(safe.Box(JSAst.ASTMemoryAllocator).init(allocator, undefined));
+        var ast_scope = ast_memory_allocator.ptr.enter(allocator);
         defer ast_scope.exit();
 
         this.transpiler.setAllocator(allocator);
@@ -640,11 +641,11 @@ fn exportReplacementValue(value: JSValue, globalThis: *JSGlobalObject, allocator
         const str = JSAst.E.String{
             .data = try std.fmt.allocPrint(allocator, "{f}", .{try value.getZigString(globalThis)}),
         };
-        const out = try allocator.create(JSAst.E.String);
-        out.* = str;
+        const out = try safe.Box(JSAst.E.String).init(allocator, undefined);
+        out.ptr.* = str;
         return Expr{
             .data = .{
-                .e_string = out,
+                .e_string = out.ptr,
             },
             .loc = logger.Loc.Empty,
         };
@@ -762,6 +763,7 @@ pub fn deinit(this: *JSTranspiler) void {
 /// Check if code looks like an object literal that would be misinterpreted as a block
 /// Returns true if code starts with { (after whitespace) and doesn't end with ;
 /// This matches Node.js REPL behavior for object literal disambiguation
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn isLikelyObjectLiteral(code: []const u8) bool {
     // Skip leading whitespace
     var start: usize = 0;
@@ -788,6 +790,7 @@ fn isLikelyObjectLiteral(code: []const u8) bool {
     return true;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn getParseResult(this: *JSTranspiler, allocator: std.mem.Allocator, code: []const u8, loader: ?Loader, macro_js_ctx: Transpiler.MacroJSCtx) ?Transpiler.ParseResult {
     const name = this.config.default_loader.stdinName();
 
@@ -865,8 +868,8 @@ pub fn scan(this: *JSTranspiler, globalThis: *jsc.JSGlobalObject, callframe: *js
         this.transpiler.setAllocator(prev_allocator);
         arena.deinit();
     }
-    var ast_memory_allocator = bun.handleOom(allocator.create(JSAst.ASTMemoryAllocator));
-    var ast_scope = ast_memory_allocator.enter(allocator);
+    var ast_memory_allocator = bun.handleOom(safe.Box(JSAst.ASTMemoryAllocator).init(allocator, undefined));
+    var ast_scope = ast_memory_allocator.ptr.enter(allocator);
     defer ast_scope.exit();
 
     var parse_result = getParseResult(this, allocator, code, loader, Transpiler.MacroJSCtx.zero) orelse {
@@ -992,8 +995,8 @@ pub fn transformSync(
 
     const allocator = arena.allocator();
 
-    var ast_memory_allocator = bun.handleOom(allocator.create(JSAst.ASTMemoryAllocator));
-    var ast_scope = ast_memory_allocator.enter(allocator);
+    var ast_memory_allocator = bun.handleOom(safe.Box(JSAst.ASTMemoryAllocator).init(allocator, undefined));
+    var ast_scope = ast_memory_allocator.ptr.enter(allocator);
     defer ast_scope.exit();
 
     const prev_bundler = this.transpiler;
@@ -1136,8 +1139,8 @@ pub fn scanImports(this: *JSTranspiler, globalThis: *jsc.JSGlobalObject, callfra
     var arena = MimallocArena.init();
     const prev_allocator = this.transpiler.allocator;
     const allocator = arena.allocator();
-    var ast_memory_allocator = bun.handleOom(allocator.create(JSAst.ASTMemoryAllocator));
-    var ast_scope = ast_memory_allocator.enter(allocator);
+    var ast_memory_allocator = bun.handleOom(safe.Box(JSAst.ASTMemoryAllocator).init(allocator, undefined));
+    var ast_scope = ast_memory_allocator.ptr.enter(allocator);
     defer ast_scope.exit();
 
     this.transpiler.setAllocator(allocator);

@@ -31,15 +31,16 @@ pub fn cancel(this: *ManagedTask) void {
 pub fn New(comptime Type: type, comptime Callback: anytype) type {
     return struct {
         pub fn init(ctx: *Type) Task {
-            var managed = bun.handleOom(bun.default_allocator.create(ManagedTask));
-            managed.* = ManagedTask{
+            var managed = bun.handleOom(zust.Box(ManagedTask).init(bun.default_allocator, undefined));
+            managed.ptr.* = ManagedTask{
                 .callback = wrap,
                 .ctx = ctx,
             };
-            return managed.task();
+            return managed.ptr.task();
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
+// safe-transpile: @alignCast requires manual review
             return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
         }
     };

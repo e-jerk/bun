@@ -139,6 +139,7 @@ pub const Run = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn bootBunShell(ctx: Command.Context, entry_path: []const u8) !bun.shell.ExitCode {
         @branchHint(.cold);
 
@@ -203,9 +204,9 @@ pub const Run = struct {
         vm.allocator = vm.arena.allocator();
 
         if (ctx.runtime_options.eval.script.len > 0) {
-            const script_source = try bun.default_allocator.create(logger.Source);
-            script_source.* = logger.Source.initPathString(entry_path, ctx.runtime_options.eval.script);
-            vm.module_loader.eval_source = script_source;
+            const script_source = try safe.Box(logger.Source).init(bun.default_allocator, undefined);
+            script_source.ptr.* = logger.Source.initPathString(entry_path, ctx.runtime_options.eval.script);
+            vm.module_loader.eval_source = script_source.ptr;
 
             if (ctx.runtime_options.eval.eval_and_print) {
                 b.options.dead_code_elimination = false;
@@ -233,14 +234,16 @@ pub const Run = struct {
                 .err => return error.SystemResources,
             };
             var eval_path_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(eval_path_buf[0..cwd_slice.len], cwd_slice);
+// safe-transpile: @memcpy requires manual review
             @memcpy(eval_path_buf[cwd_slice.len..][0..trigger.len], trigger);
             const eval_entry_path = eval_path_buf[0 .. cwd_slice.len + trigger.len];
             // Heap-allocate the path so it outlives this stack frame
             const heap_entry_path = try bun.default_allocator.dupe(u8, eval_entry_path);
-            const script_source = try bun.default_allocator.create(logger.Source);
-            script_source.* = logger.Source.initPathString(heap_entry_path, cron_script);
-            vm.module_loader.eval_source = script_source;
+            const script_source = try safe.Box(logger.Source).init(bun.default_allocator, undefined);
+            script_source.ptr.* = logger.Source.initPathString(heap_entry_path, cron_script);
+            vm.module_loader.eval_source = script_source.ptr;
             run.entry_path = heap_entry_path;
         }
 
@@ -612,6 +615,7 @@ const string = []const u8;
 
 /// Escape a string for safe embedding in a JS double-quoted string literal.
 /// Escapes backslashes, double quotes, newlines, etc.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn escapeForJSString(allocator: std.mem.Allocator, input: []const u8) ![]const u8 {
     var needs_escape = false;
     for (input) |c| {

@@ -129,9 +129,9 @@ pub export fn Bun__handleHandledPromise(global: *JSGlobalObject, promise: *jsc.J
     jsc.markBinding(@src());
     const promise_js = promise.toJS();
     promise_js.protect();
-    const context = bun.handleOom(bun.default_allocator.create(Context));
-    context.* = .{ .globalThis = global, .promise = promise_js };
-    global.bunVM().eventLoop().enqueueTask(jsc.ManagedTask.New(Context, Context.callback).init(context));
+    const context = bun.handleOom(safe.Box(Context).init(bun.default_allocator, undefined));
+    context.ptr.* = .{ .globalThis = global, .promise = promise_js };
+    global.bunVM().eventLoop().enqueueTask(jsc.ManagedTask.New(Context, Context.callback).init(context.ptr));
 }
 
 pub export fn Bun__onDidAppendPlugin(jsc_vm: *VirtualMachine, globalObject: *JSGlobalObject) void {
@@ -181,6 +181,7 @@ export fn Bun__addBakeSourceProviderSourceMap(vm: *VirtualMachine, opaque_source
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.putBakeSourceProvider(@as(*BakeSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -188,6 +189,7 @@ export fn Bun__addDevServerSourceProvider(vm: *VirtualMachine, opaque_source_pro
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.putDevServerSourceProvider(@as(*DevServerSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -195,6 +197,7 @@ export fn Bun__removeDevServerSourceProvider(vm: *VirtualMachine, opaque_source_
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.removeDevServerSourceProvider(@as(*DevServerSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -222,6 +225,7 @@ pub fn Bun__setSyntheticAllocationLimitForTesting(globalObject: *JSGlobalObject,
         return globalObject.throwInvalidArguments("setSyntheticAllocationLimitForTesting expects a number", .{});
     }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const limit: usize = @intCast(@max(try args[0].coerceToInt64(globalObject), 1024 * 1024));
     const prev = VirtualMachine.synthetic_allocation_limit;
     VirtualMachine.synthetic_allocation_limit = limit;
