@@ -38,7 +38,6 @@ const zust = @import("safe");
                 return .js_undefined;
             },
             .chunk_size => |chunk| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return jsc.JSValue.jsNumber(@as(Blob.SizeType, @intCast(chunk)));
             },
             .err => |err| {
@@ -63,7 +62,6 @@ const zust = @import("safe");
 
         if (value.get(globalThis, "chunkSize")) |chunkSize| {
             if (chunkSize.isNumber())
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 return .{ .chunk_size = @as(Blob.SizeType, @intCast(@as(i52, @truncate(chunkSize.toInt64())))) };
         }
 
@@ -103,7 +101,6 @@ const zust = @import("safe");
                 if (try value.fastGet(globalThis, .highWaterMark)) |chunkSize| {
                     if (chunkSize.isNumber()) {
                         empty = false;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         chunk_size = @as(Blob.SizeType, @intCast(@max(0, @as(i51, @truncate(chunkSize.toInt64())))));
                     }
                 }
@@ -123,7 +120,6 @@ const zust = @import("safe");
 
                 if (try value.fastGet(globalThis, .highWaterMark)) |chunkSize| {
                     if (chunkSize.isNumber())
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         chunk_size = @as(Blob.SizeType, @intCast(@max(0, @as(i51, @truncate(chunkSize.toInt64())))));
                 }
 
@@ -184,7 +180,6 @@ const zust = @import("safe");
                 if (try value.fastGet(globalThis, .highWaterMark)) |chunkSize| {
                     if (chunkSize.isNumber()) {
                         empty = false;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         chunk_size = @as(Blob.SizeType, @intCast(@max(256, @as(i51, @truncate(chunkSize.toInt64())))));
                     }
                 }
@@ -268,11 +263,9 @@ pub const Result = union(Tag) {
 
     pub fn slice16(this: *const Result) []const u16 {
         const bytes = this.slice();
-// safe-transpile: @alignCast requires manual review
         return @as([*]const u16, @ptrCast(@alignCast(bytes.ptr)))[0..std.mem.bytesAsSlice(u16, bytes).len];
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *const Result) []const u8 {
         return switch (this.*) {
             .owned => |owned| owned.slice(),
@@ -583,7 +576,6 @@ pub const Result = union(Tag) {
                 var array = try jsc.JSValue.createUninitializedUint8Array(globalThis, temp.len);
                 var slice_ = array.asArrayBuffer(globalThis).?.slice();
                 const temp_slice = temp.slice();
-// safe-transpile: @memcpy requires manual review
                 @memcpy(slice_[0..temp_slice.len], temp_slice);
                 return array;
             },
@@ -591,7 +583,6 @@ pub const Result = union(Tag) {
                 var array = try jsc.JSValue.createUninitializedUint8Array(globalThis, temp.len);
                 var slice_ = array.asArrayBuffer(globalThis).?.slice();
                 const temp_slice = temp.slice();
-// safe-transpile: @memcpy requires manual review
                 @memcpy(slice_[0..temp_slice.len], temp_slice);
                 return array;
             },
@@ -683,26 +674,20 @@ pub const Signal = struct {
             const Functions = struct {
                 fn onClose(this: *anyopaque, err: ?Syscall.Error) void {
                     if (comptime !@hasDecl(Wrapped, "onClose"))
-// safe-transpile: @alignCast requires manual review
                         Wrapped.close(@as(*Wrapped, @ptrCast(@alignCast(this))), err)
                     else
-// safe-transpile: @alignCast requires manual review
                         Wrapped.onClose(@as(*Wrapped, @ptrCast(@alignCast(this))), err);
                 }
                 fn onReady(this: *anyopaque, amount: ?Blob.SizeType, offset: ?Blob.SizeType) void {
                     if (comptime !@hasDecl(Wrapped, "onReady"))
-// safe-transpile: @alignCast requires manual review
                         Wrapped.ready(@as(*Wrapped, @ptrCast(@alignCast(this))), amount, offset)
                     else
-// safe-transpile: @alignCast requires manual review
                         Wrapped.onReady(@as(*Wrapped, @ptrCast(@alignCast(this))), amount, offset);
                 }
                 fn onStart(this: *anyopaque) void {
                     if (comptime !@hasDecl(Wrapped, "onStart"))
-// safe-transpile: @alignCast requires manual review
                         Wrapped.start(@as(*Wrapped, @ptrCast(@alignCast(this))))
                     else
-// safe-transpile: @alignCast requires manual review
                         Wrapped.onStart(@as(*Wrapped, @ptrCast(@alignCast(this))));
                 }
             };
@@ -762,7 +747,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
 
         fn handleWrote(this: *@This(), amount1: usize) void {
             defer log("handleWrote: {d} offset: {d}, {d}", .{ amount1, this.offset, this.buffer.len });
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const amount = @as(Blob.SizeType, @truncate(amount1));
             this.offset += amount;
             this.wrote += amount;
@@ -788,7 +772,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
         fn hasBackpressureAndIsTryEnd(this: *const @This()) bool {
             return this.has_backpressure and this.end_len > 0;
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn sendWithoutAutoFlusher(this: *@This(), buf: []const u8) bool {
             bun.assert(!this.done);
             defer log("send: {d} bytes (backpressure: {})", .{ buf.len, this.has_backpressure });
@@ -829,13 +812,11 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             return true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn send(this: *@This(), buf: []const u8) bool {
             this.unregisterAutoFlusher();
             return this.sendWithoutAutoFlusher(buf);
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
         fn readableSlice(this: *@This()) []const u8 {
             return this.buffer.ptr[this.offset..this.buffer.len];
         }
@@ -856,7 +837,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             // do not write more than available
             // if we do, it will cause this to be delayed until the next call, each time
             // TODO: should we break it in smaller chunks?
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const to_write = @min(@as(Blob.SizeType, @truncate(write_offset)), @as(Blob.SizeType, this.buffer.len - 1));
             const chunk = this.readableSlice()[to_write..];
             // if we have nothing to write, we are done
@@ -893,7 +873,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             if (!this.done and !this.requested_end and !this.hasBackpressure()) {
                 // no pending and total_written > 0
                 if (total_written > 0 and this.readableSlice().len == 0) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     this.signal.ready(@as(Blob.SizeType, @truncate(total_written)), null);
                 }
             }
@@ -1022,7 +1001,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             }
 
             const bytes = data.slice();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const len = @as(Blob.SizeType, @truncate(bytes.len));
             log("write({d})", .{bytes.len});
 
@@ -1071,7 +1049,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             }
 
             const bytes = data.slice();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const len = @as(Blob.SizeType, @truncate(bytes.len));
             log("writeLatin1({d})", .{bytes.len});
 
@@ -1135,7 +1112,6 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
 
             // we must always buffer UTF-16
             // we assume the case of all-ascii UTF-16 string is pretty uncommon
-// safe-transpile: @alignCast requires manual review
             const written = this.buffer.writeUTF16(this.allocator, @alignCast(std.mem.bytesAsSlice(u16, bytes))) catch {
                 return .{ .err = Syscall.Error.fromCode(.NOMEM, .write) };
             };
@@ -1143,13 +1119,11 @@ pub fn HTTPServerWritable(comptime ssl: bool, comptime http3: bool) type {
             const readable = this.readableSlice();
             if (readable.len >= this.highWaterMark or this.hasBackpressure()) {
                 if (this.send(readable)) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     return .{ .owned = @as(Blob.SizeType, @intCast(written)) };
                 }
             }
 
             this.registerAutoFlusher();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return .{ .owned = @as(Blob.SizeType, @intCast(written)) };
         }
 
@@ -1417,7 +1391,6 @@ pub const NetworkSink = struct {
         return Sink.init(this);
     }
     pub fn toSink(this: *@This()) *@This().JSSink {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this);
     }
     pub fn finalize(this: *@This()) void {
@@ -1481,7 +1454,6 @@ pub const NetworkSink = struct {
             return .{ .owned = 0 };
         }
         const bytes = data.slice();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const len = @as(Blob.SizeType, @truncate(bytes.len));
 
         if (this.task) |task| {
@@ -1499,7 +1471,6 @@ pub const NetworkSink = struct {
         }
 
         const bytes = data.slice();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const len = @as(Blob.SizeType, @truncate(bytes.len));
 
         if (this.task) |task| {
@@ -1522,7 +1493,6 @@ pub const NetworkSink = struct {
             };
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return .{ .owned = @as(Blob.SizeType, @intCast(bytes.len)) };
     }
 
@@ -1631,7 +1601,6 @@ pub const ReadResult = union(enum) {
     done: void,
     read: []u8,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toStream(this: ReadResult, pending: *Result.Pending, buf: []u8, view: JSValue, close_on_empty: bool) Result {
         return toStreamWithIsDone(
             this,
@@ -1642,7 +1611,6 @@ pub const ReadResult = union(enum) {
             false,
         );
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toStreamWithIsDone(this: ReadResult, pending: *Result.Pending, buf: []u8, view: JSValue, close_on_empty: bool, is_done: bool) Result {
         return switch (this) {
             .pending => .{ .pending = pending },
@@ -1657,10 +1625,8 @@ pub const ReadResult = union(enum) {
                 else if (owned)
                     Result{ .owned = bun.ByteList.fromOwnedSlice(slice) }
                 else if (done)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     Result{ .into_array_and_done = .{ .len = @as(Blob.SizeType, @truncate(slice.len)), .value = view } }
                 else
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     Result{ .into_array = .{ .len = @as(Blob.SizeType, @truncate(slice.len)), .value = view } };
             },
         };

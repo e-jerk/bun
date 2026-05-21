@@ -181,7 +181,6 @@ pub const FilePoll = struct {
         // TODO(@paperclover): This cast is extremely suspicious. At best, `fd` is
         // the wrong type (it should be a uv handle), at worst this code is a
         // crash due to invalid memory access.
-// safe-transpile: @bitCast requires manual review
         uv.uv_unref(@ptrFromInt(@as(u64, @bitCast(this.fd))));
         return true;
     }
@@ -398,7 +397,6 @@ pub const Closer = struct {
 
     fn onClose(req: *uv.fs_t) callconv(.c) void {
         var closer: *Closer = @fieldParentPtr("io_request", req);
-// safe-transpile: @alignCast requires manual review
         bun.assert(closer == @as(*Closer, @ptrCast(@alignCast(req.data.?))));
         bun.sys.syslog("uv_fs_close({f}) = {f}", .{ bun.FD.fromUV(req.file.fd), req.result });
 

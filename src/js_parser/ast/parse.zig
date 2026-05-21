@@ -411,8 +411,7 @@ pub fn Parse(
                 }
 
                 // First, try converting the expressions to bindings
-                // safe-transpile: for with index access requires manual review
-    for (items, 0..) |_, i| {
+                for (items, 0..) |_, i| {
                     var is_spread = false;
                     switch (items[i].data) {
                         .e_spread => |v| {

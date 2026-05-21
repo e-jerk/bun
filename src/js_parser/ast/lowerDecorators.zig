@@ -50,16 +50,13 @@ pub fn LowerDecorators(
         }
 
         /// Allocate args + callRuntime in one call.
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn callRt(p: *P, l: logger.Loc, comptime name: []const u8, args: []const Expr) Expr {
             const a = bun.handleOom(p.allocator.alloc(Expr, args.len));
-// safe-transpile: @memcpy requires manual review
             @memcpy(a, args);
             return p.callRuntime(l, name, a);
         }
 
         /// newSymbol + scope.generated.append in one call.
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn newSym(p: *P, kind: Symbol.Kind, name: []const u8) Ref {
             const ref = p.newSymbol(kind, name) catch unreachable;
             bun.handleOom(p.current_scope.generated.append(p.allocator, ref));
@@ -176,7 +173,6 @@ pub fn LowerDecorators(
         }
 
         /// Get fn variable suffix for a given kind code.
-// safe-transpile: function returns small constant slice — consider zust.String
         fn fnSuffix(k: u8) []const u8 {
             return if (k == 2) "_get" else if (k == 3) "_set" else "_fn";
         }
@@ -211,12 +207,10 @@ pub fn LowerDecorators(
                 },
                 .e_call => |e| {
                     rewriteExpr(p, &e.target, kind);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.args.slice()) |*a| rewriteExpr(p, a, kind);
                 },
                 .e_new => |e| {
                     rewriteExpr(p, &e.target, kind);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.args.slice()) |*a| rewriteExpr(p, a, kind);
                 },
                 .e_index => |e| {
@@ -232,11 +226,9 @@ pub fn LowerDecorators(
                     rewriteExpr(p, &e.no, kind);
                 },
                 .e_array => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.items.slice()) |*item| rewriteExpr(p, item, kind);
                 },
                 .e_object => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.properties.slice()) |*prop| {
                         if (prop.value) |*v| rewriteExpr(p, v, kind);
                         if (prop.initializer) |*ini| rewriteExpr(p, ini, kind);
@@ -244,7 +236,6 @@ pub fn LowerDecorators(
                 },
                 .e_template => |e| {
                     if (e.tag) |*t| rewriteExpr(p, t, kind);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.parts) |*part| rewriteExpr(p, &part.value, kind);
                 },
                 .e_arrow => |e| rewriteStmts(p, e.body.stmts, kind),
@@ -263,7 +254,6 @@ pub fn LowerDecorators(
         }
 
         fn rewriteStmts(p: *P, stmts: []Stmt, kind: RewriteKind) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (stmts) |*cur_stmt| {
                 switch (cur_stmt.data) {
                     .s_expr => |sexpr| {
@@ -275,7 +265,6 @@ pub fn LowerDecorators(
                         }, cur_stmt.loc);
                     },
                     .s_local => |local| {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (local.decls.slice()) |*decl| {
                             if (decl.value) |*v| rewriteExpr(p, v, kind);
                         }
@@ -314,7 +303,6 @@ pub fn LowerDecorators(
                     },
                     .s_switch => |data| {
                         rewriteExpr(p, &data.test_, kind);
-// safe-transpile: for loop with pointer capture requires manual review
                         for (data.cases) |*case| {
                             if (case.value) |*v| rewriteExpr(p, v, kind);
                             rewriteStmts(p, case.body, kind);
@@ -419,8 +407,7 @@ pub fn LowerDecorators(
                                 const orig_args = e.args.slice();
                                 const new_args = bun.handleOom(p.allocator.alloc(Expr, 1 + orig_args.len));
                                 new_args[0] = obj_expr;
-                                // safe-transpile: for with index access requires manual review
-    for (orig_args, 0..) |*arg, ai| {
+                                for (orig_args, 0..) |*arg, ai| {
                                     rewritePrivateAccessesInExpr(p, arg, map);
                                     new_args[1 + ai] = arg.*;
                                 }
@@ -431,7 +418,6 @@ pub fn LowerDecorators(
                         }
                     }
                     rewritePrivateAccessesInExpr(p, &e.target, map);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.args.slice()) |*arg| rewritePrivateAccessesInExpr(p, arg, map);
                 },
                 .e_unary => |e| rewritePrivateAccessesInExpr(p, &e.value, map),
@@ -448,15 +434,12 @@ pub fn LowerDecorators(
                 },
                 .e_new => |e| {
                     rewritePrivateAccessesInExpr(p, &e.target, map);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.args.slice()) |*arg| rewritePrivateAccessesInExpr(p, arg, map);
                 },
                 .e_array => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.items.slice()) |*item| rewritePrivateAccessesInExpr(p, item, map);
                 },
                 .e_object => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.properties.slice()) |*prop| {
                         if (prop.value) |*v| rewritePrivateAccessesInExpr(p, v, map);
                         if (prop.initializer) |*ini| rewritePrivateAccessesInExpr(p, ini, map);
@@ -464,7 +447,6 @@ pub fn LowerDecorators(
                 },
                 .e_template => |e| {
                     if (e.tag) |*t| rewritePrivateAccessesInExpr(p, t, map);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.parts) |*part| rewritePrivateAccessesInExpr(p, &part.value, map);
                 },
                 .e_function => |e| rewritePrivateAccessesInStmts(p, e.func.body.stmts, map),
@@ -474,7 +456,6 @@ pub fn LowerDecorators(
         }
 
         fn rewritePrivateAccessesInStmts(p: *P, stmts: []Stmt, map: *const PrivateLoweredMap) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (stmts) |*stmt_item| {
                 switch (stmt_item.data) {
                     .s_expr => |data| rewritePrivateAccessesInExpr(p, &data.value, map),
@@ -483,7 +464,6 @@ pub fn LowerDecorators(
                     },
                     .s_throw => |data| rewritePrivateAccessesInExpr(p, &data.value, map),
                     .s_local => |data| {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (data.decls.slice()) |*decl| {
                             if (decl.value) |*v| rewritePrivateAccessesInExpr(p, v, map);
                         }
@@ -518,7 +498,6 @@ pub fn LowerDecorators(
                     },
                     .s_switch => |data| {
                         rewritePrivateAccessesInExpr(p, &data.test_, map);
-// safe-transpile: for loop with pointer capture requires manual review
                         for (data.cases) |*case| {
                             if (case.value) |*v| rewritePrivateAccessesInExpr(p, v, map);
                             rewritePrivateAccessesInStmts(p, case.body, map);
@@ -642,8 +621,7 @@ pub fn LowerDecorators(
             var pre_eval_stmts = ListManaged(Stmt).init(p.allocator);
             var computed_key_counter: usize = 0;
 
-            // safe-transpile: for with index access requires manual review
-    for (class.properties, 0..) |*prop, prop_idx| {
+            for (class.properties, 0..) |*prop, prop_idx| {
                 if (prop.kind == .class_static_block) continue;
                 if (prop.ts_decorators.len > 0) {
                     dec_counter += 1;
@@ -679,10 +657,8 @@ pub fn LowerDecorators(
                 const replacement_ref = if (is_expr) (expr_class_ref orelse class_name_ref) else inner_class_ref;
                 if (!replacement_ref.eql(class_name_ref)) {
                     const rk: RewriteKind = .{ .replace_ref = .{ .old = class_name_ref, .new = replacement_ref } };
-// safe-transpile: for loop with pointer capture requires manual review
                     for (pre_eval_stmts.items) |*pre_stmt| {
                         if (pre_stmt.data == .s_local) {
-// safe-transpile: for loop with pointer capture requires manual review
                             for (pre_stmt.data.s_local.decls.slice()) |*decl| {
                                 if (decl.value) |*v| rewriteExpr(p, v, rk);
                             }
@@ -769,8 +745,7 @@ pub fn LowerDecorators(
                     lower_all_private = true;
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (class.properties, 0..) |*prop, prop_idx| {
+            for (class.properties, 0..) |*prop, prop_idx| {
                 if (prop.ts_decorators.len == 0) {
                     // ── Non-decorated property ──
                     if (lower_all_private and prop.key != null and
@@ -1111,29 +1086,22 @@ pub fn LowerDecorators(
 
             // ── Phase 5: Rewrite private accesses ────────────
             if (private_lowered_map.count() > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (new_properties.items) |*nprop| {
                     if (nprop.value) |*v| rewritePrivateAccessesInExpr(p, v, &private_lowered_map);
                     if (nprop.class_static_block) |sb|
                         rewritePrivateAccessesInStmts(p, sb.stmts.slice(), &private_lowered_map);
                 }
-// safe-transpile: for loop with pointer capture requires manual review
                 for (instance_init_entries.items) |*entry| {
                     if (entry.prop.initializer) |*ini| rewritePrivateAccessesInExpr(p, ini, &private_lowered_map);
                 }
-// safe-transpile: for loop with pointer capture requires manual review
                 for (static_init_entries.items) |*entry| {
                     if (entry.prop.initializer) |*ini| rewritePrivateAccessesInExpr(p, ini, &private_lowered_map);
                 }
                 for (extracted_static_blocks.items) |sb|
                     rewritePrivateAccessesInStmts(p, sb.stmts.slice(), &private_lowered_map);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (static_non_field_elements.items) |*elem| rewritePrivateAccessesInExpr(p, elem, &private_lowered_map);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (instance_non_field_elements.items) |*elem| rewritePrivateAccessesInExpr(p, elem, &private_lowered_map);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (static_field_decorate.items) |*elem| rewritePrivateAccessesInExpr(p, elem, &private_lowered_map);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (instance_field_decorate.items) |*elem| rewritePrivateAccessesInExpr(p, elem, &private_lowered_map);
                 rewritePrivateAccessesInStmts(p, pre_eval_stmts.items, &private_lowered_map);
                 rewritePrivateAccessesInStmts(p, prefix_stmts.items, &private_lowered_map);
@@ -1346,7 +1314,6 @@ pub fn LowerDecorators(
             // Inject into constructor
             if (constructor_inject_stmts.items.len > 0) {
                 var found_constructor = false;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (new_properties.items) |*nprop| {
                     if (nprop.flags.contains(.is_method) and nprop.key != null and
                         nprop.key.?.data == .e_string and nprop.key.?.data.e_string.eqlComptime("constructor"))
@@ -1354,8 +1321,7 @@ pub fn LowerDecorators(
                         const func = nprop.value.?.data.e_function;
                         var body_stmts = ListManaged(Stmt).fromOwnedSlice(p.allocator, func.func.body.stmts);
                         var super_index: ?usize = null;
-                        // safe-transpile: for with index access requires manual review
-    for (body_stmts.items, 0..) |item, index| {
+                        for (body_stmts.items, 0..) |item, index| {
                             if (item.data != .s_expr) continue;
                             if (item.data.s_expr.value.data != .e_call) continue;
                             if (item.data.s_expr.value.data.e_call.target.data != .e_super) continue;

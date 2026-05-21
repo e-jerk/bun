@@ -26,9 +26,9 @@ const HashMapPool = struct {
             }
         }
 
-        const new_node = safe.Box(LinkedList.Node).init(default_allocator, undefined) catch unreachable;
-        new_node.ptr.* = LinkedList.Node{ .data = HashMap.initContext(default_allocator, IdentityContext{}) };
-        return new_node.ptr;
+        const new_node = default_allocator.create(LinkedList.Node) catch unreachable;
+        new_node.* = LinkedList.Node{ .data = HashMap.initContext(default_allocator, IdentityContext{}) };
+        return new_node;
     }
 
     pub fn release(node: *LinkedList.Node) void {
@@ -548,8 +548,7 @@ pub fn toAST(
                 }
 
                 const exprs = try allocator.alloc(Expr, value.len);
-                // safe-transpile: for with index access requires manual review
-    for (exprs, 0..) |*ex, i| ex.* = try toAST(allocator, @TypeOf(value[i]), value[i]);
+                for (exprs, 0..) |*ex, i| ex.* = try toAST(allocator, @TypeOf(value[i]), value[i]);
 
                 return Expr.init(js_ast.E.Array, js_ast.E.Array{ .items = exprs }, logger.Loc.Empty);
             },
@@ -561,8 +560,7 @@ pub fn toAST(
             }
 
             const exprs = try allocator.alloc(Expr, value.len);
-            // safe-transpile: for with index access requires manual review
-    for (exprs, 0..) |*ex, i| ex.* = try toAST(allocator, @TypeOf(value[i]), value[i]);
+            for (exprs, 0..) |*ex, i| ex.* = try toAST(allocator, @TypeOf(value[i]), value[i]);
 
             return Expr.init(js_ast.E.Array, js_ast.E.Array{ .items = exprs }, logger.Loc.Empty);
         },

@@ -41,7 +41,6 @@ const zust = @import("safe");
                 bun.default_allocator.free(bun.span(buf));
             }
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (self.actions.items) |*action| {
                 action.deinit(bun.default_allocator);
             }
@@ -49,7 +48,6 @@ const zust = @import("safe");
             self.actions.deinit(bun.default_allocator);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn open(self: *Actions, fd: bun.FD, path: []const u8, flags: u32, mode: i32) !void {
             const posix_path = try toPosixPath(path);
 
@@ -60,9 +58,7 @@ const zust = @import("safe");
             try self.actions.append(bun.default_allocator, .{
                 .kind = .open,
                 .path = (try bun.default_allocator.dupeZ(u8, bun.span(path))).ptr,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .flags = @intCast(flags),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .mode = @intCast(mode),
                 .fds = .{ fd.native(), 0 },
             });
@@ -86,7 +82,6 @@ const zust = @import("safe");
             try self.dup2(fd, fd);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn chdir(self: *Actions, path: []const u8) !void {
             if (self.chdir_buf) |buf| {
                 bun.default_allocator.free(bun.span(buf));
@@ -160,7 +155,6 @@ pub const PosixSpawn = struct {
         pub fn get(self: PosixSpawnAttr) !u16 {
             var flags: c_short = undefined;
             switch (errno(system.posix_spawnattr_getflags(&self.attr, &flags))) {
-// safe-transpile: @bitCast requires manual review
                 .SUCCESS => return @as(u16, @bitCast(flags)),
                 .INVAL => unreachable,
                 else => |err| return unexpectedErrno(err),
@@ -168,7 +162,6 @@ pub const PosixSpawn = struct {
         }
 
         pub fn set(self: *PosixSpawnAttr, flags: u16) !void {
-// safe-transpile: @bitCast requires manual review
             switch (errno(system.posix_spawnattr_setflags(&self.attr, @bitCast(flags)))) {
                 .SUCCESS => return,
                 .INVAL => unreachable,
@@ -204,14 +197,12 @@ pub const PosixSpawn = struct {
             self.* = undefined;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn open(self: *PosixSpawnActions, fd: bun.FD, path: []const u8, flags: u32, mode: mode_t) !void {
             const posix_path = try toPosixPath(path);
             return self.openZ(fd, &posix_path, flags, mode);
         }
 
         pub fn openZ(self: *PosixSpawnActions, fd: bun.FD, path: [*:0]const u8, flags: u32, mode: mode_t) !void {
-// safe-transpile: @bitCast requires manual review
             switch (errno(system.posix_spawn_file_actions_addopen(&self.actions, fd.cast(), path, @as(c_int, @bitCast(flags)), mode))) {
                 .SUCCESS => return,
                 .BADF => return error.InvalidFileDescriptor,
@@ -259,7 +250,6 @@ pub const PosixSpawn = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn chdir(self: *PosixSpawnActions, path: []const u8) !void {
             const posix_path = try toPosixPath(path);
             return self.chdirZ(&posix_path);
@@ -323,13 +313,11 @@ pub const PosixSpawn = struct {
                 });
 
             if (rc == 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return Maybe(pid_t){ .result = @intCast(pid) };
             }
 
             return Maybe(pid_t){
                 .err = .{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     .errno = @as(bun.sys.Error.Int, @truncate(@intFromEnum(@as(std.c.E, @enumFromInt(rc))))),
                     .syscall = .posix_spawn,
                     .path = bun.span(argv[0] orelse ""),
@@ -426,7 +414,6 @@ pub const PosixSpawn = struct {
                                 bun.sys.syslog("posix_spawn_file_actions_adddup2({d}, {d}) failed: {s}", .{ action.fds[0], action.fds[1], @errorName(err) });
                             }
                         },
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .open => posix_actions.openZ(bun.FD.fromNative(action.fds[0]), action.path.?, @intCast(action.flags), @intCast(action.mode)) catch |err| {
                             if (comptime bun.Environment.allow_assert) {
                                 bun.sys.syslog("posix_spawn_file_actions_addopen({d}, {s}, {d}, {d}) failed: {s}", .{ action.fds[0], action.path.?, action.flags, action.mode, @errorName(err) });
@@ -468,7 +455,6 @@ pub const PosixSpawn = struct {
 
             return Maybe(pid_t){
                 .err = .{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     .errno = @as(bun.sys.Error.Int, @truncate(@intFromEnum(@as(std.c.E, @enumFromInt(rc))))),
                     .syscall = .posix_spawn,
                     .path = bun.asByteSlice(path),
@@ -501,7 +487,6 @@ pub const PosixSpawn = struct {
 
         return Maybe(pid_t){
             .err = .{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .errno = @as(bun.sys.Error.Int, @truncate(@intFromEnum(@as(std.c.E, @enumFromInt(rc))))),
                 .syscall = .posix_spawn,
                 .path = bun.asByteSlice(path),
@@ -519,14 +504,11 @@ pub const PosixSpawn = struct {
 var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
     if (__loop_limit_1 > 1_000_000) break;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const rc = system.waitpid(pid, &status, @as(c_int, @intCast(flags)));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){
                     .result = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .pid = @as(pid_t, @intCast(rc)),
-// safe-transpile: @bitCast requires manual review
                         .status = @as(u32, @bitCast(status)),
                     },
                 },
@@ -544,14 +526,11 @@ while (true) : (__loop_limit_1 += 1) {
 var __loop_limit_2: usize = 0;
 while (true) : (__loop_limit_2 += 1) {
     if (__loop_limit_2 > 1_000_000) return .{ .err = bun.sys.Error.fromCode(.LOOP, .waitpid) };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const rc = system.wait4(pid, &status, @as(c_int, @intCast(flags)), @ptrCast(usage));
             switch (errno(rc)) {
                 .SUCCESS => return Maybe(WaitPidResult){
                     .result = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .pid = @as(pid_t, @intCast(rc)),
-// safe-transpile: @bitCast requires manual review
                         .status = @as(u32, @bitCast(status)),
                     },
                 },

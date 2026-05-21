@@ -143,7 +143,6 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
 
                 // const m:
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 break :blk .{ @intCast(_max), @intCast(_graph_size) };
             };
 
@@ -168,15 +167,12 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
             // ================================================================
 
             for (0..max + 1) |_diff_level| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const diff_level: int = @intCast(_diff_level); // why is this always usize?
                 // const new_trace = try TraceFrame.initCapacity(trace_alloc, graph.len);
                 const new_trace = try trace_alloc.dupe(uint, graph);
                 trace.appendAssumeCapacity(new_trace);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const diag_start: int = -@as(int, @intCast(diff_level));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const diag_end: int = @intCast(diff_level);
 
                 // for k ← -D in steps of 2 do
@@ -198,11 +194,9 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
 
                     // y = x - diag_idx
                     var y: usize = blk: {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const x2: int = @intCast(x);
                         const y: int = x2 - diag_idx;
                         assert(y >= 0 and y <= MAXLEN); // sanity check. Fine to be stripped in release.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         break :blk @intCast(y);
                     };
 
@@ -210,7 +204,6 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
                         x += 1;
                         y += 1;
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     graph[k] = @intCast(x);
                     if (x >= actual.len and y >= expected.len) {
                         // todo: arena
@@ -287,15 +280,12 @@ pub fn DifferWithEql(comptime Line: type, comptime opts: Options, comptime areLi
 
         // shorthands for int casting since I'm tired of writing `@as(int, @intCast(x))` everywhere
         inline fn u(n: anytype) uint {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(n);
         }
         inline fn us(n: anytype) usize {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(n);
         }
         inline fn i(n: anytype) int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(n);
         }
     };

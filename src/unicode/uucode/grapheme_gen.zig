@@ -41,7 +41,7 @@ const Context = struct {
 };
 
 pub fn main() !void {
-    var arena_state = std.heap.ArenaAllocator.init(safe.Pool);
+    var arena_state = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena_state.deinit();
     const alloc = arena_state.allocator();
 

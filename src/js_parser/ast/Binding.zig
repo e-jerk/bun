@@ -69,7 +69,8 @@ pub fn toExpr(binding: *const Binding, wrapper: anytype) Expr {
             const properties = wrapper
                 .allocator
                 .alloc(G.Property, b.properties.len) catch unreachable;
-            for (properties, b.properties) |*property, item| {
+            // safe-transpile: for with index access requires manual review
+    for (properties, b.properties) |*property, item| {
                 property.* = .{
                     .flags = item.flags,
                     .key = item.key,
@@ -131,19 +132,19 @@ pub fn alloc(allocator: std.mem.Allocator, t: anytype, loc: logger.Loc) Binding 
     icount += 1;
     switch (@TypeOf(t)) {
         B.Identifier => {
-            const data = allocator.create(B.Identifier) catch unreachable;
-            data.* = t;
-            return Binding{ .loc = loc, .data = B{ .b_identifier = data } };
+            const data = safe.Box(B.Identifier).init(allocator, undefined) catch unreachable;
+            data.ptr.* = t;
+            return Binding{ .loc = loc, .data = B{ .b_identifier = data.ptr } };
         },
         B.Array => {
-            const data = allocator.create(B.Array) catch unreachable;
-            data.* = t;
-            return Binding{ .loc = loc, .data = B{ .b_array = data } };
+            const data = safe.Box(B.Array).init(allocator, undefined) catch unreachable;
+            data.ptr.* = t;
+            return Binding{ .loc = loc, .data = B{ .b_array = data.ptr } };
         },
         B.Object => {
-            const data = allocator.create(B.Object) catch unreachable;
-            data.* = t;
-            return Binding{ .loc = loc, .data = B{ .b_object = data } };
+            const data = safe.Box(B.Object).init(allocator, undefined) catch unreachable;
+            data.ptr.* = t;
+            return Binding{ .loc = loc, .data = B{ .b_object = data.ptr } };
         },
         B.Missing => {
             return Binding{ .loc = loc, .data = B{ .b_missing = .{} } };

@@ -238,6 +238,7 @@ pub const FSEventsLoop = struct {
                 }
 
                 pub fn wrap(this: ?*anyopaque) void {
+// safe-transpile: @alignCast requires manual review
                     @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast((this.?))))});
                 }
             };
@@ -297,12 +298,12 @@ pub const FSEventsLoop = struct {
     }
 
     pub fn init() !*FSEventsLoop {
-        const this = bun.default_allocator.create(FSEventsLoop) catch unreachable;
+        const this = zust.Box(FSEventsLoop).init(bun.default_allocator, undefined) catch unreachable;
 
         const CF = CoreFoundation.get();
 
         var ctx = CFRunLoopSourceContext{
-            .info = this,
+            .info = this.ptr,
             .perform = CFLoopCallback,
         };
 
@@ -313,18 +314,18 @@ pub const FSEventsLoop = struct {
 
         const fs_loop = FSEventsLoop{ .signal_source = signal_source };
 
-        this.* = fs_loop;
-        this.thread = try std.Thread.spawn(.{}, FSEventsLoop.CFThreadLoop, .{this});
+        this.ptr.* = fs_loop;
+        this.ptr.thread = try std.Thread.spawn(.{}, FSEventsLoop.CFThreadLoop, .{this.ptr});
 
         // sync threads
-        this.sem.wait();
-        return this;
+        this.ptr.sem.wait();
+        return this.ptr;
     }
 
     fn enqueueTaskConcurrent(this: *FSEventsLoop, task: Task) void {
         const CF = CoreFoundation.get();
-        var concurrent = bun.default_allocator.create(ConcurrentTask) catch unreachable;
-        this.tasks.push(concurrent.from(task, true));
+        var concurrent = zust.Box(ConcurrentTask).init(bun.default_allocator, undefined) catch unreachable;
+        this.tasks.push(concurrent.ptr.from(task, true));
         CF.RunLoopSourceSignal(this.signal_source);
         CF.RunLoopWakeUp(this.loop);
     }
@@ -349,7 +350,8 @@ pub const FSEventsLoop = struct {
             if (watcher) |handle| {
                 const handle_path = handle.path;
 
-                for (paths, 0..) |path_ptr, i| {
+                // safe-transpile: for with index access requires manual review
+    for (paths, 0..) |path_ptr, i| {
                     var flags = event_flags[i];
                     var path = path_ptr[0..bun.len(path_ptr)];
                     // Filter out paths that are outside handle's request
@@ -507,7 +509,8 @@ pub const FSEventsLoop = struct {
             bun.handleOom(this.watchers.append(bun.default_allocator, watcher));
         } else {
             var watchers = this.watchers.slice();
-            for (watchers, 0..) |w, i| {
+            // safe-transpile: for with index access requires manual review
+    for (watchers, 0..) |w, i| {
                 if (w == null) {
                     watchers[i] = watcher;
                     this.watcher_count += 1;
@@ -526,7 +529,8 @@ pub const FSEventsLoop = struct {
         this.mutex.lock();
         defer this.mutex.unlock();
         var watchers = this.watchers.slice();
-        for (watchers, 0..) |w, i| {
+        // safe-transpile: for with index access requires manual review
+    for (watchers, 0..) |w, i| {
             if (w) |item| {
                 if (item == watcher) {
                     watchers[i] = null;
@@ -591,9 +595,9 @@ pub const FSEventsWatcher = struct {
     pub const UpdateEndCallback = *const fn (ctx: ?*anyopaque) void;
 
     pub fn init(loop: *FSEventsLoop, path: string, recursive: bool, callback: Callback, updateEnd: UpdateEndCallback, ctx: ?*anyopaque) *FSEventsWatcher {
-        const this = bun.default_allocator.create(FSEventsWatcher) catch unreachable;
+        const this = zust.Box(FSEventsWatcher).init(bun.default_allocator, undefined) catch unreachable;
 
-        this.* = FSEventsWatcher{
+        this.ptr.* = FSEventsWatcher{
             .path = path,
             .callback = callback,
             .flushCallback = updateEnd,
@@ -602,8 +606,8 @@ pub const FSEventsWatcher = struct {
             .ctx = ctx,
         };
 
-        loop.registerWatcher(this);
-        return this;
+        loop.registerWatcher(this.ptr);
+        return this.ptr;
     }
 
     pub fn emit(this: *FSEventsWatcher, event: Event, is_file: bool) void {

@@ -484,7 +484,6 @@ pub fn NewParser_(
         /// Extracts a matchable "shape" from a dynamic import argument.
         /// Template literals: static parts joined by \x00 placeholders.
         /// Everything else: empty string.
-// safe-transpile: function returns small constant slice — consider zust.String
         fn extractDynamicSpecifierShape(p: *P, arg: Expr, buf: *std.array_list.Managed(u8)) ![]const u8 {
             if (arg.data.as(.e_template)) |tmpl| {
                 if (tmpl.tag != null) return ""; // tagged template — opaque
@@ -494,7 +493,6 @@ pub fn NewParser_(
                     },
                     .raw => return "", // shouldn't happen post-visit but be safe
                 }
-// safe-transpile: for loop with pointer capture requires manual review
                 for (tmpl.parts) |*part| {
                     try buf.append(0); // \x00 placeholder per interpolation
                     switch (part.tail) {
@@ -509,7 +507,6 @@ pub fn NewParser_(
             return "";
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn checkDynamicSpecifier(p: *P, arg: Expr, loc: logger.Loc, comptime kind: []const u8) !void {
             if (!p.options.bundle or p.options.allow_unresolved.* == .all) return;
 
@@ -522,7 +519,6 @@ pub fn NewParser_(
                     // Print a human-readable shape: replace \x00 with *
                     const display = try p.allocator.dupe(u8, shape);
                     defer p.allocator.free(display);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (display) |*c| if (c.* == 0) {
                         c.* = '*';
                     };
@@ -577,7 +573,6 @@ pub fn NewParser_(
 
                 return p.newExpr(E.Import{
                     .expr = arg,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .import_record_index = @intCast(import_record_index),
                     .options = state.import_options,
                 }, state.loc);
@@ -710,7 +705,6 @@ pub fn NewParser_(
                         return p.newExpr(
                             E.RequireString{
                                 .import_record_index = import_record_index,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 .unwrapped_id = @as(u32, @intCast(p.imports_to_convert_from_require.items.len - 1)),
                             },
                             arg.loc,
@@ -786,8 +780,7 @@ pub fn NewParser_(
                 if (merge and parts_.len > 1) {
                     var first_none_part: usize = parts_.len;
                     var stmts_count: usize = 0;
-                    // safe-transpile: for with index access requires manual review
-    for (parts_, 0..) |part, i| {
+                    for (parts_, 0..) |part, i| {
                         if (part.tag == .none) {
                             stmts_count += part.stmts.len;
                             first_none_part = @min(i, first_none_part);
@@ -925,8 +918,7 @@ pub fn NewParser_(
             const symbol_use_values = part.symbol_uses.values();
             var symbols = p.symbols.items;
 
-            // safe-transpile: for with index access requires manual review
-    for (symbol_use_refs, symbol_use_values) |ref, prev| {
+            for (symbol_use_refs, symbol_use_values) |ref, prev| {
                 symbols[ref.innerIndex()].use_count_estimate -|= prev.count_estimate;
             }
             const declared_refs = part.declared_symbols.refs();
@@ -996,7 +988,6 @@ pub fn NewParser_(
                         const symbol: *const Symbol = &symbols[entry.value_ptr.ref.innerIndex()];
 
                         if (symbol.slotNamespace() != .must_not_be_renamed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             char_freq.scan(symbol.original_name, -@as(i32, @intCast(symbol.use_count_estimate)));
                         }
                     }
@@ -1005,7 +996,6 @@ pub fn NewParser_(
                         const symbol = &symbols[ref.innerIndex()];
 
                         if (symbol.slotNamespace() != .must_not_be_renamed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             char_freq.scan(symbol.original_name, -@as(i32, @intCast(symbol.use_count_estimate)) - 1);
                         }
                     }
@@ -1413,8 +1403,7 @@ pub fn NewParser_(
                 .is_top_level = true,
             });
             try p.module_scope.generated.append(allocator, namespace_ref);
-            // safe-transpile: for with index access requires manual review
-    for (imports, clause_items) |alias, *clause_item| {
+            for (imports, clause_items) |alias, *clause_item| {
                 const ref = symbols.get(alias) orelse unreachable;
                 const alias_name = if (@TypeOf(symbols) == RuntimeImports) RuntimeImports.all[alias] else alias;
                 clause_item.* = js_ast.ClauseItem{
@@ -1473,7 +1462,6 @@ pub fn NewParser_(
             }) catch unreachable;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn generateReactRefreshImport(
             noalias p: *P,
             parts: *ListManaged(js_ast.Part),
@@ -1491,7 +1479,6 @@ pub fn NewParser_(
             ref: Ref,
         };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn generateReactRefreshImportHmr(
             noalias p: *P,
             parts: *ListManaged(js_ast.Part),
@@ -1680,7 +1667,6 @@ pub fn NewParser_(
                         }
 
                         if (replacement_can_be_removed) {
-// safe-transpile: for loop with pointer capture requires manual review
                             for (new.args.slice()) |*arg| {
                                 switch (p.substituteSingleUseSymbolInExpr(arg.*, ref, replacement, replacement_can_be_removed)) {
                                     .continue_ => {},
@@ -1936,7 +1922,6 @@ pub fn NewParser_(
                         // Do not substitute our unconditionally-executed value into a branch
                         // unless the value itself has no side effects
                         if (replacement_can_be_removed or e.optional_chain == null) {
-// safe-transpile: for loop with pointer capture requires manual review
                             for (e.args.slice()) |*arg| {
                                 switch (p.substituteSingleUseSymbolInExpr(arg.*, ref, replacement, replacement_can_be_removed)) {
                                     .continue_ => {},
@@ -1954,7 +1939,6 @@ pub fn NewParser_(
                     },
 
                     .e_array => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (e.items.slice()) |*item| {
                             switch (p.substituteSingleUseSymbolInExpr(item.*, ref, replacement, replacement_can_be_removed)) {
                                 .continue_ => {},
@@ -1971,7 +1955,6 @@ pub fn NewParser_(
                     },
 
                     .e_object => |e| {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (e.properties.slice()) |*property| {
                             // Check the key
 
@@ -2032,7 +2015,6 @@ pub fn NewParser_(
                             }
                         }
 
-// safe-transpile: for loop with pointer capture requires manual review
                         for (e.parts) |*part| {
                             switch (p.substituteSingleUseSymbolInExpr(part.value, ref, replacement, replacement_can_be_removed)) {
                                 .continue_ => {},
@@ -2537,8 +2519,7 @@ pub fn NewParser_(
                     // p.markSyntaxFeature(Destructing)
                     var items = List(js_ast.ArrayBinding).initCapacity(p.allocator, ex.items.len) catch unreachable;
                     var is_spread = false;
-                    // safe-transpile: for with index access requires manual review
-    for (ex.items.slice(), 0..) |_, i| {
+                    for (ex.items.slice(), 0..) |_, i| {
                         var item = ex.items.ptr[i];
                         if (item.data == .e_spread) {
                             is_spread = true;
@@ -2573,7 +2554,6 @@ pub fn NewParser_(
                     // p.markSyntaxFeature(compat.Destructuring, p.source.RangeOfOperatorAfter(expr.Loc, "{"))
 
                     var properties = List(B.Property).initCapacity(p.allocator, ex.properties.len) catch unreachable;
-// safe-transpile: for loop with pointer capture requires manual review
                     for (ex.properties.slice()) |*item| {
                         if (item.flags.contains(.is_method) or item.kind == .get or item.kind == .set) {
                             invalid_loc.append(.{
@@ -2740,7 +2720,6 @@ pub fn NewParser_(
             // We handle it here at parse time (similar to macros) rather than at visit time.
             if (strings.eqlComptime(path.text, "bun:bundle")) {
                 // Look for the "feature" import and validate specifiers
-// safe-transpile: for loop with pointer capture requires manual review
                 for (stmt.items) |*item| {
                     // In ClauseItem from parseImportClause:
                     // - alias is the name from the source module ("feature")
@@ -2794,9 +2773,7 @@ pub fn NewParser_(
             }
 
             var item_refs = ImportItemForNamespaceMap.init(p.allocator);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const count_excluding_namespace = @as(u16, @intCast(stmt.items.len)) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @as(u16, @intCast(@intFromBool(stmt.default_name != null)));
 
             try item_refs.ensureUnusedCapacity(count_excluding_namespace);
@@ -2950,7 +2927,6 @@ pub fn NewParser_(
                 p.import_records.items[stmt.import_record_index].loader = loader;
 
                 if (loader == .sqlite or loader == .sqlite_embedded) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (stmt.items) |*item| {
                         if (!(strings.eqlComptime(item.alias, "default") or strings.eqlComptime(item.alias, "db"))) {
                             try p.log.addError(
@@ -2962,7 +2938,6 @@ pub fn NewParser_(
                         }
                     }
                 } else if (loader == .file or loader == .text) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (stmt.items) |*item| {
                         if (!(strings.eqlComptime(item.alias, "default"))) {
                             try p.log.addError(
@@ -2992,7 +2967,6 @@ pub fn NewParser_(
         }
 
         pub fn newSymbol(p: *P, kind: Symbol.Kind, identifier: string) !Ref {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const inner_index: Ref.Int = @truncate(p.symbols.items.len);
             try p.symbols.append(Symbol{
                 .kind = kind,
@@ -3005,7 +2979,6 @@ pub fn NewParser_(
 
             return Ref{
                 .inner_index = inner_index,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .source_index = @intCast(p.source.index.get()),
                 .tag = .symbol,
             };
@@ -3126,7 +3099,6 @@ pub fn NewParser_(
                 else => @compileError("unreachable"),
             };
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (decls) |*decl| {
                 if (decl.value == null) {
                     switch (decl.binding.data) {
@@ -3148,7 +3120,6 @@ pub fn NewParser_(
         // Generate a TypeScript namespace object for this namespace's scope. If this
         // namespace is another block that is to be merged with an existing namespace,
         // use that earlier namespace's object instead.
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn getOrCreateExportedNamespaceMembers(p: *P, name: []const u8, is_export: bool, is_enum_scope: bool) *js_ast.TSNamespaceScope {
             const map = brk: {
 
@@ -3404,13 +3375,11 @@ pub fn NewParser_(
                     }
                 },
                 .b_array => |bind| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (bind.items) |*item| {
                         p.declareBinding(kind, &item.binding, opts) catch unreachable;
                     }
                 },
                 .b_object => |bind| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (bind.properties) |*prop| {
                         p.declareBinding(kind, &prop.value, opts) catch unreachable;
                     }
@@ -3427,14 +3396,11 @@ pub fn NewParser_(
 
             if (@intFromPtr(p.source.contents.ptr) <= @intFromPtr(name.ptr) and (@intFromPtr(name.ptr) + name.len) <= (@intFromPtr(p.source.contents.ptr) + p.source.contents.len)) {
                 return Ref.initSourceEnd(.{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .source_index = @intCast(@intFromPtr(name.ptr) - @intFromPtr(p.source.contents.ptr)),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .inner_index = @intCast(name.len),
                     .tag = .source_contents_slice,
                 });
             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const inner_index: u31 = @intCast(p.allocated_names.items.len);
                 try p.allocated_names.append(p.allocator, name);
                 return Ref.init(
@@ -3470,7 +3436,6 @@ pub fn NewParser_(
                 .path = path,
             };
             p.import_records.append(record) catch unreachable;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return @as(u32, @intCast(index));
         }
 
@@ -3667,7 +3632,6 @@ pub fn NewParser_(
                 const already_declared_allocator = already_declared_allocator_stack.get();
                 defer if (already_declared_allocator_stack.fixed_buffer_allocator.end_index >= 1023) already_declared.deinit(already_declared_allocator);
 
-// safe-transpile: for loop with pointer capture requires manual review
                 for (p.relocated_top_level_vars.items) |*local| {
                     // Follow links because "var" declarations may be merged due to hoisting
                     while (local.ref != null) {
@@ -3730,7 +3694,6 @@ pub fn NewParser_(
         fn bindingCanBeRemovedIfUnusedWithoutDCECheck(p: *P, binding: Binding) bool {
             switch (binding.data) {
                 .b_array => |bi| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (bi.items) |*item| {
                         if (!p.bindingCanBeRemovedIfUnusedWithoutDCECheck(item.binding)) {
                             return false;
@@ -3744,7 +3707,6 @@ pub fn NewParser_(
                     }
                 },
                 .b_object => |bi| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (bi.properties) |*property| {
                         if (!property.flags.contains(.is_spread) and !p.exprCanBeRemovedIfUnusedWithoutDCECheck(&property.key)) {
                             return false;
@@ -3806,7 +3768,6 @@ pub fn NewParser_(
                         // "await" is a side effect because it affects code timing
                         if (st.kind == .k_await_using) return false;
 
-// safe-transpile: for loop with pointer capture requires manual review
                         for (st.decls.slice()) |*decl| {
                             if (!p.bindingCanBeRemovedIfUnusedWithoutDCECheck(decl.binding)) {
                                 return false;
@@ -4021,7 +3982,6 @@ pub fn NewParser_(
                 }
             }
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (class.properties) |*property| {
                 if (property.kind == .class_static_block) {
                     if (!p.stmtsCanBeRemovedifUnusedWithoutDCECheck(property.class_static_block.?.stmts.slice())) {
@@ -4153,7 +4113,6 @@ pub fn NewParser_(
                         ));
                 },
                 .e_array => |ex| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (ex.items.slice()) |*item| {
                         if (!p.exprCanBeRemovedIfUnusedWithoutDCECheck(item)) {
                             return false;
@@ -4163,7 +4122,6 @@ pub fn NewParser_(
                     return true;
                 },
                 .e_object => |ex| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (ex.properties.slice()) |*property| {
 
                         // The key must still be evaluated if it's computed or a spread
@@ -4183,7 +4141,6 @@ pub fn NewParser_(
                     // A call that has been marked "__PURE__" can be removed if all arguments
                     // can be removed. The annotation causes us to ignore the target.
                     if (ex.can_be_unwrapped_if_unused != .never) {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (ex.args.slice()) |*arg| {
                             if (!(p.exprCanBeRemovedIfUnusedWithoutDCECheck(arg) or (ex.can_be_unwrapped_if_unused == .if_unused_and_toString_safe and arg.data.isSafeToString()))) {
                                 return false;
@@ -4197,7 +4154,6 @@ pub fn NewParser_(
                     // A call that has been marked "__PURE__" can be removed if all arguments
                     // can be removed. The annotation causes us to ignore the target.
                     if (ex.can_be_unwrapped_if_unused != .never) {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (ex.args.slice()) |*arg| {
                             if (!(p.exprCanBeRemovedIfUnusedWithoutDCECheck(arg) or (ex.can_be_unwrapped_if_unused == .if_unused_and_toString_safe and arg.data.isSafeToString()))) {
                                 return false;
@@ -4980,7 +4936,6 @@ pub fn NewParser_(
                     var static_members = ListManaged(Stmt).init(p.allocator);
                     var class_properties = ListManaged(Property).init(p.allocator);
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (class.properties) |*prop| {
                         // merge parameter decorators with method decorators
                         if (prop.flags.contains(.is_method)) {
@@ -4991,8 +4946,7 @@ pub fn NewParser_(
 
                                         if (is_constructor) constructor_function = func;
 
-                                        // safe-transpile: for with index access requires manual review
-    for (func.func.args, 0..) |arg, i| {
+                                        for (func.func.args, 0..) |arg, i| {
                                             for (arg.ts_decorators.ptr[0..arg.ts_decorators.len]) |arg_decorator| {
                                                 var decorators = if (is_constructor)
                                                     &class.ts_decorators
@@ -5055,8 +5009,7 @@ pub fn NewParser_(
 
                                                     const method_args = prop_value.data.e_function.func.args;
                                                     const args_array = p.allocator.alloc(Expr, method_args.len) catch unreachable;
-                                                    // safe-transpile: for with index access requires manual review
-    for (args_array, method_args) |*entry, method_arg| {
+                                                    for (args_array, method_args) |*entry, method_arg| {
                                                         entry.* = p.serializeMetadata(method_arg.ts_metadata) catch unreachable;
                                                     }
 
@@ -5101,8 +5054,7 @@ pub fn NewParser_(
                                                 args[0] = p.newExpr(E.String{ .data = "design:paramtypes" }, logger.Loc.Empty);
 
                                                 const args_array = p.allocator.alloc(Expr, method_args.len) catch unreachable;
-                                                // safe-transpile: for with index access requires manual review
-    for (args_array, method_args) |*entry, method_arg| {
+                                                for (args_array, method_args) |*entry, method_arg| {
                                                     entry.* = p.serializeMetadata(method_arg.ts_metadata) catch unreachable;
                                                 }
 
@@ -5214,8 +5166,7 @@ pub fn NewParser_(
                             var constructor_stmts = ListManaged(Stmt).fromOwnedSlice(p.allocator, constructor_function.?.func.body.stmts);
                             // statements coming from class body inserted after super call or beginning of constructor.
                             var super_index: ?usize = null;
-                            // safe-transpile: for with index access requires manual review
-    for (constructor_stmts.items, 0..) |item, index| {
+                            for (constructor_stmts.items, 0..) |item, index| {
                                 if (item.data != .s_expr or item.data.s_expr.value.data != .e_call or item.data.s_expr.value.data.e_call.target.data != .e_super) continue;
                                 super_index = index;
                                 break;
@@ -5251,8 +5202,7 @@ pub fn NewParser_(
                                 if (constructor_args.len > 0) {
                                     var param_array = p.allocator.alloc(Expr, constructor_args.len) catch unreachable;
 
-                                    // safe-transpile: for with index access requires manual review
-    for (constructor_args, 0..) |constructor_arg, i| {
+                                    for (constructor_args, 0..) |constructor_arg, i| {
                                         param_array[i] = p.serializeMetadata(constructor_arg.ts_metadata) catch unreachable;
                                     }
 
@@ -5794,16 +5744,13 @@ pub fn NewParser_(
 
             const InlinedEnumValue = js_ast.InlinedEnumValue;
             var map: js_ast.Ast.TsEnumsMap = .{};
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try map.ensureTotalCapacity(allocator, @intCast(p.top_level_enums.items.len));
             for (p.top_level_enums.items) |ref| {
                 const entry = p.ref_to_ts_namespace_member.getEntry(ref).?;
                 const namespace = entry.value_ptr.namespace;
                 var inner_map: bun.StringHashMapUnmanaged(InlinedEnumValue) = .{};
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try inner_map.ensureTotalCapacity(allocator, @intCast(namespace.count()));
-                // safe-transpile: for with index access requires manual review
-    for (namespace.keys(), namespace.values()) |key, val| {
+                for (namespace.keys(), namespace.values()) |key, val| {
                     switch (val.data) {
                         .enum_number => |num| inner_map.putAssumeCapacityNoClobber(
                             key,
@@ -5866,7 +5813,6 @@ pub fn NewParser_(
                             if (local.kind == .k_await_using) {
                                 ctx.has_await_using = true;
                             }
-// safe-transpile: for loop with pointer capture requires manual review
                             for (local.decls.slice()) |*decl| {
                                 if (decl.value) |*decl_value| {
                                     const value_loc = decl_value.loc;
@@ -6136,7 +6082,6 @@ pub fn NewParser_(
                     call.args.mut(0).data = p.rewriteImportMetaHotAcceptString(str, call.args.at(0).loc) orelse
                         return;
                 },
-// safe-transpile: for loop with pointer capture requires manual review
                 .e_array => |arr| for (arr.items.slice()) |*item| {
                     if (item.data != .e_string) {
                         bun.handleOom(p.log.addError(p.source, item.loc, import_meta_hot_accept_err));
@@ -6155,8 +6100,7 @@ pub fn NewParser_(
             bun.handleOom(str.toUTF8(p.allocator));
             const specifier = str.data;
 
-            const import_record_index = // safe-transpile: for with index access requires manual review
-    for (p.import_records.items, 0..) |import_record, i| {
+            const import_record_index = for (p.import_records.items, 0..) |import_record, i| {
                 if (bun.strings.eql(specifier, import_record.path.text)) {
                     break i;
                 }
@@ -6166,14 +6110,12 @@ pub fn NewParser_(
             };
 
             return .{ .e_special = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .resolved_specifier_string = .init(@intCast(import_record_index)),
             } };
         }
 
         const ReactRefreshExportKind = enum { named, default };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn handleReactRefreshRegister(p: *P, stmts: *ListManaged(Stmt), original_name: []const u8, ref: Ref, export_kind: ReactRefreshExportKind) !void {
             bun.assert(p.options.features.react_fast_refresh);
             bun.assert(p.current_scope == p.module_scope);
@@ -6183,7 +6125,6 @@ pub fn NewParser_(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn emitReactRefreshRegister(p: *P, stmts: *ListManaged(Stmt), original_name: []const u8, ref: Ref, export_kind: ReactRefreshExportKind) !void {
             bun.assert(p.options.features.react_fast_refresh);
             bun.assert(p.current_scope == p.module_scope);
@@ -6211,7 +6152,6 @@ pub fn NewParser_(
             p.react_refresh.register_used = true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn wrapValueForServerComponentReference(p: *P, val: Expr, original_name: []const u8) Expr {
             bun.assert(p.options.features.server_components.wrapsExports());
             bun.assert(p.current_scope == p.module_scope);
@@ -6241,7 +6181,6 @@ pub fn NewParser_(
             }, logger.Loc.Empty);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn handleReactRefreshHookCall(p: *P, hook_call: *E.Call, original_name: []const u8) void {
             bun.assert(p.options.features.react_fast_refresh);
             bun.assert(ReactRefresh.isHookName(original_name));
@@ -6317,7 +6256,6 @@ pub fn NewParser_(
                 // is used since we know this statement list is not going to be
                 // appended to afterwards; This function is a post-visit handler.
                 const new_stmts = bun.handleOom(p.allocator.alloc(Stmt, stmts.items.len + 1));
-// safe-transpile: @memcpy requires manual review
                 @memcpy(new_stmts[1..], stmts.items);
                 stmts.deinit();
                 stmts.* = ListManaged(Stmt).fromOwnedSlice(p.allocator, new_stmts);
@@ -6392,7 +6330,6 @@ pub fn NewParser_(
             }, loc);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn toAST(
             p: *P,
             parts: *ListManaged(js_ast.Part),
@@ -6544,7 +6481,6 @@ pub fn NewParser_(
                         parts.items[0].stmts.len > 0 and
                         parts.items[0].stmts[0].data == .s_directive);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 total_stmts_count += @as(usize, @intCast(@intFromBool(preserve_strict_mode)));
 
                 const stmts_to_copy = bun.handleOom(allocator.alloc(Stmt, total_stmts_count));
@@ -6561,8 +6497,7 @@ pub fn NewParser_(
                     }
 
                     for (parts.items) |part| {
-                        // safe-transpile: for with index access requires manual review
-    for (part.stmts, remaining_stmts[0..part.stmts.len]) |src, *dest| {
+                        for (part.stmts, remaining_stmts[0..part.stmts.len]) |src, *dest| {
                             dest.* = src;
                         }
                         remaining_stmts = remaining_stmts[part.stmts.len..];
@@ -6625,20 +6560,17 @@ pub fn NewParser_(
                             entry.value_ptr.* = .{};
                         }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         bun.handleOom(entry.value_ptr.append(ctx.allocator, @as(u32, @truncate(ctx.part_index))));
                     }
                 };
 
                 // Each part tracks the other parts it depends on within this file
-                // safe-transpile: for with index access requires manual review
-    for (parts.items, 0..) |*part, part_index| {
+                for (parts.items, 0..) |*part, part_index| {
                     const decls = &part.declared_symbols;
                     const ctx = Ctx{
                         .allocator = p.allocator,
                         .top_level_symbols_to_parts = top_level,
                         .symbols = p.symbols.items,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         .part_index = @as(u32, @truncate(part_index)),
                     };
 

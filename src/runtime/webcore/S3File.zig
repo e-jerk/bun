@@ -1,4 +1,3 @@
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFormat(s3: *Blob.Store.S3, comptime Formatter: type, formatter: *Formatter, writer: anytype, comptime enable_ansi_colors: bool, content_type: []const u8, offset: usize) !void {
     try writer.writeAll(comptime Output.prettyFmt("<r>S3Ref<r>", enable_ansi_colors));
     const credentials = s3.getCredentials();
@@ -422,7 +421,6 @@ pub const S3BlobStatTask = struct {
         const path = s3_store.path();
         const env = globalThis.bunVM().transpiler.env;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         try S3.stat(credentials, path, @ptrCast(&S3BlobStatTask.onS3ExistsResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         return promise;
     }
@@ -439,7 +437,6 @@ pub const S3BlobStatTask = struct {
         const path = s3_store.path();
         const env = globalThis.bunVM().transpiler.env;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         try S3.stat(credentials, path, @ptrCast(&S3BlobStatTask.onS3StatResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         return promise;
     }
@@ -456,7 +453,6 @@ pub const S3BlobStatTask = struct {
         const path = s3_store.path();
         const env = globalThis.bunVM().transpiler.env;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         try S3.stat(credentials, path, @ptrCast(&S3BlobStatTask.onS3SizeResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, s3_store.request_payer);
         return promise;
     }
@@ -494,7 +490,6 @@ pub fn getPresignUrlFrom(this: *Blob, globalThis: *jsc.JSGlobalObject, extra_opt
             }
             if (try options.getOptional(globalThis, "expiresIn", i32)) |expires_| {
                 if (expires_ <= 0) return globalThis.throwInvalidArguments("expiresIn must be greather than 0", .{});
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 expires = @intCast(expires_);
             }
         }

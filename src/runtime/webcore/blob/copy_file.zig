@@ -251,7 +251,6 @@ while (true) : (__loop_limit_1 += 1) {
         const dest_fd = this.destination_fd;
 
         defer {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             this.read_len = @as(SizeType, @truncate(total_written));
         }
 
@@ -266,7 +265,6 @@ while (true) : (__loop_limit_1 += 1) {
                     return bun.errnoToZigErr(err.errno);
                 },
                 .result => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     _ = linux.ftruncate(dest_fd.cast(), @as(std.posix.off_t, @intCast(total_written)));
                     return;
                 },
@@ -297,7 +295,6 @@ while (true) : (__loop_limit_2 += 1) {
                             return bun.errnoToZigErr(err.errno);
                         },
                         .result => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             _ = linux.ftruncate(dest_fd.cast(), @as(std.posix.off_t, @intCast(total_written)));
                             return;
                         },
@@ -333,7 +330,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 return bun.errnoToZigErr(err.errno);
                             },
                             .result => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 _ = linux.ftruncate(dest_fd.cast(), @as(std.posix.off_t, @intCast(total_written)));
                                 return;
                             },
@@ -341,7 +337,6 @@ while (true) : (__loop_limit_2 += 1) {
                     }
 
                     this.system_error = (bun.sys.Error{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .errno = @as(bun.sys.Error.Int, @intCast(@intFromEnum(linux.E.INVAL))),
                         .syscall = TryWith.tag.get(use).?,
                     }).toSystemError();
@@ -349,7 +344,6 @@ while (true) : (__loop_limit_2 += 1) {
                 },
                 else => |errno| {
                     this.system_error = (bun.sys.Error{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .errno = @as(bun.sys.Error.Int, @intCast(@intFromEnum(errno))),
                         .syscall = TryWith.tag.get(use).?,
                     }).toSystemError();
@@ -358,9 +352,7 @@ while (true) : (__loop_limit_2 += 1) {
             }
 
             // wrote zero bytes means EOF
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             remain -|= @intCast(written);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             total_written += @intCast(written);
             if (written == 0 or remain == 0) break;
         }
@@ -473,18 +465,14 @@ while (true) : (__loop_limit_3 += 1) {
                         }
 
                         if (this.doClonefile()) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             if (this.max_length != Blob.max_size and this.max_length < @as(SizeType, @intCast((stat_.?).size))) {
                                 // If this fails...well, there's not much we can do about it.
                                 _ = bun.c.truncate(
                                     this.destination_file_store.pathlike.path.sliceZ(&path_buf),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     @as(std.posix.off_t, @intCast(this.max_length)),
                                 );
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 this.read_len = @as(SizeType, @intCast(this.max_length));
                             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 this.read_len = @as(SizeType, @intCast((stat_.?).size));
                             }
                             // Apply destination mode if specified (clonefile copies source permissions)
@@ -548,7 +536,6 @@ while (true) : (__loop_limit_3 += 1) {
         }
 
         if (stat.size != 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.max_length = @max(@min(@as(SizeType, @intCast(stat.size)), this.max_length), this.offset) - this.offset;
             if (this.max_length == 0) {
                 this.doClose();
@@ -612,9 +599,7 @@ while (true) : (__loop_limit_3 += 1) {
 
                 return;
             };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (stat.size != 0 and @as(SizeType, @intCast(stat.size)) > this.max_length) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 _ = darwin.ftruncate(this.destination_fd.cast(), @as(std.posix.off_t, @intCast(this.max_length)));
             }
 
@@ -629,14 +614,10 @@ while (true) : (__loop_limit_3 += 1) {
                 },
                 .result => {},
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (stat.size != 0 and @as(SizeType, @intCast(stat.size)) > this.max_length) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 _ = bun.sys.ftruncate(this.destination_fd, @intCast(this.max_length));
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.read_len = @truncate(@min(total_written, @as(u64, this.max_length)));
             } else {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.read_len = @truncate(total_written);
             }
             this.doClose();
@@ -690,14 +671,12 @@ pub const CopyFileWindows = struct {
             // This io_request is used for both reading and writing.
             // For now, we don't start reading the next chunk until
             // we've finished writing all the previous chunks.
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             this.io_request.data = @ptrCast(this);
 
             const rc = libuv.uv_fs_read(
                 loop,
                 &this.io_request,
                 read_write_loop.source_fd.uv(),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(&read_write_loop.uv_buf),
                 1,
                 -1,
@@ -713,7 +692,6 @@ pub const CopyFileWindows = struct {
 
         fn onRead(req: *libuv.fs_t) callconv(.c) void {
             var this: *CopyFileWindows = @fieldParentPtr("io_request", req);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.assert(req.data == @as(?*anyopaque, @ptrCast(this)));
 
             const source_fd = this.read_write_loop.source_fd;
@@ -731,7 +709,6 @@ pub const CopyFileWindows = struct {
                 return;
             }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             read_buf.len = @intCast(rc.int());
             this.read_write_loop.uv_buf = libuv.uv_buf_t.init(read_buf.*);
 
@@ -747,13 +724,11 @@ pub const CopyFileWindows = struct {
                 event_loop.virtual_machine.event_loop_handle.?,
                 &this.io_request,
                 destination_fd.uv(),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(&this.read_write_loop.uv_buf),
                 1,
                 -1,
                 &onWrite,
             );
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             req.data = @ptrCast(this);
 
             if (rc2.toError(.write)) |err| {
@@ -765,7 +740,6 @@ pub const CopyFileWindows = struct {
 
         fn onWrite(req: *libuv.fs_t) callconv(.c) void {
             var this: *CopyFileWindows = @fieldParentPtr("io_request", req);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.assert(req.data == @as(?*anyopaque, @ptrCast(this)));
             const buf = &this.read_write_loop.read_buf.items;
 
@@ -781,7 +755,6 @@ pub const CopyFileWindows = struct {
                 return;
             }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const wrote: u32 = @intCast(rc.int());
 
             this.read_write_loop.written += wrote;
@@ -795,7 +768,6 @@ pub const CopyFileWindows = struct {
 
                 // Re-use the fs request.
                 req.deinit();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 req.data = @ptrCast(this);
 
                 this.read_write_loop.uv_buf = libuv.uv_buf_t.init(this.read_write_loop.uv_buf.slice()[wrote..]);
@@ -803,7 +775,6 @@ pub const CopyFileWindows = struct {
                     this.event_loop.virtual_machine.event_loop_handle.?,
                     &this.io_request,
                     destination_fd.uv(),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     @ptrCast(&this.read_write_loop.uv_buf),
                     1,
                     -1,
@@ -919,7 +890,6 @@ pub const CopyFileWindows = struct {
                     result.close();
                     return .{
                         .err = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .errno = @as(c_int, @intCast(@intFromEnum(bun.sys.SystemErrno.EMFILE))),
                             .syscall = .open,
                             .path = pathlike.path.slice(),
@@ -1065,7 +1035,6 @@ pub const CopyFileWindows = struct {
             }
         };
         const loop = this.event_loop.virtual_machine.event_loop_handle.?;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         this.io_request.data = @ptrCast(this);
 
         const rc = libuv.uv_fs_copyfile(
@@ -1081,7 +1050,6 @@ pub const CopyFileWindows = struct {
             this.throw(.{
                 // #6336
                 .errno = if (errno == @intFromEnum(bun.sys.SystemErrno.EPERM))
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @as(c_int, @intCast(@intFromEnum(bun.sys.SystemErrno.ENOENT)))
                 else
                     errno,
@@ -1107,7 +1075,6 @@ pub const CopyFileWindows = struct {
 
     fn onCopyFile(req: *libuv.fs_t) callconv(.c) void {
         var this: *CopyFileWindows = @fieldParentPtr("io_request", req);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         bun.assert(req.data == @as(?*anyopaque, @ptrCast(this)));
 
         var event_loop = this.event_loop;
@@ -1146,10 +1113,8 @@ pub const CopyFileWindows = struct {
 
     pub fn onComplete(this: *CopyFileWindows, written_actual: usize) void {
         var written = written_actual;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (written != @as(@TypeOf(written), @intCast(this.size)) and this.size != Blob.max_size) {
             this.truncate();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             written = @intCast(this.size);
         }
 
@@ -1162,14 +1127,12 @@ pub const CopyFileWindows = struct {
                 const loop = this.event_loop.virtual_machine.event_loop_handle.?;
                 this.io_request.deinit();
                 this.io_request = std.mem.zeroes(libuv.fs_t);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.io_request.data = @ptrCast(this);
 
                 const rc = libuv.uv_fs_chmod(
                     loop,
                     &this.io_request,
                     path,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(mode),
                     &onChmod,
                 );
@@ -1194,7 +1157,6 @@ pub const CopyFileWindows = struct {
 
     fn onChmod(req: *libuv.fs_t) callconv(.c) void {
         var this: *CopyFileWindows = @fieldParentPtr("io_request", req);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         bun.assert(req.data == @as(?*anyopaque, @ptrCast(this)));
 
         var event_loop = this.event_loop;
@@ -1233,7 +1195,6 @@ pub const CopyFileWindows = struct {
         _ = node_fs.truncate(
             .{
                 .path = this.destination_file_store.data.file.pathlike,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .len = @intCast(this.size),
             },
             .sync,
@@ -1257,7 +1218,6 @@ pub const CopyFileWindows = struct {
         var destination = &this.destination_file_store.data.file;
         if (destination.pathlike != .path) {
             this.throw(.{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .errno = @as(c_int, @intCast(@intFromEnum(bun.sys.SystemErrno.EINVAL))),
                 .syscall = .mkdir,
             });
@@ -1266,7 +1226,6 @@ pub const CopyFileWindows = struct {
 
         this.event_loop.refConcurrently();
         jsc.Node.fs.Async.AsyncMkdirp.new(.{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .completion = @ptrCast(&onMkdirpCompleteConcurrent),
             .completion_ctx = this,
             .path = bun.Dirname.dirname(u8, destination.pathlike.path.slice())
@@ -1303,13 +1262,11 @@ pub const IOWhich = enum {
 };
 
 const unsupported_directory_error = SystemError{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     .errno = @as(c_int, @intCast(@intFromEnum(bun.sys.SystemErrno.EISDIR))),
     .message = bun.String.static("That doesn't work on folders"),
     .syscall = bun.String.static("fstat"),
 };
 const unsupported_non_regular_file_error = SystemError{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     .errno = @as(c_int, @intCast(@intFromEnum(bun.sys.SystemErrno.ENOTSUP))),
     .message = bun.String.static("Non-regular files aren't supported yet"),
     .syscall = bun.String.static("fstat"),

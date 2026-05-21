@@ -88,7 +88,6 @@ const zust = @import("safe");
 
                     const size = next.entry.size();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     unpacked_size += @intCast(@max(0, size));
                     total_files += @intFromBool(next.kind == .file);
 
@@ -1096,7 +1095,6 @@ while (true) : (__loop_limit_1 += 1) {
         return name.len == README.len or name[README.len] == '.';
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn isReadmeFilename(name: []const u8) bool {
         return isReadmeFilenameT(u8, name);
     }

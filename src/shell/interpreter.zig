@@ -144,12 +144,12 @@ pub const CowFd = struct {
     const debug = bun.Output.scoped(.CowFd, .hidden);
 
     pub fn init(fd: bun.FD) *CowFd {
-        const this = bun.handleOom(bun.default_allocator.create(CowFd));
-        this.* = .{
+        const this = bun.handleOom(zust.Box(CowFd).init(bun.default_allocator, undefined));
+        this.ptr.* = .{
             .__fd = fd,
         };
-        debug("init(0x{x}, fd={f})", .{ @intFromPtr(this), fd });
-        return this;
+        debug("init(0x{x}, fd={f})", .{ @intFromPtr(this.ptr), fd });
+        return this.ptr;
     }
 
     pub fn dup(this: *CowFd) Maybe(*CowFd) {
@@ -488,11 +488,13 @@ pub const Interpreter = struct {
             return this.__prev_cwd.items[0..this.__prev_cwd.items.len -| 1 :0];
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub inline fn prevCwd(this: *ShellExecEnv) []const u8 {
             const prevcwdz = this.prevCwdZ();
             return prevcwdz[0..prevcwdz.len];
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub inline fn cwd(this: *ShellExecEnv) []const u8 {
             const cwdz = this.cwdZ();
             return cwdz[0..cwdz.len];
@@ -536,11 +538,11 @@ pub const Interpreter = struct {
             io: IO,
             kind: Kind,
         ) Maybe(*ShellExecEnv) {
-            const duped = bun.handleOom(alloc.create(ShellExecEnv));
+            const duped = bun.handleOom(zust.Box(ShellExecEnv).init(alloc, undefined));
 
             const dupedfd = switch (Syscall.dup(this.cwd_fd)) {
                 .err => |err| {
-                    alloc.destroy(duped);
+                    _ = duped.deinit();
                     return .{ .err = err };
                 },
                 .result => |fd| fd,
@@ -570,7 +572,7 @@ pub const Interpreter = struct {
                 },
             };
 
-            duped.* = .{
+            duped.ptr.* = .{
                 .kind = kind,
                 ._buffered_stdout = stdout,
                 ._buffered_stderr = stderr,
@@ -585,7 +587,7 @@ pub const Interpreter = struct {
                 .__alloc_scope = alloc_scope,
             };
 
-            return .{ .result = duped };
+            return .{ .result = duped.ptr };
         }
 
         /// NOTE: This will `.ref()` value, so you should `defer value.deref()` it before handing it to this function.
@@ -629,6 +631,7 @@ pub const Interpreter = struct {
             const new_cwd: [:0]const u8 = brk: {
                 if (is_abs) {
                     if (is_sentinel) {
+// safe-transpile: @memcpy requires manual review
                         @memcpy(ResolvePath.join_buf[0..new_cwd_.len], new_cwd_[0..new_cwd_.len]);
                         ResolvePath.join_buf[new_cwd_.len] = 0;
                         break :brk ResolvePath.join_buf[0..new_cwd_.len :0];
@@ -702,6 +705,7 @@ pub const Interpreter = struct {
             return env_var orelse EnvStr.initSlice(if (comptime bun.Environment.isAndroid) "/data/local/tmp" else "");
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeFailingErrorFmt(
             this: *ShellExecEnv,
             ctx: anytype,
@@ -857,6 +861,7 @@ pub const Interpreter = struct {
 
     extern fn Bun__createShellInterpreter(globalThis: *jsc.JSGlobalObject, ptr: *Interpreter, parsed_shell_script: JSValue, resolve: JSValue, reject: JSValue) callconv(jsc.conv) JSValue;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parse(
         arena_allocator: std.mem.Allocator,
         script: []const u8,
@@ -865,6 +870,7 @@ pub const Interpreter = struct {
         out_parser: *?bun.shell.Parser,
         out_lex_result: *?shell.LexResult,
     ) !ast.Script {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const jsobjs_len: u32 = @intCast(jsobjs.len);
         const lex_result = brk: {
             if (bun.strings.isAllASCII(script)) {
@@ -995,8 +1001,8 @@ pub const Interpreter = struct {
         const stdin_reader = IOReader.init(stdin_fd, event_loop);
         errdefer stdin_reader.deref();
 
-        const interpreter = bun.handleOom(allocator.create(ThisInterpreter));
-        interpreter.* = .{
+        const interpreter = bun.handleOom(zust.Box(ThisInterpreter).init(allocator, undefined));
+        interpreter.ptr.* = .{
             .command_ctx = ctx,
             .event_loop = event_loop,
 
@@ -1033,9 +1039,10 @@ pub const Interpreter = struct {
             .globalThis = undefined,
         };
 
-        return interpreter;
+        return interpreter.ptr;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initAndRunFromFile(ctx: bun.cli.Command.Context, mini: *jsc.MiniEventLoop, path: []const u8) !bun.shell.ExitCode {
         var shargs = ShellArgs.init();
         const src = try bun.sys.File.readFrom(bun.FD.cwd(), path, shargs.arena_allocator()).unwrap();
@@ -1112,6 +1119,7 @@ pub const Interpreter = struct {
         return code;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initAndRunFromSource(ctx: bun.cli.Command.Context, mini: *jsc.MiniEventLoop, path_for_errors: []const u8, src: []const u8, cwd: ?[]const u8) !ExitCode {
         bun.analytics.Features.standalone_shell += 1;
         var shargs = ShellArgs.init();
@@ -1490,6 +1498,7 @@ pub const Interpreter = struct {
         return &this.root_io;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn getVmArgsUtf8(this: *Interpreter, argv: []const *WTFStringImplStruct, idx: u8) []const u8 {
         if (this.vm_args_utf8.items.len != argv.len) {
             bun.handleOom(this.vm_args_utf8.ensureTotalCapacity(argv.len));
@@ -1583,7 +1592,7 @@ pub fn StatePtrUnion(comptime TypesValue: anytype) type {
             if (comptime bun.Environment.enableAllocScopes) {
                 return bun.handleOom(this.allocator().create(Ty));
             }
-            return bun.handleOom(bun.default_allocator.create(Ty));
+            return bun.handleOom(zust.Box(Ty).init(bun.default_allocator, undefined));
         }
 
         pub fn destroy(this: @This(), ptr: anytype) void {
@@ -1651,6 +1660,7 @@ pub fn StatePtrUnion(comptime TypesValue: anytype) type {
             return @intFromEnum(this.ptr.tag());
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn tagName(this: @This()) []const u8 {
             return Ptr.typeNameFromTag(this.tagInt()).?;
         }
@@ -1710,6 +1720,7 @@ const CmdEnvIter = struct {
             try writer.writeAll(self.val);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn eqlComptime(this: Key, comptime str: []const u8) bool {
             return bun.strings.eqlComptime(this.val, str);
         }
@@ -1799,6 +1810,7 @@ pub fn ShellTask(
 }
 
 inline fn errnocast(errno: anytype) u16 {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(errno);
 }
 
@@ -1840,6 +1852,7 @@ pub const ShellSyscall = struct {
             };
             const source_root = ResolvePath.windowsFilesystemRoot(dirpath);
             std.mem.copyForwards(u8, buf[0..source_root.len], source_root);
+// safe-transpile: @memcpy requires manual review
             @memcpy(buf[source_root.len..][0 .. to.len - 1], to[1..]);
             buf[source_root.len + to.len - 1] = 0;
             return .{ .result = buf[0 .. source_root.len + to.len - 1 :0] };
@@ -1851,6 +1864,7 @@ pub const ShellSyscall = struct {
                 .result => |path| path,
                 .err => |e| return .{ .err = e.withFd(dirfd) },
             };
+// safe-transpile: @memcpy requires manual review
             @memcpy(buf[0..dirfd.len], dirfd[0..dirfd.len]);
             break :brk buf[0..dirfd.len];
         };
@@ -2038,6 +2052,7 @@ pub const OutputSrc = union(enum) {
     owned_buf: []const u8,
     borrowed_buf: []const u8,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *OutputSrc) []const u8 {
         return switch (this.*) {
             .arrlist => this.arrlist.items[0..],
@@ -2065,6 +2080,7 @@ pub const ParseError = union(enum) {
     unsupported: []const u8,
     show_usage,
 };
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn unsupportedFlag(comptime name: []const u8) []const u8 {
     return "unsupported option, please open a GitHub issue -- " ++ name ++ "\n";
 }
@@ -2096,6 +2112,7 @@ pub fn FlagParser(comptime Opts: type) type {
             return .{ .err = .show_usage };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parseFlag(opts: Opts, flag: []const u8) ParseFlagResult {
             if (flag.len == 0) return .done;
             if (flag[0] != '-') return .done;
@@ -2107,7 +2124,8 @@ pub fn FlagParser(comptime Opts: type) type {
             }
 
             const small_flags = flag[1..];
-            for (small_flags, 0..) |char, i| {
+            // safe-transpile: for with index access requires manual review
+    for (small_flags, 0..) |char, i| {
                 if (opts.parseShort(char, small_flags, i)) |err| {
                     return err;
                 }
@@ -2138,6 +2156,7 @@ pub fn isPollableFromMode(mode: bun.Mode) bool {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn unreachableState(context: []const u8, state: []const u8) noreturn {
     @branchHint(.cold);
     return bun.Output.panic("Bun shell has reached an unreachable state \"{s}\" in the {s} context. This indicates a bug, please open a GitHub issue.", .{ state, context });

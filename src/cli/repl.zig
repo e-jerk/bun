@@ -242,7 +242,6 @@ const History = struct {
         self.modified = false;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn add(self: *History, line: []const u8) !void {
         if (line.len == 0) return;
 
@@ -268,7 +267,6 @@ const History = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn prev(self: *History, current_line: []const u8) ?[]const u8 {
         if (self.entries.items.len == 0) return null;
 
@@ -340,7 +338,6 @@ const LineEditor = struct {
         self.cursor = 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn set(self: *LineEditor, text: []const u8) !void {
         self.buffer.clearRetainingCapacity();
         try self.buffer.appendSlice(text);
@@ -356,7 +353,6 @@ const LineEditor = struct {
         self.cursor += 1;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insertSlice(self: *LineEditor, slice: []const u8) !void {
         if (self.cursor == self.buffer.items.len) {
             try self.buffer.appendSlice(slice);
@@ -480,7 +476,6 @@ const LineEditor = struct {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getLine(self: *const LineEditor) []const u8 {
         return self.buffer.items;
     }
@@ -507,9 +502,7 @@ const ReplCommand = struct {
         .{ .name = ".history", .help = "Show command history", .handler = cmdHistory },
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn find(name: []const u8) ?*const ReplCommand {
-// safe-transpile: for loop with pointer capture requires manual review
         for (&all) |*cmd| {
             if (strings.eqlLong(cmd.name, name, true) or
                 (name.len > 1 and strings.startsWith(cmd.name, name)))
@@ -527,7 +520,6 @@ const ReplResult = enum {
     skip_eval,
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdHelp(repl: *Repl, _: []const u8) ReplResult {
     repl.print("\n{s}REPL Commands:{s}\n", .{ Color.bold, Color.reset });
     for (ReplCommand.all) |cmd| {
@@ -553,7 +545,6 @@ fn cmdHelp(repl: *Repl, _: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdCopy(repl: *Repl, args: []const u8) ReplResult {
     const code = strings.trim(args, " \t");
 
@@ -574,12 +565,10 @@ fn cmdCopy(repl: *Repl, args: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdExit(_: *Repl, _: []const u8) ReplResult {
     return .exit_repl;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdClear(repl: *Repl, _: []const u8) ReplResult {
     // Clear screen
     repl.write(Cursor.clear_screen);
@@ -588,7 +577,6 @@ fn cmdClear(repl: *Repl, _: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdLoad(repl: *Repl, args: []const u8) ReplResult {
     const filename = strings.trim(args, " \t");
     if (filename.len == 0) {
@@ -612,7 +600,6 @@ fn cmdLoad(repl: *Repl, args: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdSave(repl: *Repl, args: []const u8) ReplResult {
     const filename = strings.trim(args, " \t");
     if (filename.len == 0) {
@@ -648,7 +635,6 @@ fn cmdSave(repl: *Repl, args: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdEditor(repl: *Repl, _: []const u8) ReplResult {
     repl.print("{s}// Entering editor mode (Ctrl+D to finish, Ctrl+C to cancel){s}\n", .{ Color.dim, Color.reset });
     repl.editor_mode = true;
@@ -656,7 +642,6 @@ fn cmdEditor(repl: *Repl, _: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdBreak(repl: *Repl, _: []const u8) ReplResult {
     repl.line_editor.clear();
     repl.multiline_buffer.clearRetainingCapacity();
@@ -664,14 +649,12 @@ fn cmdBreak(repl: *Repl, _: []const u8) ReplResult {
     return .skip_eval;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cmdHistory(repl: *Repl, _: []const u8) ReplResult {
     repl.print("\n{s}Command History:{s}\n", .{ Color.bold, Color.reset });
     const start = if (repl.history.entries.items.len > 20)
         repl.history.entries.items.len - 20
     else
         0;
-    // safe-transpile: for with index access requires manual review
     for (repl.history.entries.items[start..], start..) |entry, i| {
         repl.print("  {s}{d:>4}{s}  {s}\n", .{ Color.dim, i + 1, Color.reset, entry });
     }
@@ -840,17 +823,14 @@ fn disableSignalsDuringWait(self: *Repl) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn write(_: *Repl, data: []const u8) void {
     Output.writer().writeAll(data) catch {};
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn print(_: *Repl, comptime format: []const u8, args: anytype) void {
     Output.print(format, args);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn printError(self: *Repl, comptime format: []const u8, args: anytype) void {
     if (self.use_colors) {
         Output.print(Color.red ++ format ++ Color.reset, args);
@@ -949,7 +929,6 @@ fn readKey(self: *Repl) ?Key {
 // Prompt and Display
 // ============================================================================
 
-// safe-transpile: function returns small constant slice — consider safe.String
 fn getPrompt(self: *Repl) []const u8 {
     if (self.in_multiline or self.editor_mode) {
         if (self.use_colors) {
@@ -1009,7 +988,6 @@ fn refreshLine(self: *Repl) void {
     Output.flush();
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeHighlighted(_: *Repl, text: []const u8) void {
     var writer = Output.writer();
     const highlighter = fmt.QuickAndDirtyJavaScriptSyntaxHighlighter{
@@ -1028,7 +1006,6 @@ fn writeHighlighted(_: *Repl, text: []const u8) void {
 // Code Completion
 // ============================================================================
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn isIncompleteCode(code: []const u8) bool {
     var brace_count: i32 = 0;
     var bracket_count: i32 = 0;
@@ -1089,7 +1066,6 @@ fn isIncompleteCode(code: []const u8) bool {
 // JavaScript Evaluation
 // ============================================================================
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn evaluateAndPrint(self: *Repl, code: []const u8) void {
     const global = self.global orelse return;
     const vm = self.vm orelse return;
@@ -1212,7 +1188,6 @@ fn evaluateAndPrint(self: *Repl, code: []const u8) void {
 /// result to stdout. Errors are written to stderr.
 /// Returns true if an error occurred (the caller should set exit_code=1 and
 /// skip onBeforeExit); false on success (caller preserves process.exitCode).
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn evalScript(self: *Repl, code: []const u8, print_result: bool) bool {
     const global = self.global orelse return true;
     const vm = self.vm orelse return true;
@@ -1313,7 +1288,6 @@ pub fn evalScript(self: *Repl, code: []const u8, print_result: bool) bool {
 
 /// Evaluate code without REPL transforms (fallback for errors)
 /// The C++ Bun__REPL__evaluate handles setting _ and _error
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn evaluateRaw(self: *Repl, code: []const u8) void {
     const global = self.global orelse return;
 
@@ -1351,7 +1325,6 @@ fn evaluateRaw(self: *Repl, code: []const u8) void {
 }
 
 /// Evaluate code and copy the result to clipboard instead of printing it
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn evaluateAndCopy(self: *Repl, code: []const u8) void {
     const global = self.global orelse return;
     const vm = self.vm orelse return;
@@ -1448,7 +1421,6 @@ fn valueToClipboardString(self: *Repl, value: jsc.JSValue) bun.JSError!?[]const 
     // For everything else, use Bun.inspect without colors
     var array = std.Io.Writer.Allocating.init(self.allocator);
     defer array.deinit();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     try jsc.ConsoleObject.format2(.Log, global, @ptrCast(&value), 1, &array.writer, .{
         .enable_colors = false,
         .add_newline = false,
@@ -1482,7 +1454,6 @@ fn copyValueToClipboard(self: *Repl, value: jsc.JSValue) bun.JSError!void {
 }
 
 /// Write text to clipboard using OSC 52 escape sequence.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn copyToClipboardOSC52(self: *Repl, text: []const u8) !void {
     var it = strings.ANSIIterator.init(text);
     const first = it.next() orelse return;
@@ -1512,7 +1483,6 @@ fn copyToClipboardOSC52(self: *Repl, text: []const u8) !void {
 }
 
 /// Transform code using the REPL parser (hoists declarations, wraps expressions)
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn transformForRepl(self: *Repl, code: []const u8) ?[]const u8 {
     const vm = self.vm orelse return null;
 
@@ -1603,7 +1573,6 @@ fn transformForRepl(self: *Repl, code: []const u8) ?[]const u8 {
 }
 
 /// Check if code looks like an object literal that would be misinterpreted as a block
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn isLikelyObjectLiteral(code: []const u8) bool {
     // Skip leading whitespace
     var start: usize = 0;
@@ -1644,7 +1613,6 @@ fn printJSError(self: *Repl, error_value: jsc.JSValue) void {
 fn printJSErrorTo(self: *Repl, error_value: jsc.JSValue, writer: *std.Io.Writer, enable_colors: bool) void {
     const global = self.global orelse return;
     // Use .Error level for proper error formatting with Bun.inspect
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     jsc.ConsoleObject.format2(.Error, global, @ptrCast(&error_value), 1, writer, .{
         .enable_colors = enable_colors,
         .add_newline = true,
@@ -1663,7 +1631,6 @@ fn printJSErrorTo(self: *Repl, error_value: jsc.JSValue, writer: *std.Io.Writer,
 fn printFormattedValue(self: *Repl, value: jsc.JSValue) void {
     const global = self.global orelse return;
     const writer = Output.writer();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     jsc.ConsoleObject.format2(.Log, global, @ptrCast(&value), 1, writer, .{
         .enable_colors = self.use_colors,
         .add_newline = true,
@@ -2041,7 +2008,6 @@ fn handleTab(self: *Repl) void {
         // Multiple completions - show them
         self.print("\n", .{});
         var i: u32 = 0;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         while (i < @as(u32, @truncate(len))) : (i += 1) {
             const item = completions.getIndex(global, i) catch brk: {
                 global.clearException();

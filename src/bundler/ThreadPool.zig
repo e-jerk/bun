@@ -227,7 +227,6 @@ pub const ThreadPool = struct {
 
         pub fn deinitCallback(task: *ThreadPoolLib.Task) void {
             debug("Worker.deinit()", .{});
-// safe-transpile: @alignCast requires manual review
             var this: *Worker = @alignCast(@fieldParentPtr("deinit_task", task));
             this.deinit();
         }

@@ -15,7 +15,6 @@ fn formatUnsignedIntegerBetween(comptime len: u16, buf: *[len]u8, val: u64) void
     // Write out the number from the end to the front
     inline while (i > 0) {
         comptime i -= 1;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         buf[comptime i] = @as(u8, @intCast((remainder % 10))) + '0';
         remainder /= 10;
     }
@@ -84,13 +83,11 @@ const Whitespacer = struct {
     normal: []const u8,
     minify: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(this: Whitespacer, comptime str: []const u8) Whitespacer {
         return .{ .normal = this.normal ++ str, .minify = this.minify ++ str };
     }
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn ws(comptime str: []const u8) Whitespacer {
     const Static = struct {
         pub const with = str;
@@ -112,7 +109,6 @@ fn ws(comptime str: []const u8) Whitespacer {
     return .{ .normal = Static.with, .minify = Static.without };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn estimateLengthForUTF8(input: []const u8, comptime ascii_only: bool, comptime quote_char: u8) usize {
     var remaining = input;
     var len: usize = 2; // for quotes
@@ -149,9 +145,7 @@ pub fn estimateLengthForUTF8(input: []const u8, comptime ascii_only: bool, compt
     return len;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writePreQuotedString(text_in: []const u8, comptime Writer: type, writer: Writer, comptime quote_char: u8, comptime ascii_only: bool, comptime json: bool, comptime encoding: strings.Encoding) !void {
-// safe-transpile: @alignCast requires manual review
     const text = if (comptime encoding == .utf16) @as([]const u16, @alignCast(std.mem.bytesAsSlice(u16, text_in))) else text_in;
     if (comptime json and quote_char != '"') @compileError("for json, quote_char must be '\"'");
     var i: usize = 0;
@@ -301,7 +295,6 @@ pub fn writePreQuotedString(text_in: []const u8, comptime Writer: type, writer: 
                 i += @as(usize, width);
 
                 if (c <= 0xFF and !json) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const k = @as(usize, @intCast(c));
 
                     try writer.writeAll(&[_]u8{
@@ -311,7 +304,6 @@ pub fn writePreQuotedString(text_in: []const u8, comptime Writer: type, writer: 
                         hex_chars[k & 0xF],
                     });
                 } else if (c <= 0xFFFF) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const k = @as(usize, @intCast(c));
 
                     try writer.writeAll(&[_]u8{
@@ -324,9 +316,7 @@ pub fn writePreQuotedString(text_in: []const u8, comptime Writer: type, writer: 
                     });
                 } else {
                     const k = c - 0x10000;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const lo = @as(usize, @intCast(first_high_surrogate + ((k >> 10) & 0x3FF)));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const hi = @as(usize, @intCast(first_low_surrogate + (k & 0x3FF)));
 
                     try writer.writeAll(&[_]u8{
@@ -348,7 +338,6 @@ pub fn writePreQuotedString(text_in: []const u8, comptime Writer: type, writer: 
         }
     }
 }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn quoteForJSON(text: []const u8, bytes: *MutableString, comptime ascii_only: bool) !void {
     const writer = bytes.writer();
 
@@ -358,7 +347,6 @@ pub fn quoteForJSON(text: []const u8, bytes: *MutableString, comptime ascii_only
     bytes.appendChar('"') catch unreachable;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeJSONString(input: []const u8, comptime Writer: type, writer: Writer, comptime encoding: strings.Encoding) !void {
     try writer.writeAll("\"");
     try writePreQuotedString(input, Writer, writer, '"', false, true, encoding);
@@ -377,7 +365,6 @@ pub const SourceMapHandler = struct {
     pub fn For(comptime Type: type, comptime handler: (fn (t: *Type, chunk: SourceMap.Chunk, source: *const logger.Source) anyerror!void)) type {
         return struct {
             pub fn onChunk(self: *anyopaque, chunk: SourceMap.Chunk, source: *const logger.Source) anyerror!void {
-// safe-transpile: @alignCast requires manual review
                 try handler(@as(*Type, @ptrCast(@alignCast(self))), chunk, source);
             }
 
@@ -490,7 +477,6 @@ pub const RequireOrImportMeta = struct {
         ) Callback {
             return Callback{
                 .ctx = bun.cast(*anyopaque, ctx),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .callback = @as(*const Fn, @ptrCast(&callback)),
             };
         }
@@ -872,7 +858,6 @@ fn NewPrinter(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeBytesNTimes(self: *Printer, bytes: []const u8, n: usize) anyerror!void {
             var i: usize = 0;
             while (i < n) : (i += 1) {
@@ -897,7 +882,6 @@ fn NewPrinter(
             p.writer.advance(written.len);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn printBuffer(p: *Printer, str: []const u8) void {
             p.writer.print([]const u8, str);
         }
@@ -1046,8 +1030,7 @@ fn NewPrinter(
                     p.printIndent();
                 }
 
-                // safe-transpile: for with index access requires manual review
-    for (import.items, 0..) |item, i| {
+                for (import.items, 0..) |item, i| {
                     if (i > 0) {
                         p.print(",");
                         p.printSpace();
@@ -1336,7 +1319,6 @@ fn NewPrinter(
                 }
             }
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (decls[1..]) |*decl| {
                 p.print(",");
                 p.printSpace();
@@ -1405,8 +1387,7 @@ fn NewPrinter(
                 p.print("(");
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (args, 0..) |arg, i| {
+            for (args, 0..) |arg, i| {
                 if (i != 0) {
                     p.print(",");
                     p.printSpace();
@@ -1514,7 +1495,6 @@ fn NewPrinter(
                         p.print("0");
                     },
                     1...9 => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         var bytes = [1]u8{'0' + @as(u8, @intCast(val))};
                         p.print(&bytes);
                     },
@@ -1601,7 +1581,6 @@ fn NewPrinter(
             p.fmt("{d}", .{float}) catch {};
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn printStringCharactersUTF8(e: *Printer, text: []const u8, quote: u8) void {
             const writer = e.writer.stdWriter();
             (switch (quote) {
@@ -2010,7 +1989,6 @@ fn NewPrinter(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn printRawTemplateLiteral(p: *Printer, bytes: []const u8) void {
             if (comptime is_json or !ascii_only) {
                 p.print(bytes);
@@ -2222,8 +2200,7 @@ fn NewPrinter(
                     p.printSpaceBeforeIdentifier();
                     p.addSourceMapping(expr.loc);
 
-                    // safe-transpile: for with index access requires manual review
-    for (p.options.commonjs_named_exports.keys(), p.options.commonjs_named_exports.values()) |key, value| {
+                    for (p.options.commonjs_named_exports.keys(), p.options.commonjs_named_exports.values()) |key, value| {
                         if (value.loc_ref.ref.?.eql(id.ref)) {
                             if (p.options.commonjs_named_exports_deoptimized or value.needs_decl) {
                                 if (p.options.commonjs_module_exports_assigned_deoptimized and
@@ -2712,8 +2689,7 @@ fn NewPrinter(
                             p.indent();
                         }
 
-                        // safe-transpile: for with index access requires manual review
-    for (items, 0..) |item, i| {
+                        for (items, 0..) |item, i| {
                             if (i != 0) {
                                 p.print(",");
                                 if (e.is_single_line) {
@@ -2831,8 +2807,7 @@ fn NewPrinter(
                 .e_template => |e| {
                     if (e.tag == null and (p.options.minify_syntax or p.was_lazy_export)) {
                         var replaced = std.array_list.Managed(E.TemplatePart).init(p.options.allocator);
-                        // safe-transpile: for with index access requires manual review
-    for (e.parts, 0..) |_part, i| {
+                        for (e.parts, 0..) |_part, i| {
                             var part = _part;
                             const inlined_value: ?js_ast.Expr = switch (part.value.data) {
                                 .e_name_of_symbol => |e2| Expr.init(
@@ -2909,7 +2884,6 @@ fn NewPrinter(
                         },
                     }
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (e.parts) |*part| {
                         p.print("${");
                         p.printExpr(part.value, .lowest, ExprFlag.None());
@@ -3312,9 +3286,7 @@ fn NewPrinter(
 
                                 else => |c| {
                                     const k = c - 0x10000;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     const lo = @as(usize, @intCast(first_high_surrogate + ((k >> 10) & 0x3FF)));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     const hi = @as(usize, @intCast(first_low_surrogate + (k & 0x3FF)));
 
                                     p.print(&[_]u8{
@@ -3665,8 +3637,7 @@ fn NewPrinter(
                             p.indent();
                         }
 
-                        // safe-transpile: for with index access requires manual review
-    for (b.items, 0..) |*item, i| {
+                        for (b.items, 0..) |*item, i| {
                             if (i != 0) {
                                 p.print(",");
                                 if (b.is_single_line) {
@@ -3710,8 +3681,7 @@ fn NewPrinter(
                             p.indent();
                         }
 
-                        // safe-transpile: for with index access requires manual review
-    for (b.properties, 0..) |*property, i| {
+                        for (b.properties, 0..) |*property, i| {
                             if (i != 0) {
                                 p.print(",");
                             }
@@ -4094,8 +4064,7 @@ fn NewPrinter(
                                 p.print("{");
                                 p.printSpace();
                                 const last = s.items.len - 1;
-                                // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                                for (s.items, 0..) |item, i| {
                                     const symbol = p.symbols().getWithLink(item.name.ref.?).?;
                                     const name = symbol.original_name;
                                     var did_print = false;
@@ -4207,8 +4176,7 @@ fn NewPrinter(
                         p.printSpace();
                     }
 
-                    // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                    for (s.items, 0..) |item, i| {
                         if (i != 0) {
                             p.print(",");
                             if (s.is_single_line) {
@@ -4257,8 +4225,7 @@ fn NewPrinter(
                         p.printSpace();
                     }
 
-                    // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                    for (s.items, 0..) |item, i| {
                         if (i != 0) {
                             p.print(",");
                             if (s.is_single_line) {
@@ -4581,8 +4548,7 @@ fn NewPrinter(
                                     p.printSpace();
                                     p.print(",");
                                     p.printSpace();
-                                    // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                                    for (s.items, 0..) |item, i| {
                                         p.printClauseItemAs(item, .@"var");
 
                                         if (i < s.items.len - 1) {
@@ -4592,8 +4558,7 @@ fn NewPrinter(
                                     }
                                 }
                             } else {
-                                // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                                for (s.items, 0..) |item, i| {
                                     p.printClauseItemAs(item, .@"var");
 
                                     if (i < s.items.len - 1) {
@@ -4645,8 +4610,7 @@ fn NewPrinter(
                             p.printSpace();
                         }
 
-                        // safe-transpile: for with index access requires manual review
-    for (s.items, 0..) |item, i| {
+                        for (s.items, 0..) |item, i| {
                             if (i != 0) {
                                 p.print(",");
                                 if (s.is_single_line) {
@@ -5188,7 +5152,6 @@ fn NewPrinter(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn tryToGetImportedEnumValue(p: *Printer, target: Expr, name: []const u8) ?js_ast.InlinedEnumValue.Decoded {
             if (target.data.as(.e_import_identifier)) |id| {
                 const ref = p.symbols().follow(id.ref);
@@ -5204,7 +5167,6 @@ fn NewPrinter(
             return null;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn printInlinedEnum(
             p: *Printer,
             inlined: js_ast.InlinedEnumValue.Decoded,
@@ -5554,7 +5516,6 @@ fn NewPrinter(
                         p.printStringLiteralUTF8(record.path.pretty, false);
 
                         const item_count = @as(u32, @intFromBool(import.default_name != null)) +
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @as(u32, @intCast(import.items.len));
                         p.fmt(", {d},", .{item_count}) catch {};
                         if (item_count == 0) {
@@ -5676,7 +5637,6 @@ pub fn NewWriter(
         pub fn stdWriter(self: *Self) @import("std-io-compat").MakeGenericWriter(*Self, error{}, stdWriterWrite) {
             return .{ .context = self };
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn stdWriterWrite(self: *Self, bytes: []const u8) error{}!usize {
             self.print([]const u8, bytes);
             return bytes.len;
@@ -5730,7 +5690,6 @@ pub fn NewWriter(
 
         pub fn advance(writer: *Self, count: u64) void {
             advanceBy(&writer.ctx, count);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             writer.written += @as(i32, @intCast(count));
         }
 
@@ -5739,20 +5698,17 @@ pub fn NewWriter(
         pub fn writeAll(writer: *Self, bytes: anytype) Error!usize {
             const written = @max(writer.written, 0);
             writer.print(@TypeOf(bytes), bytes);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(usize, @intCast(writer.written)) - @as(usize, @intCast(written));
         }
 
         pub inline fn print(writer: *Self, comptime ValueType: type, str: ValueType) void {
             switch (ValueType) {
                 comptime_int, u16, u8 => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const written = writeByte(&writer.ctx, @as(u8, @intCast(str))) catch |err| brk: {
                         writer.orig_err = err;
                         break :brk 0;
                     };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     writer.written += @as(i32, @intCast(written));
                     writer.err = if (written == 0) error.WriteFailed else writer.err;
                 },
@@ -5762,7 +5718,6 @@ pub fn NewWriter(
                         break :brk 0;
                     };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     writer.written += @as(i32, @intCast(written));
                     if (written < str.len) {
                         writer.err = if (written == 0) error.WriteFailed else error.PartialWrite;
@@ -5787,12 +5742,10 @@ pub fn NewWriter(
 pub const DirectWriter = struct {
     handle: FileDescriptorType,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(writer: *DirectWriter, buf: []const u8) !usize {
         return try std.posix.write(writer.handle, buf);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(writer: *DirectWriter, buf: []const u8) !void {
         _ = try std.posix.write(writer.handle, buf);
     }
@@ -5818,7 +5771,6 @@ pub const BufferWriter = struct {
         return this.buffer;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getWritten(this: *BufferWriter) []u8 {
         return this.buffer.list.items;
     }
@@ -5871,7 +5823,6 @@ pub const BufferWriter = struct {
 
     pub fn reserveNext(ctx: *BufferWriter, count: u64) anyerror![*]u8 {
         try ctx.buffer.growIfNeeded(count);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as([*]u8, @ptrCast(&ctx.buffer.list.items.ptr[ctx.buffer.list.items.len]));
     }
 
@@ -5893,7 +5844,6 @@ pub const BufferWriter = struct {
         ctx.written = &.{};
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn writtenWithoutTrailingZero(ctx: *const BufferWriter) []u8 {
         var written = ctx.written;
         while (written.len > 0 and written[written.len - 1] == 0) {
@@ -5975,7 +5925,6 @@ pub fn getSourceMapBuilder(
                 source.contents,
                 @as(
                     i32,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @intCast(tree.approximate_newline_count),
                 ),
             );
@@ -6167,7 +6116,6 @@ pub fn printAst(
 
     try printer.writer.done();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(usize, @intCast(@max(printer.writer.written, 0)));
 }
 
@@ -6208,7 +6156,6 @@ pub fn printJSON(
     }
     try printer.writer.done();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(usize, @intCast(@max(printer.writer.written, 0)));
 }
 
@@ -6417,7 +6364,6 @@ pub fn printCommonJS(
 
     try printer.writer.done();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(usize, @intCast(@max(printer.writer.written, 0)));
 }
 

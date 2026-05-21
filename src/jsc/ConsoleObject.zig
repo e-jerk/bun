@@ -20,7 +20,6 @@ default_indent: u16 = 0,
 
 counts: Counter = .{},
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn format(_: @This(), comptime _: []const u8, _: anytype, _: anytype) !void {}
 
 pub fn init(out: *ConsoleObject, error_writer: Output.Source.StreamType, writer: Output.Source.StreamType) void {
@@ -317,13 +316,11 @@ pub const TablePrinter = struct {
             VisibleCharacterCounter.write,
         );
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(this: VisibleCharacterCounter, bytes: []const u8) WriteError!usize {
             this.width.* += strings.visible.width.exclude_ansi_colors.utf8(bytes);
             return bytes.len;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeAll(this: VisibleCharacterCounter, bytes: []const u8) WriteError!void {
             this.width.* += strings.width.exclude_ansi_colors.utf8(bytes);
         }
@@ -356,7 +353,6 @@ pub const TablePrinter = struct {
             error.WriteFailed => if (Environment.ci_assert) bun.assert(false), // VisibleCharacterCounter write cannot fail
         };
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @truncate(width);
     }
 
@@ -364,9 +360,7 @@ pub const TablePrinter = struct {
     fn updateColumnsForRow(this: *TablePrinter, columns: *std.array_list.Managed(Column), row_key: RowKey, row_value: JSValue) bun.JSError!void {
         // update size of "(index)" column
         const row_key_len: u32 = switch (row_key) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .str => |value| @intCast(value.visibleWidthExcludeANSIColors(false)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .num => |value| @truncate(bun.fmt.fastDigitCount(value)),
         };
         columns.items[0].width = @max(columns.items[0].width, row_key_len);
@@ -385,7 +379,6 @@ pub const TablePrinter = struct {
             //  - if "properties" arg was provided: iterate the already-created columns (except for the 0-th which is the index)
             //  - otherwise: iterate the object properties, and create the columns on-demand
             if (!this.properties.isUndefined()) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (columns.items[1..]) |*column| {
                     if (try row_value.getOwn(this.globalObject, column.name)) |value| {
                         column.width = @max(column.width, try this.getWidthForValue(value));
@@ -405,7 +398,6 @@ pub const TablePrinter = struct {
                     const column: *Column = brk: {
                         const col_str = String.init(col_key);
 
-// safe-transpile: for loop with pointer capture requires manual review
                         for (columns.items[1..]) |*col| {
                             if (col.name.eql(col_str)) {
                                 break :brk col;
@@ -430,7 +422,6 @@ pub const TablePrinter = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeStringNTimes(comptime Writer: type, writer: Writer, comptime str: []const u8, n: usize) !void {
         if (comptime str.len == 1) {
             try writer.splatByteAll(str[0], n);
@@ -454,9 +445,7 @@ pub const TablePrinter = struct {
         try writer.writeAll("│");
         {
             const len: u32 = switch (row_key) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .str => |value| @truncate(value.visibleWidthExcludeANSIColors(false)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .num => |value| @truncate(bun.fmt.fastDigitCount(value)),
             };
             const needed = columns.items[0].width -| len;
@@ -536,7 +525,6 @@ pub const TablePrinter = struct {
         var stack_fallback = std.heap.stackFallback(@sizeOf(Column) * 16, this.globalObject.allocator());
         var columns = try std.array_list.Managed(Column).initCapacity(stack_fallback.get(), 16);
         defer {
-// safe-transpile: for loop with pointer capture requires manual review
             for (columns.items) |*col| {
                 col.name.deref();
             }
@@ -604,24 +592,20 @@ pub const TablePrinter = struct {
 
         // print the table header (border line + column names line + border line)
         {
-// safe-transpile: for loop with pointer capture requires manual review
             for (columns.items) |*col| {
                 // also update the col width with the length of the column name itself
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 col.width = @max(col.width, @as(u32, @intCast(col.name.visibleWidthExcludeANSIColors(false))));
             }
 
             try writer.writeAll("┌");
-            // safe-transpile: for with index access requires manual review
-    for (columns.items, 0..) |*col, i| {
+            for (columns.items, 0..) |*col, i| {
                 if (i > 0) try writer.writeAll("┬");
                 try writeStringNTimes(Writer, writer, "─", col.width + (PADDING * 2));
             }
 
             try writer.writeAll("┐\n│");
 
-            // safe-transpile: for with index access requires manual review
-    for (columns.items, 0..) |col, i| {
+            for (columns.items, 0..) |col, i| {
                 if (i > 0) try writer.writeAll("│");
                 const len = col.name.visibleWidthExcludeANSIColors(false);
                 const needed = col.width -| len;
@@ -637,8 +621,7 @@ pub const TablePrinter = struct {
             }
 
             try writer.writeAll("│\n├");
-            // safe-transpile: for with index access requires manual review
-    for (columns.items, 0..) |col, i| {
+            for (columns.items, 0..) |col, i| {
                 if (i > 0) try writer.writeAll("┼");
                 try writeStringNTimes(Writer, writer, "─", col.width + (PADDING * 2));
             }
@@ -678,7 +661,6 @@ pub const TablePrinter = struct {
         {
             try writer.writeAll("└");
             try writeStringNTimes(Writer, writer, "─", columns.items[0].width + (PADDING * 2));
-// safe-transpile: for loop with pointer capture requires manual review
             for (columns.items[1..]) |*column| {
                 try writer.writeAll("┴");
                 try writeStringNTimes(Writer, writer, "─", column.width + (PADDING * 2));
@@ -797,7 +779,6 @@ pub const FormatOptions = struct {
                     if (arg < 0) {
                         return globalThis.throwInvalidArguments("expected depth to be greater than or equal to 0, got {d}", .{arg});
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     formatOptions.max_depth = @as(u16, @truncate(@as(u32, @intCast(@min(arg, std.math.maxInt(u16))))));
                 } else if (opt.isNumber()) {
                     const v = try opt.coerce(f64, globalThis);
@@ -826,7 +807,6 @@ pub const FormatOptions = struct {
                     if (arg < 0) {
                         return globalThis.throwInvalidArguments("expected depth to be greater than or equal to 0, got {d}", .{arg});
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     formatOptions.max_depth = @as(u16, @truncate(@as(u32, @intCast(@min(arg, std.math.maxInt(u16))))));
                 } else if (depthArg.isNumber()) {
                     const v = try depthArg.coerce(f64, globalThis);
@@ -1461,7 +1441,6 @@ pub const Formatter = struct {
         };
         var slice = slice_;
         var i: u32 = 0;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         var len: u32 = @as(u32, @truncate(slice.len));
         var hit_percent = false;
         while (i < len) : (i += 1) {
@@ -1493,7 +1472,6 @@ pub const Formatter = struct {
                             writer.writeAll(end);
                             // then skip the second % so we dont hit it again
                             slice = slice[@min(slice.len, i + 1)..];
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             len = @truncate(slice.len);
                             i = 0;
                             continue;
@@ -1507,7 +1485,6 @@ pub const Formatter = struct {
                     slice = slice[@min(slice.len, i + 1)..];
                     i = 0;
                     hit_percent = true;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     len = @truncate(slice.len);
                     const next_value = this.remaining_values[0];
                     this.remaining_values = this.remaining_values[1..];
@@ -1570,7 +1547,6 @@ pub const Formatter = struct {
                             if (int < std.math.maxInt(u32)) {
                                 const is_negative = int < 0;
                                 const digits = if (i != 0)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     bun.fmt.fastDigitCount(@as(u64, @intCast(@abs(int)))) + @as(u64, @intFromBool(is_negative))
                                 else
                                     1;
@@ -1589,7 +1565,6 @@ pub const Formatter = struct {
                                     const int = next_value.asInt32();
                                     const is_negative = int < 0;
                                     const digits = if (i != 0)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         bun.fmt.fastDigitCount(@as(u64, @intCast(@abs(int)))) + @as(u64, @intFromBool(is_negative))
                                     else
                                         1;
@@ -1735,7 +1710,6 @@ pub const Formatter = struct {
                 };
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn writeLatin1(self: *@This(), buf: []const u8) void {
                 var remain = buf;
                 while (remain.len > 0) {
@@ -1758,7 +1732,6 @@ pub const Formatter = struct {
                 self.ctx.writeAll(remain) catch return;
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
             pub inline fn writeAll(self: *@This(), buf: []const u8) void {
                 self.ctx.writeAll(buf) catch {
                     self.failed = true;
@@ -2236,7 +2209,6 @@ pub const Formatter = struct {
                         i = -i;
                     }
                     const digits = if (i != 0)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         bun.fmt.fastDigitCount(@as(usize, @intCast(i))) + @as(usize, @intFromBool(is_negative))
                     else
                         1;
@@ -2675,10 +2647,8 @@ pub const Formatter = struct {
                     // this case should never happen
                     return try this.printAs(.Undefined, Writer, writer_, .js_undefined, .Cell, enable_ansi_colors);
                 } else if (value.as(bun.api.Timer.TimeoutObject)) |timer| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     this.addForNewLine("Timeout(# ) ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(timer.internals.id, 0)))));
                     if (timer.internals.flags.kind == .setInterval) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         this.addForNewLine("repeats ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(timer.internals.id, 0)))));
                         writer.print(comptime Output.prettyFmt("<r><blue>Timeout<r> <d>(#<yellow>{d}<r><d>, repeats)<r>", enable_ansi_colors), .{
                             timer.internals.id,
@@ -2691,7 +2661,6 @@ pub const Formatter = struct {
 
                     return;
                 } else if (value.as(bun.api.Timer.ImmediateObject)) |immediate| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     this.addForNewLine("Immediate(# ) ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(immediate.internals.id, 0)))));
                     writer.print(comptime Output.prettyFmt("<r><blue>Immediate<r> <d>(#<yellow>{d}<r><d>)<r>", enable_ansi_colors), .{
                         immediate.internals.id,
@@ -2747,7 +2716,6 @@ pub const Formatter = struct {
 
                 writer.writeAll("Promise { " ++ comptime Output.prettyFmt("<r><cyan>", enable_ansi_colors));
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 switch (JSPromise.status(@as(*JSPromise, @ptrCast(value.asObjectRef().?)))) {
                     .pending => writer.writeAll("<pending>"),
                     .fulfilled => writer.writeAll("<resolved>"),
@@ -3303,7 +3271,6 @@ pub const Formatter = struct {
 
                                                 var j: usize = 0;
                                                 while (j < length) : (j += 1) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                                     const child = try children.getIndex(this.globalThis, @as(u32, @intCast(j)));
                                                     try this.format(try Tag.getAdvanced(child, this.globalThis, .{
                                                         .hide_global = true,
@@ -3465,7 +3432,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         i8,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(i8, slice)),
                         enable_ansi_colors,
                     ),
@@ -3473,7 +3439,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         i16,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(i16, slice)),
                         enable_ansi_colors,
                     ),
@@ -3481,7 +3446,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         u16,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(u16, slice)),
                         enable_ansi_colors,
                     ),
@@ -3489,7 +3453,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         i32,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(i32, slice)),
                         enable_ansi_colors,
                     ),
@@ -3497,7 +3460,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         u32,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(u32, slice)),
                         enable_ansi_colors,
                     ),
@@ -3505,7 +3467,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         f16,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(f16, slice)),
                         enable_ansi_colors,
                     ),
@@ -3513,7 +3474,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         f32,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(f32, slice)),
                         enable_ansi_colors,
                     ),
@@ -3521,7 +3481,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         f64,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(f64, slice)),
                         enable_ansi_colors,
                     ),
@@ -3529,7 +3488,6 @@ pub const Formatter = struct {
                         *@TypeOf(writer),
                         &writer,
                         i64,
-// safe-transpile: @alignCast requires manual review
                         @alignCast(std.mem.bytesAsSlice(i64, slice)),
                         enable_ansi_colors,
                     ),
@@ -3538,7 +3496,6 @@ pub const Formatter = struct {
                             *@TypeOf(writer),
                             &writer,
                             u64,
-// safe-transpile: @alignCast requires manual review
                             @as([]align(std.meta.alignment([]u64)) u64, @alignCast(std.mem.bytesAsSlice(u64, slice))),
                             enable_ansi_colors,
                         );

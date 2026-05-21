@@ -174,12 +174,14 @@ pub const GlobalJS = struct {
         return this.globalThis.bunVM();
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throwInvalidArguments(this: @This(), comptime fmt: []const u8, args: anytype) ShellErr {
         return .{
             .invalid_arguments = .{ .val = bun.handleOom(std.fmt.allocPrint(this.globalThis.bunVM().allocator, fmt, args)) },
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throwTODO(this: @This(), msg: []const u8) ShellErr {
         return .{
             .todo = bun.handleOom(std.fmt.allocPrint(this.globalThis.bunVM().allocator, "{s}", .{msg})),
@@ -190,6 +192,7 @@ pub const GlobalJS = struct {
         this.globalThis.throwValue(err.toJS(this.globalThis));
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn handleError(this: @This(), err: anytype, comptime fmt: []const u8) ShellErr {
         const str = bun.handleOom(std.fmt.allocPrint(this.globalThis.bunVM().allocator, "{s} " ++ fmt, .{@errorName(err)}));
         return .{
@@ -197,6 +200,7 @@ pub const GlobalJS = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throw(this: @This(), comptime fmt: []const u8, args: anytype) ShellErr {
         const str = bun.handleOom(std.fmt.allocPrint(this.globalThis.bunVM().allocator, fmt, args));
         return .{
@@ -216,6 +220,7 @@ pub const GlobalJS = struct {
         this.globalThis.bunVMConcurrently().enqueueTaskConcurrent(jsc.ConcurrentTask.create(jsc.Task.init(task)));
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn topLevelDir(this: @This()) []const u8 {
         return this.globalThis.bunVM().transpiler.fs.top_level_dir;
     }
@@ -257,18 +262,21 @@ pub const GlobalMini = struct {
 
     // pub inline fn throwShellErr(this: @This(), shell_err: ShellErr
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throwTODO(this: @This(), msg: []const u8) ShellErr {
         return .{
             .todo = bun.handleOom(std.fmt.allocPrint(this.mini.allocator, "{s}", .{msg})),
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throwInvalidArguments(this: @This(), comptime fmt: []const u8, args: anytype) ShellErr {
         return .{
             .invalid_arguments = .{ .val = bun.handleOom(std.fmt.allocPrint(this.allocator(), fmt, args)) },
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn handleError(this: @This(), err: anytype, comptime fmt: []const u8) ShellErr {
         const str = bun.handleOom(std.fmt.allocPrint(this.mini.allocator, "{s} " ++ fmt, .{@errorName(err)}));
         return .{
@@ -285,15 +293,17 @@ pub const GlobalMini = struct {
     }
 
     pub inline fn enqueueTaskConcurrentWaitPid(this: @This(), task: anytype) void {
-        var anytask = bun.handleOom(bun.default_allocator.create(jsc.AnyTaskWithExtraContext));
-        _ = anytask.from(task, "runFromMainThreadMini");
-        this.mini.enqueueTaskConcurrent(anytask);
+        var anytask = bun.handleOom(zust.Box(jsc.AnyTaskWithExtraContext).init(bun.default_allocator, undefined));
+        _ = anytask.ptr.from(task, "runFromMainThreadMini");
+        this.mini.enqueueTaskConcurrent(anytask.ptr);
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn topLevelDir(this: @This()) []const u8 {
         return this.mini.top_level_dir;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn throw(this: @This(), comptime fmt: []const u8, args: anytype) ShellErr {
         const str = bun.handleOom(std.fmt.allocPrint(this.allocator(), fmt, args));
         return .{
@@ -319,6 +329,7 @@ pub const AST = struct {
 
         pub fn memoryCost(this: *const @This()) usize {
             var cost: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.stmts) |*stmt| {
                 cost += stmt.memoryCost();
             }
@@ -331,6 +342,7 @@ pub const AST = struct {
 
         pub fn memoryCost(this: *const @This()) usize {
             var cost: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.exprs) |*expr| {
                 cost += expr.memoryCost();
             }
@@ -361,6 +373,7 @@ pub const AST = struct {
             return switch (this.*) {
                 .assign => |assign| brk: {
                     var cost: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (assign) |*expr| {
                         cost += expr.memoryCost();
                     }
@@ -622,10 +635,10 @@ pub const AST = struct {
         };
 
         pub fn to_expr(this: CondExpr, alloc: Allocator) !Expr {
-            const condexpr = try alloc.create(CondExpr);
-            condexpr.* = this;
+            const condexpr = try zust.Box(CondExpr).init(alloc, undefined);
+            condexpr.ptr.* = this;
             return .{
-                .condexpr = condexpr,
+                .condexpr = condexpr.ptr,
             };
         }
     };
@@ -662,10 +675,10 @@ pub const AST = struct {
         else_parts: SmolList(SmolList(Stmt, 1), 1) = SmolList(SmolList(Stmt, 1), 1).zeroes,
 
         pub fn to_expr(this: If, alloc: Allocator) !Expr {
-            const @"if" = try alloc.create(If);
-            @"if".* = this;
+            const @"if" = try zust.Box(If).init(alloc, undefined);
+            @"if".ptr.* = this;
             return .{
-                .@"if" = @"if",
+                .@"if" = @"if".ptr,
             };
         }
 
@@ -698,6 +711,7 @@ pub const AST = struct {
 
         pub fn memoryCost(this: *const @This()) usize {
             var cost: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.items) |*item| {
                 cost += item.memoryCost();
             }
@@ -719,6 +733,7 @@ pub const AST = struct {
                     cost += cmd.memoryCost();
                 },
                 .assigns => |assigns| {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (assigns) |*assign| {
                         cost += assign.memoryCost();
                     }
@@ -746,9 +761,9 @@ pub const AST = struct {
         pub fn to_pipeline_item(this: CmdOrAssigns, alloc: Allocator) PipelineItem {
             switch (this) {
                 .cmd => |cmd| {
-                    const cmd_ptr = try alloc.create(Cmd);
-                    cmd_ptr.* = cmd;
-                    return .{ .cmd = cmd_ptr };
+                    const cmd_ptr = try zust.Box(Cmd).init(alloc, undefined);
+                    cmd_ptr.ptr.* = cmd;
+                    return .{ .cmd = cmd_ptr.ptr };
                 },
                 .assigns => |assigns| {
                     return .{ .assign = assigns };
@@ -759,9 +774,9 @@ pub const AST = struct {
         pub fn to_expr(this: CmdOrAssigns, alloc: Allocator) !Expr {
             switch (this) {
                 .cmd => |cmd| {
-                    const cmd_ptr = try alloc.create(Cmd);
-                    cmd_ptr.* = cmd;
-                    return .{ .cmd = cmd_ptr };
+                    const cmd_ptr = try zust.Box(Cmd).init(alloc, undefined);
+                    cmd_ptr.ptr.* = cmd;
+                    return .{ .cmd = cmd_ptr.ptr };
                 },
                 .assigns => |assigns| {
                     return .{ .assign = assigns };
@@ -788,6 +803,7 @@ pub const AST = struct {
         label: []const u8,
         value: Atom,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn new(label: []const u8, value: Atom) Assign {
             return .{
                 .label = label,
@@ -811,9 +827,11 @@ pub const AST = struct {
 
         pub fn memoryCost(this: *const @This()) usize {
             var cost: usize = @sizeOf(Cmd);
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.assigns) |*assign| {
                 cost += assign.memoryCost();
             }
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.name_and_args) |*atom| {
                 cost += atom.memoryCost();
             }
@@ -847,6 +865,7 @@ pub const AST = struct {
         __unused: u3 = 0,
 
         pub inline fn isEmpty(this: RedirectFlags) bool {
+// safe-transpile: @bitCast requires manual review
             return @as(u8, @bitCast(this)) == 0;
         }
 
@@ -898,8 +917,11 @@ pub const AST = struct {
         }
 
         pub fn merge(a: RedirectFlags, b: RedirectFlags) RedirectFlags {
+// safe-transpile: @bitCast requires manual review
             const anum: u8 = @bitCast(a);
+// safe-transpile: @bitCast requires manual review
             const bnum: u8 = @bitCast(b);
+// safe-transpile: @bitCast requires manual review
             return @bitCast(anum | bnum);
         }
     };
@@ -943,7 +965,9 @@ pub const AST = struct {
 
             if (this == .compound and right == .compound) {
                 var atoms = try allocator.alloc(SimpleAtom, this.compound.atoms.len + right.compound.atoms.len);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(atoms[0..this.compound.atoms.len], this.compound.atoms);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(atoms[this.compound.atoms.len .. this.compound.atoms.len + right.compound.atoms.len], right.compound.atoms);
                 return .{ .compound = .{
                     .atoms = atoms,
@@ -955,6 +979,7 @@ pub const AST = struct {
             if (this == .simple) {
                 var atoms = try allocator.alloc(SimpleAtom, 1 + right.compound.atoms.len);
                 atoms[0] = this.simple;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(atoms[1 .. right.compound.atoms.len + 1], right.compound.atoms);
                 return .{ .compound = .{
                     .atoms = atoms,
@@ -964,6 +989,7 @@ pub const AST = struct {
             }
 
             var atoms = try allocator.alloc(SimpleAtom, 1 + this.compound.atoms.len);
+// safe-transpile: @memcpy requires manual review
             @memcpy(atoms[0..this.compound.atoms.len], this.compound.atoms);
             atoms[this.compound.atoms.len] = right.simple;
             return .{ .compound = .{
@@ -976,6 +1002,7 @@ pub const AST = struct {
         pub fn atomsLen(this: *const Atom) u32 {
             return switch (this.*) {
                 .simple => 1,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .compound => @intCast(this.compound.atoms.len),
             };
         }
@@ -1080,6 +1107,7 @@ pub const AST = struct {
 
         fn _atomsMemoryCost(this: *const @This()) usize {
             var cost: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.atoms) |*atom| {
                 cost += atom.memoryCost();
             }
@@ -1289,6 +1317,7 @@ pub const Parser = struct {
         return expr;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     fn extractIfClauseTextToken(comptime if_clause_token: @TypeOf(.enum_literal)) []const u8 {
         const tagname = comptime switch (if_clause_token) {
             .@"if" => "if",
@@ -1491,6 +1520,7 @@ pub const Parser = struct {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromText(txt: []const u8) ?IfClauseTok {
             if (bun.strings.eqlComptime(txt, "if")) return .@"if";
             if (bun.strings.eqlComptime(txt, "else")) return .@"else";
@@ -1924,6 +1954,7 @@ pub const Parser = struct {
         return heap;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     fn text(self: *const Parser, range: Token.TextRange) []const u8 {
         return self.strpool[range.start..range.end];
     }
@@ -2099,6 +2130,7 @@ pub const Parser = struct {
         return self.tokens[self.current - 1];
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn combineErrors(self: *Parser) []const u8 {
         const errors = self.errors.items[0..];
         const str = str: {
@@ -2112,6 +2144,7 @@ pub const Parser = struct {
             var buf = bun.handleOom(self.alloc.alloc(u8, size));
             var i: usize = 0;
             for (errors) |e| {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[i .. i + e.msg.len], e.msg);
                 i += e.msg.len;
             }
@@ -2120,6 +2153,7 @@ pub const Parser = struct {
         return str;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn add_error(self: *Parser, comptime fmt: []const u8, args: anytype) !void {
         const error_msg = try std.fmt.allocPrint(self.alloc, fmt, args);
         try self.errors.append(.{ .msg = error_msg });
@@ -2229,16 +2263,20 @@ pub const Token = union(TokenTag) {
             return range.end - range.start;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn slice(range: TextRange, buf: []const u8) []const u8 {
             return buf[range.start..range.end];
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn asHumanReadable(self: Token, strpool: []const u8) []const u8 {
         const varargv_strings = blk: {
             var res: [10][2]u8 = undefined;
-            for (&res, 0..) |*item, i| {
+            // safe-transpile: for with index access requires manual review
+    for (&res, 0..) |*item, i| {
                 item[0] = '$';
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 item[1] = @as(u8, @intCast(i)) + '0';
             }
             break :blk res;
@@ -2285,6 +2323,7 @@ pub const LexResult = struct {
     tokens: []const Token,
     strpool: []const u8,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn combineErrors(this: *const LexResult, arena: Allocator) []const u8 {
         const errors = this.errors;
         const str = str: {
@@ -2298,6 +2337,7 @@ pub const LexResult = struct {
             var buf = bun.handleOom(arena.alloc(u8, size));
             var i: usize = 0;
             for (errors) |e| {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[i .. i + e.msg.len()], e.msg.slice(this.strpool));
                 i += e.msg.len();
             }
@@ -2376,6 +2416,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
             delimit_quote: bool,
         };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn new(alloc: Allocator, src: []const u8, strings_to_escape: []bun.String, jsobjs_len: u32) @This() {
             return .{
                 .chars = Chars.init(src),
@@ -2395,10 +2436,12 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn add_error(self: *@This(), msg: []const u8) void {
             const start = self.strpool.items.len;
             bun.handleOom(self.strpool.appendSlice(msg));
             const end = self.strpool.items.len;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             bun.handleOom(self.errors.append(.{ .msg = .{ .start = @intCast(start), .end = @intCast(end) } }));
         }
 
@@ -2878,6 +2921,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                 self.j += 1;
             } else {
                 if (char <= 0x7F) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     try self.strpool.append(@intCast(char));
                     self.j += 1;
                     return;
@@ -2890,6 +2934,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
         fn appendUnicodeCharToStrPool(self: *@This(), char: Chars.CodepointType) !void {
             @branchHint(.cold);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const ichar: i32 = @intCast(char);
             var bytes: [4]u8 = undefined;
             const n = bun.strings.encodeWTF8Rune(&bytes, ichar);
@@ -3082,6 +3127,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                 '0'...'9' => {
                     // Codepoint int casts are safe here because the digits are in the ASCII range
                     var count: usize = 1;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     var buf: [32]u8 = [_]u8{@intCast(first.char)} ** 32;
 
                     while (self.peek()) |peeked| {
@@ -3092,6 +3138,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                                 if (count >= 32) {
                                     return null;
                                 }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 buf[count] = @intCast(char);
                                 count += 1;
                                 continue;
@@ -3179,6 +3226,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                     '0'...'9' => {
                         if (count >= 32) return null;
                         // Safe to cast here because 0-8 is in ASCII range
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         buf[count] = @intCast(char);
                         count += 1;
                         continue;
@@ -3247,6 +3295,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                 }
             }
             const end = self.strpool.items.len;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             self.j += @intCast(end - start);
         }
 
@@ -3286,6 +3335,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
             // Use width=0 so that nextCursor (which computes pos = width + i)
             // starts reading from exactly new_idx.
             self.chars.src.cursor = CodepointIterator.Cursor{
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .i = @intCast(new_idx),
                 .c = 0,
                 .width = 0,
@@ -3297,12 +3347,14 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
             self.chars.current = .{ .char = cur_ascii_char };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn matchesAsciiLiteral(self: *@This(), literal: []const u8) bool {
             const bytes = self.chars.srcBytesAtCursor();
             if (literal.len >= bytes.len) return false;
             return std.mem.eql(u8, bytes[0..literal.len], literal[0..]);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn eatJSSubstitutionIdx(self: *@This(), comptime literal: []const u8, comptime name: []const u8, comptime validate: *const fn (*@This(), usize) bool) ?usize {
             if (self.matchesAsciiLiteral(literal[1..literal.len])) {
                 const bytes = self.chars.srcBytesAtCursor();
@@ -3347,7 +3399,9 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
 
                 // Bump the cursor
                 const new_idx = self.chars.cursorPos() + i;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 const prev_ascii_char: ?u7 = if (digit_buf_count == 1) null else @truncate(digit_buf[digit_buf_count - 2]);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 const cur_ascii_char: u7 = @truncate(digit_buf[digit_buf_count - 1]);
                 self.bumpCursorAscii(new_idx, prev_ascii_char, cur_ascii_char);
 
@@ -3383,6 +3437,7 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                 "JS object ref",
                 validateJSObjRefIdx,
             )) |idx| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return .{ .JSObjRef = @intCast(idx) };
             }
             return null;
@@ -3468,12 +3523,14 @@ pub fn NewLexer(comptime encoding: StringEncoding) type {
                 // string, or is greater than the codepoint range of source string than an int cast
                 // will not panic
                 if (CodepointType == Chars.CodepointType or std.math.maxInt(CodepointType) >= std.math.maxInt(Chars.CodepointType)) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     slice[i] = @intCast(result.char);
                 } else {
                     // Otherwise the codepoint range is smaller than the source, so we need to check that the chars are valid
                     if (result.char > std.math.maxInt(CodepointType)) {
                         return null;
                     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     slice[i] = @intCast(result.char);
                 }
 
@@ -3508,6 +3565,7 @@ const SrcAscii = struct {
         escaped: bool = false,
     };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(bytes: []const u8) SrcAscii {
         return .{
             .bytes = bytes,
@@ -3517,11 +3575,13 @@ const SrcAscii = struct {
 
     inline fn index(this: *const SrcAscii) ?IndexValue {
         if (this.i >= this.bytes.len) return null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return .{ .char = @intCast(this.bytes[this.i]) };
     }
 
     inline fn indexNext(this: *const SrcAscii) ?IndexValue {
         if (this.i + 1 >= this.bytes.len) return null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return .{ .char = @intCast(this.bytes[this.i + 1]) };
     }
 
@@ -3543,12 +3603,14 @@ const SrcUnicode = struct {
     fn nextCursor(iter: *const CodepointIterator, cursor: *CodepointIterator.Cursor) void {
         if (!iter.next(cursor)) {
             // This will make `i > sourceBytes.len` so the condition in `index` will fail
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             cursor.i = @intCast(iter.bytes.len + 1);
             cursor.width = 1;
             cursor.c = CodepointIterator.ZeroValue;
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(bytes: []const u8) SrcUnicode {
         var iter = CodepointIterator.init(bytes);
         var cursor = CodepointIterator.Cursor{};
@@ -3565,6 +3627,7 @@ const SrcUnicode = struct {
 
     inline fn indexNext(this: *const SrcUnicode) ?IndexValue {
         if (this.next_cursor.width + this.next_cursor.i > this.iter.bytes.len) return null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return .{ .char = @intCast(this.next_cursor.c), .width = this.next_cursor.width };
     }
 
@@ -3614,6 +3677,7 @@ pub fn ShellCharIter(comptime encoding: StringEncoding) type {
             Double,
         };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(bytes: []const u8) @This() {
             const src = if (comptime encoding == .ascii)
                 SrcAscii.init(bytes)
@@ -3625,11 +3689,13 @@ pub fn ShellCharIter(comptime encoding: StringEncoding) type {
             };
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn srcBytes(self: *@This()) []const u8 {
             if (comptime encoding == .ascii) return self.src.bytes;
             return self.src.iter.bytes;
         }
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn srcBytesAtCursor(self: *@This()) []const u8 {
             const bytes = self.srcBytes();
             if (comptime encoding == .ascii) {
@@ -3698,6 +3764,7 @@ pub fn ShellCharIter(comptime encoding: StringEncoding) type {
 /// - a-ZA-Z
 /// - _
 /// - 0-9 (but can't be first char)
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isValidVarName(var_name: []const u8) bool {
     if (isAllAscii(var_name)) return isValidVarNameAscii(var_name);
 
@@ -3724,6 +3791,7 @@ pub fn isValidVarName(var_name: []const u8) bool {
 
     return true;
 }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn isValidVarNameAscii(var_name: []const u8) bool {
     if (var_name.len == 0) return false;
     switch (var_name[0]) {
@@ -3746,6 +3814,7 @@ fn isValidVarNameAscii(var_name: []const u8) bool {
 
 var stderr_mutex = bun.Mutex{};
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn hasEqSign(str: []const u8) ?u32 {
     if (isAllAscii(str)) {
         return bun.strings.indexOfChar(str, '=');
@@ -3756,6 +3825,7 @@ pub fn hasEqSign(str: []const u8) ?u32 {
     var cursor = CodepointIterator.Cursor{};
     while (iter.next(&cursor)) {
         if (cursor.c == '=') {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return @intCast(cursor.i);
         }
     }
@@ -3787,6 +3857,7 @@ pub const CmdEnvIter = struct {
             try writer.writeAll(self.val);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn eqlComptime(this: Key, comptime str: []const u8) bool {
             return bun.strings.eqlComptime(this.val, str);
         }
@@ -3859,6 +3930,7 @@ pub const Test = struct {
         Delimit,
         Eof,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn from_real(the_token: Token, buf: []const u8) TestToken {
             switch (the_token) {
                 .Var => |txt| return .{ .Var = buf[txt.start..txt.end] },
@@ -3927,6 +3999,7 @@ pub fn shellCmdFromJS(
     return;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleTemplateValue(
     globalThis: *jsc.JSGlobalObject,
     template_value: JSValue,
@@ -4119,6 +4192,7 @@ pub const ShellSrcBuilder = struct {
         return true;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendUTF8(this: *ShellSrcBuilder, utf8: []const u8, comptime allow_escape: bool) !bool {
         const invalid = bun.simdutf.validate.utf8(utf8);
         if (!invalid) return false;
@@ -4141,10 +4215,12 @@ pub const ShellSrcBuilder = struct {
         try bun.strings.convertUTF16ToUTF8Append(this.outbuf, utf16);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendUTF8Impl(this: *ShellSrcBuilder, utf8: []const u8) !void {
         try this.outbuf.appendSlice(utf8);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendLatin1Impl(this: *ShellSrcBuilder, latin1: []const u8) !void {
         const non_ascii_idx = bun.strings.firstNonASCII(latin1) orelse 0;
 
@@ -4192,6 +4268,7 @@ pub fn escapeBunStr(bunstr: bun.String, outbuf: *std.array_list.Managed(u8), com
 }
 
 /// works for utf-8, latin-1, and ascii
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn escape8Bit(str: []const u8, outbuf: *std.array_list.Managed(u8), comptime add_quotes: bool) !void {
     try outbuf.ensureUnusedCapacity(str.len);
 
@@ -4233,7 +4310,9 @@ pub fn escapeUtf16(str: []const u16, outbuf: *std.array_list.Managed(u8), compti
         };
 
         inline for (BACKSLASHABLE_CHARS) |bchar| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (@as(u32, @intCast(bchar)) == char) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try outbuf.appendSlice(&[_]u8{ '\\', @intCast(char) });
                 continue :loop;
             }
@@ -4264,6 +4343,7 @@ pub fn needsEscapeUTF16(str: []const u16) bool {
 /// indicates the *possibility* that the string must be escaped, so it can have
 /// false positives, but it is faster than running the shell lexer through the
 /// input string for a more correct implementation.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn needsEscapeUtf8AsciiLatin1(str: []const u8) bool {
     for (str) |c| {
         if (SPECIAL_CHARS_TABLE.isSet(c)) return true;
@@ -4291,6 +4371,7 @@ pub fn SmolList(comptime T: type, comptime INLINED_MAX: comptime_int) type {
             switch (this.*) {
                 .inlined => |*inlined| {
                     if (comptime bun.trait.isContainer(T) and @hasDecl(T, "memoryCost")) {
+// safe-transpile: for loop with pointer capture requires manual review
                         for (inlined.slice()) |*item| {
                             cost += item.memoryCost();
                         }
@@ -4300,6 +4381,7 @@ pub fn SmolList(comptime T: type, comptime INLINED_MAX: comptime_int) type {
                 },
                 .heap => {
                     if (comptime bun.trait.isContainer(T) and @hasDecl(T, "memoryCost")) {
+// safe-transpile: for loop with pointer capture requires manual review
                         for (this.heap.slice()) |*item| {
                             cost += item.memoryCost();
                         }
@@ -4317,7 +4399,9 @@ pub fn SmolList(comptime T: type, comptime INLINED_MAX: comptime_int) type {
             if (bun.Environment.allow_assert) assert(vals.len <= std.math.maxInt(u32));
             if (vals.len <= INLINED_MAX) {
                 var this: @This() = @This().zeroes;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(this.inlined.items[0..vals.len], vals);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.inlined.len += @intCast(vals.len);
                 return this;
             }
@@ -4439,11 +4523,13 @@ pub fn SmolList(comptime T: type, comptime INLINED_MAX: comptime_int) type {
                     if (starting_idx >= this.inlined.len) return;
                     const slice_to_move = this.inlined.items[starting_idx..this.inlined.len];
                     bun.copy(T, this.inlined.items[0..starting_idx], slice_to_move);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     this.inlined.len = @intCast(slice_to_move.len);
                 },
                 .heap => {
                     const slc = this.heap.ptr[starting_idx..this.heap.len];
                     bun.copy(T, this.heap.ptr[0..slc.len], slc);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     this.heap.len = @intCast(slc.len);
                 },
             }
@@ -4600,6 +4686,7 @@ pub const TestingAPIs = struct {
         var script = std.array_list.Managed(u8).init(arena.allocator());
         try shellCmdFromJS(globalThis, string_args, &template_args, &jsobjs, &jsstrings, &script, marked_argument_buffer);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const jsobjs_len: u32 = @intCast(jsobjs.items.len);
         const lex_result = brk: {
             if (bun.strings.isAllASCII(script.items[0..])) {

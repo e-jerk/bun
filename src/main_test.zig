@@ -83,10 +83,10 @@ fn runTests() u8 {
     var stats = Stats.init();
     const stderr = std.fs.File.stderr();
 
-    namebuf = safe.Pool.alloc(u8, namebuf_size) catch {
+    namebuf = std.heap.page_allocator.alloc(u8, namebuf_size) catch {
         Output.panic("Failed to allocate name buffer", .{});
     };
-    defer safe.Pool.free(namebuf);
+    defer std.heap.page_allocator.free(namebuf);
 
     const tests: []const TestFn = builtin.test_functions;
     for (tests) |t| {

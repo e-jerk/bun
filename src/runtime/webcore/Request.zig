@@ -467,7 +467,6 @@ pub fn sizeOfURL(this: *const Request) usize {
     return 0;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getProtocol(this: *const Request) []const u8 {
     if (this.flags.https)
         return "https://";

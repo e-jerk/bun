@@ -18,7 +18,6 @@ const zust = @import("safe");
         URLEncoded: void,
         Multipart: []const u8, // boundary
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn get(content_type: []const u8) ?Encoding {
             if (strings.indexOf(content_type, "application/x-www-form-urlencoded") != null)
                 return Encoding{ .URLEncoded = {} };
@@ -37,8 +36,8 @@ const zust = @import("safe");
         allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator, encoding: Encoding) !*AsyncFormData {
-            const this = try zust.Box(AsyncFormData).init(allocator, undefined);
-            this.ptr.* = AsyncFormData{
+            const this = try allocator.create(AsyncFormData);
+            this.* = AsyncFormData{
                 .encoding = switch (encoding) {
                     .Multipart => .{
                         .Multipart = try allocator.dupe(u8, encoding.Multipart),
@@ -47,7 +46,7 @@ const zust = @import("safe");
                 },
                 .allocator = allocator,
             };
-            return this.ptr;
+            return this;
         }
 
         pub fn deinit(this: *AsyncFormData) void {
@@ -56,7 +55,6 @@ const zust = @import("safe");
             defer _ = this.deinit();
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn toJS(this: *AsyncFormData, global: *jsc.JSGlobalObject, data: []const u8, promise: jsc.AnyPromise) bun.JSTerminated!void {
             if (this.encoding == .Multipart and this.encoding.Multipart.len == 0) {
                 log("AsnycFormData.toJS -> promise.reject missing boundary", .{});
@@ -77,7 +75,6 @@ const zust = @import("safe");
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getBoundary(content_type: []const u8) ?[]const u8 {
         const boundary_index = strings.indexOf(content_type, "boundary=") orelse return null;
         const boundary_start = boundary_index + "boundary=".len;
@@ -85,7 +82,6 @@ const zust = @import("safe");
         if (begin.len == 0)
             return null;
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const boundary_end = strings.indexOfChar(begin, ';') orelse @as(u32, @truncate(begin.len));
         if (begin[0] == '"') {
             if (boundary_end > 1 and begin[boundary_end - 1] == '"') {
@@ -120,7 +116,6 @@ const zust = @import("safe");
         };
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toJS(globalThis: *jsc.JSGlobalObject, input: []const u8, encoding: Encoding) !jsc.JSValue {
         switch (encoding) {
             .URLEncoded => {
@@ -199,7 +194,6 @@ const zust = @import("safe");
         @export(&jsFunctionFromMultipartData, .{ .name = "FormData__jsFunctionFromMultipartData" });
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toJSFromMultipartData(
         globalThis: *jsc.JSGlobalObject,
         input: []const u8,
@@ -215,7 +209,6 @@ const zust = @import("safe");
             globalThis: *jsc.JSGlobalObject,
             form: *jsc.DOMFormData,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn onEntry(wrap: *@This(), name: bun.Semver.String, field: Field, buf: []const u8) void {
                 const value_str = field.value;
                 var key = jsc.ZigString.initUTF8(name.slice(buf));
@@ -290,7 +283,6 @@ const zust = @import("safe");
         return form_data_value;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn forEachMultipartEntry(
         input: []const u8,
         boundary: []const u8,

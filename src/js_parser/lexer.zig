@@ -175,7 +175,6 @@ fn NewLexer_(
             return Error.SyntaxError;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addDefaultError(noalias self: *LexerType, msg: []const u8) !void {
             @branchHint(.cold);
 
@@ -183,14 +182,12 @@ fn NewLexer_(
             return Error.SyntaxError;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addSyntaxError(noalias self: *LexerType, _loc: usize, comptime fmt: []const u8, args: anytype) !void {
             @branchHint(.cold);
             self.addError(_loc, fmt, args, false);
             return Error.SyntaxError;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addError(noalias self: *LexerType, _loc: usize, comptime format: []const u8, args: anytype, _: bool) void {
             @branchHint(.cold);
 
@@ -204,7 +201,6 @@ fn NewLexer_(
             self.prev_error_loc = __loc;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addRangeError(noalias self: *LexerType, r: logger.Range, comptime format: []const u8, args: anytype, _: bool) !void {
             @branchHint(.cold);
 
@@ -222,7 +218,6 @@ fn NewLexer_(
             // }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addRangeErrorWithNotes(noalias self: *LexerType, r: logger.Range, comptime format: []const u8, args: anytype, notes: []const logger.Data) !void {
             @branchHint(.cold);
 
@@ -418,11 +413,9 @@ fn NewLexer_(
                                     },
                                 }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 iter.c = @as(i32, @intCast(value));
                                 if (is_bad) {
                                     lexer.addRangeError(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         logger.Range{ .loc = .{ .start = @as(i32, @intCast(octal_start)) }, .len = @as(i32, @intCast(iter.i - octal_start)) },
                                         "Invalid legacy octal literal",
                                         .{},
@@ -536,7 +529,6 @@ fn NewLexer_(
 
                                     if (is_out_of_range) {
                                         try lexer.addRangeError(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                             .{ .loc = .{ .start = @as(i32, @intCast(start + hex_start)) }, .len = @as(i32, @intCast(((iter.i + start) - hex_start))) },
                                             "Unicode escape sequence is out of range",
                                             .{},
@@ -577,7 +569,6 @@ fn NewLexer_(
                                     }
                                 }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 iter.c = @as(CodePoint, @truncate(value));
                             },
                             '\r' => {
@@ -622,15 +613,12 @@ fn NewLexer_(
                 switch (iter.c) {
                     -1 => return try lexer.addDefaultError("Unexpected end of file"),
                     0...0xFFFF => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         buf.append(@as(u16, @intCast(iter.c))) catch unreachable;
                     },
                     else => {
                         iter.c -= 0x10000;
                         buf.ensureUnusedCapacity(2) catch unreachable;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         buf.appendAssumeCapacity(@as(u16, @intCast(0xD800 + ((iter.c >> 10) & 0x3FF))));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         buf.appendAssumeCapacity(@as(u16, @intCast(0xDC00 + (iter.c & 0x3FF))));
                     },
                 }
@@ -791,7 +779,6 @@ fn NewLexer_(
             }
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
         inline fn nextCodepointSlice(noalias it: *const LexerType) []const u8 {
             if (it.current >= it.source.contents.len) {
                 return "";
@@ -800,7 +787,6 @@ fn NewLexer_(
             return if (!(cp_len + it.current > it.source.contents.len)) it.source.contents[it.current .. cp_len + it.current] else "";
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
         fn remaining(noalias it: *const LexerType) []const u8 {
             return it.source.contents[it.current..];
         }
@@ -816,7 +802,6 @@ fn NewLexer_(
             const code_point = switch (slice.len) {
                 0 => -1,
                 1 => @as(CodePoint, slice[0]),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 else => strings.decodeWTF8RuneTMultibyte(slice.ptr[0..4], @as(u3, @intCast(slice.len)), CodePoint, strings.unicode_replacement),
             };
 
@@ -858,7 +843,6 @@ fn NewLexer_(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addUnsupportedSyntaxError(noalias self: *LexerType, msg: []const u8) !void {
             self.addError(self.end, "Unsupported syntax: {s}", .{msg}, true);
             return Error.SyntaxError;
@@ -968,7 +952,6 @@ fn NewLexer_(
 
             if (!isIdentifier(identifier)) {
                 try lexer.addRangeError(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .{ .loc = logger.usize2Loc(lexer.start), .len = @as(i32, @intCast(lexer.end - lexer.start)) },
                     "Invalid identifier: \"{s}\"",
                     .{result.contents},
@@ -1827,7 +1810,6 @@ fn NewLexer_(
             try lexer.addRangeError(lexer.range(), "Unexpected {s}", .{found}, true);
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
         pub fn raw(noalias self: *const LexerType) []const u8 {
             return self.source.contents[self.start..self.end];
         }
@@ -2012,28 +1994,24 @@ fn NewLexer_(
                 if (PragmaArg.scan(.skip_space_first, lexer.start + offset_for_errors, "jsx", chunk, allow_newline)) |span| {
                     lexer.jsx_pragma._jsx = span;
                     return "jsx".len +
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (span.range.len > 0) @as(usize, @intCast(span.range.len)) else 0;
                 }
             } else if (strings.hasPrefixWithWordBoundary(chunk, "jsxFrag")) {
                 if (PragmaArg.scan(.skip_space_first, lexer.start + offset_for_errors, "jsxFrag", chunk, allow_newline)) |span| {
                     lexer.jsx_pragma._jsxFrag = span;
                     return "jsxFrag".len +
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (span.range.len > 0) @as(usize, @intCast(span.range.len)) else 0;
                 }
             } else if (strings.hasPrefixWithWordBoundary(chunk, "jsxRuntime")) {
                 if (PragmaArg.scan(.skip_space_first, lexer.start + offset_for_errors, "jsxRuntime", chunk, allow_newline)) |span| {
                     lexer.jsx_pragma._jsxRuntime = span;
                     return "jsxRuntime".len +
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (span.range.len > 0) @as(usize, @intCast(span.range.len)) else 0;
                 }
             } else if (strings.hasPrefixWithWordBoundary(chunk, "jsxImportSource")) {
                 if (PragmaArg.scan(.skip_space_first, lexer.start + offset_for_errors, "jsxImportSource", chunk, allow_newline)) |span| {
                     lexer.jsx_pragma._jsxImportSource = span;
                     return "jsxImportSource".len +
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (span.range.len > 0) @as(usize, @intCast(span.range.len)) else 0;
                 }
             } else if (chunk.len >= " sourceMappingURL=".len + 1 and strings.hasPrefixComptime(chunk, " sourceMappingURL=")) { // Check includes space for prefix
@@ -2098,7 +2076,6 @@ fn NewLexer_(
                 },
                 .utf16 => {
                     // string_literal_raw_content is already parsed, duplicated, and utf-16
-// safe-transpile: @alignCast requires manual review
                     return js_ast.E.String.init(@as([]const u16, @alignCast(std.mem.bytesAsSlice(u16, lexer.string_literal_raw_content))));
                 },
                 .needs_decode => {
@@ -2150,17 +2127,14 @@ fn NewLexer_(
                             switch (lexer.code_point) {
                                 'd', 'g', 'i', 'm', 's', 'u', 'y', 'v' => {
                                     if (!has_set_flags_start) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                         lexer.regex_flags_start = @as(u16, @truncate(lexer.end - lexer.start));
                                         has_set_flags_start = true;
                                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     const flag = max_flag - @as(u8, @intCast(lexer.code_point));
                                     if (flags.isSet(flag)) {
                                         lexer.addError(
                                             lexer.current,
                                             "Duplicate flag \"{u}\" in regular expression",
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                             .{@as(u21, @intCast(lexer.code_point))},
                                             false,
                                         );
@@ -2173,7 +2147,6 @@ fn NewLexer_(
                                     lexer.addError(
                                         lexer.current,
                                         "Invalid flag \"{u}\" in regular expression",
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .{@as(u21, @intCast(lexer.code_point))},
                                         false,
                                     );
@@ -2369,7 +2342,6 @@ fn NewLexer_(
 
                     '\\' => {
                         backslash = logger.Range{ .loc = logger.Loc{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             .start = @as(i32, @intCast(lexer.end)),
                         }, .len = 1 };
                         lexer.step();
@@ -2581,12 +2553,10 @@ fn NewLexer_(
                         break :brk strings.unicode_replacement;
                     };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     cursor.i += @as(u32, @intCast(length)) + 1;
                     cursor.width = 1;
                 } else if (tables.jsxEntity.get(entity)) |ent| {
                     cursor.c = ent;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     cursor.i += @as(u32, @intCast(length)) + 1;
                 }
             }
@@ -2602,7 +2572,6 @@ fn NewLexer_(
                 if (cursor.c == '&') lexer.maybeDecodeJSXEntity(text, &cursor);
 
                 if (cursor.c <= 0xFFFF) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try out.append(@as(u16, @intCast(cursor.c)));
                 } else {
                     cursor.c -= 0x10000;
@@ -2610,12 +2579,10 @@ fn NewLexer_(
                     (out.items.ptr + out.items.len)[0..2].* = [_]u16{
                         @as(
                             u16,
-// safe-transpile: @bitCast requires manual review
                             @truncate(@as(u32, @bitCast(@as(i32, 0xD800) + ((cursor.c >> 10) & 0x3FF)))),
                         ),
                         @as(
                             u16,
-// safe-transpile: @bitCast requires manual review
                             @truncate(@as(u32, @bitCast(@as(i32, 0xDC00) + (cursor.c & 0x3FF)))),
                         ),
                     };
@@ -3017,7 +2984,6 @@ fn NewLexer_(
                     // Parse a 32-bit integer (very fast path);
                     var number: u32 = 0;
                     for (text) |c| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         number = number * 10 + @as(u32, @intCast(c - '0'));
                     }
                     lexer.number = @as(f64, @floatFromInt(number));
@@ -3146,7 +3112,6 @@ pub fn isIdentifierUTF16(text: []const u16) bool {
 
 pub fn rangeOfIdentifier(source: *const Source, loc: logger.Loc) logger.Range {
     const contents = source.contents;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (loc.start == -1 or @as(usize, @intCast(loc.start)) >= contents.len) return logger.Range.None;
 
     const iter = strings.CodepointIterator.init(contents[loc.toUsize()..]);
@@ -3157,7 +3122,6 @@ pub fn rangeOfIdentifier(source: *const Source, loc: logger.Loc) logger.Range {
         return r;
     }
     const text = iter.bytes;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const end = @as(u32, @intCast(text.len));
 
     if (!iter.next(&cursor)) return r;
@@ -3188,13 +3152,11 @@ pub fn rangeOfIdentifier(source: *const Source, loc: logger.Loc) logger.Range {
                     }
                 }
             } else if (!isIdentifierContinue(cursor.c)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 r.len = @as(i32, @intCast(cursor.i));
                 return r;
             }
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         r.len = @as(i32, @intCast(cursor.i));
     }
 
@@ -3250,15 +3212,12 @@ pub fn isLatin1Identifier(comptime Buffer: type, name: Buffer) bool {
     return true;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn latin1IdentifierContinueLength(name: []const u8) usize {
     // We don't use SIMD for this because the input will be very short.
     return latin1IdentifierContinueLengthScalar(name);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn latin1IdentifierContinueLengthScalar(name: []const u8) usize {
-    // safe-transpile: for with index access requires manual review
     for (name, 0..) |c, i| {
         switch (c) {
             '0'...'9', 'a'...'z', 'A'...'Z', '$', '_' => {},
@@ -3304,9 +3263,7 @@ pub const PragmaArg = enum {
 
         result.* = js_ast.Span{
             .range = logger.Range{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @as(i32, @intCast(url_len)), // Correct length
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .loc = .{ .start = @as(i32, @intCast(absolute_arg_start)) }, // Correct start
             },
             .text = url,
@@ -3359,10 +3316,8 @@ pub const PragmaArg = enum {
 
         return js_ast.Span{
             .range = logger.Range{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @as(i32, @intCast(i)),
                 .loc = logger.Loc{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .start = @as(i32, @intCast(start + @as(u32, @intCast(offset_)) + @as(u32, @intCast(pragma.len)))),
                 },
             },
@@ -3371,7 +3326,6 @@ pub const PragmaArg = enum {
     }
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn skipToInterestingCharacterInMultilineComment(text_: []const u8) ?u32 {
     var text = text_;
     const star: @Vector(strings.ascii_vector_size, u8) = @splat(@as(u8, '*'));
@@ -3389,32 +3343,24 @@ fn skipToInterestingCharacterInMultilineComment(text_: []const u8) ?u32 {
         const vec: strings.AsciiVector = text.ptr[0..strings.ascii_vector_size].*;
 
         const any_significant =
-// safe-transpile: @bitCast requires manual review
             @as(V1x16, @bitCast(vec > strings.max_16_ascii)) |
-// safe-transpile: @bitCast requires manual review
             @as(V1x16, @bitCast(star == vec)) |
-// safe-transpile: @bitCast requires manual review
             @as(V1x16, @bitCast(carriage == vec)) |
-// safe-transpile: @bitCast requires manual review
             @as(V1x16, @bitCast(newline == vec));
 
         if (@reduce(.Max, any_significant) > 0) {
-// safe-transpile: @bitCast requires manual review
             const bitmask = @as(u16, @bitCast(any_significant));
             const first = @ctz(bitmask);
             bun.assertWithLocation(first < strings.ascii_vector_size, @src());
             bun.assertWithLocation(text.ptr[first] == '*' or text.ptr[first] == '\r' or text.ptr[first] == '\n' or text.ptr[first] > 127, @src());
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(first + (@intFromPtr(text.ptr) - @intFromPtr(text_.ptr))));
         }
         text.ptr += strings.ascii_vector_size;
     }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(@intFromPtr(text.ptr) - @intFromPtr(text_.ptr)));
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn indexOfInterestingCharacterInStringLiteral(text_: []const u8, quote: u8) ?usize {
     return bun.highway.indexOfInterestingCharacterInStringLiteral(text_, quote);
 }

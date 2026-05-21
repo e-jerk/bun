@@ -101,7 +101,6 @@ pub const ProcessHandle = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onReadChunk(this: *This, chunk: []const u8, hasMore: bun.io.ReadState) bool {
         _ = hasMore;
         this.state.readChunk(this, chunk) catch {};
@@ -138,7 +137,6 @@ pub const ProcessHandle = struct {
     }
 };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn fmt(comptime str: []const u8) []const u8 {
     return Output.prettyFmt(str, true);
 }
@@ -166,7 +164,6 @@ const State = struct {
         elided_count: usize,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn readChunk(this: *This, handle: *ProcessHandle, chunk: []const u8) !void {
         if (this.pretty_output) {
             bun.handleOom(handle.buffer.appendSlice(chunk));
@@ -233,7 +230,6 @@ const State = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn elide(data_: []const u8, max_lines: ?usize) ElideResult {
         var data = data_;
         if (data.len == 0) return .{ .content = &.{}, .elided_count = 0 };
@@ -273,7 +269,6 @@ const State = struct {
                 try this.draw_buf.appendSlice("\x1b[1A\x1b[K");
             }
         }
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.handles) |*handle| {
             // normally we truncate the output to 10 lines, but on abort we print everything to aid debugging
             const elide_lines = if (is_abort) null else handle.config.elide_count orelse 10;
@@ -353,7 +348,6 @@ const State = struct {
     pub fn abort(this: *This) void {
         // we perform an abort by sending SIGINT to all processes
         this.aborted = true;
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.handles) |*handle| {
             if (handle.process) |*proc| {
                 // if we get an error here we simply ignore it
@@ -436,15 +430,11 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
         Global.exit(1);
     };
     const pre_script_name = try ctx.allocator.alloc(u8, script_name.len + 3);
-// safe-transpile: @memcpy requires manual review
     @memcpy(pre_script_name[0..3], "pre");
-// safe-transpile: @memcpy requires manual review
     @memcpy(pre_script_name[3..], script_name);
 
     const post_script_name = try ctx.allocator.alloc(u8, script_name.len + 4);
-// safe-transpile: @memcpy requires manual review
     @memcpy(post_script_name[0..4], "post");
-// safe-transpile: @memcpy requires manual review
     @memcpy(post_script_name[4..], script_name);
 
     const fsinstance = try bun.fs.FileSystem.init(null);
@@ -495,8 +485,7 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
 
         const PATH = try RunCommand.configurePathForRunWithPackageJsonDir(ctx, dirpath, &this_transpiler, null, dirpath, ctx.debug.run_in_bun);
 
-        // safe-transpile: for with index access requires manual review
-    for (&[3][]const u8{ pre_script_name, script_name, post_script_name }, 0..) |name, i| {
+        for (&[3][]const u8{ pre_script_name, script_name, post_script_name }, 0..) |name, i| {
             const original_content = pkgscripts.get(name) orelse {
                 if (i == 1 and ctx.workspaces and !ctx.if_present) {
                     Output.errGeneric("Missing '{s}' script at '{s}'", .{ script_name, path });
@@ -570,7 +559,6 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
 
     // initialize the handles
     var map = bun.StringHashMap(std.array_list.Managed(*ProcessHandle)).init(ctx.allocator);
-    // safe-transpile: for with index access requires manual review
     for (scripts.items, 0..) |*script, i| {
         state.handles[i] = ProcessHandle{
             .state = &state,
@@ -596,7 +584,6 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
         }
     }
     // compute dependencies (TODO: maybe we should do this only in a workspace?)
-// safe-transpile: for loop with pointer capture requires manual review
     for (state.handles) |*handle| {
         const source_buf = handle.config.deps.source_buf;
         var iter = handle.config.deps.map.iterator();
@@ -614,7 +601,6 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
 
     // check if there is a dependency cycle
     var has_cycle = false;
-// safe-transpile: for loop with pointer capture requires manual review
     for (state.handles) |*handle| {
         if (hasCycle(handle)) {
             has_cycle = true;
@@ -623,7 +609,6 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
     }
     // if there is, we ignore dependency order completely
     if (has_cycle) {
-// safe-transpile: for loop with pointer capture requires manual review
         for (state.handles) |*handle| {
             handle.dependents.clearRetainingCapacity();
             handle.remaining_dependencies = 0;
@@ -640,7 +625,6 @@ pub fn runScriptsWithFilter(ctx: Command.Context) !noreturn {
     }
 
     // start inital scripts
-// safe-transpile: for loop with pointer capture requires manual review
     for (state.handles) |*handle| {
         if (handle.remaining_dependencies == 0) {
             handle.start() catch {

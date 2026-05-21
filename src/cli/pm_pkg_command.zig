@@ -7,13 +7,11 @@ const zust = @import("safe");
         fix,
         help,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
         fn fromString(str: []const u8) ?SubCommand {
             return std.meta.stringToEnum(SubCommand, str);
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn exec(ctx: Command.Context, pm: *PackageManager, positionals: []const string, cwd: []const u8) !void {
         if (positionals.len <= 1) {
             printHelp();
@@ -64,7 +62,6 @@ const zust = @import("safe");
         Output.flush();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn findPackageJson(allocator: std.mem.Allocator, cwd: []const u8) ![]const u8 {
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = cwd;
@@ -95,7 +92,6 @@ while (true) : (__loop_limit_1 += 1) {
         indentation: JSPrinter.Options.Indentation,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn loadPackageJson(ctx: Command.Context, allocator: std.mem.Allocator, path: []const u8) !PackageJson {
         const contents = bun.sys.File.readFrom(bun.FD.cwd(), path, allocator).unwrap() catch |err| {
             Output.errGeneric("Failed to read package.json: {s}", .{@errorName(err)});
@@ -126,7 +122,6 @@ while (true) : (__loop_limit_1 += 1) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn execGet(ctx: Command.Context, pm: *PackageManager, args: []const string, cwd: []const u8) !void {
         _ = pm;
         const path = try findPackageJson(ctx.allocator, cwd);
@@ -181,8 +176,7 @@ while (true) : (__loop_limit_1 += 1) {
             Output.println("{s}", .{value});
         } else {
             Output.println("{{", .{});
-            // safe-transpile: for with index access requires manual review
-    for (results.keys(), results.values(), 0..) |key, value, i| {
+            for (results.keys(), results.values(), 0..) |key, value, i| {
                 const comma = if (i == results.count() - 1) "" else ",";
                 Output.println("  \"{s}\": {s}{s}", .{ key, value, comma });
             }
@@ -190,7 +184,6 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn execSet(ctx: Command.Context, pm: *PackageManager, args: []const string, cwd: []const u8) !void {
         if (args.len == 0) {
             Output.errGeneric("<blue>bun pm pkg set<r> expects a key=value pair of args", .{});
@@ -240,7 +233,6 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn execDelete(ctx: Command.Context, pm: *PackageManager, args: []const string, cwd: []const u8) !void {
         _ = pm;
         if (args.len == 0) {
@@ -274,7 +266,6 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn execFix(ctx: Command.Context, pm: *PackageManager, cwd: []const u8) !void {
         _ = pm;
         const path = try findPackageJson(ctx.allocator, cwd);
@@ -336,7 +327,6 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
     fn formatJson(allocator: std.mem.Allocator, expr: js_ast.Expr, initial_indent: ?usize) ![]const u8 {
         switch (expr.data) {
             .e_boolean => |b| {
@@ -381,13 +371,11 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn getJsonValue(allocator: std.mem.Allocator, root: js_ast.Expr, key: []const u8, initial_indent: ?usize) ![]const u8 {
         const expr = try resolvePath(root, key);
         return try formatJson(allocator, expr, initial_indent);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn resolvePath(root: js_ast.Expr, key: []const u8) !js_ast.Expr {
         if (root.data != .e_object) {
             return error.NotFound;
@@ -462,7 +450,6 @@ while (true) : (__loop_limit_1 += 1) {
         return current;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseKeyPath(allocator: std.mem.Allocator, key: []const u8) !std.array_list.Managed([]const u8) {
         var path_parts = std.array_list.Managed([]const u8).init(allocator);
         errdefer {
@@ -509,7 +496,6 @@ while (true) : (__loop_limit_1 += 1) {
         return path_parts;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn setValue(allocator: std.mem.Allocator, root: *js_ast.Expr, key: []const u8, value: []const u8, parse_json: bool) !void {
         if (root.data != .e_object) {
             return error.InvalidRoot;
@@ -564,7 +550,6 @@ while (true) : (__loop_limit_1 += 1) {
         try setNested(allocator, root, path_parts.items, value, parse_json);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn setNestedSimple(allocator: std.mem.Allocator, root: *js_ast.Expr, path: []const []const u8, value: []const u8, parse_json: bool) !void {
         if (path.len == 0) return;
 
@@ -593,7 +578,6 @@ while (true) : (__loop_limit_1 += 1) {
         try root.data.e_object.put(allocator, current_key, nested);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn setNested(allocator: std.mem.Allocator, root: *js_ast.Expr, path: [][]const u8, value: []const u8, parse_json: bool) !void {
         if (path.len == 0) return;
 
@@ -627,7 +611,6 @@ while (true) : (__loop_limit_1 += 1) {
         try setNested(allocator, &nested, remaining_path, value, parse_json);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseValue(allocator: std.mem.Allocator, value: []const u8, parse_json: bool) !js_ast.Expr {
         if (parse_json) {
             if (strings.eqlComptime(value, "true")) {
@@ -660,7 +643,6 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn deleteValue(allocator: std.mem.Allocator, root: *js_ast.Expr, key: []const u8) !bool {
         if (root.data != .e_object) return false;
 
@@ -714,7 +696,6 @@ while (true) : (__loop_limit_1 += 1) {
         return deleted;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn removeProperty(allocator: std.mem.Allocator, obj: *js_ast.Expr, key: []const u8) !bool {
         if (obj.data != .e_object) return false;
 
@@ -754,7 +735,6 @@ while (true) : (__loop_limit_1 += 1) {
         return true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn savePackageJson(allocator: std.mem.Allocator, path: []const u8, root: js_ast.Expr, pkg: *const PackageJson) !void {
         const preserve_newline = pkg.contents.len > 0 and pkg.contents[pkg.contents.len - 1] == '\n';
 

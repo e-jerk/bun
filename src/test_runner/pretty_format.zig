@@ -518,7 +518,6 @@ while (true) : (__loop_limit_2 += 1) {
             var writer = WrappedWriter(Writer){ .ctx = writer_ };
             var slice = slice_;
             var i: u32 = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             var len: u32 = @as(u32, @truncate(slice.len));
             var any_non_ascii = false;
             while (i < len) : (i += 1) {
@@ -546,7 +545,6 @@ while (true) : (__loop_limit_2 += 1) {
                         any_non_ascii = false;
                         slice = slice[@min(slice.len, i + 1)..];
                         i = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         len = @as(u32, @truncate(slice.len));
                         const next_value = this.remaining_values[0];
                         this.remaining_values = this.remaining_values[1..];
@@ -591,7 +589,6 @@ while (true) : (__loop_limit_2 += 1) {
                     };
                 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn writeLatin1(self: *@This(), buf: []const u8) void {
                     var remain = buf;
                     while (remain.len > 0) {
@@ -614,7 +611,6 @@ while (true) : (__loop_limit_2 += 1) {
                     self.ctx.writeAll(remain) catch return;
                 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub inline fn writeAll(self: *@This(), buf: []const u8) void {
                     self.ctx.writeAll(buf) catch {
                         self.failed = true;
@@ -764,7 +760,6 @@ while (true) : (__loop_limit_2 += 1) {
                 ) callconv(.c) void {
                     if (is_private_symbol) return;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const key = (@as(?[*c]ZigString, @ptrCast(key_))).?[0];
                     if (key.eqlComptime("constructor")) return;
 
@@ -930,8 +925,7 @@ while (true) : (__loop_limit_2 += 1) {
                         this.resetLine();
                         this.writeIndent(Writer, writer_) catch unreachable;
                         const length = str.len;
-                        // safe-transpile: for with index access requires manual review
-    for (str.slice(), 0..) |c, i| {
+                        for (str.slice(), 0..) |c, i| {
                             writer.print("\"{d}\": \"{c}\",\n", .{ i, c });
                             if (i != length - 1) this.writeIndent(Writer, writer_) catch unreachable;
                         }
@@ -1019,7 +1013,6 @@ while (true) : (__loop_limit_2 += 1) {
                             i = -i;
                         }
                         const digits = if (i != 0)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             bun.fmt.fastDigitCount(@as(usize, @intCast(i))) + @as(usize, @intFromBool(is_negative))
                         else
                             1;
@@ -1115,7 +1108,6 @@ while (true) : (__loop_limit_2 += 1) {
                     }
                 },
                 .Array => {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     const len: u32 = @truncate(try value.getLength(this.globalThis));
                     if (len == 0) {
                         writer.writeAll("[]");
@@ -1253,10 +1245,8 @@ while (true) : (__loop_limit_2 += 1) {
                             enable_ansi_colors,
                         );
                     } else if (value.as(bun.api.Timer.TimeoutObject)) |timer| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         this.addForNewLine("Timeout(# ) ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(timer.internals.id, 0)))));
                         if (timer.internals.flags.kind == .setInterval) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             this.addForNewLine("repeats ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(timer.internals.id, 0)))));
                             writer.print(comptime Output.prettyFmt("<r><blue>Timeout<r> <d>(#<yellow>{d}<r><d>, repeats)<r>", enable_ansi_colors), .{
                                 timer.internals.id,
@@ -1269,7 +1259,6 @@ while (true) : (__loop_limit_2 += 1) {
 
                         return;
                     } else if (value.as(bun.api.Timer.ImmediateObject)) |immediate| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         this.addForNewLine("Immediate(# ) ".len + bun.fmt.fastDigitCount(@as(u64, @intCast(@max(immediate.internals.id, 0)))));
                         writer.print(comptime Output.prettyFmt("<r><blue>Immediate<r> <d>(#<yellow>{d}<r><d>)<r>", enable_ansi_colors), .{
                             immediate.internals.id,
@@ -1678,7 +1667,6 @@ while (true) : (__loop_limit_2 += 1) {
 
                                                     var j: usize = 0;
                                                     while (j < length) : (j += 1) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                                         const child = try jsc.JSObject.getIndex(children, this.globalThis, @as(u32, @intCast(j)));
                                                         try this.format(try Tag.get(child, this.globalThis), Writer, writer_, child, this.globalThis, enable_ansi_colors);
                                                         if (j + 1 < length) {
@@ -1836,7 +1824,6 @@ while (true) : (__loop_limit_2 += 1) {
                     if (slice.len > 0) {
                         switch (jsType) {
                             .Int8Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]i8)) i8 = @alignCast(std.mem.bytesAsSlice(i8, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1847,7 +1834,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Int16Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]i16)) i16 = @alignCast(std.mem.bytesAsSlice(i16, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1858,7 +1844,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Uint16Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]u16)) u16 = @alignCast(std.mem.bytesAsSlice(u16, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1869,7 +1854,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Int32Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]i32)) i32 = @alignCast(std.mem.bytesAsSlice(i32, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1880,7 +1864,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Uint32Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]u32)) u32 = @alignCast(std.mem.bytesAsSlice(u32, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1891,7 +1874,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Float16Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]f16)) f16 = @alignCast(std.mem.bytesAsSlice(f16, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1902,7 +1884,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Float32Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]f32)) f32 = @alignCast(std.mem.bytesAsSlice(f32, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1913,7 +1894,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .Float64Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]f64)) f64 = @alignCast(std.mem.bytesAsSlice(f64, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1924,7 +1904,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .BigInt64Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]i64)) i64 = @alignCast(std.mem.bytesAsSlice(i64, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1935,7 +1914,6 @@ while (true) : (__loop_limit_2 += 1) {
                                 }
                             },
                             .BigUint64Array => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]u64)) u64 = @alignCast(std.mem.bytesAsSlice(u64, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;
@@ -1948,7 +1926,6 @@ while (true) : (__loop_limit_2 += 1) {
 
                             // Uint8Array, Uint8ClampedArray, DataView, ArrayBuffer
                             else => {
-// safe-transpile: @alignCast requires manual review
                                 const slice_with_type: []align(std.meta.alignment([]u8)) u8 = @alignCast(std.mem.bytesAsSlice(u8, slice));
                                 this.indent += 1;
                                 defer this.indent -|= 1;

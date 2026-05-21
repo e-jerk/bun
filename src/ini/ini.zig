@@ -11,7 +11,6 @@ pub const Parser = struct {
         bracked_array: bool = true,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: Allocator, path: []const u8, src: []const u8, env: *bun.DotEnv.Loader) Parser {
         return .{
             .logger = bun.logger.Log.init(allocator),
@@ -28,7 +27,6 @@ pub const Parser = struct {
         this.arena.deinit();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     inline fn shouldSkipLine(line: []const u8) bool {
         if (line.len == 0 or
             // comments
@@ -74,7 +72,6 @@ pub const Parser = struct {
                         else => true,
                     }) break :treat_as_key;
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const section: *Rope = try this.prepareStr(arena_allocator, ropealloc, line[1..close_bracket_idx], @as(i32, @intCast(@intFromPtr(line.ptr) - @intFromPtr(this.src.ptr))) + 1, .section);
                 defer rope_stack.fixed_buffer_allocator.reset();
                 const parent_object = this.out.data.e_object.getOrPutObject(section, arena_allocator) catch |e| switch (e) {
@@ -122,7 +119,6 @@ pub const Parser = struct {
 
             // Otherwise it's a key val here
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const line_offset: i32 = @intCast(@intFromPtr(line.ptr) - @intFromPtr(this.src.ptr));
 
             const maybe_eq_sign_idx = std.mem.indexOfScalar(u8, line, '=');
@@ -157,7 +153,6 @@ pub const Parser = struct {
                         arena_allocator,
                         ropealloc,
                         line[eq_sign_idx + 1 ..],
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         @intCast(line_offset + @as(i32, @intCast(eq_sign_idx)) + 1),
                         .value,
                     );
@@ -206,7 +201,6 @@ pub const Parser = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn prepareStr(
         this: *Parser,
         arena_allocator: Allocator,
@@ -237,7 +231,6 @@ pub const Parser = struct {
                 // Still need to expand env vars in the content
                 if (comptime usage == .value) {
                     const expanded = try this.expandEnvVars(arena_allocator, val);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     return Expr.init(E.String, E.String.init(expanded), Loc{ .start = @intCast(offset) });
                 }
                 break :out;
@@ -246,7 +239,6 @@ pub const Parser = struct {
             if (json_val.asString(arena_allocator)) |str| {
                 // Expand env vars in the JSON-parsed string
                 const expanded = if (comptime usage == .value) try this.expandEnvVars(arena_allocator, str) else str;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (comptime usage == .value) return Expr.init(E.String, E.String.init(expanded), Loc{ .start = @intCast(offset) });
                 if (comptime usage == .section) return strToRope(ropealloc, expanded);
                 return expanded;
@@ -423,10 +415,8 @@ pub const Parser = struct {
     /// - ${VAR} - if VAR is undefined, leave as "${VAR}" (no expansion)
     /// - ${VAR?} - if VAR is undefined, expand to empty string
     /// - Backslash escaping is already handled by JSON parsing
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn expandEnvVars(this: *Parser, allocator: Allocator, val: []const u8) OOM![]const u8 {
         // Quick check if there are any env vars to expand
-// zust: use zust.String or zust.GuardedSlice for slice operations
         if (std.mem.indexOf(u8, val, "${") == null) {
             return val;
         }
@@ -476,7 +466,6 @@ pub const Parser = struct {
     /// Supports ${VAR} and ${VAR?} syntax:
     /// - ${VAR} - if undefined, returns null (leaves as-is)
     /// - ${VAR?} - if undefined, expands to empty string
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseEnvSubstitution(this: *Parser, val: []const u8, start: usize, i: usize, unesc: *std.array_list.Managed(u8)) OOM!?usize {
         bun.debugAssert(val[i] == '$');
         var esc = false;
@@ -521,7 +510,6 @@ pub const Parser = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn singleStrRope(ropealloc: Allocator, str: []const u8) OOM!*Rope {
         const rope = try ropealloc.create(Rope);
         rope.* = .{
@@ -530,7 +518,6 @@ pub const Parser = struct {
         return rope;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn nextDot(key: []const u8) ?usize {
         return std.mem.indexOfScalar(u8, key, '.');
     }
@@ -551,7 +538,6 @@ pub const Parser = struct {
         unesc.clearRetainingCapacity();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn strToRope(ropealloc: Allocator, key: []const u8) OOM!*Rope {
         var dot_idx = nextDot(key) orelse {
             const rope = try ropealloc.create(Rope);
@@ -581,7 +567,6 @@ pub const Parser = struct {
         return head;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn isQuoted(val: []const u8) bool {
         return (bun.strings.startsWithChar(val, '"') and bun.strings.endsWithChar(val, '"')) or
             (bun.strings.startsWithChar(val, '\'') and bun.strings.endsWithChar(val, '\''));
@@ -598,8 +583,7 @@ pub const ToStringFormatter = struct {
         switch (this.d) {
             .e_array => {
                 const last = this.d.e_array.items.len -| 1;
-                // safe-transpile: for with index access requires manual review
-    for (this.d.e_array.items.slice(), 0..) |*e, i| {
+                for (this.d.e_array.items.slice(), 0..) |*e, i| {
                     const is_last = i == last;
                     try writer.print("{f}{s}", .{ ToStringFormatter{ .d = e.data }, if (is_last) "" else "," });
                 }
@@ -746,7 +730,6 @@ pub const ConfigIterator = struct {
                     inline for (optnames) |name| {
                         var buf: [name.len + 1]u8 = undefined;
                         buf[0] = ':';
-// safe-transpile: @memcpy requires manual review
                         @memcpy(buf[1 .. name.len + 1], name);
                         const name_with_eq = buf[0..];
 
@@ -851,7 +834,6 @@ pub fn loadNpmrcConfig(
     // to be created at the end.
     var configs = std.array_list.Managed(ConfigIterator.Item).init(allocator);
     defer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (configs.items) |*item| {
             item.deinit(allocator);
         }
@@ -1170,8 +1152,7 @@ pub fn loadNpmrc(
             var url_map = bun.StringArrayHashMap(bun.URL).init(parser.arena.allocator());
             try url_map.ensureTotalCapacity(registry_map.scopes.keys().len);
 
-            // safe-transpile: for with index access requires manual review
-    for (registry_map.scopes.keys(), registry_map.scopes.values()) |*k, *v| {
+            for (registry_map.scopes.keys(), registry_map.scopes.values()) |*k, *v| {
                 const url = bun.URL.parse(v.url);
                 try url_map.put(k.*, url);
             }
@@ -1257,8 +1238,7 @@ pub fn loadNpmrc(
                 }
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (registry_map.scopes.keys(), registry_map.scopes.values()) |*k, *v| {
+            for (registry_map.scopes.keys(), registry_map.scopes.values()) |*k, *v| {
                 const url = url_map.get(k.*) orelse unreachable;
 
                 if (std.mem.eql(u8, bun.strings.withoutTrailingSlash(url.host), bun.strings.withoutTrailingSlash(conf_item_url.host)) and

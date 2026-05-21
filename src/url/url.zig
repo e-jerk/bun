@@ -26,7 +26,6 @@ const zust = @import("safe");
         return strings.eqlComptime(this.protocol, "file");
     }
     /// host + path without the ending slash, protocol, searchParams and hash
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn hostWithPath(this: *const URL) []const u8 {
         if (this.host.len > 0) {
             if (this.path.len > 1 and bun.isSliceInBuffer(this.path, this.href) and bun.isSliceInBuffer(this.host, this.href)) {
@@ -60,7 +59,6 @@ const zust = @import("safe");
         return URL.parse(try href.toOwnedSlice(allocator));
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fromUTF8(allocator: std.mem.Allocator, input: []const u8) !URL {
         return fromString(allocator, bun.String.borrowUTF8(input));
     }
@@ -153,7 +151,6 @@ const zust = @import("safe");
         return this.hostname.len > 0 and this.pathname.len > 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn joinNormalize(out: []u8, prefix: string, dirname: string, basename: string, extname: string) string {
         var buf: [2048]u8 = undefined;
 
@@ -212,7 +209,6 @@ const zust = @import("safe");
     }
 
     pub fn joinAlloc(this: *const URL, allocator: std.mem.Allocator, prefix: string, dirname: string, basename: string, extname: string, absolute_path: string) !string {
-// zust: use zust.String or zust.GuardedSlice for slice operations
         const has_uplevels = std.mem.indexOf(u8, dirname, "../") != null;
 
         if (has_uplevels) {
@@ -281,7 +277,6 @@ const zust = @import("safe");
         }
 
         if (strings.indexOfChar(base[offset..], '?')) |q| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             offset += @as(u31, @intCast(q));
             url.path = base[path_offset..][0..q];
             can_update_path = false;
@@ -289,7 +284,6 @@ const zust = @import("safe");
         }
 
         if (strings.indexOfChar(base[offset..], '#')) |hash| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             offset += @as(u31, @intCast(hash));
             hash_offset = offset;
             if (can_update_path) {
@@ -333,7 +327,6 @@ const zust = @import("safe");
             url.pathname = "/";
         }
 
-// safe-transpile: @bitCast requires manual review
         while (url.pathname.len > 1 and @as(u16, @bitCast(url.pathname[0..2].*)) == comptime std.mem.readInt(u16, "//", .little)) {
             url.pathname = url.pathname[1..];
         }
@@ -352,7 +345,6 @@ const zust = @import("safe");
                 ':' => {
                     if (i + 3 <= str.len and str[i + 1] == '/' and str[i + 2] == '/') {
                         url.protocol = str[0..i];
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         return @intCast(i + 3);
                     }
                 },
@@ -373,7 +365,6 @@ const zust = @import("safe");
                 ':', '@' => {
                     // we found a username, everything before this point in the slice is a username
                     url.username = str[0..i];
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     return @intCast(i + 1);
                 },
                 // if we reach a slash or "?", there's no username
@@ -397,7 +388,6 @@ const zust = @import("safe");
                     // we found a password, everything before this point in the slice is a password
                     url.password = str[0..i];
                     if (Environment.allow_assert) bun.assert(str[i..].len < 2 or std.mem.readInt(u16, str[i..][0..2], .little) != std.mem.readInt(u16, "//", .little));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     return @intCast(i + 1);
                 },
                 // if we reach a slash or "?", there's no password
@@ -660,11 +650,9 @@ pub const QueryStringMap = struct {
             var value = result.value;
             const name_slice = result.rawName(scanner.pathname.routename);
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             name.length = @as(u32, @truncate(name_slice.len));
             name.offset = buf_writer_pos;
             try writer.writeAll(name_slice);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             buf_writer_pos += @as(u32, @truncate(name_slice.len));
 
             const name_hash: u64 = bun.hash(name_slice);
@@ -828,7 +816,6 @@ pub const PercentEncoding = struct {
 
     /// Decode percent-encoded input into allocated memory.
     /// Caller owns the returned slice and must free it with the same allocator.
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn decodeAlloc(allocator: std.mem.Allocator, input: string) ![]u8 {
         // Allocate enough space - decoded will be at most input.len bytes
         const buf = try allocator.alloc(u8, input.len);
@@ -889,7 +876,6 @@ pub const PercentEncoding = struct {
                     // scan ahead assuming .writeAll is faster than .writeByte one at a time
                     while (i < input.len and input[i] != '%') : (i += 1) {}
                     try writer.writeAll(input[start..i]);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     written += @as(u32, @truncate(i - start));
                 },
             }
@@ -933,9 +919,7 @@ fn stringPointerFromStrings(parent: string, in: string) api.StringPointer {
             }
 
             return api.StringPointer{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .offset = @as(u32, @truncate(i)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .length = @as(u32, @truncate(in.len)),
             };
         }
@@ -1031,7 +1015,6 @@ loop: while (true) : (__loop_limit_1 += 1) {
 
             const slice = this.query_string[this.i..];
             relative_i = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             var name = api.StringPointer{ .offset = @as(u32, @truncate(this.i)), .length = 0 };
             var value = api.StringPointer{ .offset = 0, .length = 0 };
             var name_needs_decoding = false;
@@ -1040,11 +1023,9 @@ loop: while (true) : (__loop_limit_1 += 1) {
                 const char = slice[relative_i];
                 switch (char) {
                     '=' => {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         name.length = @as(u32, @truncate(relative_i));
                         relative_i += 1;
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         value.offset = @as(u32, @truncate(relative_i + this.i));
 
                         const offset = relative_i;
@@ -1055,7 +1036,6 @@ loop: while (true) : (__loop_limit_1 += 1) {
                                 else => false,
                             };
                         }
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         value.length = @as(u32, @truncate(relative_i - offset));
                         // If the name is empty and it's just a value, skip it.
                         // This is kind of an opinion. But, it's hard to see where that might be intentional.
@@ -1068,7 +1048,6 @@ loop: while (true) : (__loop_limit_1 += 1) {
                     '&' => {
                         // key&
                         if (relative_i > 0) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                             name.length = @as(u32, @truncate(relative_i));
                             return Result{ .name = name, .value = value, .name_needs_decoding = name_needs_decoding, .value_needs_decoding = false };
                         }
@@ -1090,7 +1069,6 @@ loop: while (true) : (__loop_limit_1 += 1) {
                 return null;
             }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             name.length = @as(u32, @truncate(relative_i));
             return Result{ .name = name, .value = value, .name_needs_decoding = name_needs_decoding };
         }

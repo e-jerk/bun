@@ -38,7 +38,6 @@ const AuditResult = struct {
         var iter = self.vulnerable_packages.iterator();
         while (iter.next()) |entry| {
             entry.value_ptr.vulnerabilities.deinit();
-// safe-transpile: for loop with pointer capture requires manual review
             for (entry.value_ptr.dependents.items) |*dependent| {
                 dependent.path.deinit();
             }
@@ -139,8 +138,7 @@ pub const AuditCommand = struct {
 fn printSkippedPackages(skipped_packages: std.array_list.Managed([]const u8)) void {
     if (skipped_packages.items.len > 0) {
         Output.pretty("<d>Skipped<r> ", .{});
-        // safe-transpile: for with index access requires manual review
-    for (skipped_packages.items, 0..) |package_name, i| {
+        for (skipped_packages.items, 0..) |package_name, i| {
             if (i > 0) Output.pretty(", ", .{});
             Output.pretty("{s}", .{package_name});
         }
@@ -166,7 +164,6 @@ fn buildDependencyTree(allocator: std.mem.Allocator, pm: *PackageManager) bun.OO
     const dependencies = pm.lockfile.buffers.dependencies.items;
     const resolutions = pm.lockfile.buffers.resolutions.items;
 
-    // safe-transpile: for with index access requires manual review
     for (pkg_names, pkg_dependencies, pkg_resolutions, 0..) |pkg_name, deps, res_list, pkg_idx| {
         const package_name = pkg_name.slice(buf);
 
@@ -175,8 +172,7 @@ fn buildDependencyTree(allocator: std.mem.Allocator, pm: *PackageManager) bun.OO
         const dep_slice = deps.get(dependencies);
         const res_slice = res_list.get(resolutions);
 
-        // safe-transpile: for with index access requires manual review
-    for (dep_slice, res_slice) |_, resolved_pkg_id| {
+        for (dep_slice, res_slice) |_, resolved_pkg_id| {
             if (resolved_pkg_id >= pkg_names.len) continue;
 
             const resolved_name = pkg_names[resolved_pkg_id].slice(buf);
@@ -211,7 +207,6 @@ fn buildProductionPackageSet(allocator: std.mem.Allocator, pm: *PackageManager, 
     const dep_slice = root_deps.get(dependencies);
     const res_slice = root_resolutions.get(resolutions);
 
-    // safe-transpile: for with index access requires manual review
     for (dep_slice, res_slice) |dep, resolved_pkg_id| {
         if (!dep.behavior.isDev() and resolved_pkg_id < packages.len) {
             const pkg_name = pkg_names[resolved_pkg_id].slice(buf);
@@ -226,8 +221,7 @@ fn buildProductionPackageSet(allocator: std.mem.Allocator, pm: *PackageManager, 
         const current_dep_slice = current_deps.get(dependencies);
         const current_res_slice = current_resolutions.get(resolutions);
 
-        // safe-transpile: for with index access requires manual review
-    for (current_dep_slice, current_res_slice) |_, resolved_pkg_id| {
+        for (current_dep_slice, current_res_slice) |_, resolved_pkg_id| {
             if (resolved_pkg_id >= pkg_names.len) continue;
 
             const pkg_name = pkg_names[resolved_pkg_id].slice(buf);
@@ -271,7 +265,6 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         try buildProductionPackageSet(allocator, pm, &(prod_packages.?));
     }
 
-    // safe-transpile: for with index access requires manual review
     for (pkg_names, pkg_resolutions, 0..) |name, res, idx| {
         if (idx == root_id) continue;
         if (res.tag != .npm) continue;
@@ -293,7 +286,6 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         const ver_str = try std.fmt.allocPrint(allocator, "{f}", .{res.value.npm.version.fmt(buf)});
 
         var found_package: ?*@TypeOf(packages_list.items[0]) = null;
-// safe-transpile: for loop with pointer capture requires manual review
         for (packages_list.items) |*item| {
             if (std.mem.eql(u8, item.name, name_slice)) {
                 found_package = item;
@@ -327,7 +319,6 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
     var body = try MutableString.init(allocator, 1024);
     body.appendChar('{') catch {};
 
-    // safe-transpile: for with index access requires manual review
     for (packages_list.items, 0..) |package, pkg_idx| {
         if (pkg_idx > 0) body.appendChar(',') catch {};
         body.appendChar('"') catch {};
@@ -335,8 +326,7 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
         body.appendChar('"') catch {};
         body.appendChar(':') catch {};
         body.appendChar('[') catch {};
-        // safe-transpile: for with index access requires manual review
-    for (package.versions.items, 0..) |version, ver_idx| {
+        for (package.versions.items, 0..) |version, ver_idx| {
             if (ver_idx > 0) body.appendChar(',') catch {};
             body.appendChar('"') catch {};
             body.appendSlice(version) catch {};
@@ -352,7 +342,6 @@ fn collectPackagesForAudit(allocator: std.mem.Allocator, pm: *PackageManager, pr
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn sendAuditRequest(allocator: std.mem.Allocator, pm: *PackageManager, body: []const u8) bun.OOM![]u8 {
     libdeflate.load();
     var compressor = libdeflate.Compressor.alloc(6) orelse return error.OutOfMemory;
@@ -418,7 +407,6 @@ fn sendAuditRequest(allocator: std.mem.Allocator, pm: *PackageManager, body: []c
     return try allocator.dupe(u8, response_buf.slice());
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn parseVulnerability(allocator: std.mem.Allocator, package_name: []const u8, vuln: bun.ast.Expr) bun.OOM!VulnerabilityInfo {
     var vulnerability = VulnerabilityInfo{
         .severity = "moderate",
@@ -463,7 +451,6 @@ fn parseVulnerability(allocator: std.mem.Allocator, package_name: []const u8, vu
     return vulnerability;
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn findDependencyPaths(
     allocator: std.mem.Allocator,
     target_package: []const u8,
@@ -495,7 +482,6 @@ fn findDependencyPaths(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (pkg_resolutions, pkg_deps, pkg_names) |resolution, workspace_deps, pkg_name| {
         if (resolution.tag != .workspace) continue;
 
@@ -538,7 +524,6 @@ fn findDependencyPaths(
         try visited.put(current.*, {});
 
         var is_root_dep = false;
-// safe-transpile: for loop with pointer capture requires manual review
         for (dep_slice) |*dependency| {
             const dep_name = dependency.name.slice(buf);
             if (bun.strings.eql(dep_name, current.*)) {
@@ -548,12 +533,10 @@ fn findDependencyPaths(
         }
 
         var workspace_name_for_dep: ?[]const u8 = null;
-        // safe-transpile: for with index access requires manual review
-    for (pkg_resolutions, pkg_deps, pkg_names) |resolution, workspace_deps, pkg_name| {
+        for (pkg_resolutions, pkg_deps, pkg_names) |resolution, workspace_deps, pkg_name| {
             if (resolution.tag != .workspace) continue;
 
             const workspace_dep_slice = workspace_deps.get(dependencies);
-// safe-transpile: for loop with pointer capture requires manual review
             for (workspace_dep_slice) |*dependency| {
                 const dep_name = dependency.name.slice(buf);
                 if (bun.strings.eql(dep_name, current.*)) {
@@ -616,7 +599,6 @@ while (true) : (__loop_limit_1 += 1) {
     return paths;
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn printEnhancedAuditReport(
     allocator: std.mem.Allocator,
     response_text: []const u8,

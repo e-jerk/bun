@@ -307,8 +307,8 @@ pub fn create(
         }
     }
 
-    var worker = bun.handleOom(bun.default_allocator.create(WebWorker));
-    worker.* = WebWorker{
+    var worker = bun.handleOom(safe.Box(WebWorker).init(bun.default_allocator, undefined));
+    worker.ptr.* = WebWorker{
         .cpp_worker = cpp_worker,
         .parent = parent,
         .parent_context_id = parent_context_id,
@@ -332,27 +332,27 @@ pub fn create(
     // If the user passed `{ ref: false }` we skip — they've opted out of the
     // worker keeping the process alive.
     if (!default_unref) {
-        worker.parent_poll_ref.ref(parent);
+        worker.ptr.parent_poll_ref.ref(parent);
     }
 
     // Register BEFORE spawning so terminateAllAndWait() can never miss a
     // worker whose thread is already running.
-    LiveWorkers.register(worker);
+    LiveWorkers.register(worker.ptr);
 
     var thread = std.Thread.spawn(
         .{ .stack_size = bun.default_thread_stack_size },
         threadMain,
-        .{worker},
+        .{worker.ptr},
     ) catch {
-        LiveWorkers.unregister(worker);
-        worker.parent_poll_ref.unref(parent);
-        worker.destroy();
+        LiveWorkers.unregister(worker.ptr);
+        worker.ptr.parent_poll_ref.unref(parent);
+        worker.ptr.destroy();
         error_message.* = bun.String.static("Failed to spawn worker thread");
         return null;
     };
     thread.detach();
 
-    return worker;
+    return worker.ptr;
 }
 
 /// Free the struct and its owned strings. Called from `WebCore::Worker::~Worker()`
@@ -487,20 +487,20 @@ fn startVM(this: *WebWorker) !void {
     var temp_proxy_storage: jsc.RareData.ProxyEnvStorage = .{};
     errdefer temp_proxy_storage.deinit();
 
-    const map = try allocator.create(bun.DotEnv.Map);
+    const map = try safe.Box(bun.DotEnv.Map).init(allocator, undefined);
     {
         const parent_storage = &this.parent.proxy_env_storage;
         parent_storage.lock.lock();
         defer parent_storage.lock.unlock();
 
         temp_proxy_storage.cloneFrom(parent_storage);
-        map.* = try this.parent.transpiler.env.map.cloneWithAllocator(allocator);
+        map.ptr.* = try this.parent.transpiler.env.map.cloneWithAllocator(allocator);
     }
     // Ensure map entries point at the exact bytes we hold refs on.
-    temp_proxy_storage.syncInto(map);
+    temp_proxy_storage.syncInto(map.ptr);
 
-    const loader = try allocator.create(bun.DotEnv.Loader);
-    loader.* = bun.DotEnv.Loader.init(map, allocator);
+    const loader = try safe.Box(bun.DotEnv.Loader).init(allocator, undefined);
+    loader.ptr.* = bun.DotEnv.Loader.init(map.ptr, allocator);
 
     // Checkpoint before the expensive part: initWorker builds a full JSC
     // VM. If terminateAllAndWait() fired while we were cloning the env
@@ -514,7 +514,7 @@ fn startVM(this: *WebWorker) !void {
     var vm = try jsc.VirtualMachine.initWorker(this, .{
         .allocator = allocator,
         .args = transform_options,
-        .env_loader = loader,
+        .env_loader = loader.ptr,
         .store_fd = this.store_fd,
         .graph = this.parent.standalone_module_graph,
     });
@@ -855,6 +855,7 @@ fn onUnhandledRejection(vm: *jsc.VirtualMachine, globalObject: *jsc.JSGlobalObje
 /// Resolve a worker entry-point specifier to a path the module loader can
 /// consume. The returned slice is BORROWED — it aliases `str`, the standalone
 /// module graph, or the resolver's arena; the caller must NOT free it.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn resolveEntryPointSpecifier(
     parent: *jsc.VirtualMachine,
     str: []const u8,
