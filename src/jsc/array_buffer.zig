@@ -51,6 +51,7 @@ pub const ArrayBuffer = extern struct {
             switch (bun.sys.pread(fd, bytes, read)) {
                 .result => |amount| {
                     bytes = bytes[amount..];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     read += @intCast(amount);
 
                     if (amount == 0) {
@@ -95,6 +96,7 @@ pub const ArrayBuffer = extern struct {
         // If there is a lot of repetitive memory allocations in a tight loop, it performs poorly.
         // So we clone it when it's small.
         if (size < mmap_threshold) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const result = toJSBufferFromFd(fd, @intCast(size), globalObject);
             fd.close();
             return result;
@@ -102,6 +104,7 @@ pub const ArrayBuffer = extern struct {
 
         const result = bun.sys.mmap(
             null,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(@max(size, 0)),
             std.posix.PROT.READ | std.posix.PROT.WRITE,
             .{ .TYPE = .SHARED },
@@ -129,6 +132,7 @@ pub const ArrayBuffer = extern struct {
             ref.set(jsc.JSValue.zero);
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn slice(this: *const ArrayBuffer.Strong) []u8 {
             return this.array_buffer.slice();
         }
@@ -147,6 +151,7 @@ pub const ArrayBuffer = extern struct {
         return Stream{ .pos = 0, .buf = this.slice() };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn create(globalThis: *jsc.JSGlobalObject, bytes: []const u8, comptime kind: jsc.JSValue.JSType) bun.JSError!jsc.JSValue {
         jsc.markBinding(@src());
         return switch (comptime kind) {
@@ -165,11 +170,13 @@ pub const ArrayBuffer = extern struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createBuffer(globalThis: *jsc.JSGlobalObject, bytes: []const u8) bun.JSError!jsc.JSValue {
         jsc.markBinding(@src());
         return bun.jsc.fromJSHostCall(globalThis, @src(), Bun__createUint8ArrayForCopy, .{ globalThis, bytes.ptr, bytes.len, true });
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createUint8Array(globalThis: *jsc.JSGlobalObject, bytes: []const u8) bun.JSError!jsc.JSValue {
         jsc.markBinding(@src());
         return bun.jsc.fromJSHostCall(globalThis, @src(), Bun__createUint8ArrayForCopy, .{ globalThis, bytes.ptr, bytes.len, false });
@@ -181,7 +188,9 @@ pub const ArrayBuffer = extern struct {
     pub fn alloc(global: *jsc.JSGlobalObject, comptime kind: jsc.JSValue.JSType, len: u32) JSError!struct { jsc.JSValue, []u8 } {
         var ptr: [*]u8 = undefined;
         const buf = switch (comptime kind) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .Uint8Array => try bun.jsc.fromJSHostCall(global, @src(), Bun__allocUint8ArrayForCopy, .{ global, len, @ptrCast(&ptr) }),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ArrayBuffer => try bun.jsc.fromJSHostCall(global, @src(), Bun__allocArrayBufferForCopy, .{ global, len, @ptrCast(&ptr) }),
             else => @compileError("Not implemented yet"),
         };
@@ -196,10 +205,12 @@ pub const ArrayBuffer = extern struct {
     }
 
     extern "c" fn JSArrayBuffer__fromDefaultAllocator(*jsc.JSGlobalObject, ptr: [*]u8, len: usize) jsc.JSValue;
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toJSFromDefaultAllocator(globalThis: *jsc.JSGlobalObject, bytes: []u8) jsc.JSValue {
         return JSArrayBuffer__fromDefaultAllocator(globalThis, bytes.ptr, bytes.len);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromDefaultAllocator(globalThis: *jsc.JSGlobalObject, bytes: []u8, comptime typed_array_type: jsc.JSValue.JSType) jsc.JSValue {
         return switch (typed_array_type) {
             .ArrayBuffer => JSArrayBuffer__fromDefaultAllocator(globalThis, bytes.ptr, bytes.len),
@@ -208,7 +219,9 @@ pub const ArrayBuffer = extern struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(bytes: []u8, typed_array_type: jsc.JSValue.JSType) ArrayBuffer {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return ArrayBuffer{ .len = @as(u32, @intCast(bytes.len)), .byte_len = @as(u32, @intCast(bytes.len)), .typed_array_type = typed_array_type, .ptr = bytes.ptr };
     }
 
@@ -321,6 +334,7 @@ pub const ArrayBuffer = extern struct {
     /// ```js
     ///    new ArrayBuffer(view.buffer, view.byteOffset, view.byteLength)
     /// ```
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn byteSlice(this: *const @This()) []u8 {
         if (this.isDetached()) {
             return &.{};
@@ -336,6 +350,7 @@ pub const ArrayBuffer = extern struct {
     pub const slice = byteSlice;
 
     pub inline fn asU16(this: *const @This()) []u16 {
+// safe-transpile: @alignCast requires manual review
         return @alignCast(this.asU16Unaligned());
     }
 
@@ -343,10 +358,12 @@ pub const ArrayBuffer = extern struct {
         if (this.isDetached()) {
             return &.{};
         }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this.ptr.?[0 .. this.byte_len / @sizeOf(u16) * @sizeOf(u16)]);
     }
 
     pub inline fn asU32(this: *const @This()) []u32 {
+// safe-transpile: @alignCast requires manual review
         return @alignCast(this.asU32Unaligned());
     }
 
@@ -354,6 +371,7 @@ pub const ArrayBuffer = extern struct {
         if (this.isDetached()) {
             return &.{};
         }
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this.ptr.?[0 .. this.byte_len / @sizeOf(u32) * @sizeOf(u32)]);
     }
 
@@ -444,6 +462,7 @@ pub const ArrayBuffer = extern struct {
             },
         );
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromString(input: []const u8) ?BinaryType {
             return Map.get(input);
         }
@@ -459,6 +478,7 @@ pub const ArrayBuffer = extern struct {
         }
 
         /// This clones bytes
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn toJS(this: BinaryType, bytes: []const u8, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
             switch (this) {
                 .Buffer => return jsc.ArrayBuffer.createBuffer(globalThis, bytes),
@@ -564,6 +584,7 @@ pub const MarkedArrayBuffer = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromString(str: []const u8, allocator: std.mem.Allocator) !MarkedArrayBuffer {
         const buf = try allocator.dupe(u8, str);
         return MarkedArrayBuffer.fromBytes(buf, allocator, jsc.JSValue.JSType.Uint8Array);
@@ -574,6 +595,7 @@ pub const MarkedArrayBuffer = struct {
         return MarkedArrayBuffer{ .buffer = array_buffer, .allocator = null };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(bytes: []u8, allocator: std.mem.Allocator, typed_array_type: jsc.JSValue.JSType) MarkedArrayBuffer {
         return MarkedArrayBuffer{
             .buffer = ArrayBuffer.fromBytes(bytes, typed_array_type),
@@ -586,6 +608,7 @@ pub const MarkedArrayBuffer = struct {
         .buffer = ArrayBuffer.empty,
     };
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn slice(this: *const @This()) []u8 {
         return this.buffer.byteSlice();
     }

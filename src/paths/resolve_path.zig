@@ -1,12 +1,14 @@
 threadlocal var parser_join_input_buffer: [4096]u8 = undefined;
 threadlocal var parser_buffer: [1024]u8 = undefined;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn z(input: []const u8, output: *bun.PathBuffer) [:0]const u8 {
     if (input.len > bun.MAX_PATH_BYTES) {
         if (comptime bun.Environment.allow_assert) @panic("path too long");
         return "";
     }
 
+// safe-transpile: @memcpy requires manual review
     @memcpy(output[0..input.len], input);
     output[input.len] = 0;
 
@@ -38,6 +40,7 @@ inline fn nqlAtIndexCaseInsensitive(comptime string_count: comptime_int, index: 
 }
 
 /// The given string contains separators that match the platform's path separator style.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hasPlatformPathSeparators(input_path: []const u8) bool {
     if (bun.Environment.isWindows) {
         // Windows accepts both forward and backward slashes as path separators
@@ -52,7 +55,9 @@ const IsSeparatorFuncT = fn (comptime T: type, char: anytype) bool;
 const LastSeparatorFunction = fn (slice: []const u8) ?usize;
 const LastSeparatorFunctionT = fn (comptime T: type, slice: anytype) ?usize;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn @"is .."(slice: []const u8) bool {
+// safe-transpile: @bitCast requires manual review
     return slice.len >= 2 and @as(u16, @bitCast(slice[0..2].*)) == comptime std.mem.readInt(u16, "..", .little);
 }
 
@@ -61,6 +66,7 @@ inline fn @"is .. with type"(comptime T: type, slice: []const T) bool {
     return slice.len >= 2 and slice[0] == '.' and slice[1] == '.';
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn @"is ../"(slice: []const u8) bool {
     return strings.hasPrefixComptime(slice, "../");
 }
@@ -71,6 +77,7 @@ const ParentEqual = enum {
     unrelated,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isParentOrEqual(parent_: []const u8, child: []const u8) ParentEqual {
     var parent = parent_;
     while (parent.len > 0 and isSepAny(parent[parent.len - 1])) {
@@ -179,6 +186,7 @@ pub fn getIfExistsLongestCommonPathGeneric(input: []const []const u8, comptime p
 // TODO: is it faster to determine longest_common_separator in the while loop
 // or as an extra step at the end?
 // only boether to check if this function appears in benchmarking
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn longestCommonPathGeneric(input: []const []const u8, comptime platform: Platform) []const u8 {
     const separator = comptime platform.separator();
     const isPathSeparator = comptime platform.getSeparatorFunc();
@@ -274,6 +282,7 @@ pub fn longestCommonPathGeneric(input: []const []const u8, comptime platform: Pl
     // To detect /app/public is actually a folder, we do one more loop through the strings
     // and say, "do one of you have a path separator after what we thought was the end?"
     var idx = input.len; // Use this value as an invalid value.
+    // safe-transpile: for with index access requires manual review
     for (input, 0..) |str, i| {
         if (str.len > index) {
             if (@call(bun.callmod_inline, isPathSeparator, .{str[index]})) {
@@ -291,6 +300,7 @@ pub fn longestCommonPathGeneric(input: []const []const u8, comptime platform: Pl
     return input[0][0 .. last_common_separator + 1];
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn longestCommonPath(input: []const []const u8) []const u8 {
     return longestCommonPathGeneric(input, .loose);
 }
@@ -299,10 +309,12 @@ pub fn getIfExistsLongestCommonPath(input: []const []const u8) ?[]const u8 {
     return getIfExistsLongestCommonPathGeneric(input, .loose);
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn longestCommonPathWindows(input: []const []const u8) []const u8 {
     return longestCommonPathGeneric(input, .windows);
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn longestCommonPathPosix(input: []const []const u8) []const u8 {
     return longestCommonPathGeneric(input, .posix);
 }
@@ -320,6 +332,7 @@ pub inline fn relative_to_common_path_buf() *bun.PathBuffer {
 /// Find a relative path from a common path
 // Loosely based on Node.js' implementation of path.relative
 // https://github.com/nodejs/node/blob/9a7cbe25de88d87429a69050a1a1971234558d97/lib/path.js#L1250-L1259
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeToCommonPath(
     common_path_: []const u8,
     normalized_from_: []const u8,
@@ -425,6 +438,7 @@ pub fn relativeToCommonPath(
     var out_slice: []u8 = buf[0..0];
 
     if (normalized_from.len > 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var i: usize = @as(usize, @intCast(@intFromBool(platform.isSeparator(normalized_from[0])))) + 1 + last_common_separator;
 
         while (i <= normalized_from.len) : (i += 1) {
@@ -470,6 +484,7 @@ pub fn relativeToCommonPath(
     return out_slice;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeNormalizedBuf(buf: []u8, from: []const u8, to: []const u8, comptime platform: Platform, comptime always_copy: bool) []const u8 {
     if ((if (platform == .windows)
         strings.eqlCaseInsensitiveASCII(from, to, true)
@@ -485,10 +500,12 @@ pub fn relativeNormalizedBuf(buf: []u8, from: []const u8, to: []const u8, compti
     return relativeToCommonPath(common_path, from, to, buf, always_copy, platform);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeNormalized(from: []const u8, to: []const u8, comptime platform: Platform, comptime always_copy: bool) []const u8 {
     return relativeNormalizedBuf(relative_to_common_path_buf(), from, to, platform, always_copy);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn dirname(str: []const u8, comptime platform: Platform) []const u8 {
     switch (platform) {
         .loose => {
@@ -520,20 +537,24 @@ pub fn dirnameW(str: []const u16) []const u16 {
     return str[0..separator];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relative(from: []const u8, to: []const u8) []const u8 {
     return relativePlatform(from, to, .auto, false);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeZ(from: []const u8, to: []const u8) [:0]const u8 {
     return relativeBufZ(relative_to_common_path_buf(), from, to);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeBufZ(buf: []u8, from: []const u8, to: []const u8) [:0]const u8 {
     const rel = relativePlatformBuf(buf, from, to, .auto, true);
     buf[rel.len] = 0;
     return buf[0..rel.len :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativePlatformBuf(buf: []u8, from: []const u8, to: []const u8, comptime platform: Platform, comptime always_copy: bool) []const u8 {
     const relative_from_buf = &relative_bufs.get().relative_from_buf;
     const relative_to_buf = &relative_bufs.get().relative_to_buf;
@@ -580,10 +601,12 @@ pub fn relativePlatformBuf(buf: []u8, from: []const u8, to: []const u8, comptime
     return relativeNormalizedBuf(buf, normalized_from, normalized_to, platform, always_copy);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativePlatform(from: []const u8, to: []const u8, comptime platform: Platform, comptime always_copy: bool) []const u8 {
     return relativePlatformBuf(relative_to_common_path_buf(), from, to, platform, always_copy);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn relativeAlloc(allocator: std.mem.Allocator, from: []const u8, to: []const u8) ![]const u8 {
     const result = relativePlatform(from, to, .auto, false);
     return try allocator.dupe(u8, result);
@@ -592,6 +615,7 @@ pub fn relativeAlloc(allocator: std.mem.Allocator, from: []const u8, to: []const
 // This function is based on Go's volumeNameLen function
 // https://cs.opensource.google/go/go/+/refs/tags/go1.17.6:src/path/filepath/path_windows.go;l=57
 // volumeNameLen returns length of the leading volume name on Windows.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn windowsVolumeNameLen(path: []const u8) struct { usize, usize } {
     return windowsVolumeNameLenT(u8, path);
 }
@@ -641,10 +665,12 @@ pub fn windowsVolumeNameLenT(comptime T: type, path: []const T) struct { usize, 
     return .{ 0, 0 };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn windowsVolumeName(path: []const u8) []const u8 {
     return path[0..@call(bun.callmod_inline, windowsVolumeNameLen, .{path})[0]];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn windowsFilesystemRoot(path: []const u8) []const u8 {
     return windowsFilesystemRootT(u8, path);
 }
@@ -657,6 +683,7 @@ pub fn isDriveLetterT(comptime T: type, c: T) bool {
     return 'a' <= c and c <= 'z' or 'A' <= c and c <= 'Z';
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hasAnyIllegalChars(maybe_path: []const u8) bool {
     if (!bun.Environment.isWindows) return false;
     var maybe_path_ = maybe_path;
@@ -666,6 +693,7 @@ pub fn hasAnyIllegalChars(maybe_path: []const u8) bool {
     return bun.strings.indexAnyComptime(maybe_path_, "<>:\"|?*") != null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn startsWithDiskDiscriminator(maybe_path: []const u8) bool {
     if (!bun.Environment.isWindows) return false;
     if (maybe_path.len < 3) return false;
@@ -715,6 +743,7 @@ pub fn windowsFilesystemRootT(comptime T: type, path: []const T) []const T {
 
 // This function is based on Go's filepath.Clean function
 // https://cs.opensource.google/go/go/+/refs/tags/go1.17.6:src/path/filepath/path.go;l=89
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringGeneric(
     path_: []const u8,
     buf: []u8,
@@ -799,19 +828,23 @@ pub fn normalizeStringGenericTZ(
     if (isWindows) {
         if (volLen > 0) {
             if (options.add_nt_prefix) {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[buf_i .. buf_i + 4], strings.literal(T, "\\??\\"));
                 buf_i += 4;
             }
             if (path_[1] != ':') {
                 // UNC paths
                 if (options.add_nt_prefix) {
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[buf_i .. buf_i + 4], strings.literal(T, "UNC" ++ sep_str));
                     buf_i += 2;
                 } else {
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[buf_i .. buf_i + 2], strings.literal(T, sep_str ++ sep_str));
                 }
                 if (indexOfThirdUNCSlash > 0) {
                     // we have the ending slash
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[buf_i + 2 .. buf_i + indexOfThirdUNCSlash + 1], path_[2 .. indexOfThirdUNCSlash + 1]);
                     buf[buf_i + indexOfThirdUNCSlash] = options.separator;
                     @memcpy(
@@ -820,6 +853,7 @@ pub fn normalizeStringGenericTZ(
                     );
                 } else {
                     // we dont have the ending slash
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[buf_i + 2 .. buf_i + volLen], path_[2..volLen]);
                 }
                 buf[buf_i + volLen] = options.separator;
@@ -837,6 +871,7 @@ pub fn normalizeStringGenericTZ(
                 }
             } else {
                 // drive letter
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 buf[buf_i] = std.ascii.toUpper(@truncate(path_[0]));
                 buf[buf_i + 1] = ':';
                 buf_i += 2;
@@ -919,6 +954,7 @@ pub fn normalizeStringGenericTZ(
         const from = r;
         while (r < n and !options.isSeparator(path[r])) : (r += 1) {}
         const count = r - from;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[buf_i..][0..count], path[from..][0..count]);
         buf_i += count;
     }
@@ -963,6 +999,7 @@ pub const Platform = enum {
         .wasm => .loose,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isAbsolute(comptime platform: Platform, path: []const u8) bool {
         return isAbsoluteT(platform, u8, path);
     }
@@ -988,6 +1025,7 @@ pub const Platform = enum {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn separatorString(comptime platform: Platform) []const u8 {
         return switch (platform) {
             .loose, .posix => std.fs.path.sep_str_posix,
@@ -1087,19 +1125,23 @@ pub const Platform = enum {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeString(str: []const u8, comptime allow_above_root: bool, comptime platform: Platform) []u8 {
     return normalizeStringBuf(str, &parser_buffer, allow_above_root, platform, false);
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringZ(str: []const u8, comptime allow_above_root: bool, comptime platform: Platform) [:0]u8 {
     const normalized = normalizeStringBuf(str, &parser_buffer, allow_above_root, platform, false);
     parser_buffer[normalized.len] = 0;
     return parser_buffer[0..normalized.len :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeBuf(str: []const u8, buf: []u8, comptime platform: Platform) []u8 {
     return normalizeBufT(u8, str, buf, platform);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeBufZ(str: []const u8, buf: []u8, comptime platform: Platform) [:0]u8 {
     const norm = normalizeBufT(u8, str, buf, platform);
     buf[norm.len] = 0;
@@ -1128,6 +1170,7 @@ pub fn normalizeBufT(comptime T: type, str: []const T, buf: []T, comptime platfo
     return normalizeStringBufT(T, str, buf, false, platform, true);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringBuf(
     str: []const u8,
     buf: []u8,
@@ -1179,16 +1222,19 @@ pub fn normalizeStringBufT(
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringAlloc(allocator: std.mem.Allocator, str: []const u8, comptime allow_above_root: bool, comptime platform: Platform) ![]const u8 {
     return try allocator.dupe(u8, normalizeString(str, allow_above_root, platform));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbs2(_cwd: []const u8, comptime platform: Platform, part: anytype, part2: anytype) []const u8 {
     const parts = [_][]const u8{ part, part2 };
     const slice = joinAbsString(_cwd, &parts, platform);
     return slice;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbs(cwd: []const u8, comptime platform: Platform, part: []const u8) []const u8 {
     return joinAbsString(cwd, &.{part}, platform);
 }
@@ -1198,6 +1244,7 @@ pub fn joinAbs(cwd: []const u8, comptime platform: Platform, part: []const u8) [
 /// This is the equivalent of path.resolve
 ///
 /// Returned path is stored in a temporary buffer. It must be copied if it needs to be stored.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsString(_cwd: []const u8, parts: anytype, comptime platform: Platform) []const u8 {
     return joinAbsStringBuf(
         _cwd,
@@ -1212,6 +1259,7 @@ pub fn joinAbsString(_cwd: []const u8, parts: anytype, comptime platform: Platfo
 /// This is the equivalent of path.resolve
 ///
 /// Returned path is stored in a temporary buffer. It must be copied if it needs to be stored.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringZ(_cwd: []const u8, parts: anytype, comptime platform: Platform) [:0]const u8 {
     return joinAbsStringBufZ(
         _cwd,
@@ -1222,6 +1270,7 @@ pub fn joinAbsStringZ(_cwd: []const u8, parts: anytype, comptime platform: Platf
 }
 
 pub threadlocal var join_buf: [4096]u8 = undefined;
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn join(_parts: anytype, comptime platform: Platform) []const u8 {
     return joinStringBuf(&join_buf, _parts, platform);
 }
@@ -1229,6 +1278,7 @@ pub fn joinZ(_parts: anytype, comptime platform: Platform) [:0]const u8 {
     return joinZBuf(&join_buf, _parts, platform);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinZBuf(buf: []u8, _parts: anytype, comptime platform: Platform) [:0]const u8 {
     const joined = joinStringBuf(buf[0 .. buf.len - 1], _parts, platform);
     assert(bun.isSliceInBuffer(joined, buf));
@@ -1236,6 +1286,7 @@ pub fn joinZBuf(buf: []u8, _parts: anytype, comptime platform: Platform) [:0]con
     buf[joined.len + start_offset] = 0;
     return buf[start_offset..][0..joined.len :0];
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinStringBuf(buf: []u8, parts: anytype, comptime platform: Platform) []const u8 {
     return joinStringBufT(u8, buf, parts, platform);
 }
@@ -1251,6 +1302,7 @@ pub fn joinStringBufWZ(buf: []u16, parts: anytype, comptime platform: Platform) 
     return buf[start_offset..][0..joined.len :0];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinStringBufZ(buf: []u8, parts: anytype, comptime platform: Platform) [:0]const u8 {
     const joined = joinStringBufT(u8, buf[0 .. buf.len - 1], parts, platform);
     assert(bun.isSliceInBufferT(u8, joined, buf));
@@ -1324,6 +1376,7 @@ const JoinScratch = struct {
     alloc: std.mem.Allocator,
     buf: []u8,
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn init(self: *JoinScratch, base: usize, parts: []const []const u8) []u8 {
         self.sfa = std.heap.stackFallback(bun.MAX_PATH_BYTES * 2, bun.default_allocator);
         self.alloc = self.sfa.get();
@@ -1338,6 +1391,7 @@ const JoinScratch = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringBuf(cwd: []const u8, buf: []u8, _parts: anytype, comptime platform: Platform) []const u8 {
     return _joinAbsStringBuf(false, []const u8, cwd, buf, _parts, platform);
 }
@@ -1347,6 +1401,7 @@ pub fn joinAbsStringBuf(cwd: []const u8, buf: []u8, _parts: anytype, comptime pl
 /// input of arbitrary length. `..` segments are handled correctly: a path
 /// whose unnormalized length exceeds `buf.len` but normalizes down will still
 /// succeed.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringBufChecked(cwd: []const u8, buf: []u8, parts: []const []const u8, comptime platform: Platform) ?[]const u8 {
     comptime if (platform == .nt) @compileError("joinAbsStringBufChecked does not support .nt (the \\\\?\\ prefix is not accounted for in scratch sizing)");
     // Fast path: size check only — don't allocate a JoinScratch here since the
@@ -1368,10 +1423,12 @@ pub fn joinAbsStringBufChecked(cwd: []const u8, buf: []u8, parts: []const []cons
     return buf[0..joined.len];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringBufZ(cwd: []const u8, buf: []u8, _parts: anytype, comptime platform: Platform) [:0]const u8 {
     return _joinAbsStringBuf(true, [:0]const u8, cwd, buf, _parts, platform);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringBufZNT(cwd: []const u8, buf: []u8, _parts: anytype, comptime platform: Platform) [:0]const u8 {
     if ((platform == .auto or platform == .loose or platform == .windows) and bun.Environment.isWindows) {
         return _joinAbsStringBuf(true, [:0]const u8, cwd, buf, _parts, .nt);
@@ -1380,6 +1437,7 @@ pub fn joinAbsStringBufZNT(cwd: []const u8, buf: []u8, _parts: anytype, comptime
     return _joinAbsStringBuf(true, [:0]const u8, cwd, buf, _parts, platform);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn joinAbsStringBufZTrailingSlash(cwd: []const u8, buf: []u8, _parts: anytype, comptime platform: Platform) [:0]const u8 {
     const out = _joinAbsStringBuf(true, [:0]const u8, cwd, buf, _parts, platform);
     if (out.len + 2 < buf.len and out.len > 0 and out[out.len - 1] != platform.separator()) {
@@ -1391,6 +1449,7 @@ pub fn joinAbsStringBufZTrailingSlash(cwd: []const u8, buf: []u8, _parts: anytyp
     return out;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn _joinAbsStringBuf(comptime is_sentinel: bool, comptime ReturnType: type, _cwd: []const u8, buf: []u8, _parts: anytype, comptime platform: Platform) ReturnType {
     if (platform == .windows or
         (bun.Environment.os == .windows and platform == .loose))
@@ -1432,6 +1491,7 @@ fn _joinAbsStringBuf(comptime is_sentinel: bool, comptime ReturnType: type, _cwd
 
     {
         var part_i: u16 = 0;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         var part_len: u16 = @as(u16, @truncate(parts.len));
 
         while (part_i < part_len) {
@@ -1439,6 +1499,7 @@ fn _joinAbsStringBuf(comptime is_sentinel: bool, comptime ReturnType: type, _cwd
                 cwd = parts[part_i];
                 parts = parts[part_i + 1 ..];
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 part_len = @as(u16, @truncate(parts.len));
                 part_i = 0;
                 continue;
@@ -1473,6 +1534,7 @@ fn _joinAbsStringBuf(comptime is_sentinel: bool, comptime ReturnType: type, _cwd
     const leading_separator: []const u8 = if (platform.leadingSeparatorIndex(temp_buf[0..out])) |i| brk: {
         const outdir = temp_buf[0 .. i + 1];
         if (platform == .loose) {
+// safe-transpile: for loop with pointer capture requires manual review
             for (outdir) |*c| {
                 if (c.* == '\\') {
                     c.* = '/';
@@ -1501,6 +1563,7 @@ fn _joinAbsStringBuf(comptime is_sentinel: bool, comptime ReturnType: type, _cwd
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn _joinAbsStringBufWindows(
     comptime is_sentinel: bool,
     comptime ReturnType: type,
@@ -1571,7 +1634,9 @@ fn _joinAbsStringBufWindows(
     const temp_buf = scratch.init(root.len + set_cwd.len, parts[n_start..]);
     defer scratch.deinit();
 
+// safe-transpile: @memcpy requires manual review
     @memcpy(temp_buf[0..root.len], root);
+// safe-transpile: @memcpy requires manual review
     @memcpy(temp_buf[root.len .. root.len + set_cwd.len], set_cwd);
     var out: usize = root.len + set_cwd.len;
 
@@ -1595,6 +1660,7 @@ fn _joinAbsStringBufWindows(
             continue;
 
         const part_without_vol = part[volume.len..];
+// safe-transpile: @memcpy requires manual review
         @memcpy(temp_buf[out .. out + part_without_vol.len], part_without_vol);
         out += part_without_vol.len;
     }
@@ -1644,6 +1710,7 @@ pub fn isSepAnyT(comptime T: type, char: T) bool {
     return @call(bun.callmod_inline, isSepPosixT, .{ T, char }) or @call(bun.callmod_inline, isSepWin32T, .{ T, char });
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lastIndexOfSeparatorWindows(slice: []const u8) ?usize {
     return lastIndexOfSeparatorWindowsT(u8, slice);
 }
@@ -1652,6 +1719,7 @@ pub fn lastIndexOfSeparatorWindowsT(comptime T: type, slice: []const T) ?usize {
     return std.mem.lastIndexOfAny(T, slice, strings.literal(T, "\\/"));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lastIndexOfSeparatorPosix(slice: []const u8) ?usize {
     return lastIndexOfSeparatorPosixT(u8, slice);
 }
@@ -1660,10 +1728,12 @@ pub fn lastIndexOfSeparatorPosixT(comptime T: type, slice: []const T) ?usize {
     return std.mem.lastIndexOfScalar(T, slice, std.fs.path.sep_posix);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lastIndexOfNonSeparatorPosix(slice: []const u8) ?u32 {
     var i: usize = slice.len;
     while (i != 0) : (i -= 1) {
         if (slice[i] != std.fs.path.sep_posix) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(u32, @intCast(i));
         }
     }
@@ -1671,6 +1741,7 @@ pub fn lastIndexOfNonSeparatorPosix(slice: []const u8) ?u32 {
     return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lastIndexOfSeparatorLoose(slice: []const u8) ?usize {
     return lastIndexOfSeparatorLooseT(u8, slice);
 }
@@ -1679,6 +1750,7 @@ pub fn lastIndexOfSeparatorLooseT(comptime T: type, slice: []const T) ?usize {
     return lastIndexOfSepT(T, slice);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringLooseBuf(
     str: []const u8,
     buf: []u8,
@@ -1706,6 +1778,7 @@ pub fn normalizeStringLooseBufT(
     );
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringWindows(
     str: []const u8,
     buf: []u8,
@@ -1733,6 +1806,7 @@ pub fn normalizeStringWindowsT(
     );
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn normalizeStringNode(
     str: []const u8,
     buf: []u8,
@@ -1811,6 +1885,7 @@ pub fn normalizeStringNodeT(
     return out;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn basename(path: []const u8) []const u8 {
     if (path.len == 0)
         return &[_]u8{};
@@ -1832,6 +1907,7 @@ pub fn basename(path: []const u8) []const u8 {
     return path[start_index + 1 .. end_index];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn lastIndexOfSep(path: []const u8) ?usize {
     return lastIndexOfSepT(u8, path);
 }
@@ -1844,6 +1920,7 @@ pub fn lastIndexOfSepT(comptime T: type, path: []const T) ?usize {
     return std.mem.lastIndexOfAny(T, path, "/\\");
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn nextDirname(path_: []const u8) ?[]const u8 {
     var path = path_;
     var root_prefix: []const u8 = "";
@@ -1908,6 +1985,7 @@ pub const PosixToWinNormalizer = struct {
 
     // methods on PosixToWinNormalizer, to be minimal yet stack allocate the PathBuffer
     // these do not force inline of much code
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn resolve(
         this: *PosixToWinNormalizer,
         source_dir: []const u8,
@@ -1916,6 +1994,7 @@ pub const PosixToWinNormalizer = struct {
         return resolveWithExternalBuf(&this._raw_bytes, source_dir, maybe_posix_path);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn resolveZ(
         this: *PosixToWinNormalizer,
         source_dir: []const u8,
@@ -1924,6 +2003,7 @@ pub const PosixToWinNormalizer = struct {
         return resolveWithExternalBufZ(&this._raw_bytes, source_dir, maybe_posix_path);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn resolveCWD(
         this: *PosixToWinNormalizer,
         maybe_posix_path: []const u8,
@@ -1931,6 +2011,7 @@ pub const PosixToWinNormalizer = struct {
         return resolveCWDWithExternalBuf(&this._raw_bytes, maybe_posix_path);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn resolveCWDZ(
         this: *PosixToWinNormalizer,
         maybe_posix_path: []const u8,
@@ -1940,6 +2021,7 @@ pub const PosixToWinNormalizer = struct {
 
     // underlying implementation:
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resolveWithExternalBuf(
         buf: *Buf,
         source_dir: []const u8,
@@ -1952,7 +2034,9 @@ pub const PosixToWinNormalizer = struct {
                 assert(isSepAny(root[0]));
                 if (bun.strings.isWindowsAbsolutePathMissingDriveLetter(u8, maybe_posix_path)) {
                     const source_root = windowsFilesystemRoot(source_dir);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[0..source_root.len], source_root);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[source_root.len..][0 .. maybe_posix_path.len - 1], maybe_posix_path[1..]);
                     const res = buf[0 .. source_root.len + maybe_posix_path.len - 1];
                     assert(!bun.strings.isWindowsAbsolutePathMissingDriveLetter(u8, res));
@@ -1965,6 +2049,7 @@ pub const PosixToWinNormalizer = struct {
         return maybe_posix_path;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resolveWithExternalBufZ(
         buf: *Buf,
         source_dir: []const u8,
@@ -1977,7 +2062,9 @@ pub const PosixToWinNormalizer = struct {
                 assert(isSepAny(root[0]));
                 if (bun.strings.isWindowsAbsolutePathMissingDriveLetter(u8, maybe_posix_path)) {
                     const source_root = windowsFilesystemRoot(source_dir);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[0..source_root.len], source_root);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[source_root.len..][0 .. maybe_posix_path.len - 1], maybe_posix_path[1..]);
                     buf[source_root.len + maybe_posix_path.len - 1] = 0;
                     const res = buf[0 .. source_root.len + maybe_posix_path.len - 1 :0];
@@ -1991,6 +2078,7 @@ pub const PosixToWinNormalizer = struct {
         return maybe_posix_path;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn resolveCWDWithExternalBuf(
         buf: *Buf,
         maybe_posix_path: []const u8,
@@ -2006,6 +2094,7 @@ pub const PosixToWinNormalizer = struct {
                     assert(cwd.ptr == buf.ptr);
                     const source_root = windowsFilesystemRoot(cwd);
                     assert(source_root.ptr == source_root.ptr);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[source_root.len..][0 .. maybe_posix_path.len - 1], maybe_posix_path[1..]);
                     const res = buf[0 .. source_root.len + maybe_posix_path.len - 1];
                     assert(!bun.strings.isWindowsAbsolutePathMissingDriveLetter(u8, res));
@@ -2019,6 +2108,7 @@ pub const PosixToWinNormalizer = struct {
         return maybe_posix_path;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn resolveCWDWithExternalBufZ(
         buf: *bun.PathBuffer,
         maybe_posix_path: []const u8,
@@ -2034,6 +2124,7 @@ pub const PosixToWinNormalizer = struct {
                     assert(cwd.ptr == buf.ptr);
                     const source_root = windowsFilesystemRoot(cwd);
                     assert(source_root.ptr == source_root.ptr);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[source_root.len..][0 .. maybe_posix_path.len - 1], maybe_posix_path[1..]);
                     buf[source_root.len + maybe_posix_path.len - 1] = 0;
                     const res = buf[0 .. source_root.len + maybe_posix_path.len - 1 :0];
@@ -2046,6 +2137,7 @@ pub const PosixToWinNormalizer = struct {
             assert(!bun.strings.isWindowsAbsolutePathMissingDriveLetter(u8, maybe_posix_path));
         }
 
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf.ptr, maybe_posix_path);
         buf[maybe_posix_path.len] = 0;
         return buf[0..maybe_posix_path.len :0];
@@ -2091,9 +2183,11 @@ pub fn dangerouslyConvertPathToWindowsInPlace(comptime T: type, path: []T) void 
 pub fn pathToPosixBuf(comptime T: type, path: []const T, buf: []T) []T {
     var idx: usize = 0;
     while (std.mem.indexOfScalarPos(T, path, idx, std.fs.path.sep_windows)) |index| : (idx = index + 1) {
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[idx..index], path[idx..index]);
         buf[index] = std.fs.path.sep_posix;
     }
+// safe-transpile: @memcpy requires manual review
     @memcpy(buf[idx..path.len], path[idx..path.len]);
     return buf[0..path.len];
 }
@@ -2102,9 +2196,11 @@ pub fn platformToPosixBuf(comptime T: type, path: []const T, buf: []T) []const T
     if (std.fs.path.sep == '/') return path;
     var idx: usize = 0;
     while (std.mem.indexOfScalarPos(T, path, idx, std.fs.path.sep)) |index| : (idx = index + 1) {
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[idx..index], path[idx..index]);
         buf[index] = '/';
     }
+// safe-transpile: @memcpy requires manual review
     @memcpy(buf[idx..path.len], path[idx..path.len]);
     return buf[0..path.len];
 }

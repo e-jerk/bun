@@ -236,7 +236,6 @@ pub fn ArrayListAlignedIn(
             new_items: []const T,
         ) void {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
             for (self.items()[start .. start + len]) |*item| {
                 bun.memory.deinit(item);
             }

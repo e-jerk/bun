@@ -42,9 +42,7 @@ pub fn main() void {
         );
         _bun.handleOom(_bun.windows.env.convertEnvToWTF8());
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         environ = @ptrCast(std.c.environ);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _environ = @ptrCast(std.c.environ);
     }
@@ -86,7 +84,6 @@ pub fn copyBackwards(comptime T: type, dest: []T, source: []const T) void {
     }
     _bun.copy(T, dest[0..source.len], source);
 }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn eqlBytes(src: []const u8, dest: []const u8) bool {
     return _bun.c.memcmp(src.ptr, dest.ptr, src.len) == 0;

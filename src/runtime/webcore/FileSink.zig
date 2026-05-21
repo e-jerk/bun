@@ -78,6 +78,7 @@ pub fn memoryCost(this: *const FileSink) usize {
 }
 
 fn Bun__ForceFileSinkToBeSynchronousForProcessObjectStdio(_: *jsc.JSGlobalObject, jsvalue: jsc.JSValue) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
     var this: *FileSink = @ptrCast(@alignCast(JSSink.fromJS(jsvalue) orelse return));
 
     if (comptime !Environment.isWindows) {
@@ -90,11 +91,13 @@ fn Bun__ForceFileSinkToBeSynchronousForProcessObjectStdio(_: *jsc.JSGlobalObject
         if (this.writer.source) |*source| {
             switch (source.*) {
                 .pipe => |pipe| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     if (uv.uv_stream_set_blocking(@ptrCast(pipe), 1) == .zero) {
                         return;
                     }
                 },
                 .tty => |tty| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     if (uv.uv_stream_set_blocking(@ptrCast(tty), 1) == .zero) {
                         return;
                     }
@@ -200,12 +203,14 @@ pub fn onWrite(this: *FileSink, amount: usize, status: bun.io.WriteStatus) void 
     // if we are not done yet and has pending data we just wait so we do not runPending twice
     if (status == .pending and has_pending_data) {
         if (this.pending.state == .pending) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.pending.consumed = @truncate(amount);
         }
         return;
     }
 
     if (this.pending.state == .pending) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         this.pending.consumed = @truncate(amount);
 
         // when "done" is true, we will never receive more data.
@@ -518,12 +523,15 @@ pub fn flushFromJS(this: *FileSink, globalThis: *JSGlobalObject, wait: bool) bun
     const rc = this.writer.flush();
     switch (rc) {
         .done => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
         },
         .pending => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
         },
         .wrote => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
         },
         .err => |err| {
@@ -601,6 +609,7 @@ pub fn end(this: *FileSink, _: ?bun.sys.Error) bun.sys.Maybe(void) {
 
     switch (this.writer.flush()) {
         .done => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
             this.writer.end();
             return .success;
@@ -610,6 +619,7 @@ pub fn end(this: *FileSink, _: ?bun.sys.Error) bun.sys.Maybe(void) {
             return .{ .err = e };
         },
         .pending => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
             if (!this.must_be_kept_alive_until_eof) {
                 this.must_be_kept_alive_until_eof = true;
@@ -619,6 +629,7 @@ pub fn end(this: *FileSink, _: ?bun.sys.Error) bun.sys.Maybe(void) {
             return .success;
         },
         .wrote => |written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(written);
             this.writer.end();
             return .success;
@@ -668,12 +679,14 @@ pub fn endFromJS(this: *FileSink, globalThis: *JSGlobalObject) bun.sys.Maybe(JSV
             return .{ .err = err };
         },
         .pending => |pending_written| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.written += @truncate(pending_written);
             if (!this.must_be_kept_alive_until_eof) {
                 this.must_be_kept_alive_until_eof = true;
                 this.ref();
             }
             this.done = true;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.pending.result = .{ .owned = @truncate(pending_written) };
 
             const promise_result = this.pending.promise(globalThis);
@@ -715,14 +728,17 @@ fn toResult(this: *FileSink, write_result: bun.io.WriteResult) streams.Result.Wr
     switch (write_result) {
         .done => |amt| {
             if (amt > 0)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return .{ .owned_and_done = @truncate(amt) };
 
             return .{ .done = {} };
         },
         .wrote => |amt| {
             if (amt > 0)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return .{ .owned = @truncate(amt) };
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return .{ .temporary = @truncate(amt) };
         },
         .err => |err| {
@@ -733,7 +749,9 @@ fn toResult(this: *FileSink, write_result: bun.io.WriteResult) streams.Result.Wr
                 this.must_be_kept_alive_until_eof = true;
                 this.ref();
             }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.pending.consumed += @truncate(pending_written);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.pending.result = .{ .owned = @truncate(pending_written) };
             return .{ .pending = &this.pending };
         },
@@ -746,6 +764,7 @@ pub const FlushPendingTask = struct {
     pub fn runFromJSThread(flush_pending: *FlushPendingTask) void {
         const had = flush_pending.has;
         flush_pending.has = false;
+// safe-transpile: @alignCast requires manual review
         const this: *FileSink = @alignCast(@fieldParentPtr("run_pending_later", flush_pending));
         defer this.deref();
         if (had)
@@ -806,6 +825,7 @@ pub fn assignToStream(this: *FileSink, stream: *jsc.WebCore.ReadableStream, glob
     signal.clear();
 
     this.readable_stream = .init(stream.*, globalThis);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const promise_result = jsc.WebCore.FileSink.JSSink.assignToStream(globalThis, stream.value, this, @as(**anyopaque, @ptrCast(&signal.ptr)));
 
     if (promise_result.toError()) |err| {

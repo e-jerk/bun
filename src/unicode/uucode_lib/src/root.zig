@@ -16,7 +16,7 @@ test {
 }
 
 test "name" {
-    try testing.expect(safe.SimdUtils.eql(get(.name, 65), "LATIN CAPITAL LETTER A"));
+    try testing.expect(std.mem.eql(u8, get(.name, 65), "LATIN CAPITAL LETTER A"));
 }
 
 test "is_alphabetic" {
@@ -125,7 +125,7 @@ test "info extension" {
     try testing.expect(!get(.has_simple_lowercase, 0x1FE0)); // ῠ
 
     // MALAYALAM FRACTION ONE ONE-HUNDRED-AND-SIXTIETH
-    try testing.expect(safe.SimdUtils.eql("061/1", get(.numeric_value_numeric_reversed, 0x0D58)));
+    try testing.expect(std.mem.eql(u8, "061/1", get(.numeric_value_numeric_reversed, 0x0D58)));
 }
 
 test "is_emoji_vs_base" {

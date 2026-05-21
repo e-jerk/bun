@@ -59,7 +59,6 @@ pub const syscall = switch (Environment.os) {
 
 fn toPackedO(number: anytype) i32 {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(number);
 }
 
@@ -360,7 +359,6 @@ pub fn getcwdZ(buf: *bun.PathBuffer) Maybe([:0]const u8) {
         return Result{ .result = bun.strings.fromWPath(buf, wbuf[0..len]) };
     }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const rc: ?[*:0]u8 = @ptrCast(std.c.getcwd(buf, bun.MAX_PATH_BYTES));
     return if (rc) |p|
@@ -733,14 +731,12 @@ fn statxImpl(fd: bun.FD, path: ?[*:0]const u8, flags: u32, mask: u32) Maybe(Posi
 
     while (true) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = linux.statx(@intCast(fd.cast()), if (path) |p| p else "", flags, mask, &buf);
 
         // On some setups (QEMU user-mode, S390 RHEL docker), statx returns a
         // positive value other than 0 with errno unset — neither a normal
         // success (0) nor a kernel -errno. Treat as "not implemented".
         // See nodejs/node#27275 and libuv/libuv src/unix/fs.c.
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         if (@as(isize, @bitCast(rc)) > 0) {
             supports_statx_on_linux.store(false, .monotonic);
@@ -834,7 +830,6 @@ pub fn lutimes(path: [:0]const u8, atime: jsc.Node.TimeLike, mtime: jsc.Node.Tim
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn mkdiratA(dir_fd: bun.FD, file_path: []const u8) Maybe(void) {
     const buf = bun.w_path_buffer_pool.get();
     defer bun.w_path_buffer_pool.put(buf);
@@ -844,19 +839,15 @@ pub fn mkdiratA(dir_fd: bun.FD, file_path: []const u8) Maybe(void) {
 pub fn mkdiratZ(dir_fd: bun.FD, file_path: [*:0]const u8, mode: mode_t) Maybe(void) {
     return switch (Environment.os) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .mac => Maybe(void).errnoSysP(syscall.mkdirat(@intCast(dir_fd.cast()), file_path, mode), .mkdir, file_path) orelse .success,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .linux => Maybe(void).errnoSysP(linux.mkdirat(@intCast(dir_fd.cast()), file_path, mode), .mkdir, file_path) orelse .success,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .freebsd => Maybe(void).errnoSysP(syscall.mkdirat(@intCast(dir_fd.cast()), file_path, mode), .mkdir, file_path) orelse .success,
         .windows, .wasm => @compileError("mkdir is not implemented on this platform"),
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn mkdiratPosix(dir_fd: bun.FD, file_path: []const u8, mode: mode_t) Maybe(void) {
     return mkdiratZ(
@@ -956,7 +947,6 @@ pub fn mkdir(file_path: [:0]const u8, flags: mode_t) Maybe(void) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn mkdirA(file_path: []const u8, flags: mode_t) Maybe(void) {
     if (comptime Environment.isMac or Environment.isFreeBSD) {
         return Maybe(void).errnoSysP(syscall.mkdir(&(std.posix.toPosixPath(file_path) catch return Maybe(void){
@@ -1017,7 +1007,6 @@ pub fn fcntl(fd: bun.FD, cmd: i32, arg: anytype) Maybe(fnctl_int) {
         const result = switch (@TypeOf(arg)) {
             i32, comptime_int, c_int => fcntl_symbol(fd.native(), cmd, @as(c_int, arg)),
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             i64 => fcntl_symbol(fd.cast(), cmd, @as(c_long, @bitCast(arg))),
             *const anyopaque, *anyopaque, usize => fcntl_symbol(fd.cast(), cmd, arg),
             else => @compileError("Unsupported argument type for fcntl"),
@@ -1026,7 +1015,6 @@ pub fn fcntl(fd: bun.FD, cmd: i32, arg: anytype) Maybe(fnctl_int) {
             if (err.getErrno() == .INTR) continue;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @intCast(result) };
     }
@@ -1080,7 +1068,8 @@ pub fn normalizePathWindows(
             if ((bun.strings.eqlComptimeT(T, path_[path_.len - "\\nul".len ..], "\\nul") or
                 bun.strings.eqlComptimeT(T, path_[path_.len - "\\NUL".len ..], "\\NUL")))
             {
-                safe.SimdUtils.copy(buf[0..bun.strings.w("\\??\\NUL").len], bun.strings.w("\\??\\NUL"));
+// safe-transpile: @memcpy requires manual review
+                @memcpy(buf[0..bun.strings.w("\\??\\NUL").len], bun.strings.w("\\??\\NUL"));
                 buf[bun.strings.w("\\??\\NUL").len] = 0;
                 return .{ .result = buf[0..bun.strings.w("\\??\\NUL").len :0] };
             }
@@ -1095,7 +1084,8 @@ pub fn normalizePathWindows(
                     }
                     buf[0..4].* = .{ '\\', '\\', '.', '\\' };
                     const rest = path[4..];
-                    safe.SimdUtils.copy(buf[4..][0..rest.len], rest);
+// safe-transpile: @memcpy requires manual review
+                    @memcpy(buf[4..][0..rest.len], rest);
                     buf[path.len] = 0;
                     return .{ .result = buf[0..path.len :0] };
                 }
@@ -1123,7 +1113,8 @@ pub fn normalizePathWindows(
         }
 
         // Skip the system call to get the final path name if it doesn't have any of the above characters.
-        safe.SimdUtils.copy(buf[0..path.len], path);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(buf[0..path.len], path);
         buf[path.len] = 0;
         return .{
             .result = buf[0..path.len :0],
@@ -1152,9 +1143,11 @@ pub fn normalizePathWindows(
     if (joined_len > buf1.len -| nt_prefix_headroom) {
         return name_too_long;
     }
-    safe.SimdUtils.copy(buf1[0..base_path.len], base_path);
+// safe-transpile: @memcpy requires manual review
+    @memcpy(buf1[0..base_path.len], base_path);
     buf1[base_path.len] = '\\';
-    safe.SimdUtils.copy(buf1[base_path.len + 1 .. joined_len], path);
+// safe-transpile: @memcpy requires manual review
+    @memcpy(buf1[base_path.len + 1 .. joined_len], path);
     const norm = bun.path.normalizeStringGenericTZ(u16, buf1[0..joined_len], buf, .{ .add_nt_prefix = true, .zero_terminate = true });
     return .{
         .result = norm,
@@ -1189,7 +1182,6 @@ fn openDirAtWindowsNtPath(
             w.FILE_DIRECTORY_FILE | w.FILE_SYNCHRONOUS_IO_NONALERT | w.FILE_OPEN_FOR_BACKUP_INTENT | open_reparse_point,
         );
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const path_len_bytes: u16 = @truncate(path.len * 2);
     var nt_name = w.UNICODE_STRING{
@@ -1345,7 +1337,6 @@ pub fn openDirAtWindows(
     return openDirAtWindowsT(u16, dirFd, path, options);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub noinline fn openDirAtWindowsA(
     dirFd: bun.FD,
@@ -1664,7 +1655,6 @@ pub fn openFileAtWindows(
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub noinline fn openFileAtWindowsA(
     dirFd: bun.FD,
     path: []const u8,
@@ -1760,7 +1750,6 @@ pub fn openatWindows(
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openatWindowsA(
     dir: bun.FD,
     path: []const u8,
@@ -1773,7 +1762,6 @@ pub fn openatWindowsA(
 pub fn openatOSPath(dirfd: bun.FD, file_path: bun.OSPathSliceZ, flags: i32, perm: bun.Mode) Maybe(bun.FD) {
     if (comptime Environment.isMac) {
         // https://opensource.apple.com/source/xnu/xnu-7195.81.3/libsyscall/wrappers/open-base.c
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         const rc = darwin_nocancel.@"openat$NOCANCEL"(dirfd.cast(), file_path.ptr, @bitCast(bun.O.toPacked(flags)), perm);
         if (comptime Environment.allow_assert)
@@ -1788,16 +1776,13 @@ pub fn openatOSPath(dirfd: bun.FD, file_path: bun.OSPathSliceZ, flags: i32, perm
             loop_limit += 1;
             std.debug.assert(loop_limit <= 1_000_000);
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             const rc = std.c.openat(dirfd.cast(), file_path, @bitCast(bun.O.toPacked(flags)), perm);
             if (comptime Environment.allow_assert)
                 log("openat({f}, {s}, {d}) = {d}", .{ dirfd, bun.sliceTo(file_path, 0), flags, rc });
             return switch (sys.getErrno(rc)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .SUCCESS => .{ .result = .fromNative(@intCast(rc)) },
                 .INTR => continue,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 else => |err| .{ .err = .{ .errno = @truncate(@intFromEnum(err)), .syscall = .open } },
             };
@@ -1814,13 +1799,11 @@ pub fn openatOSPath(dirfd: bun.FD, file_path: bun.OSPathSliceZ, flags: i32, perm
 
         return switch (sys.getErrno(rc)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .SUCCESS => .{ .result = .fromNative(@intCast(rc)) },
             .INTR => continue,
             else => |err| {
                 return .{
                     .err = .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         .errno = @truncate(@intFromEnum(err)),
                         .syscall = .open,
@@ -1854,7 +1837,6 @@ pub fn access(path: bun.OSPathSliceZ, mode: i32) Maybe(void) {
     }
     // TODO: fix that bun's std library fork has a different parameter type.
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     return Maybe(void).errnoSysP(syscall.access(path, @bitCast(mode)), .access, path) orelse .success;
 }
 
@@ -1881,7 +1863,6 @@ pub fn openatFileWithLibuvFlags(dirfd: bun.FD, file_path: [:0]const u8, flags: b
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openatA(dirfd: bun.FD, file_path: []const u8, flags: i32, perm: bun.Mode) Maybe(bun.FD) {
     if (comptime Environment.isWindows) {
         return openatWindowsT(u8, dirfd, file_path, flags, perm);
@@ -1902,7 +1883,6 @@ pub fn openatA(dirfd: bun.FD, file_path: []const u8, flags: i32, perm: bun.Mode)
     );
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openA(file_path: []const u8, flags: i32, perm: bun.Mode) Maybe(bun.FD) {
     // this is what open() does anyway.
@@ -1929,7 +1909,6 @@ pub const max_count = switch (builtin.os.tag) {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(fd: bun.FD, bytes: []const u8) Maybe(usize) {
     const adjusted_len = @min(max_count, bytes.len);
     var debug_timer = bun.Output.DebugTimer.start();
@@ -1952,7 +1931,6 @@ pub fn write(fd: bun.FD, bytes: []const u8) Maybe(usize) {
             }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @intCast(rc) };
         },
         .linux, .freebsd => {
@@ -1966,7 +1944,6 @@ pub fn write(fd: bun.FD, bytes: []const u8) Maybe(usize) {
                 }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return Maybe(usize){ .result = @intCast(rc) };
             }
         },
@@ -1977,7 +1954,6 @@ pub fn write(fd: bun.FD, bytes: []const u8) Maybe(usize) {
             const rc = kernel32.WriteFile(
                 fd.cast(),
                 bytes.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 @as(u32, @truncate(adjusted_len)),
                 &bytes_written,
@@ -2023,7 +1999,6 @@ fn veclen(buffers: anytype) usize {
 pub fn writev(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
     if (comptime Environment.isMac) {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const rc = writev_sym(fd.cast(), @as([*]std.posix.iovec_const, @ptrCast(buffers.ptr)), @as(i32, @intCast(buffers.len)));
         if (comptime Environment.allow_assert)
             log("writev({f}, {d}) = {d}", .{ fd, veclen(buffers), rc });
@@ -2033,11 +2008,9 @@ pub fn writev(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         while (true) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const rc = writev_sym(fd.cast(), @as([*]std.posix.iovec_const, @ptrCast(buffers.ptr)), @intCast(buffers.len));
             if (comptime Environment.allow_assert)
@@ -2048,7 +2021,6 @@ pub fn writev(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
                 return err;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
@@ -2062,7 +2034,6 @@ pub fn pwritev(fd: bun.FD, buffers: []const bun.PlatformIOVecConst, position: is
     }
     if (comptime Environment.isMac) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = pwritev_sym(fd.cast(), buffers.ptr, @as(i32, @intCast(buffers.len)), position);
         if (comptime Environment.allow_assert)
             log("pwritev({f}, {d}) = {d}", .{ fd, veclen(buffers), rc });
@@ -2072,11 +2043,9 @@ pub fn pwritev(fd: bun.FD, buffers: []const bun.PlatformIOVecConst, position: is
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         while (true) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const rc = pwritev_sym(fd.cast(), buffers.ptr, @intCast(buffers.len), position);
             if (comptime Environment.allow_assert)
@@ -2087,7 +2056,6 @@ pub fn pwritev(fd: bun.FD, buffers: []const bun.PlatformIOVecConst, position: is
                 return err;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
@@ -2104,7 +2072,6 @@ pub fn readv(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
 
     if (comptime Environment.isMac) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = readv_sym(fd.cast(), buffers.ptr, @as(i32, @intCast(buffers.len)));
         if (comptime Environment.allow_assert)
             log("readv({f}, {d}) = {d}", .{ fd, veclen(buffers), rc });
@@ -2114,11 +2081,9 @@ pub fn readv(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         while (true) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const rc = readv_sym(fd.cast(), buffers.ptr, @intCast(buffers.len));
             if (comptime Environment.allow_assert)
@@ -2129,7 +2094,6 @@ pub fn readv(fd: bun.FD, buffers: []std.posix.iovec) Maybe(usize) {
                 return err;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
@@ -2146,7 +2110,6 @@ pub fn preadv(fd: bun.FD, buffers: []std.posix.iovec, position: isize) Maybe(usi
 
     if (comptime Environment.isMac) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = preadv_sym(fd.cast(), buffers.ptr, @as(i32, @intCast(buffers.len)), position);
         if (comptime Environment.allow_assert)
             log("preadv({f}, {d}) = {d}", .{ fd, veclen(buffers), rc });
@@ -2156,11 +2119,9 @@ pub fn preadv(fd: bun.FD, buffers: []std.posix.iovec, position: isize) Maybe(usi
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         while (true) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const rc = preadv_sym(fd.cast(), buffers.ptr, @intCast(buffers.len), position);
             if (comptime Environment.allow_assert)
@@ -2171,7 +2132,6 @@ pub fn preadv(fd: bun.FD, buffers: []std.posix.iovec, position: isize) Maybe(usi
                 return err;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
@@ -2213,7 +2173,6 @@ else
 const fcntl_symbol = syscall.fcntl;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pread(fd: bun.FD, buf: []u8, offset: i64) Maybe(usize) {
     const adjusted_len = @min(buf.len, max_count);
 
@@ -2223,7 +2182,6 @@ pub fn pread(fd: bun.FD, buf: []u8, offset: i64) Maybe(usize) {
         }
     }
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
     const ioffset = @as(i64, @bitCast(offset)); // the OS treats this as unsigned
     var loop_limit: usize = 0;
@@ -2236,7 +2194,6 @@ pub fn pread(fd: bun.FD, buf: []u8, offset: i64) Maybe(usize) {
             return err;
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     }
 }
@@ -2247,7 +2204,6 @@ else
     syscall.pwrite;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pwrite(fd: bun.FD, bytes: []const u8, offset: i64) Maybe(usize) {
     if (comptime Environment.allow_assert) {
         if (bytes.len == 0) {
@@ -2257,7 +2213,6 @@ pub fn pwrite(fd: bun.FD, bytes: []const u8, offset: i64) Maybe(usize) {
 
     const adjusted_len = @min(bytes.len, max_count);
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
     const ioffset = @as(i64, @bitCast(offset)); // the OS treats this as unsigned
     var loop_limit: usize = 0;
@@ -2271,12 +2226,10 @@ pub fn pwrite(fd: bun.FD, bytes: []const u8, offset: i64) Maybe(usize) {
                 else => return err,
             }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         } else Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn read(fd: bun.FD, buf: []u8) Maybe(usize) {
     if (comptime Environment.allow_assert) {
@@ -2297,7 +2250,6 @@ pub fn read(fd: bun.FD, buf: []u8) Maybe(usize) {
             log("read({f}, {d}) = {d} ({f})", .{ fd, adjusted_len, rc, debug_timer });
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         },
         .linux, .freebsd => {
@@ -2310,7 +2262,6 @@ pub fn read(fd: bun.FD, buf: []u8) Maybe(usize) {
                     return err;
                 }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
             }
         },
@@ -2318,7 +2269,6 @@ pub fn read(fd: bun.FD, buf: []u8) Maybe(usize) {
             sys_uv.read(fd, buf)
         else {
             var amount_read: u32 = 0;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const rc = kernel32.ReadFile(fd.native(), buf.ptr, @as(u32, @truncate(adjusted_len)), &amount_read, null);
             if (rc == windows.FALSE) {
@@ -2345,7 +2295,6 @@ pub fn read(fd: bun.FD, buf: []u8) Maybe(usize) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readAll(fd: bun.FD, buf: []u8) Maybe(usize) {
     var rest = buf;
     var total_read: usize = 0;
@@ -2365,7 +2314,6 @@ pub fn readAll(fd: bun.FD, buf: []u8) Maybe(usize) {
 const send_flags_nonblock = c.MSG_DONTWAIT | c.MSG_NOSIGNAL;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn recvNonBlock(fd: bun.FD, buf: []u8) Maybe(usize) {
     return recv(fd, buf, recv_flags_nonblock);
 }
@@ -2379,7 +2327,6 @@ pub fn poll(fds: []std.posix.pollfd, timeout: i32) Maybe(usize) {
             .mac => darwin_nocancel.@"poll$NOCANCEL"(fds.ptr, fds.len, timeout),
             .linux => linux.poll(fds.ptr, fds.len, timeout),
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .freebsd => std.c.poll(fds.ptr, @intCast(fds.len), timeout),
             .windows, .wasm => @compileError("poll is not implemented on this platform"),
         };
@@ -2387,7 +2334,6 @@ pub fn poll(fds: []std.posix.pollfd, timeout: i32) Maybe(usize) {
             if (err.getErrno() == .INTR) continue;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @as(usize, @intCast(rc)) };
     }
@@ -2443,7 +2389,6 @@ pub inline fn sigemptyset() sigset_t {
 pub inline fn sigaddset(set: *sigset_t, sig: u8) void {
     if (comptime Environment.isAndroid) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         set.* |= @as(c_ulong, 1) << @as(u6, @intCast(sig - 1));
         return;
     }
@@ -2462,7 +2407,6 @@ pub fn sigaction(sig: u8, noalias act: ?*const Sigaction, noalias oact: ?*Sigact
         .{ .name = "sigaction" },
     ) else std.c.sigaction;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     _ = libc_sigaction(@intCast(sig), act, oact);
 }
 
@@ -2475,7 +2419,6 @@ pub fn ppoll(fds: []std.posix.pollfd, timeout: ?*std.posix.timespec, sigmask: ?*
             .mac => darwin_nocancel.@"ppoll$NOCANCEL"(fds.ptr, fds.len, timeout, sigmask),
             .linux => linux.ppoll(fds.ptr, fds.len, timeout, sigmask),
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .freebsd => std.c.ppoll(fds.ptr, @intCast(fds.len), timeout, sigmask),
             .windows, .wasm => @compileError("ppoll is not implemented on this platform"),
         };
@@ -2484,13 +2427,11 @@ pub fn ppoll(fds: []std.posix.pollfd, timeout: ?*std.posix.timespec, sigmask: ?*
             return err;
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @as(usize, @intCast(rc)) };
     }
     unreachable;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn recv(fd: bun.FD, buf: []u8, flag: u32) Maybe(usize) {
     const adjusted_len = @min(buf.len, max_count);
@@ -2512,7 +2453,6 @@ pub fn recv(fd: bun.FD, buf: []u8, flag: u32) Maybe(usize) {
         log("recv({f}, {d}) = {d} {f}", .{ fd, adjusted_len, rc, debug_timer });
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         while (true) {
@@ -2525,7 +2465,6 @@ pub fn recv(fd: bun.FD, buf: []u8, flag: u32) Maybe(usize) {
             }
             log("recv({f}, {d}) = {d} {f}", .{ fd, adjusted_len, rc, debug_timer });
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
     }
@@ -2537,13 +2476,11 @@ pub fn kevent(fd: bun.FD, changelist: []const std.c.Kevent, eventlist: []std.c.K
         loop_limit += 1;
         std.debug.assert(loop_limit <= 1_000_000);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = std.c.kevent(fd.cast(), changelist.ptr, @intCast(changelist.len), eventlist.ptr, @intCast(eventlist.len), timeout);
         if (Maybe(usize).errnoSysFd(rc, .kevent, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @as(usize, @intCast(rc)) };
     }
@@ -2551,12 +2488,10 @@ pub fn kevent(fd: bun.FD, changelist: []const std.c.Kevent, eventlist: []std.c.K
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn sendNonBlock(fd: bun.FD, buf: []const u8) Maybe(usize) {
     return send(fd, buf, send_flags_nonblock);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn send(fd: bun.FD, buf: []const u8, flag: u32) Maybe(usize) {
     if (comptime Environment.isMac) {
@@ -2571,7 +2506,6 @@ pub fn send(fd: bun.FD, buf: []const u8, flag: u32) Maybe(usize) {
         syslog("send({f}, {d}) = {d} ({f})", .{ fd, buf.len, rc, debug_timer });
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
     } else {
         const debug_timer = bun.Output.DebugTimer.start();
@@ -2585,7 +2519,6 @@ pub fn send(fd: bun.FD, buf: []const u8, flag: u32) Maybe(usize) {
             }
 
             syslog("send({f}, {d}) = {d} ({f})", .{ fd, buf.len, rc, debug_timer });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Maybe(usize){ .result = @as(usize, @intCast(rc)) };
         }
@@ -2602,7 +2535,6 @@ pub fn pidfd_open(pid: std.os.linux.pid_t, flags: u32) Maybe(i32) {
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(i32){ .result = @intCast(rc) };
     }
 
@@ -2615,7 +2547,6 @@ pub fn lseek(fd: bun.FD, offset: i64, whence: usize) Maybe(usize) {
         loop_limit += 1;
         std.debug.assert(loop_limit <= 1_000_000);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = syscall.lseek(fd.cast(), offset, @intCast(whence));
         if (Maybe(usize).errnoSysFd(rc, .lseek, fd)) |err| {
             if (err.getErrno() == .INTR) continue;
@@ -2623,12 +2554,10 @@ pub fn lseek(fd: bun.FD, offset: i64, whence: usize) Maybe(usize) {
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @intCast(rc) };
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readlink(in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
     if (comptime Environment.isWindows) {
@@ -2642,7 +2571,6 @@ pub fn readlink(in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
             if (err.getErrno() == .INTR) continue;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const len: usize = @intCast(rc);
         // POSIX readlink does not NUL-terminate and may truncate to buf.len.
@@ -2662,7 +2590,6 @@ pub fn readlink(in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readlinkat(fd: bun.FD, in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
     var loop_limit: usize = 0;
     while (true) {
@@ -2674,7 +2601,6 @@ pub fn readlinkat(fd: bun.FD, in: [:0]const u8, buf: []u8) Maybe([:0]u8) {
             if (err.getErrno() == .INTR) continue;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const len: usize = @intCast(rc);
         // See comment in readlink() above.
@@ -2695,7 +2621,6 @@ pub fn ftruncate(fd: bun.FD, size: isize) Maybe(void) {
     if (comptime Environment.isWindows) {
         var io_status_block: std.os.windows.IO_STATUS_BLOCK = undefined;
         var eof_info = std.os.windows.FILE_END_OF_FILE_INFORMATION{
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             .EndOfFile = @bitCast(size),
         };
@@ -2854,9 +2779,7 @@ pub fn renameat2(from_dir: bun.FD, from: [:0]const u8, to_dir: bun.FD, to: [:0]c
     while (true) {
         const rc = switch (comptime Environment.os) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .linux => std.os.linux.renameat2(@intCast(from_dir.cast()), from.ptr, @intCast(to_dir.cast()), to.ptr, flags.int()),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .mac => bun.c.renameatx_np(@intCast(from_dir.cast()), from.ptr, @intCast(to_dir.cast()), to.ptr, flags.int()),
             .freebsd => unreachable, // returned above
@@ -3299,7 +3222,8 @@ pub fn getFdPath(fd: bun.FD, out_buffer: *bun.PathBuffer) Maybe([]u8) {
                 .result => {},
             }
             const path = bun.sliceTo(&info.kf_path, 0);
-            safe.SimdUtils.copy(out_buffer[0..path.len], path);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(out_buffer[0..path.len], path);
             return .{ .result = out_buffer[0..path.len] };
         },
         .wasm => @compileError("querying for canonical path of a handle is unsupported on this host"),
@@ -3318,20 +3242,17 @@ pub fn mmap(
     offset: u64,
 ) Maybe([]align(page_size_min) u8) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     const ioffset = @as(i64, @bitCast(offset)); // the OS treats this as unsigned
     const rc = std.c.mmap(ptr, length, prot, flags, fd.cast(), ioffset);
     const fail = std.c.MAP_FAILED;
     if (rc == fail) {
         return .initErr(.{
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             .errno = @as(sys.Error.Int, @truncate(@intFromEnum(getErrno(@as(i64, @bitCast(@intFromPtr(fail))))))),
             .syscall = .mmap,
         });
     }
 
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     return .initResult(@as([*]align(page_size_min) u8, @ptrCast(@alignCast(rc)))[0..length]);
 }
@@ -3343,7 +3264,6 @@ pub fn mmapFile(path: [:0]const u8, flags: std.c.MAP, wanted_size: ?usize, offse
     };
     defer fd.close();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var size = std.math.sub(usize, @as(usize, @intCast(switch (fstat(fd)) {
         .result => |result| result.size,
@@ -3388,7 +3308,6 @@ pub fn setsockopt(fd: bun.FD, level: c_int, optname: u32, value: i32) Maybe(i32)
             return err;
         }
         log("setsockopt({d}, {d}, {d}) = {d}", .{ fd.cast(), level, optname, rc });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @intCast(rc) };
     }
@@ -3606,7 +3525,6 @@ pub fn memfd_create(name: [:0]const u8, flags_: MemfdFlags) Maybe(bun.FD) {
         }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = .fromNative(@intCast(rc)) };
     }
     unreachable;
@@ -3649,7 +3567,6 @@ pub fn getMaxPipeSizeOnLinux() usize {
     return @as(
         usize,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(bun.once(struct {
             fn once() c_int {
                 const strings = bun.strings;
@@ -3676,7 +3593,6 @@ pub fn getMaxPipeSizeOnLinux() usize {
 
                 // we set the absolute max to 8 MB because honestly that's a huge pipe
                 // my current linux machine only goes up to 1 MB, so that's very unlikely to be hit
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @min(@as(c_int, @truncate(max_pipe_size -| 32)), 1024 * 1024 * 8);
             }
@@ -3757,7 +3673,6 @@ pub fn getFileAttributes(path: anytype) ?WindowsFileAttributes {
             return null;
         }
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         const attributes: WindowsFileAttributes = @bitCast(dword);
         return attributes;
     } else {
@@ -3803,7 +3718,6 @@ pub fn existsOSPath(path: bun.OSPathSliceZ, file_only: bool) bool {
     @compileError("TODO: existsOSPath");
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn exists(path: []const u8) bool {
     if (comptime Environment.isPosix) {
@@ -3873,9 +3787,7 @@ pub fn futimens(fd: bun.FD, atime: jsc.Node.TimeLike, mtime: jsc.Node.TimeLike) 
     while (true) {
         const rc = syscall.futimens(fd.cast(), &[2]syscall.timespec{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .{ .sec = @intCast(atime.sec), .nsec = atime.nsec },
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .{ .sec = @intCast(mtime.sec), .nsec = mtime.nsec },
         });
@@ -3901,9 +3813,7 @@ fn utimensWithFlags(path: bun.OSPathSliceZ, atime: jsc.Node.TimeLike, mtime: jsc
     while (true) {
         var times: [2]syscall.timespec = .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .{ .sec = @intCast(atime.sec), .nsec = atime.nsec },
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .{ .sec = @intCast(mtime.sec), .nsec = mtime.nsec },
         };
@@ -3952,7 +3862,6 @@ pub fn setNonblocking(fd: bun.FD) Maybe(void) {
 pub fn updateNonblocking(fd: bun.FD, nonblocking: bool) Maybe(void) {
     const current_flags: i32 = switch (getFcntlFlags(fd)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .result => |f| @intCast(f),
         .err => |err| return .{ .err = err },
     };
@@ -3960,7 +3869,6 @@ pub fn updateNonblocking(fd: bun.FD, nonblocking: bool) Maybe(void) {
     const new_flags: i32 = if (nonblocking) current_flags | @as(i32, bun.O.NONBLOCK) else current_flags & ~@as(i32, bun.O.NONBLOCK);
 
     if (new_flags != current_flags) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         switch (fcntl(fd, std.posix.F.SETFL, @as(fnctl_int, @intCast(new_flags)))) {
             .err => |err| return .{ .err = err },
@@ -3990,7 +3898,6 @@ pub fn existsAtType(fd: bun.FD, subpath: anytype) Maybe(ExistsAtType) {
             path = path[2..];
         }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const path_len_bytes: u16 = @truncate(path.len * 2);
         var nt_name = w.UNICODE_STRING{
@@ -4043,9 +3950,9 @@ pub fn existsAtType(fd: bun.FD, subpath: anytype) Maybe(ExistsAtType) {
     if (std.meta.sentinel(@TypeOf(subpath)) == null) {
         const path_buf = bun.path_buffer_pool.get();
         defer bun.path_buffer_pool.put(path_buf);
-        safe.SimdUtils.copy(path_buf[0..subpath.len], subpath);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(path_buf[0..subpath.len], subpath);
         path_buf[subpath.len] = 0;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const slice: [:0]const u8 = @ptrCast(path_buf);
         return existsAtType(fd, slice);
@@ -4131,7 +4038,6 @@ pub fn setFileOffset(fd: bun.FD, offset: usize) Maybe(void) {
     if (comptime Environment.isLinux) {
         return Maybe(void).errnoSysFd(
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             linux.lseek(fd.cast(), @intCast(offset), posix.SEEK.SET),
             .lseek,
             fd,
@@ -4141,7 +4047,6 @@ pub fn setFileOffset(fd: bun.FD, offset: usize) Maybe(void) {
     if (comptime Environment.isMac or Environment.isFreeBSD) {
         return Maybe(void).errnoSysFd(
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             std.c.lseek(fd.cast(), @intCast(offset), posix.SEEK.SET),
             .lseek,
             fd,
@@ -4150,17 +4055,13 @@ pub fn setFileOffset(fd: bun.FD, offset: usize) Maybe(void) {
 
     if (comptime Environment.isWindows) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const offset_high: u64 = @as(u32, @intCast(offset >> 32));
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const offset_low: u64 = @as(u32, @intCast(offset & 0xFFFFFFFF));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         var plarge_integer: i64 = @bitCast(offset_high);
         const rc = kernel32.SetFilePointerEx(
             fd.cast(),
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             @as(windows.LARGE_INTEGER, @bitCast(offset_low)),
             &plarge_integer,
@@ -4180,7 +4081,6 @@ pub fn setFileOffsetToEndWindows(fd: bun.FD) Maybe(usize) {
         if (rc == windows.FALSE) {
             return Maybe(usize).errnoSysFd(0, .lseek, fd) orelse Maybe(usize){ .result = 0 };
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return Maybe(usize){ .result = @intCast(new_ptr) };
     }
@@ -4260,10 +4160,8 @@ pub fn dupWithFlags(fd: bun.FD, _: i32) Maybe(bun.FD) {
     };
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     log("dup({f}) = {f}", .{ fd, bun.FD.fromNative(@intCast(out)) });
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .initResult(.fromNative(@intCast(out)));
 }
@@ -4301,7 +4199,6 @@ pub fn link(comptime T: type, src: [:0]const T, dest: [:0]const T) Maybe(void) {
     return .success;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn linkat(src: bun.FD, src_path: []const u8, dest: bun.FD, dest_path: []const u8) Maybe(void) {
     return linkatZ(
@@ -4406,7 +4303,6 @@ extern "c" fn sys_preadv2(
 ///
 /// On other platforms, this is just a wrapper around `read(2)`.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readNonblocking(fd: bun.FD, buf: []u8) Maybe(usize) {
     if (Environment.isLinux) {
         while (bun.linux.RWFFlagSupport.isMaybeSupported()) {
@@ -4442,7 +4338,6 @@ pub fn readNonblocking(fd: bun.FD, buf: []u8) Maybe(usize) {
             }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = @as(usize, @intCast(rc)) };
         }
     }
@@ -4462,7 +4357,6 @@ pub extern "c" fn sys_pwritev2(
 /// On Linux, this `pwritev(2)` to attempt to read a blocking file descriptor without blocking.
 ///
 /// On other platforms, this is just a wrapper around `read(2)`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeNonblocking(fd: bun.FD, buf: []const u8) Maybe(usize) {
     if (Environment.isLinux) {
@@ -4499,7 +4393,6 @@ pub fn writeNonblocking(fd: bun.FD, buf: []const u8) Maybe(usize) {
             }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = @as(usize, @intCast(rc)) };
         }
     }
@@ -4517,13 +4410,11 @@ pub fn getFileSize(fd: bun.FD) Maybe(usize) {
         }
         log("GetFileSizeEx({f}) = {d}", .{ fd, size });
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .result = @intCast(@max(size, 0)) };
     }
 
     switch (fstat(fd)) {
         .result => |*stat_| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = @intCast(@max(stat_.size, 0)) };
         },
@@ -4587,12 +4478,9 @@ pub fn lstat_absolute(path: [:0]const u8) !Stat {
     return Stat{
         .inode = st.ino,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .nlink = @intCast(st.nlink),
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         .size = @as(u64, @bitCast(st.size)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .block_size = @intCast(st.blksize),
         .permissions = @import("std-fs-compat").File.Permissions.fromMode(st.mode),
@@ -4618,12 +4506,9 @@ pub fn lstat_absolute(path: [:0]const u8) !Stat {
             },
         },
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .atime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, atime.sec) * std.time.ns_per_s + atime.nsec)) },
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .mtime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, mtime.sec) * std.time.ns_per_s + mtime.nsec)) },
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .ctime = .{ .nanoseconds = @as(i96, @intCast(@as(i128, ctime.sec) * std.time.ns_per_s + ctime.nsec)) },
     };
@@ -4729,7 +4614,6 @@ pub fn copyFileZSlowWithHandle(in_handle: bun.FD, to_dir: bun.FD, destination: [
         defer out_handle.close();
 
         if (comptime Environment.isLinux) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             _ = std.os.linux.fallocate(out_handle.cast(), 0, 0, @intCast(stat_.size));
         }
@@ -4926,7 +4810,6 @@ pub const preallocate_supported = @TypeOf(preallocate_length) != void;
 pub fn preallocate_file(fd: std.posix.fd_t, offset: std.posix.off_t, len: std.posix.off_t) anyerror!void {
     switch (Environment.os) {
         .linux => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             _ = std.os.linux.fallocate(fd, 0, @as(i64, @intCast(offset)), len);
         },

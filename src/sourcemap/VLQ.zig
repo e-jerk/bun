@@ -11,7 +11,6 @@ bytes: [vlq_max_in_bytes]u8,
 len: u8 = 0,
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub inline fn slice(self: *const VLQ) []const u8 {
     return self.bytes[0..self.len];
 }
@@ -38,7 +37,6 @@ const vlq_max_in_bytes = 7;
 pub fn encode(value: i32) VLQ {
     return if (value >= 0 and value <= 255)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         vlq_lookup_table[@as(usize, @intCast(value))]
     else
         encodeSlowPath(value);
@@ -62,10 +60,8 @@ fn encodeSlowPath(value: i32) VLQ {
 
     var vlq: u32 = if (value >= 0)
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         @as(u32, @bitCast(value << 1))
     else
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         @as(u32, @bitCast((-value << 1) | 1));
 
@@ -104,7 +100,6 @@ const base64_lut: [std.math.maxInt(u7)]u8 = brk: {
     var bytes = [_]u8{std.math.maxInt(u7)} ** std.math.maxInt(u7);
 
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (base64, 0..) |c, i| {
         bytes[c] = i;
     }
@@ -112,7 +107,6 @@ const base64_lut: [std.math.maxInt(u7)]u8 = brk: {
     break :brk bytes;
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(encoded: []const u8, start: usize) VLQResult {
     var shift: u8 = 0;
@@ -124,11 +118,9 @@ pub fn decode(encoded: []const u8, start: usize) VLQResult {
     // inlining helps for the 1 or 2 byte case, hurts a little for larger
     inline for (0..vlq_max_in_bytes + 1) |i| {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const index = @as(u32, base64_lut[@as(u7, @truncate(encoded_[i]))]);
 
         // decode a byte
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         vlq |= (index & 31) << @as(u5, @truncate(shift));
         shift += 5;
@@ -139,10 +131,8 @@ pub fn decode(encoded: []const u8, start: usize) VLQResult {
                 .start = start + comptime (i + 1),
                 .value = if ((vlq & 1) == 0)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @as(i32, @intCast(vlq >> 1))
                 else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     -@as(i32, @intCast((vlq >> 1))),
             };
@@ -152,7 +142,6 @@ pub fn decode(encoded: []const u8, start: usize) VLQResult {
     return VLQResult{ .start = start + encoded_.len, .value = 0 };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decodeAssumeValid(encoded: []const u8, start: usize) VLQResult {
     var shift: u8 = 0;
@@ -165,12 +154,10 @@ pub fn decodeAssumeValid(encoded: []const u8, start: usize) VLQResult {
     inline for (0..vlq_max_in_bytes + 1) |i| {
         bun.assert(encoded_[i] < std.math.maxInt(u7)); // invalid base64 character
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const index = @as(u32, base64_lut[@as(u7, @truncate(encoded_[i]))]);
         bun.assert(index != std.math.maxInt(u7)); // invalid base64 character
 
         // decode a byte
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         vlq |= (index & 31) << @as(u5, @truncate(shift));
         shift += 5;
@@ -181,10 +168,8 @@ pub fn decodeAssumeValid(encoded: []const u8, start: usize) VLQResult {
                 .start = start + comptime (i + 1),
                 .value = if ((vlq & 1) == 0)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @as(i32, @intCast(vlq >> 1))
                 else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     -@as(i32, @intCast((vlq >> 1))),
             };

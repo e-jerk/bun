@@ -25,6 +25,7 @@ pub fn throwErrInvalidArgTypeWithMessage(
     return globalThis.ERR(.INVALID_ARG_TYPE, fmt, args).throw();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn throwErrInvalidArgType(
     globalThis: *JSGlobalObject,
     comptime name_fmt: string,
@@ -142,12 +143,14 @@ pub fn validateUint32(globalThis: *JSGlobalObject, value: JSValue, comptime name
     }
     const num: i64 = value.asInt52();
     const min: i64 = if (greater_than_zero) 1 else 0;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const max: i64 = @intCast(std.math.maxInt(u32));
     if (num < min or num > max) {
         var formatter = jsc.ConsoleObject.Formatter{ .globalThis = globalThis };
         defer formatter.deinit();
         return throwRangeError(globalThis, "The value of \"" ++ name_fmt ++ "\" is out of range. It must be >= {d} and <= {d}. Received {f}", name_args ++ .{ min, max, value.toFmt(&formatter) });
     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @truncate(@as(u63, @intCast(num)));
 }
 
@@ -281,7 +284,8 @@ pub fn validateStringEnum(comptime T: type, globalThis: *JSGlobalObject, value: 
 
     const values_info = comptime blk: {
         var out: []const u8 = "";
-        for (@typeInfo(T).@"enum".fields, 0..) |enum_field, i| {
+        // safe-transpile: for with index access requires manual review
+    for (@typeInfo(T).@"enum".fields, 0..) |enum_field, i| {
             out = out ++ (if (i > 0) "|" else "") ++ enum_field.name;
         }
         break :blk out;

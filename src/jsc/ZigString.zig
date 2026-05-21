@@ -12,7 +12,6 @@ pub const ZigString = extern struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(slice_: []const u8) ZigString {
         if (!strings.isAllASCII(slice_)) {
             return initUTF8(slice_);
@@ -26,12 +25,10 @@ pub const ZigString = extern struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn encode(this: ZigString, encoding: jsc.Node.Encoding) []u8 {
         return this.encodeWithAllocator(bun.default_allocator, encoding);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn encodeWithAllocator(this: ZigString, allocator: std.mem.Allocator, encoding: jsc.Node.Encoding) []u8 {
         return switch (this.as()) {
@@ -41,7 +38,6 @@ pub const ZigString = extern struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn dupeForJS(utf8: []const u8, allocator: std.mem.Allocator) !ZigString {
         if (try strings.toUTF16Alloc(allocator, utf8, false, false)) |utf16| {
@@ -91,12 +87,10 @@ pub const ZigString = extern struct {
             .allocator = NullableAllocator.init(allocator),
             .ptr = out.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(u32, @truncate(out.len)),
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn indexOfAny(this: ZigString, comptime chars: []const u8) ?strings.OptionalUsize {
         if (this.is16Bit()) {
@@ -109,10 +103,8 @@ pub const ZigString = extern struct {
     pub fn charAt(this: ZigString, offset: usize) u8 {
         if (this.is16Bit()) {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u8, @truncate(this.utf16SliceAligned()[offset]));
         } else {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u8, @truncate(this.slice()[offset]));
         }
@@ -286,7 +278,6 @@ pub const ZigString = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eqlComptime(this: ZigString, comptime other: []const u8) bool {
         if (this.is16Bit()) {
             return strings.eqlComptimeUTF16(this.utf16SliceAligned(), other);
@@ -306,7 +297,6 @@ pub const ZigString = extern struct {
         return this.len;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn byteSlice(this: ZigString) []const u8 {
         if (this.is16Bit()) {
@@ -343,18 +333,15 @@ pub const ZigString = extern struct {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(allocator: std.mem.Allocator, input: []const u8) Slice {
             return .{
                 .ptr = input.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(input.len)),
                 .allocator = NullableAllocator.init(allocator),
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn initDupe(allocator: std.mem.Allocator, input: []const u8) OOM!Slice {
             return .init(allocator, try allocator.dupe(u8, input));
@@ -377,11 +364,9 @@ pub const ZigString = extern struct {
         pub const byteSlice = Slice.slice;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fromUTF8NeverFree(input: []const u8) Slice {
             return .{
                 .ptr = input.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(input.len)),
                 .allocator = .{},
@@ -440,17 +425,14 @@ pub const ZigString = extern struct {
         pub fn cloneWithTrailingSlash(this: Slice, allocator: std.mem.Allocator) !Slice {
             const buf = try strings.cloneNormalizingSeparators(allocator, this.slice());
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return Slice{ .allocator = NullableAllocator.init(allocator), .ptr = buf.ptr, .len = @as(u32, @truncate(buf.len)) };
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
         pub fn slice(this: *const Slice) []const u8 {
             return this.ptr[0..this.len];
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
         pub fn mut(this: Slice) []u8 {
             bun.assertf(!this.allocator.isNull(), "cannot mutate a borrowed ZigString.Slice", .{});
@@ -475,7 +457,6 @@ pub const ZigString = extern struct {
         }
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as([*]align(1) const u16, @ptrCast(untagged(this._unsafe_ptr_do_not_use)))[0..this.len];
     }
 
@@ -486,7 +467,6 @@ pub const ZigString = extern struct {
             }
         }
 
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @as([*]const u16, @ptrCast(@alignCast(untagged(this._unsafe_ptr_do_not_use))))[0..this.len];
     }
@@ -519,12 +499,10 @@ pub const ZigString = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn init(slice_: []const u8) ZigString {
         return ZigString{ ._unsafe_ptr_do_not_use = slice_.ptr, .len = slice_.len };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn initUTF8(slice_: []const u8) ZigString {
         var out = init(slice_);
@@ -532,7 +510,6 @@ pub const ZigString = extern struct {
         return out;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUTF8(slice_: []const u8) ZigString {
         var out = init(slice_);
@@ -572,7 +549,6 @@ pub const ZigString = extern struct {
 
     pub fn initUTF16(items: []const u16) ZigString {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var out = ZigString{ ._unsafe_ptr_do_not_use = @ptrCast(items), .len = items.len };
         out.markUTF16();
         return out;
@@ -583,7 +559,6 @@ pub const ZigString = extern struct {
     }
 
     fn from16SliceMaybeGlobal(slice_: []const u16, global: bool) ZigString {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         var str = init(@as([*]const u8, @ptrCast(@alignCast(slice_.ptr)))[0..slice_.len]);
         str.markUTF16();
@@ -596,7 +571,6 @@ pub const ZigString = extern struct {
     /// Globally-allocated memory only
     pub fn from16(slice_: [*]const u16, len: usize) ZigString {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var str = init(@as([*]const u8, @ptrCast(slice_))[0..len]);
         str.markUTF16();
         str.markGlobal();
@@ -604,7 +578,6 @@ pub const ZigString = extern struct {
         return str;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn toBase64DataURL(this: ZigString, allocator: std.mem.Allocator) ![]const u8 {
         const slice_ = this.slice();
@@ -675,7 +648,6 @@ pub const ZigString = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn toRef(slice_: []const u8, global: *JSGlobalObject) C_API.JSValueRef {
         return init(slice_).toJS(global).asRef();
     }
@@ -686,11 +658,9 @@ pub const ZigString = extern struct {
         // this can be null ptr, so long as it's also a 0 length string
         @setRuntimeSafety(false);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as([*]const u8, @ptrFromInt(@as(u53, @truncate(@intFromPtr(ptr)))));
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const ZigString) []const u8 {
         if (comptime bun.Environment.allow_assert) {
@@ -711,14 +681,12 @@ pub const ZigString = extern struct {
                 .allocator = NullableAllocator.init(allocator),
                 .ptr = buffer.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(buffer.len)),
             };
         }
 
         return Slice{
             .ptr = untagged(this._unsafe_ptr_do_not_use),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(u32, @truncate(this.len)),
         };
@@ -735,7 +703,6 @@ pub const ZigString = extern struct {
                 .allocator = NullableAllocator.init(allocator),
                 .ptr = buffer.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(buffer.len)),
             };
         }
@@ -746,14 +713,12 @@ pub const ZigString = extern struct {
                 .allocator = NullableAllocator.init(allocator),
                 .ptr = buffer.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(buffer.len)),
             };
         }
 
         return Slice{
             .ptr = untagged(this._unsafe_ptr_do_not_use),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(u32, @truncate(this.len)),
         };
@@ -768,7 +733,6 @@ pub const ZigString = extern struct {
             .allocator = NullableAllocator.init(allocator),
             .ptr = buffer.ptr,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(u32, @truncate(buffer.len)),
         };
     }
@@ -778,12 +742,10 @@ pub const ZigString = extern struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn full(this: *const ZigString) []const u8 {
         return untagged(this._unsafe_ptr_do_not_use)[0..this.len];
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn trimmedSlice(this: *const ZigString) []const u8 {
         return strings.trim(this.full(), " \r\n");
@@ -842,7 +804,6 @@ pub const ZigString = extern struct {
     ) JSValue {
         if (this.len > String.max_length()) {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             callback(ctx, @ptrCast(@constCast(this.byteSlice().ptr)), this.len);
             global.ERR(.STRING_TOO_LONG, "Cannot create a string longer than 2^32-1 characters", .{}).throw() catch {}; // TODO: propagate?
             return .zero;
@@ -869,7 +830,6 @@ pub const ZigString = extern struct {
         }
 
         return if (this.is16Bit())
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             C_API.JSStringCreateWithCharactersNoCopy(@as([*]const u16, @ptrCast(@alignCast(untagged(this._unsafe_ptr_do_not_use)))), this.len)
         else
@@ -908,7 +868,6 @@ pub const StringPointer = struct {
 };
 
 export fn ZigString__free(raw: [*]const u8, len: usize, allocator_: ?*anyopaque) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     var allocator: std.mem.Allocator = @as(*std.mem.Allocator, @ptrCast(@alignCast(allocator_ orelse return))).*;
     var ptr = ZigString.init(raw[0..len]).slice().ptr;

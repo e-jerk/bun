@@ -19,7 +19,6 @@ fn bind(this: *MySQLQuery, execute: *PreparedStatement.Execute, globalObject: *J
     var params = try bun.default_allocator.alloc(Value, execute.param_types.len);
     errdefer {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (params[0..i]) |*param| {
             param.deinit(bun.default_allocator);
         }

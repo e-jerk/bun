@@ -14,10 +14,8 @@ pub fn splice(fd_in: std.posix.fd_t, off_in: ?*i64, fd_out: std.posix.fd_t, off_
     return std.os.linux.syscall6(
         .splice,
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         @as(usize, @bitCast(@as(isize, fd_in))),
         @intFromPtr(off_in),
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         @as(usize, @bitCast(@as(isize, fd_out))),
         @intFromPtr(off_out),
@@ -74,7 +72,6 @@ pub const RWFFlagSupport = enum(u8) {
 /// Support for FICLONE is dependent on the filesystem driver.
 pub fn ioctl_ficlone(dest_fd: bun.FD, srcfd: bun.FD) usize {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return std.os.linux.ioctl(dest_fd.native(), bun.c.FICLONE, @intCast(srcfd.native()));
 }
 
@@ -83,10 +80,8 @@ export fn sys_epoll_pwait2(epfd: i32, events: ?[*]std.os.linux.epoll_event, maxe
         std.os.linux.syscall6(
             .epoll_pwait2,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @bitCast(@as(isize, @intCast(epfd))),
             @intFromPtr(events),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @bitCast(@as(isize, @intCast(maxevents))),
             @intFromPtr(timeout),

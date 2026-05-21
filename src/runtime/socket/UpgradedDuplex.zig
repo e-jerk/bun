@@ -65,7 +65,6 @@ fn onOpen(this: *UpgradedDuplex) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData(this: *UpgradedDuplex, decoded_data: []const u8) void {
     log("onData ({})", .{decoded_data.len});
     this.handlers.onData(this.handlers.ctx, decoded_data);
@@ -117,7 +116,6 @@ fn callWriteOrEnd(this: *UpgradedDuplex, data: ?[]const u8, msg_more: bool) void
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn internalWrite(this: *UpgradedDuplex, encoded_data: []const u8) void {
     this.resetTimeout();
 
@@ -136,7 +134,6 @@ pub fn flush(this: *UpgradedDuplex) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onInternalReceiveData(this: *UpgradedDuplex, data: []const u8) void {
     if (this.wrapper) |*wrapper| {
         this.resetTimeout();
@@ -154,7 +151,6 @@ fn onReceivedData(
     const args = callframe.arguments_old(1);
 
     if (jsc.host_fn.getFunctionData(function)) |self| {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const this = @as(*UpgradedDuplex, @ptrCast(@alignCast(self)));
         if (args.len >= 1) {
@@ -189,7 +185,6 @@ fn onEnd(
 
     if (jsc.host_fn.getFunctionData(function)) |self| {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         const this = @as(*UpgradedDuplex, @ptrCast(@alignCast(self)));
 
         if (this.wrapper != null) {
@@ -209,7 +204,6 @@ fn onWritable(
     const function = callframe.callee();
 
     if (jsc.host_fn.getFunctionData(function)) |self| {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const this = @as(*UpgradedDuplex, @ptrCast(@alignCast(self)));
         // flush pending data
@@ -233,7 +227,6 @@ fn onCloseJS(
     const function = callframe.callee();
 
     if (jsc.host_fn.getFunctionData(function)) |self| {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const this = @as(*UpgradedDuplex, @ptrCast(@alignCast(self)));
         // flush pending data
@@ -387,11 +380,9 @@ pub fn startTLSWithCTX(this: *UpgradedDuplex, ctx: *bun.BoringSSL.c.SSL_CTX, is_
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeAndWrite(this: *UpgradedDuplex, data: []const u8) i32 {
     log("encodeAndWrite (len: {})", .{data.len});
     if (this.wrapper) |*wrapper| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(i32, @intCast(wrapper.writeData(data) catch 0));
     }
@@ -399,10 +390,8 @@ pub fn encodeAndWrite(this: *UpgradedDuplex, data: []const u8) i32 {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rawWrite(this: *UpgradedDuplex, encoded_data: []const u8) i32 {
     this.internalWrite(encoded_data);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(encoded_data.len);
 }
@@ -454,9 +443,7 @@ pub fn sslError(this: *UpgradedDuplex) us_bun_verify_error_t {
     return .{
         .error_no = this.ssl_error.error_no,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .code = @ptrCast(this.ssl_error.code.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .reason = @ptrCast(this.ssl_error.reason.ptr),
     };

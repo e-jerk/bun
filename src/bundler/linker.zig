@@ -117,10 +117,8 @@ pub const Linker = struct {
         switch (result.loader) {
             .jsx, .js, .ts, .tsx => {
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (result.ast.import_records.slice(), 0..) |*import_record, record_i| {
                     if (import_record.flags.is_unused or
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         (is_bun and is_deferred and !result.isPendingImport(@intCast(record_i)))) continue;
 
@@ -140,7 +138,6 @@ pub const Linker = struct {
                                 );
                             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             result.ast.runtime_import_record_id = @intCast(record_index);
                             result.ast.needs_runtime = true;

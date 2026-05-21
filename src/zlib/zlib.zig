@@ -156,9 +156,10 @@ pub fn NewZlibReader(comptime Writer: type, comptime buffer_size: usize) type {
             }
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(writer: Writer, input: []const u8, allocator: std.mem.Allocator) !*ZlibReader {
-            var zlib_reader = try allocator.create(ZlibReader);
-            zlib_reader.* = ZlibReader{
+            var zlib_reader = try zust.Box(ZlibReader).init(allocator, undefined);
+            zlib_reader.ptr.* = ZlibReader{
                 .context = writer,
                 .input = input,
                 .buf = std.mem.zeroes([buffer_size]u8),
@@ -166,12 +167,14 @@ pub fn NewZlibReader(comptime Writer: type, comptime buffer_size: usize) type {
                 .zlib = undefined,
             };
 
-            zlib_reader.zlib = zStream_struct{
+            zlib_reader.ptr.zlib = zStream_struct{
                 .next_in = input.ptr,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .avail_in = @as(uInt, @intCast(input.len)),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .total_in = @as(uInt, @intCast(input.len)),
 
-                .next_out = &zlib_reader.buf,
+                .next_out = &zlib_reader.ptr.buf,
                 .avail_out = buffer_size,
                 .total_out = buffer_size,
 
@@ -180,25 +183,25 @@ pub fn NewZlibReader(comptime Writer: type, comptime buffer_size: usize) type {
                 .free_func = ZlibReader.free,
 
                 .internal_state = null,
-                .user_data = zlib_reader,
+                .user_data = zlib_reader.ptr,
 
                 .data_type = DataType.Unknown,
                 .adler = 0,
                 .reserved = 0,
             };
 
-            switch (inflateInit2_(&zlib_reader.zlib, 15 + 32, zlibVersion(), @sizeOf(zStream_struct))) {
-                ReturnCode.Ok => return zlib_reader,
+            switch (inflateInit2_(&zlib_reader.ptr.zlib, 15 + 32, zlibVersion(), @sizeOf(zStream_struct))) {
+                ReturnCode.Ok => return zlib_reader.ptr,
                 ReturnCode.MemError => {
-                    zlib_reader.deinit();
+                    zlib_reader.ptr.deinit();
                     return error.OutOfMemory;
                 },
                 ReturnCode.StreamError => {
-                    zlib_reader.deinit();
+                    zlib_reader.ptr.deinit();
                     return error.InvalidArgument;
                 },
                 ReturnCode.VersionError => {
-                    zlib_reader.deinit();
+                    zlib_reader.ptr.deinit();
                     return error.InvalidArgument;
                 },
                 else => unreachable,
@@ -360,6 +363,7 @@ pub const ZlibReaderArrayList = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),
@@ -372,13 +376,15 @@ pub const ZlibReaderArrayList = struct {
         return initWithOptions(input, list, allocator, options);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithOptions(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibReader {
         return initWithOptionsAndListAllocator(input, list, allocator, allocator, options);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithOptionsAndListAllocator(input: []const u8, list: *std.ArrayListUnmanaged(u8), list_allocator: std.mem.Allocator, allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibReader {
-        var zlib_reader = try allocator.create(ZlibReader);
-        zlib_reader.* = ZlibReader{
+        var zlib_reader = try zust.Box(ZlibReader).init(allocator, undefined);
+        zlib_reader.ptr.* = ZlibReader{
             .input = input,
             .list = list.*,
             .list_allocator = list_allocator,
@@ -387,39 +393,43 @@ pub const ZlibReaderArrayList = struct {
             .zlib = undefined,
         };
 
-        zlib_reader.zlib = zStream_struct{
+        zlib_reader.ptr.zlib = zStream_struct{
             .next_in = input.ptr,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_in = @truncate(input.len),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_in = @truncate(input.len),
 
-            .next_out = zlib_reader.list.items.ptr,
-            .avail_out = @truncate(zlib_reader.list.items.len),
-            .total_out = @truncate(zlib_reader.list.items.len),
+            .next_out = zlib_reader.ptr.list.items.ptr,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            .avail_out = @truncate(zlib_reader.ptr.list.items.len),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            .total_out = @truncate(zlib_reader.ptr.list.items.len),
 
             .err_msg = null,
             .alloc_func = ZlibAllocator.alloc,
             .free_func = ZlibAllocator.free,
 
             .internal_state = null,
-            .user_data = zlib_reader,
+            .user_data = zlib_reader.ptr,
 
             .data_type = DataType.Unknown,
             .adler = 0,
             .reserved = 0,
         };
 
-        switch (inflateInit2_(&zlib_reader.zlib, options.windowBits, zlibVersion(), @sizeOf(zStream_struct))) {
-            ReturnCode.Ok => return zlib_reader,
+        switch (inflateInit2_(&zlib_reader.ptr.zlib, options.windowBits, zlibVersion(), @sizeOf(zStream_struct))) {
+            ReturnCode.Ok => return zlib_reader.ptr,
             ReturnCode.MemError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.OutOfMemory;
             },
             ReturnCode.StreamError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.InvalidArgument;
             },
             ReturnCode.VersionError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.InvalidArgument;
             },
             else => unreachable,
@@ -476,7 +486,9 @@ pub const ZlibReaderArrayList = struct {
                 const initial = this.list.items.len;
                 try this.list.ensureUnusedCapacity(this.list_allocator, 4096);
                 this.list.expandToCapacity();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.zlib.next_out = @ptrCast(&this.list.items[initial]);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.zlib.avail_out = @truncate(this.list.items.len -| initial);
             }
 
@@ -797,13 +809,15 @@ pub const ZlibCompressorArrayList = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibCompressor {
         return initWithListAllocator(input, list, allocator, allocator, options);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithListAllocator(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, list_allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibCompressor {
-        var zlib_reader = try allocator.create(ZlibCompressor);
-        zlib_reader.* = ZlibCompressor{
+        var zlib_reader = try zust.Box(ZlibCompressor).init(allocator, undefined);
+        zlib_reader.ptr.* = ZlibCompressor{
             .input = input,
             .list = list.*,
             .list_ptr = list,
@@ -812,21 +826,25 @@ pub const ZlibCompressorArrayList = struct {
             .zlib = undefined,
         };
 
-        zlib_reader.zlib = zStream_struct{
+        zlib_reader.ptr.zlib = zStream_struct{
             .next_in = input.ptr,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_in = @truncate(input.len),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_in = @truncate(input.len),
 
-            .next_out = zlib_reader.list.items.ptr,
-            .avail_out = @truncate(zlib_reader.list.items.len),
-            .total_out = @truncate(zlib_reader.list.items.len),
+            .next_out = zlib_reader.ptr.list.items.ptr,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            .avail_out = @truncate(zlib_reader.ptr.list.items.len),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            .total_out = @truncate(zlib_reader.ptr.list.items.len),
 
             .err_msg = null,
             .alloc_func = ZlibCompressor.alloc,
             .free_func = ZlibCompressor.free,
 
             .internal_state = null,
-            .user_data = zlib_reader,
+            .user_data = zlib_reader.ptr,
 
             .data_type = DataType.Unknown,
             .adler = 0,
@@ -834,7 +852,7 @@ pub const ZlibCompressorArrayList = struct {
         };
 
         switch (deflateInit2_(
-            &zlib_reader.zlib,
+            &zlib_reader.ptr.zlib,
             options.level,
             options.method,
             if (!options.gzip) -options.windowBits else options.windowBits + 16,
@@ -844,26 +862,28 @@ pub const ZlibCompressorArrayList = struct {
             @sizeOf(zStream_struct),
         )) {
             ReturnCode.Ok => {
-                zlib_reader.list.ensureTotalCapacityPrecise(list_allocator, deflateBound(&zlib_reader.zlib, @intCast(input.len))) catch {
-                    zlib_reader.deinit();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                zlib_reader.ptr.list.ensureTotalCapacityPrecise(list_allocator, deflateBound(&zlib_reader.ptr.zlib, @intCast(input.len))) catch {
+                    zlib_reader.ptr.deinit();
                     return error.OutOfMemory;
                 };
-                zlib_reader.list_ptr.* = zlib_reader.list;
-                zlib_reader.zlib.avail_out = @truncate(zlib_reader.list.capacity);
-                zlib_reader.zlib.next_out = zlib_reader.list.items.ptr;
+                zlib_reader.ptr.list_ptr.* = zlib_reader.ptr.list;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                zlib_reader.ptr.zlib.avail_out = @truncate(zlib_reader.ptr.list.capacity);
+                zlib_reader.ptr.zlib.next_out = zlib_reader.ptr.list.items.ptr;
 
-                return zlib_reader;
+                return zlib_reader.ptr;
             },
             ReturnCode.MemError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.OutOfMemory;
             },
             ReturnCode.StreamError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.InvalidArgument;
             },
             ReturnCode.VersionError => {
-                zlib_reader.deinit();
+                zlib_reader.ptr.deinit();
                 return error.InvalidArgument;
             },
             else => unreachable,
@@ -916,7 +936,9 @@ pub const ZlibCompressorArrayList = struct {
                 const initial = this.list.items.len;
                 try this.list.ensureUnusedCapacity(this.list_allocator, 4096);
                 this.list.expandToCapacity();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.zlib.next_out = @ptrCast(&this.list.items[initial]);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.zlib.avail_out = @truncate(this.list.items.len -| initial);
             }
 

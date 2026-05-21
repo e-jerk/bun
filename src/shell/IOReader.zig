@@ -115,7 +115,6 @@ pub fn addReader(this: *IOReader, reader_: anytype) void {
 
     const slice = this.readers.slice();
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const usize_slice: []const usize = @as([*]const usize, @ptrCast(slice.ptr))[0..slice.len];
     const ptr_usize: usize = @intFromPtr(reader.ptr.ptr());
     // Only add if it hasn't been added yet
@@ -131,7 +130,6 @@ pub fn removeReader(this: *IOReader, reader_: anytype) void {
     };
     const slice = this.readers.slice();
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const usize_slice: []const usize = @as([*]const usize, @ptrCast(slice.ptr))[0..slice.len];
     const ptr_usize: usize = @intFromPtr(reader.ptr.ptr());
     if (std.mem.indexOfScalar(usize, usize_slice, ptr_usize)) |idx| {
@@ -140,9 +138,7 @@ pub fn removeReader(this: *IOReader, reader_: anytype) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onReadChunk(ptr: *anyopaque, chunk: []const u8, has_more: bun.io.ReadState) bool {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     var this: *IOReader = @ptrCast(@alignCast(ptr));
     log("IOReader(0x{x}, fd={f}) onReadChunk(chunk_len={d}, has_more={s})", .{ @intFromPtr(this), this.fd, chunk.len, @tagName(has_more) });
@@ -270,7 +266,6 @@ pub const IOReaderChildPtr = struct {
 
     /// Return true if the child should be deleted
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onReadChunk(this: IOReaderChildPtr, chunk: []const u8, remove: *bool) Yield {
         return this.ptr.call("onIOReaderChunk", .{ chunk, remove }, Yield);
     }
@@ -297,12 +292,10 @@ pub const AsyncDeinitReader = struct {
 
     pub fn reader(this: *AsyncDeinitReader) *IOReader {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         return @alignCast(@fieldParentPtr("async_deinit", this));
     }
 
     pub fn runFromMainThread(this: *AsyncDeinitReader) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const ioreader: *IOReader = @alignCast(@fieldParentPtr("async_deinit", this));
         ioreader.asyncDeinitCallback();

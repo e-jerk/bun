@@ -106,7 +106,6 @@ pub fn constructor(
     var names = std.array_list.Managed(bun.String).init(bun.default_allocator);
     errdefer {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (names.items) |*str| {
             str.deref();
         }
@@ -115,7 +114,6 @@ pub fn constructor(
 
     var sources = std.array_list.Managed(bun.String).init(bun.default_allocator);
     errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (sources.items) |*str| {
             str.deref();
@@ -144,7 +142,6 @@ pub fn constructor(
         bun.default_allocator,
         mappings_str.slice(),
         null, // estimated_mapping_count
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(sources.items.len), // sources_count
         std.math.maxInt(i32),
@@ -213,7 +210,6 @@ fn mappingNameToJS(this: *const JSSourceMap, globalObject: *JSGlobalObject, mapp
             return bun.String.createUTF8ForJS(globalObject, name);
         } else {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const index: usize = @intCast(name_index);
             if (index < this.names.len) {
                 return this.names[index].toJS(globalObject);
@@ -226,9 +222,7 @@ fn mappingNameToJS(this: *const JSSourceMap, globalObject: *JSGlobalObject, mapp
 fn sourceNameToJS(this: *const JSSourceMap, globalObject: *JSGlobalObject, mapping: *const bun.SourceMap.Mapping) bun.JSError!JSValue {
     const source_index = mapping.sourceIndex();
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (source_index >= 0 and source_index < @as(i32, @intCast(this.sources.len))) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return this.sources[@intCast(source_index)].toJS(globalObject);
     }
@@ -289,13 +283,11 @@ pub fn findEntry(this: *JSSourceMap, globalObject: *JSGlobalObject, callFrame: *
 
 pub fn deinit(this: *JSSourceMap) void {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.sources) |*str| {
         str.deref();
     }
     bun.default_allocator.free(this.sources);
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (this.names) |*name| {
         name.deref();

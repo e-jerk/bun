@@ -40,7 +40,6 @@ pub const DiffFormatter = struct {
                 .Debug,
                 this.globalThis,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @as([*]const JSValue, @ptrCast(&received)),
                 1,
                 &received_buf.writer,
@@ -50,7 +49,6 @@ pub const DiffFormatter = struct {
             JestPrettyFormat.format(
                 .Debug,
                 this.globalThis,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @as([*]const JSValue, @ptrCast(&this.expected)),
                 1,

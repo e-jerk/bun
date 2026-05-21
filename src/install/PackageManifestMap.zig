@@ -10,7 +10,6 @@ const Value = union(enum) {
 const HashMap = std.HashMapUnmanaged(PackageNameHash, Value, IdentityContext(PackageNameHash), 80);
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn byName(this: *PackageManifestMap, pm: *PackageManager, scope: *const Npm.Registry.Scope, name: []const u8, cache_behavior: CacheBehavior, needs_extended_manifest: bool) ?*Npm.PackageManifest {
     return this.byNameHash(pm, scope, String.Builder.stringHash(name), cache_behavior, needs_extended_manifest);
 }

@@ -43,13 +43,11 @@ pub fn memoryCost(self: *const Self) usize {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn vlq(self: *const Self) []const u8 {
     return self.vlq_.get();
 }
 
 // TODO: rename to `escapedSource`
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn quotedContents(self: *const Self) []const u8 {
     return self.escaped_source.get();

@@ -96,7 +96,8 @@ fn expandNested(
             },
             .expansion => |expansion| {
                 const length = out[out_key].items.len;
-                for (expansion.variants, 0..) |*group, j| {
+                // safe-transpile: for with index access requires manual review
+    for (expansion.variants, 0..) |*group, j| {
                     group.bubble_up = root;
                     group.bubble_up_next = 1;
                     const new_key = if (j == 0) out_key else brk: {
@@ -120,7 +121,9 @@ fn expandNested(
         return;
     }
 
+    // safe-transpile: for with index access requires manual review
     for (root.atoms.many[start..], start..) |atom, i_| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const i: u16 = @intCast(i_);
         switch (atom) {
             .text => |txt| {
@@ -128,7 +131,8 @@ fn expandNested(
             },
             .expansion => |expansion| {
                 const length = out[out_key].items.len;
-                for (expansion.variants, 0..) |*group, j| {
+                // safe-transpile: for with index access requires manual review
+    for (expansion.variants, 0..) |*group, j| {
                     group.bubble_up = root;
                     group.bubble_up_next = i + 1;
                     const new_key = if (j == 0) out_key else brk: {
@@ -167,6 +171,7 @@ fn expandFlat(
     if (start >= tokens.len or end > tokens.len) return;
 
     var depth = depth_;
+    // safe-transpile: for with index access requires manual review
     for (tokens[start..end], start..) |atom, j| {
         _ = j;
         switch (atom) {
@@ -186,7 +191,8 @@ fn expandFlat(
                 const skip_over_idx = variants[variants.len - 1].end;
 
                 const starting_len = out[out_key].items.len;
-                for (variants[0..], 0..) |*variant, i| {
+                // safe-transpile: for with index access requires manual review
+    for (variants[0..], 0..) |*variant, i| {
                     const new_key = if (i == 0) out_key else brk: {
                         const new_key = out_key_counter.*;
                         try out[new_key].appendSlice(out[out_key].items[0..starting_len]);
@@ -298,6 +304,7 @@ pub const Parser = struct {
         return .{ .variants = variants.items[0..] };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn has_eq_sign(self: *Parser, str: []const u8) ?u32 {
         _ = self;
         return @import("../shell/shell.zig").hasEqSign(str);
@@ -373,6 +380,7 @@ pub const Parser = struct {
         return self.tokens[self.current - 1];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn add_error(self: *Parser, comptime fmt: []const u8, args: anytype) !void {
         const error_msg = try std.fmt.allocPrint(self.alloc, fmt, args);
         try self.errors.append(.{ .msg = error_msg });
@@ -435,6 +443,7 @@ fn buildExpansionTable(tokens: []Token, table: *std.array_list.Managed(Expansion
     while (i < tokens.len) : (i += 1) {
         switch (tokens[i]) {
             .open => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const table_idx: u16 = @intCast(table.items.len);
                 tokens[i].open.idx = table_idx;
                 brace_stack.append(bun.default_allocator, .{
@@ -454,6 +463,7 @@ fn buildExpansionTable(tokens: []Token, table: *std.array_list.Managed(Expansion
                 top.prev_tok_end = i;
                 top.variants += 1;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 tokens[top.tok_idx].open.end = @intCast(table.items.len);
                 prev_close = true;
             },
@@ -477,7 +487,8 @@ fn buildExpansionTable(tokens: []Token, table: *std.array_list.Managed(Expansion
     }
 
     if (bun.Environment.allow_assert) {
-        for (table.items[0..], 0..) |variant, kdjsd| {
+        // safe-transpile: for with index access requires manual review
+    for (table.items[0..], 0..) |variant, kdjsd| {
             _ = kdjsd;
             assert(variant.start != 0 and variant.end != 0);
         }
@@ -499,6 +510,7 @@ pub fn NewLexer(comptime encoding: Encoding) type {
             contains_nested: bool,
         };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn tokenize(alloc: Allocator, src: []const u8) BraceLexerError!Output {
             var this = @This(){
                 .chars = Chars.init(src),
@@ -548,6 +560,7 @@ pub fn NewLexer(comptime encoding: Encoding) type {
                 if (!escaped) {
                     switch (char) {
                         '{' => {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             brace_stack.append(bun.default_allocator, @intCast(self.tokens.items.len));
                             try self.tokens.append(.{ .open = .{} });
                             continue;
@@ -666,6 +679,7 @@ pub fn NewLexer(comptime encoding: Encoding) type {
                         return;
                     }
                     var buf = [4]u8{ 0, 0, 0, 0 };
+// safe-transpile: @bitCast requires manual review
                     const len = bun.strings.encodeWTF8Rune(&buf, @bitCast(char));
                     try last.text.appendSlice(self.alloc, buf[0..len]);
                     return;
@@ -678,6 +692,7 @@ pub fn NewLexer(comptime encoding: Encoding) type {
                 });
             } else {
                 var buf = [4]u8{ 0, 0, 0, 0 };
+// safe-transpile: @bitCast requires manual review
                 const len = bun.strings.encodeWTF8Rune(&buf, @bitCast(char));
                 try self.tokens.append(.{
                     .text = try SmolStr.fromSlice(self.alloc, buf[0..len]),

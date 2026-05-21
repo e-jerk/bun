@@ -7,7 +7,6 @@ pub const Reader = struct {
     allocator: std.mem.Allocator,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(buf: []u8, allocator: std.mem.Allocator) Reader {
         return Reader{
             .buf = buf,
@@ -16,7 +15,6 @@ pub const Reader = struct {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn read(this: *Self, count: usize) ![]u8 {
         const read_count = @min(count, this.remain.len);
@@ -76,7 +74,6 @@ pub const Reader = struct {
             [:0]const u8, []const u8 => {
                 const array = try this.allocator.alloc(T, length);
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (array) |*a| a.* = try this.readArray(u8);
                 return array;
             },
@@ -95,7 +92,6 @@ pub const Reader = struct {
                     .Enum => |type_info| {
                         const enum_values = try this.read(length * @sizeOf(type_info.tag_type));
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         return @as([*]T, @ptrCast(enum_values.ptr))[0..length];
                     },
                     else => {},
@@ -103,14 +99,12 @@ pub const Reader = struct {
 
                 const array = try this.allocator.alloc(T, length);
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (array) |*v| v.* = try this.readValue(T);
                 return array;
             },
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn readByteArray(this: *Self) ![]u8 {
         const length = try this.readInt(u32);
@@ -159,7 +153,6 @@ pub const Reader = struct {
                             .Packed => {
                                 const sizeof = @sizeOf(T);
                                 var slice = try this.read(sizeof);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                 return @as(*align(1) T, @ptrCast(slice[0..sizeof])).*;
                             },
@@ -269,7 +262,6 @@ pub fn Writer(comptime WritableStream: type) type {
         }
 
         pub fn writeArray(this: *Self, comptime T: type, slice: anytype) !void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try this.writeInt(@as(u32, @truncate(slice.len)));
 

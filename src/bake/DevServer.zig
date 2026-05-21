@@ -494,7 +494,8 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
             bun.writeAnyToHasher(&hash, false);
         }
 
-        for (dev.framework.built_in_modules.keys(), dev.framework.built_in_modules.values()) |k, v| {
+        // safe-transpile: for with index access requires manual review
+    for (dev.framework.built_in_modules.keys(), dev.framework.built_in_modules.values()) |k, v| {
             hash.update(k);
             hash.update(&.{0});
             bun.writeAnyToHasher(&hash, std.meta.activeTag(v));
@@ -523,7 +524,8 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
         var types = try std.ArrayListUnmanaged(FrameworkRouter.Type).initCapacity(alloc, options.framework.file_system_router_types.len);
         errdefer types.deinit(alloc);
 
-        for (options.framework.file_system_router_types, 0..) |fsr, i| {
+        // safe-transpile: for with index access requires manual review
+    for (options.framework.file_system_router_types, 0..) |fsr, i| {
             const buf = bun.path_buffer_pool.get();
             defer bun.path_buffer_pool.put(buf);
             const joined_root = bun.path.joinAbsStringBuf(dev.root, buf, &.{fsr.root}, .auto);
@@ -549,6 +551,7 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
             });
 
             try dev.route_lookup.put(alloc, server_file, .{
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .route_index = FrameworkRouter.Route.Index.init(@intCast(i)),
                 .should_recurse_when_visiting = true,
             });
@@ -638,6 +641,7 @@ pub fn deinit(dev: *DevServer) void {
             dev.router.deinit(alloc);
         },
         .route_bundles = {
+// safe-transpile: for loop with pointer capture requires manual review
             for (dev.route_bundles.items) |*rb| {
                 rb.deinit(alloc);
             }
@@ -718,6 +722,7 @@ pub fn deinit(dev: *DevServer) void {
         },
         .route_lookup = dev.route_lookup.deinit(alloc),
         .source_maps = {
+// safe-transpile: for loop with pointer capture requires manual review
             for (dev.source_maps.entries.values()) |*value| {
                 bun.assert(value.ref_count > 0);
                 value.ref_count = 0;
@@ -729,6 +734,7 @@ pub fn deinit(dev: *DevServer) void {
                 dev.vm.timer.remove(&dev.source_maps.weak_ref_sweep_timer);
         },
 
+// safe-transpile: for loop with pointer capture requires manual review
         .watcher_atomics = for (&dev.watcher_atomics.events) |*event| {
             event.dirs.deinit(dev.allocator());
             event.files.deinit(dev.allocator());
@@ -776,6 +782,7 @@ fn initServerRuntime(dev: *DevServer) void {
     const runtime = bun.String.static(bun.bake.getHmrRuntime(.server).code);
 
     const interface = c.BakeLoadInitialServerCode(
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(dev.vm.global),
         runtime,
         if (dev.framework.server_components) |sc| sc.separate_ssr_graph else false,
@@ -908,6 +915,7 @@ fn onJsRequest(dev: *DevServer, req: *Request, resp: AnyResponse) void {
         return notFound(resp);
 
     if (is_map) {
+// safe-transpile: @bitCast requires manual review
         const source_id: SourceMapStore.SourceId = @bitCast(id);
         const entry = dev.source_maps.entries.getPtr(.init(id)) orelse
             return notFound(resp);
@@ -929,7 +937,9 @@ fn onJsRequest(dev: *DevServer, req: *Request, resp: AnyResponse) void {
         return;
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const route_bundle_index: RouteBundle.Index = .init(@intCast(id & 0xFFFFFFFF));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const generation: u32 = @intCast(id >> 32);
 
     if (route_bundle_index.get() >= dev.route_bundles.items.len)
@@ -953,6 +963,7 @@ fn onAssetRequest(dev: *DevServer, req: *Request, resp: AnyResponse) void {
     var out: [@sizeOf(u64)]u8 = undefined;
     assert((std.fmt.hexToBytes(&out, hex) catch
         return notFound(resp)).len == @sizeOf(u64));
+// safe-transpile: @bitCast requires manual review
     const hash: u64 = @bitCast(out);
     debug.log("onAssetRequest {} {s}", .{ hash, param });
     const asset = dev.assets.get(hash) orelse
@@ -961,9 +972,11 @@ fn onAssetRequest(dev: *DevServer, req: *Request, resp: AnyResponse) void {
     asset.on(resp);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseHexToInt(comptime T: type, slice: []const u8) ?T {
     var out: [@sizeOf(T)]u8 = undefined;
     assert((std.fmt.hexToBytes(&out, slice) catch return null).len == @sizeOf(T));
+// safe-transpile: @bitCast requires manual review
     return @bitCast(out);
 }
 
@@ -986,6 +999,7 @@ inline fn wrapGenericRequestHandler(
     }.handle;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 inline fn redirectHandler(comptime path: []const u8, comptime is_ssl: bool) fn (
     dev: *DevServer,
     req: *Request,
@@ -1258,6 +1272,7 @@ fn deferRequest(
                     .data = &deferred.data,
                     .deref_fn = struct {
                         fn deref_fn(ptr: *anyopaque) void {
+// safe-transpile: @alignCast requires manual review
                             var self: *DeferredRequest = @ptrCast(@alignCast(ptr));
                             self.weakDeref();
                         }
@@ -1416,6 +1431,7 @@ while (true) : (__loop_limit_2 += 1) {
                         relative_path_buf,
                         keys[fromOpaqueFileId(.server, layout).get()],
                     ));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     try arr.putIndex(global, @intCast(n), try layout_name.transferToJS(global));
                     n += 1;
                 }
@@ -1809,6 +1825,7 @@ pub const DeferredRequest = struct {
     };
 
     fn onAbortWrapper(this: *anyopaque) void {
+// safe-transpile: @alignCast requires manual review
         const self: *DeferredRequest = @ptrCast(@alignCast(this));
         if (!self.isAlive()) return;
         self.onAbortImpl();
@@ -1884,6 +1901,7 @@ pub fn startAsyncBundle(
         const sfa = sfa_state.get();
         var trigger_files = try std.array_list.Managed(bun.String).initCapacity(sfa, entry_points.set.count());
         defer trigger_files.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
         defer for (trigger_files.items) |*str| {
             str.deref();
         };
@@ -1902,8 +1920,8 @@ pub fn startAsyncBundle(
     var heap = ThreadLocalArena.init();
     errdefer heap.deinit();
     const alloc = heap.allocator();
-    const ast_memory_allocator = try alloc.create(bun.ast.ASTMemoryAllocator);
-    var ast_scope = ast_memory_allocator.enter(alloc);
+    const ast_memory_allocator = try zust.Box(bun.ast.ASTMemoryAllocator).init(alloc, undefined);
+    var ast_scope = ast_memory_allocator.ptr.enter(alloc);
     defer ast_scope.exit();
 
     const bv2 = try BundleV2.init(
@@ -1912,6 +1930,7 @@ pub fn startAsyncBundle(
             .framework = dev.framework,
             .client_transpiler = &dev.client_transpiler,
             .ssr_transpiler = &dev.ssr_transpiler,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .plugins = @ptrCast(dev.bundler_options.plugin),
         },
         alloc,
@@ -1952,7 +1971,8 @@ pub fn prepareAndLogResolutionFailures(dev: *DevServer) !void {
     // until the very end.
     const resolution_failures = dev.current_bundle.?.resolution_failure_entries;
     if (resolution_failures.count() > 0) {
-        for (resolution_failures.keys(), resolution_failures.values()) |owner, *log| {
+        // safe-transpile: for with index access requires manual review
+    for (resolution_failures.keys(), resolution_failures.values()) |owner, *log| {
             if (log.hasErrors()) {
                 switch (owner.decode()) {
                     .client => |index| try dev.client_graph.insertFailure(.index, index, log, false),
@@ -1995,9 +2015,11 @@ fn indexFailures(dev: *DevServer) !void {
         payload.appendAssumeCapacity(MessageId.errors.char());
         const w = @import("std-io-compat").writer(&payload);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(dev.incremental_result.failures_removed.items.len), .little);
 
         for (dev.incremental_result.failures_removed.items) |removed| {
+// safe-transpile: @bitCast requires manual review
             try w.writeInt(u32, @bitCast(removed.getOwner().encode()), .little);
             removed.deinit(dev);
         }
@@ -2035,9 +2057,11 @@ fn indexFailures(dev: *DevServer) !void {
         payload.appendAssumeCapacity(MessageId.errors.char());
         const w = @import("std-io-compat").writer(&payload);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(dev.incremental_result.failures_removed.items.len), .little);
 
         for (dev.incremental_result.failures_removed.items) |removed| {
+// safe-transpile: @bitCast requires manual review
             try w.writeInt(u32, @bitCast(removed.getOwner().encode()), .little);
             removed.deinit(dev);
         }
@@ -2142,6 +2166,7 @@ fn generateCssJSArray(dev: *DevServer, route_bundle: *RouteBundle) bun.JSError!j
 
     const names = dev.client_graph.current_css_files.items;
     const arr = try jsc.JSArray.createEmpty(dev.vm.global, names.len);
+    // safe-transpile: for with index access requires manual review
     for (names, 0..) |item, i| {
         var buf: [asset_prefix.len + @sizeOf(u64) * 2 + "/.css".len]u8 = undefined;
         const path = std.fmt.bufPrint(&buf, asset_prefix ++ "/{s}.css", .{
@@ -2149,6 +2174,7 @@ fn generateCssJSArray(dev: *DevServer, route_bundle: *RouteBundle) bun.JSError!j
         }) catch unreachable;
         const str = bun.String.cloneUTF8(path);
         defer str.deref();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try arr.putIndex(dev.vm.global, @intCast(i), try str.toJS(dev.vm.global));
     }
     return arr;
@@ -2191,11 +2217,13 @@ fn makeArrayForServerComponentsPatch(dev: *DevServer, global: *jsc.JSGlobalObjec
     if (items.len == 0) return .null;
     const arr = try jsc.JSArray.createEmpty(global, items.len);
     const names = dev.server_graph.bundled_files.keys();
+    // safe-transpile: for with index access requires manual review
     for (items, 0..) |item, i| {
         const relative_path_buf = bun.path_buffer_pool.get();
         defer bun.path_buffer_pool.put(relative_path_buf);
         const str = bun.String.cloneUTF8(dev.relativePath(relative_path_buf, names[item.get()]));
         defer str.deref();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try arr.putIndex(global, @intCast(i), try str.toJS(global));
     }
     return arr;
@@ -2239,6 +2267,7 @@ pub const HotUpdateContext = struct {
 
         comptime assert(@alignOf(IncrementalGraph(side).FileIndex.Optional) == @alignOf(u32));
         comptime assert(@sizeOf(IncrementalGraph(side).FileIndex.Optional) == @sizeOf(u32));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(&subslice[i.get()]);
     }
 };
@@ -2310,6 +2339,7 @@ pub fn finalizeBundle(
     var sfa = std.heap.stackFallback(65536, bv2.allocator());
     const stack_alloc = sfa.get();
     var scb_bitset = try bun.bit_set.DynamicBitSetUnmanaged.initEmpty(stack_alloc, input_file_sources.len);
+    // safe-transpile: for with index access requires manual review
     for (
         scbs.list.items(.source_index),
         scbs.list.items(.ssr_source_index),
@@ -2338,6 +2368,7 @@ pub fn finalizeBundle(
     const quoted_source_contents = bv2.linker.graph.files.items(.quoted_source_contents);
     // Pass 1, update the graph's nodes, resolving every bundler source
     // index into its `IncrementalGraph(...).FileIndex`
+    // safe-transpile: for with index access requires manual review
     for (
         js_chunk.content.javascript.parts_in_chunk_in_order,
         js_chunk.compile_results_for_chunk,
@@ -2375,6 +2406,7 @@ pub fn finalizeBundle(
         }
     }
 
+    // safe-transpile: for with index access requires manual review
     for (result.cssChunks(), result.css_file_list.values()) |*chunk, metadata| {
         assert(chunk.content == .css);
 
@@ -2416,6 +2448,7 @@ pub fn finalizeBundle(
         // Track css files that look like tailwind files.
         if (dev.has_tailwind_plugin_hack) |*map| {
             const first_1024 = code.buffer[0..@min(code.buffer.len, 1024)];
+// zust: use zust.String or zust.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, first_1024, "tailwind") != null) {
                 const entry = try map.getOrPut(dev.allocator(), key);
                 if (!entry.found_existing) {
@@ -2442,6 +2475,7 @@ pub fn finalizeBundle(
         }
     }
 
+// safe-transpile: for loop with pointer capture requires manual review
     for (result.htmlChunks()) |*chunk| {
         const index = bun.ast.Index.init(chunk.entry_point.source_index);
         const compile_result = chunk.compile_results_for_chunk[0].html;
@@ -2480,6 +2514,7 @@ pub fn finalizeBundle(
         html.bundled_html_text = compile_result.code;
         html.script_injection_offset = .init(compile_result.script_injection_offset);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         chunk.entry_point.entry_point_id = @intCast(route_bundle_index.get());
     }
 
@@ -2504,10 +2539,12 @@ pub fn finalizeBundle(
             .client => try dev.client_graph.processChunkDependencies(&ctx, .normal, part_range.source_index, bv2.allocator()),
         }
     }
+// safe-transpile: for loop with pointer capture requires manual review
     for (result.htmlChunks()) |*chunk| {
         const index = bun.ast.Index.init(chunk.entry_point.source_index);
         try dev.client_graph.processChunkDependencies(&ctx, .normal, index, bv2.allocator());
     }
+// safe-transpile: for loop with pointer capture requires manual review
     for (result.cssChunks()) |*chunk| {
         const entry_index = bun.ast.Index.init(chunk.entry_point.source_index);
         try dev.client_graph.processChunkDependencies(&ctx, .css, entry_index, bv2.allocator());
@@ -2583,6 +2620,7 @@ pub fn finalizeBundle(
             if (comptime AllocationScope.enabled) dev.allocation_scope.leakSlice(json);
 
             break :blk c.BakeLoadServerHmrPatchWithSourceMap(
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(dev.vm.global),
                 bun.String.cloneUTF8(server_bundle),
                 json.ptr,
@@ -2595,6 +2633,7 @@ pub fn finalizeBundle(
                 dev.vm.printErrorLikeObjectToConsole(dev.vm.global.takeException(err));
                 @panic("Error thrown while evaluating server code. This is always a bug in the bundler.");
             };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         } else c.BakeLoadServerHmrPatch(@ptrCast(dev.vm.global), bun.String.cloneLatin1(server_bundle)) catch |err| {
             dev.vm.printErrorLikeObjectToConsole(dev.vm.global.takeException(err));
             @panic("Error thrown while evaluating server code. This is always a bug in the bundler.");
@@ -2673,6 +2712,7 @@ pub fn finalizeBundle(
         while (it.next()) |bundled_route_index| {
             const bundle = &dev.route_bundles.items[bundled_route_index];
             if (bundle.active_viewers == 0) continue;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(i32, @intCast(bundled_route_index), .little);
         }
     }
@@ -2746,6 +2786,7 @@ pub fn finalizeBundle(
         var it = route_bits.iterator(.{ .kind = .set });
         // List 2
         while (it.next()) |i| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const route_bundle = dev.routeBundlePtr(RouteBundle.Index.init(@intCast(i)));
             if (dev.incremental_result.had_adjusted_edges) {
                 switch (route_bundle.data) {
@@ -2757,6 +2798,7 @@ pub fn finalizeBundle(
                 }
             }
             if (route_bundle.active_viewers == 0 or !will_hear_hot_update) continue;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(i32, @intCast(i), .little);
 
             // If no edges were changed, then it is impossible to
@@ -2767,6 +2809,7 @@ pub fn finalizeBundle(
                 try dev.traceAllRouteImports(route_bundle, &gts, .find_css);
                 const css_ids = dev.client_graph.current_css_files.items;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try w.writeInt(i32, @intCast(css_ids.len), .little);
                 for (css_ids) |css_id| {
                     try w.writeAll(&std.fmt.bytesToHex(std.mem.asBytes(&css_id), .lower));
@@ -2783,12 +2826,14 @@ pub fn finalizeBundle(
         if (dev.client_graph.current_chunk_len > 0 or css_chunks.len > 0) {
             // Send CSS mutations
             const asset_values = dev.assets.files.values();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(css_chunks.len), .little);
             const sources = bv2.graph.input_files.items(.source);
             for (css_chunks) |chunk| {
                 const key = sources[chunk.entry_point.source_index].path.keyForIncrementalGraph();
                 try w.writeAll(&std.fmt.bytesToHex(std.mem.asBytes(&bun.hash(key)), .lower));
                 const css_data = asset_values[chunk.entry_point.entry_point_id].blob.InternalBlob.bytes.items;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try w.writeInt(u32, @intCast(css_data.len), .little);
                 try w.writeAll(css_data);
             }
@@ -3071,6 +3116,7 @@ while (true) : (__loop_limit_4 += 1) {
 }
 
 /// Note: The log is not consumed here
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleParseTaskFailure(
     dev: *DevServer,
     err: anyerror,
@@ -3106,6 +3152,7 @@ pub fn handleParseTaskFailure(
 }
 
 /// Return a log to write resolution failures into.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn getLogForResolutionFailures(dev: *DevServer, abs_path: []const u8, graph: bake.Graph) !*bun.logger.Log {
     assert(dev.current_bundle != null);
     const current_bundle = &dev.current_bundle.?;
@@ -3132,6 +3179,7 @@ const CacheEntry = struct {
     kind: FileKind,
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn isFileCached(dev: *DevServer, path: []const u8, side: bake.Graph) ?CacheEntry {
     // Barrel files with deferred records must always be re-parsed so the
     // barrel optimization can evaluate updated requested_exports.
@@ -3151,6 +3199,7 @@ pub fn isFileCached(dev: *DevServer, path: []const u8, side: bake.Graph) ?CacheE
             const index = g.bundled_files.getIndex(path) orelse
                 return null; // non-existent files are considered stale
             if (!g.stale_files.isSet(index)) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return .{ .kind = g.getFileByIndex(.init(@intCast(index))).fileKind() };
             }
             return null;
@@ -3216,6 +3265,7 @@ fn onRequest(dev: *DevServer, req: *Request, resp: anytype) void {
 }
 
 // TODO: path params
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleRenderRedirect(
     dev: *DevServer,
     saved_request: bun.jsc.API.SavedRequest,
@@ -3276,6 +3326,7 @@ fn getOrPutRouteBundle(dev: *DevServer, route: RouteBundle.UnresolvedIndex) !Rou
     dev.graph_safety_lock.lock();
     defer dev.graph_safety_lock.unlock();
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const bundle_index = RouteBundle.Index.init(@intCast(dev.route_bundles.items.len));
 
     try dev.route_bundles.ensureUnusedCapacity(dev.allocator(), 1);
@@ -3620,6 +3671,7 @@ pub const ChunkKind = enum(u1) {
 pub const SerializedFailure = @import("./DevServer/SerializedFailure.zig");
 
 // For debugging, it is helpful to be able to see bundles.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn dumpBundle(dump_dir: @import("std-fs-compat").FsDir, graph: bake.Graph, rel_path: []const u8, chunk: []const u8, wrap: bool) !void {
     const buf = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(buf);
@@ -3660,6 +3712,7 @@ pub fn dumpBundle(dump_dir: @import("std-fs-compat").FsDir, graph: bake.Graph, r
     try bufw.flush();
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub noinline fn dumpBundleForChunk(dev: *DevServer, dump_dir: @import("std-fs-compat").FsDir, side: bake.Side, key: []const u8, code: []const u8, wrap: bool, is_ssr_graph: bool) void {
     const cwd = dev.root;
     var a: bun.PathBuffer = undefined;
@@ -3694,6 +3747,7 @@ pub fn emitVisualizerMessageIfNeeded(dev: *DevServer) void {
 
 pub fn emitMemoryVisualizerMessageTimer(timer: *EventLoopTimer, _: *const bun.timespec) void {
     if (!bun.FeatureFlags.bake_debugging_features) return;
+// safe-transpile: @alignCast requires manual review
     const dev: *DevServer = @alignCast(@fieldParentPtr("memory_visualizer_timer", timer));
     assert(dev.magic == .valid);
     dev.emitMemoryVisualizerMessage();
@@ -3737,18 +3791,28 @@ pub fn writeMemoryVisualizerMessage(dev: *DevServer, payload: *std.array_list.Ma
     const cost = dev.memoryCostDetailed();
     const system_total = bun.api.node.os.totalmem();
     try w.writeStruct(Fields{
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .incremental_graph_client = @truncate(cost.incremental_graph_client),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .incremental_graph_server = @truncate(cost.incremental_graph_server),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .js_code = @truncate(cost.js_code),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .source_maps = @truncate(cost.source_maps),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .assets = @truncate(cost.assets),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .other = @truncate(cost.other),
         .devserver_tracked = if (comptime AllocationScope.enabled)
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             @truncate(dev.allocation_scope.stats().total_memory_allocated)
         else
             0,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .process_used = @truncate(bun.sys.selfProcessMemoryUsage() orelse 0),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .system_used = @truncate(system_total -| bun.api.node.os.freemem()),
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .system_total = @truncate(system_total),
     });
 
@@ -3756,8 +3820,10 @@ pub fn writeMemoryVisualizerMessage(dev: *DevServer, payload: *std.array_list.Ma
     {
         const keys = dev.source_maps.entries.keys();
         const values = dev.source_maps.entries.values();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(keys.len), .little);
-        for (keys, values) |key, value| {
+        // safe-transpile: for with index access requires manual review
+    for (keys, values) |key, value| {
             bun.assert(value.ref_count > 0);
             try w.writeAll(std.mem.asBytes(&key.get()));
             try w.writeInt(u32, value.ref_count, .little);
@@ -3768,6 +3834,7 @@ pub fn writeMemoryVisualizerMessage(dev: *DevServer, payload: *std.array_list.Ma
             } else {
                 try w.writeInt(u32, 0, .little);
             }
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             try w.writeInt(u32, @truncate(value.files.len), .little);
             try w.writeInt(u32, value.overlapping_memory_cost, .little);
         }
@@ -3778,12 +3845,15 @@ pub fn writeVisualizerMessage(dev: *DevServer, payload: *std.array_list.Managed(
     payload.appendAssumeCapacity(MessageId.visualizer.char());
     const w = @import("std-io-compat").writer(&payload);
 
+    // safe-transpile: for with index access requires manual review
     inline for (
         [2]bake.Side{ .client, .server },
         .{ &dev.client_graph, &dev.server_graph },
     ) |side, g| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(g.bundled_files.count()), .little);
-        for (
+        // safe-transpile: for with index access requires manual review
+    for (
             g.bundled_files.keys(),
             g.bundled_files.values(),
             0..,
@@ -3792,6 +3862,7 @@ pub fn writeVisualizerMessage(dev: *DevServer, payload: *std.array_list.Managed(
             const relative_path_buf = bun.path_buffer_pool.get();
             defer bun.path_buffer_pool.put(relative_path_buf);
             const normalized_key = dev.relativePath(relative_path_buf, k);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(normalized_key.len), .little);
             if (k.len == 0) continue;
             try w.writeAll(normalized_key);
@@ -3812,12 +3883,17 @@ pub fn writeVisualizerMessage(dev: *DevServer, payload: *std.array_list.Managed(
     inline for (.{ &dev.client_graph, &dev.server_graph }) |g| {
         const G = @TypeOf(g.*);
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(g.edges.items.len - g.edges_free_list.items.len), .little);
-        for (g.edges.items, 0..) |edge, i| {
+        // safe-transpile: for with index access requires manual review
+    for (g.edges.items, 0..) |edge, i| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (std.mem.indexOfScalar(G.EdgeIndex, g.edges_free_list.items, G.EdgeIndex.init(@intCast(i))) != null)
                 continue;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(edge.dependency.get()), .little);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try w.writeInt(u32, @intCast(edge.imported.get()), .little);
         }
     }
@@ -4019,6 +4095,7 @@ pub const HmrTopic = enum(u8) {
 
 pub const HmrSocket = @import("./DevServer/HmrSocket.zig");
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn routeToBundleIndexSlow(dev: *DevServer, pattern: []const u8) ?RouteBundle.Index {
     var params: FrameworkRouter.MatchedParams = undefined;
     if (dev.router.matchSlow(pattern, &params)) |route_index| {
@@ -4161,6 +4238,7 @@ pub fn onWatchError(_: *DevServer, err: bun.sys.Error) void {
     // TODO: attempt to automatically restart the watcher thread, perhaps wait for next request.
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn publish(dev: *DevServer, topic: HmrTopic, message: []const u8, opcode: uws.Opcode) void {
     if (dev.server) |s| _ = s.publish(&.{@intFromEnum(topic)}, message, opcode, false);
 }
@@ -4176,6 +4254,7 @@ const SafeFileId = packed struct(u32) {
 };
 
 /// Interface function for FrameworkRouter
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn getFileIdForRouter(dev: *DevServer, abs_path: []const u8, associated_route: Route.Index, file_kind: Route.FileKind) !OpaqueFileId {
     const index = try dev.server_graph.insertStaleExtra(abs_path, false, true);
     try dev.route_lookup.put(dev.allocator(), index, .{
@@ -4185,11 +4264,13 @@ pub fn getFileIdForRouter(dev: *DevServer, abs_path: []const u8, associated_rout
     return toOpaqueFileId(.server, index);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onRouterSyntaxError(dev: *DevServer, rel_path: []const u8, log: FrameworkRouter.TinyLog) bun.OOM!void {
     _ = dev; // TODO: maybe this should track the error, send over HmrSocket?
     log.print(rel_path);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onRouterCollisionError(dev: *DevServer, rel_path: []const u8, other_id: OpaqueFileId, ty: Route.FileKind) bun.OOM!void {
     // TODO: maybe this should track the error, send over HmrSocket?
 
@@ -4210,6 +4291,7 @@ pub fn onRouterCollisionError(dev: *DevServer, rel_path: []const u8, other_id: O
 
 fn toOpaqueFileId(comptime side: bake.Side, index: IncrementalGraph(side).FileIndex) OpaqueFileId {
     if (Environment.allow_assert) {
+// safe-transpile: @bitCast requires manual review
         return OpaqueFileId.init(@bitCast(SafeFileId{
             .side = @intFromEnum(side),
             .index = index.get(),
@@ -4221,16 +4303,19 @@ fn toOpaqueFileId(comptime side: bake.Side, index: IncrementalGraph(side).FileIn
 
 fn fromOpaqueFileId(comptime side: bake.Side, id: OpaqueFileId) IncrementalGraph(side).FileIndex {
     if (Environment.allow_assert) {
+// safe-transpile: @bitCast requires manual review
         const safe: SafeFileId = @bitCast(id.get());
         assert(@intFromEnum(side) == safe.side);
         return IncrementalGraph(side).FileIndex.init(safe.index);
     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return IncrementalGraph(side).FileIndex.init(@intCast(id.get()));
 }
 
 /// Returns posix style path, suitible for URLs and reproducible hashes.
 /// Calculate the relative path from the dev server root.
 /// The caller must provide a PathBuffer from the pool.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn relativePath(dev: *DevServer, relative_path_buf: *bun.PathBuffer, path: []const u8) []const u8 {
     bun.assert(dev.root[dev.root.len - 1] != '/');
 
@@ -4302,6 +4387,7 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
     Output.note("Dumped incremental bundler graph to {f}", .{bun.fmt.quote(filepath)});
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeAllFd(fd: bun.FD, bytes: []const u8) !void {
     var written: usize = 0;
     while (written < bytes.len) {
@@ -4340,6 +4426,7 @@ pub const EntryPointList = struct {
         entry_points.set.deinit(alloc);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendJs(
         entry_points: *EntryPointList,
         alloc: Allocator,
@@ -4353,6 +4440,7 @@ pub const EntryPointList = struct {
         });
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendCss(entry_points: *EntryPointList, alloc: Allocator, abs_path: []const u8) !void {
         return entry_points.append(alloc, abs_path, .{
             .client = true,
@@ -4361,10 +4449,12 @@ pub const EntryPointList = struct {
     }
 
     /// Deduplictes requests to bundle the same file twice.
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn append(entry_points: *EntryPointList, alloc: Allocator, abs_path: []const u8, flags: Flags) !void {
         const gop = try entry_points.set.getOrPut(alloc, abs_path);
         if (gop.found_existing) {
             const T = @typeInfo(Flags).@"struct".backing_integer.?;
+// safe-transpile: @bitCast requires manual review
             gop.value_ptr.* = @bitCast(@as(T, @bitCast(gop.value_ptr.*)) | @as(T, @bitCast(flags)));
         } else {
             gop.value_ptr.* = flags;
@@ -4386,10 +4476,12 @@ const HTMLRouter = struct {
         .fallback = null,
     };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn get(router: *HTMLRouter, path: []const u8) ?*HTMLBundle.HTMLBundleRoute {
         return router.map.get(path) orelse router.fallback;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn put(router: *HTMLRouter, alloc: Allocator, path: []const u8, route: *HTMLBundle.HTMLBundleRoute) !void {
         if (bun.strings.eqlComptime(path, "/*")) {
             router.fallback = route;
@@ -4462,6 +4554,7 @@ const UnrefSourceMapRequest = struct {
         bun.destroy(ctx);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn runWithBody(ctx: *UnrefSourceMapRequest, body: []const u8, r: AnyResponse) !void {
         if (body.len != 8) return error.InvalidRequest;
         var generation: u32 = undefined;
@@ -4474,6 +4567,7 @@ const UnrefSourceMapRequest = struct {
     }
 };
 
+// safe-transpile: function returns small constant slice — consider zust.String
 pub fn readString32(reader: anytype, alloc: Allocator) ![]const u8 {
     const len = try reader.readInt(u32, .little);
     const memory = try alloc.alloc(u8, len);
@@ -4497,7 +4591,8 @@ const TestingBatch = struct {
 
     pub fn append(self: *@This(), dev: *DevServer, entry_points: EntryPointList) !void {
         assert(entry_points.set.count() > 0);
-        for (entry_points.set.keys(), entry_points.set.values()) |k, v| {
+        // safe-transpile: for with index access requires manual review
+    for (entry_points.set.keys(), entry_points.set.values()) |k, v| {
             try self.entry_points.append(dev.allocator(), k, v);
         }
     }
@@ -4598,6 +4693,7 @@ fn bundleNewRouteJSFunctionImpl(global: *bun.jsc.JSGlobalObject, request_ptr: *a
     const url = url_bunstr.toUTF8(bun.default_allocator);
     defer url.deinit();
 
+// safe-transpile: @alignCast requires manual review
     const request: *bun.webcore.Request = @ptrCast(@alignCast(request_ptr));
     const dev = request.request_context.devServer() orelse {
         return global.throw("Request context does not belong to dev server", .{});
@@ -4687,6 +4783,7 @@ fn newRouteParamsForBundlePromiseForJS(global: *bun.jsc.JSGlobalObject, callfram
     const request = request_js.as(bun.webcore.Request) orelse return global.throw("Request must be a Request object", .{});
     const dev = request.request_context.devServer() orelse return global.throw("Request context does not belong to dev server", .{});
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const route_bundle_index = RouteBundle.Index.init(@intCast(route_bundle_index_js.toInt32()));
 
     const url = try url_js.toBunString(global);
@@ -4697,6 +4794,7 @@ fn newRouteParamsForBundlePromiseForJS(global: *bun.jsc.JSGlobalObject, callfram
     return newRouteParamsForBundlePromise(dev, route_bundle_index, url_utf8.byteSlice());
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn newRouteParamsForBundlePromise(
     dev: *DevServer,
     route_bundle_index: RouteBundle.Index,
@@ -4732,8 +4830,10 @@ fn newRouteParamsForBundlePromise(
 }
 
 // TODO: this is shitty
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn extractPathnameFromUrl(url: []const u8) []const u8 {
     // Extract pathname from URL (remove protocol, host, query, hash)
+// zust: use zust.String or zust.GuardedSlice for slice operations
     var pathname = if (std.mem.indexOf(u8, url, "://")) |proto_end| blk: {
         const after_proto = url[proto_end + 3 ..];
         break :blk after_proto;

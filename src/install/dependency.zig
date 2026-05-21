@@ -5,7 +5,6 @@ const URI = union(Tag) {
     remote: String,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(lhs: URI, rhs: URI, lhs_buf: []const u8, rhs_buf: []const u8) bool {
         if (@as(Tag, lhs) != @as(Tag, rhs)) {
             return false;
@@ -44,7 +43,6 @@ behavior: Behavior = .{},
 /// "name" must be ASC so that later, when we rebuild the lockfile
 /// we insert it back in reverse order without an extra sorting pass
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isLessThan(string_buf: []const u8, lhs: Dependency, rhs: Dependency) bool {
     const behavior = lhs.behavior.cmp(rhs.behavior);
     if (behavior != .eq) {
@@ -57,25 +55,21 @@ pub fn isLessThan(string_buf: []const u8, lhs: Dependency, rhs: Dependency) bool
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn countWithDifferentBuffers(this: *const Dependency, name_buf: []const u8, version_buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) void {
     builder.count(this.name.slice(name_buf));
     builder.count(this.version.literal.slice(version_buf));
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn count(this: *const Dependency, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) void {
     this.countWithDifferentBuffers(buf, buf, StringBuilder, builder);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn clone(this: *const Dependency, package_manager: *PackageManager, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) !Dependency {
     return this.cloneWithDifferentBuffers(package_manager, buf, buf, StringBuilder, builder);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cloneWithDifferentBuffers(this: *const Dependency, package_manager: *PackageManager, name_buf: []const u8, version_buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) !Dependency {
     const out_slice = builder.lockfile.buffers.string_bytes.items;
@@ -127,7 +121,6 @@ pub inline fn realname(this: *const Dependency) String {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn isAliased(this: *const Dependency, buf: []const u8) bool {
     return switch (this.version.tag) {
         .npm => !this.version.value.npm.name.eql(this.name, buf, buf),
@@ -147,12 +140,10 @@ pub fn toDependency(
         .bytes = this[0..8].*,
     };
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     const name_hash: u64 = @bitCast(this[8..16].*);
     return Dependency{
         .name = name,
         .name_hash = name_hash,
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         .behavior = @bitCast(this[16]),
         .version = Dependency.Version.toVersion(name, name_hash, this[17..this.len].*, ctx),
@@ -163,9 +154,7 @@ pub fn toExternal(this: Dependency) External {
     var bytes: External = undefined;
     bytes[0..this.name.bytes.len].* = this.name.bytes;
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     bytes[8..16].* = @as([8]u8, @bitCast(this.name_hash));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
     bytes[16] = @bitCast(this.behavior);
     bytes[17..bytes.len].* = this.version.toExternal();
@@ -178,7 +167,6 @@ pub inline fn isSCPLikePath(dependency: string) bool {
 
     var at_index: ?usize = null;
 
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (dependency, 0..) |c, i| {
         switch (c) {
@@ -233,7 +221,6 @@ pub inline fn isRemoteTarball(dependency: string) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn splitVersionAndMaybeName(str: []const u8) struct { []const u8, ?[]const u8 } {
     if (strings.indexOfChar(str, '@')) |at_index| {
         if (at_index != 0) {
@@ -279,7 +266,6 @@ pub fn splitNameAndVersion(str: string) error{MissingVersion}!struct { string, s
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn unscopedPackageName(name: []const u8) []const u8 {
     if (name[0] != '@') return name;
@@ -329,7 +315,6 @@ pub const Version = struct {
     pub const zeroed = Version{};
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(
         this: *const Version,
         buf: []const u8,
@@ -344,13 +329,11 @@ pub const Version = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isLessThan(string_buf: []const u8, lhs: Dependency.Version, rhs: Dependency.Version) bool {
         if (comptime Environment.allow_assert) bun.assert(lhs.tag == rhs.tag);
         return strings.cmpStringsAsc({}, lhs.literal.slice(string_buf), rhs.literal.slice(string_buf));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isLessThanWithTag(string_buf: []const u8, lhs: Dependency.Version, rhs: Dependency.Version) bool {
         const tag_order = lhs.tag.cmp(rhs.tag);
@@ -390,7 +373,6 @@ pub const Version = struct {
         return bytes;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn eql(
         lhs: *const Version,
@@ -685,7 +667,6 @@ pub const Version = struct {
                     if (strings.hasPrefixComptime(dependency, "npm:") and dependency.len > "npm:".len) {
                         const remain = dependency["npm:".len + @intFromBool(dependency["npm:".len] == '@') ..];
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (remain, 0..) |c, i| {
                             if (c == '@') {
                                 return infer(remain[i + 1 ..]);
@@ -767,7 +748,6 @@ pub const Version = struct {
         is_alias: bool = false,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn eql(this: NpmInfo, that: NpmInfo, this_buf: []const u8, that_buf: []const u8) bool {
             return this.name.eql(that.name, this_buf, that_buf) and this.version.eql(that.version);
         }
@@ -778,7 +758,6 @@ pub const Version = struct {
         tag: String,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn eql(this: TagInfo, that: TagInfo, this_buf: []const u8, that_buf: []const u8) bool {
             return this.name.eql(that.name, this_buf, that_buf) and this.tag.eql(that.tag, this_buf, that_buf);
         }
@@ -788,7 +767,6 @@ pub const Version = struct {
         uri: URI,
         package_name: String = .{},
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         fn eql(this: TarballInfo, that: TarballInfo, this_buf: []const u8, that_buf: []const u8) bool {
             return this.uri.eql(that.uri, this_buf, that_buf);
@@ -816,7 +794,6 @@ pub const Version = struct {
     };
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn eql(
     a: *const Dependency,
@@ -1275,12 +1252,10 @@ pub const Behavior = packed struct(u8) {
 
     pub inline fn eq(lhs: Behavior, rhs: Behavior) bool {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         return @as(u8, @bitCast(lhs)) == @as(u8, @bitCast(rhs));
     }
 
     pub inline fn includes(lhs: Behavior, rhs: Behavior) bool {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @as(u8, @bitCast(lhs)) & @as(u8, @bitCast(rhs)) != 0;
     }
@@ -1355,18 +1330,13 @@ pub const Behavior = packed struct(u8) {
 
     comptime {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         bun.assert(@as(u8, @bitCast(Behavior{ .prod = true })) == (1 << 1));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         bun.assert(@as(u8, @bitCast(Behavior{ .optional = true })) == (1 << 2));
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         bun.assert(@as(u8, @bitCast(Behavior{ .dev = true })) == (1 << 3));
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         bun.assert(@as(u8, @bitCast(Behavior{ .peer = true })) == (1 << 4));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         bun.assert(@as(u8, @bitCast(Behavior{ .workspace = true })) == (1 << 5));
     }

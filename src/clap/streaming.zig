@@ -61,7 +61,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
                     const maybe_value = if (eql_index) |i| arg[i + 1 ..] else null;
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                     for (parser.params) |*param| {
                         if (!param.names.matchesLong(name))
                             continue;
@@ -112,7 +111,7 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
                     // If we find a positional with the value `--` then we
                     // interpret the rest of the arguments as positional
                     // arguments.
-                    if (safe.SimdUtils.eql(arg, "--")) {
+                    if (mem.eql(u8, arg, "--")) {
                         parser.state = .rest_are_positional;
                         // return null to terminate arg parsing
                         const value = parser.iter.next() orelse return null;
@@ -131,7 +130,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
             const index = state.index;
             const next_index = index + 1;
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (parser.params) |*param| {
                 const short = param.names.short orelse continue;
@@ -180,7 +178,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
                 return p;
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
             for (parser.params) |*param| {
                 if (param.names.long) |_|
                     continue;
@@ -205,7 +202,7 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
 
         fn parseNextArg(parser: *@This()) ArgError!?ArgInfo {
             const full_arg = parser.iter.next() orelse return null;
-            if (safe.SimdUtils.eql(full_arg, "--") or safe.SimdUtils.eql(full_arg, "-"))
+            if (mem.eql(u8, full_arg, "--") or mem.eql(u8, full_arg, "-"))
                 return ArgInfo{ .arg = full_arg, .kind = .positional };
             if (mem.startsWith(u8, full_arg, "--"))
                 return ArgInfo{ .arg = full_arg[2..], .kind = .long };
@@ -215,7 +212,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
             return ArgInfo{ .arg = full_arg, .kind = .positional };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         fn err(parser: @This(), arg: []const u8, names: clap.Names, _err: anytype) @TypeOf(_err) {
             if (parser.diagnostic) |d|
@@ -247,7 +243,6 @@ fn testNoErr(params: []const clap.Param(u8), args_strings: []const []const u8, r
         unreachable;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn testErr(params: []const clap.Param(u8), args_strings: []const []const u8, expected: []const u8) void {
     var diag = clap.Diagnostic{};

@@ -220,7 +220,6 @@ pub const Editor = enum(u8) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn open(
         editor: Editor,
         binary: string,
@@ -341,7 +340,6 @@ pub const EditorContext = struct {
     const Fs = @import("../resolver/fs.zig");
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) void {
         _openInEditor(this.path, editor_, blob, id, tmpdir, line, column) catch |err| {
             if (editor_ != .other) {
@@ -352,7 +350,6 @@ pub const EditorContext = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: @import("std-fs-compat").FsDir, line: string, column: string) !void {
         var basename_buf: [512]u8 = undefined;

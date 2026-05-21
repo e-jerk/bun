@@ -74,7 +74,6 @@ pub const Entry = struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn renderMappings(map: Entry, kind: ChunkKind, arena: Allocator, gpa: Allocator) ![]u8 {
         var j: StringJoiner = .{ .allocator = arena };
         j.pushStatic("AAAA");
@@ -82,7 +81,6 @@ pub const Entry = struct {
         return j.done(gpa);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn renderJSON(map: *const Entry, dev: *DevServer, arena: Allocator, kind: ChunkKind, gpa: Allocator, side: bake.Side) ![]u8 {
         const map_files = map.files.slice();
@@ -205,7 +203,6 @@ pub const Entry = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn encodeSourceMapPath(
         side: bake.Side,
         utf8_input: []const u8,
@@ -248,9 +245,7 @@ pub const Entry = struct {
                 const content = source_map.get();
                 const start_state: SourceMap.SourceMapState = .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .source_index = @intCast(source_index),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .generated_line = @intCast(lines_between),
                     .generated_column = 0,
@@ -268,7 +263,6 @@ pub const Entry = struct {
                 );
 
                 prev_end_state = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .source_index = @intCast(source_index),
                     .generated_line = 0,
@@ -337,7 +331,6 @@ pub const WeakRef = struct {
     pub fn init(k: Key, count: u32, expire: i64) WeakRef {
         return .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .key_top_bits = @intCast(k.get() >> 32),
             .count = count,
             .expire = expire,
@@ -346,7 +339,6 @@ pub const WeakRef = struct {
 };
 
 pub fn owner(store: *Self) *DevServer {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("source_maps", store));
 }
@@ -536,7 +528,6 @@ pub fn getParsedSourceMap(store: *Self, script_id: Key, arena: Allocator, gpa: A
     const entry = &store.entries.values()[index];
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     const script_id_decoded: SourceId = @bitCast(script_id.get());
     const vlq_bytes = bun.handleOom(entry.renderMappings(script_id_decoded.kind, arena, arena));
 
@@ -544,7 +535,6 @@ pub fn getParsedSourceMap(store: *Self, script_id: Key, arena: Allocator, gpa: A
         gpa,
         vlq_bytes,
         null,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(entry.paths.len),
         0, // unused
@@ -556,7 +546,6 @@ pub fn getParsedSourceMap(store: *Self, script_id: Key, arena: Allocator, gpa: A
         },
         .success => |psm| {
             return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .index = .init(@intCast(index)),
                 .mappings = psm.mappings,

@@ -132,6 +132,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             if (comptime !ssl) return;
             if (session.registry_index != std.math.maxInt(u32)) return;
             session.ref();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             session.registry_index = @intCast(this.active_h2_sessions.items.len);
             bun.handleOom(this.active_h2_sessions.append(bun.default_allocator, session));
         }
@@ -143,7 +144,8 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
         pub fn abortPendingH2Waiter(this: *@This(), async_http_id: u32) bool {
             if (comptime !ssl) return false;
             for (this.pending_h2_connects.items) |pc| {
-                for (pc.waiters.items, 0..) |waiter, i| {
+                // safe-transpile: for with index access requires manual review
+    for (pc.waiters.items, 0..) |waiter, i| {
                     if (waiter.async_http_id == async_http_id) {
                         _ = pc.waiters.swapRemove(i);
                         waiter.failFromH2(error.Aborted);
@@ -188,6 +190,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             {
                 var iter = this.pending_sockets.used.iterator(.{ .kind = .set });
                 while (iter.next()) |idx| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const pooled = this.pending_sockets.at(@intCast(idx));
                     // Not gated on comptime ssl — an HTTP-proxy-to-HTTPS
                     // tunnel pools in the non-SSL context but still stores
@@ -251,7 +254,9 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
         pub fn initWithThreadOpts(this: *@This(), init_opts: *const HTTPThread.InitOpts) InitError!void {
             if (!comptime ssl) @compileError("ssl only");
             var opts: uws.SocketContext.BunSocketContextOptions = .{
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .ca = if (init_opts.ca.len > 0) @ptrCast(init_opts.ca) else null,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .ca_count = @intCast(init_opts.ca.len),
                 .ca_file_name = if (init_opts.abs_ca_file_name.len > 0) init_opts.abs_ca_file_name else null,
                 .request_cert = 1,
@@ -284,6 +289,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
         /// tunnel. The pool takes ownership of one strong ref on the tunnel;
         /// the caller must NOT deref it afterwards. If pooling fails (pool
         /// full, hostname too long, socket bad), the tunnel is dereffed here.
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn releaseSocket(
             this: *@This(),
             socket: HTTPSocket,
@@ -321,7 +327,9 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
 
                     pending.http_socket = socket;
                     pending.did_have_handshaking_error_while_reject_unauthorized_is_false = did_have_handshaking_error_while_reject_unauthorized_is_false;
+// safe-transpile: @memcpy requires manual review
                     @memcpy(pending.hostname_buf[0..hostname.len], hostname);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     pending.hostname_len = @as(u8, @truncate(hostname.len));
                     pending.port = port;
                     pending.owner = this;
@@ -406,6 +414,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
                             }
 
                             // if checkServerIdentity returns false, we dont call firstCall — the connection was rejected
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             const ssl_ptr = @as(*BoringSSL.SSL, @ptrCast(socket.getNativeHandle()));
                             if (!client.checkServerIdentity(comptime ssl, socket, handshake_error, ssl_ptr, true)) {
                                 // checkServerIdentity already called closeAndFail() → fail()
@@ -482,6 +491,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
                 assert(pooled.owner.pending_sockets.put(pooled));
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn onData(
                 ptr: *anyopaque,
                 socket: HTTPSocket,
@@ -621,6 +631,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             h2_session: ?*H2.ClientSession,
         };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn existingSocket(
             this: *@This(),
             reject_unauthorized: bool,
@@ -639,6 +650,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             var iter = this.pending_sockets.used.iterator(.{ .kind = .set });
 
             while (iter.next()) |pending_socket_index| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 var socket = this.pending_sockets.at(@as(u16, @intCast(pending_socket_index)));
                 if (socket.port != port) {
                     continue;
@@ -720,6 +732,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             return null;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn connectSocket(this: *@This(), client: *HTTPClient, socket_path: []const u8) !?HTTPSocket {
             client.connected_url = if (client.http_proxy) |proxy| proxy else client.url;
             const socket = try HTTPSocket.connectUnixGroup(
@@ -734,6 +747,7 @@ pub fn NewHTTPContext(comptime ssl: bool) type {
             return socket;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn connect(this: *@This(), client: *HTTPClient, hostname_: []const u8, port: u16) !?HTTPSocket {
             const hostname = if (FeatureFlags.hardcode_localhost_to_127_0_0_1 and strings.eqlComptime(hostname_, "localhost"))
                 "127.0.0.1"

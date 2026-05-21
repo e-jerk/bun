@@ -21,11 +21,9 @@ pub fn findLine(byte_offsets_to_start_of_line: []const u32, loc: Logger.Loc) i32
     assert(loc.start > -1); // checked by caller
     var original_line: usize = 0;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const loc_start = @as(usize, @intCast(loc.start));
 
     {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         var count = @as(usize, @truncate(byte_offsets_to_start_of_line.len));
         var i: usize = 0;
@@ -42,7 +40,6 @@ pub fn findLine(byte_offsets_to_start_of_line: []const u32, loc: Logger.Loc) i32
     }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(i32, @intCast(original_line)) - 1;
 }
 
@@ -50,10 +47,8 @@ pub fn findIndex(byte_offsets_to_start_of_line: []const u32, loc: Logger.Loc) ?u
     assert(loc.start > -1); // checked by caller
     var original_line: usize = 0;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const loc_start = @as(usize, @intCast(loc.start));
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var count = @as(usize, @truncate(byte_offsets_to_start_of_line.len));
     var i: usize = 0;
@@ -83,11 +78,9 @@ pub fn findIndex(byte_offsets_to_start_of_line: []const u32, loc: Logger.Loc) ?u
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_line_count: i32) List {
     var list = List{};
     // Preallocate the top-level table using the approximate line count from the lexer
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     list.ensureUnusedCapacity(allocator, @as(usize, @intCast(@max(approximate_line_count, 1)))) catch unreachable;
     var column: i32 = 0;
@@ -113,7 +106,6 @@ pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_
             line_byte_offset = @as(
                 u32,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 @truncate(@intFromPtr(remaining.ptr) - @intFromPtr(contents.ptr)),
             );
         }
@@ -130,7 +122,6 @@ pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_
             column_byte_offset = @as(
                 u32,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast((@intFromPtr(
                     remaining.ptr,
                 ) - @intFromPtr(
@@ -143,10 +134,8 @@ pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_
         // Update the per-byte column offsets
         if (columns_for_non_ascii.items.len > 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const line_bytes_so_far = @as(u32, @intCast(@as(
                 u32,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 @truncate(@intFromPtr(remaining.ptr) - @intFromPtr(contents.ptr)),
             ))) - line_byte_offset;
@@ -160,12 +149,10 @@ pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_
                     // skip ahead to the next newline or non-ascii character
                     if (strings.indexOfNewlineOrNonASCIICheckStart(remaining, @as(u32, len_), false)) |j| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         column += @as(i32, @intCast(j));
                         remaining = remaining[j..];
                     } else {
                         // if there are no more lines, we are done!
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         column += @as(i32, @intCast(remaining.len));
                         remaining = remaining[remaining.len..];
@@ -222,12 +209,10 @@ pub fn generate(allocator: std.mem.Allocator, contents: []const u8, approximate_
     // Mark the start of the next line
     if (column == 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         line_byte_offset = @as(u32, @intCast(contents.len));
     }
 
     if (columns_for_non_ascii.items.len > 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const line_bytes_so_far = @as(u32, @intCast(contents.len)) - line_byte_offset;
         columns_for_non_ascii.ensureUnusedCapacity((line_bytes_so_far - column_byte_offset) + 1) catch unreachable;

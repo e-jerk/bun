@@ -27,7 +27,6 @@ pub fn next(this: *ObjectIterator) ?jsc.JSValue {
 
     if (this.current_row == .zero) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.current_row = jsc.JSObject.getIndex(this.array, globalObject, @intCast(row_i)) catch {
             this.any_failed = true;
             return null;
@@ -45,7 +44,6 @@ pub fn next(this: *ObjectIterator) ?jsc.JSValue {
         }
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const property = jsc.JSObject.getIndex(this.columns, globalObject, @intCast(cell_i)) catch {
         this.any_failed = true;

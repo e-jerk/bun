@@ -11,9 +11,7 @@ pub const Socket = opaque {
 
     extern fn us_quic_socket_status(s: *Socket, buf: [*]u8, len: c_uint) c_int;
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn status(s: *Socket, buf: []u8) c_int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_quic_socket_status(s, buf.ptr, @intCast(buf.len));
     }
@@ -26,7 +24,6 @@ pub const Socket = opaque {
     /// Unset until the caller writes to it after `connect`/`on_open`; the
     /// `?*T` slot pattern lets callbacks early-return on a null ext.
     pub fn ext(s: *Socket, comptime T: type) *?*T {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(us_quic_socket_ext(s)));
     }

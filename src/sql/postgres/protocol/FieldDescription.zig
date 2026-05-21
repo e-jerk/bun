@@ -11,7 +11,6 @@ type_oid: int4 = 0,
 binary: bool = false,
 pub fn typeTag(this: @This()) types.Tag {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @enumFromInt(@as(short, @truncate(this.type_oid)));
 }
 

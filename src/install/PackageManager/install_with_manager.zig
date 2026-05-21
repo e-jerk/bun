@@ -1,3 +1,4 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn installWithManager(
     manager: *PackageManager,
     ctx: Command.Context,
@@ -96,7 +97,8 @@ pub fn installWithManager(
                 const workspace_res_list = packages.items(.resolutions)[workspace_package_id];
                 const workspace_deps = workspace_dep_list.get(lockfile.buffers.dependencies.items);
                 const workspace_package_ids = workspace_res_list.get(lockfile.buffers.resolutions.items);
-                for (workspace_deps, workspace_package_ids) |dep, package_id| {
+                // safe-transpile: for with index access requires manual review
+    for (workspace_deps, workspace_package_ids) |dep, package_id| {
                     if (dep.version.tag != .npm and dep.version.tag != .dist_tag) continue;
                     if (package_id == invalid_package_id) continue;
 
@@ -225,7 +227,9 @@ pub fn installWithManager(
                     lockfile.catalogs.count(&lockfile, builder);
                     maybe_root.scripts.count(lockfile.buffers.string_bytes.items, *Lockfile.StringBuilder, builder);
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     const off = @as(u32, @truncate(manager.lockfile.buffers.dependencies.items.len));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     const len = @as(u32, @truncate(new_dependencies.len));
                     var packages = manager.lockfile.packages.slice();
                     var dep_lists = packages.items(.dependencies);
@@ -240,7 +244,9 @@ pub fn installWithManager(
                         const hashes_len = manager.lockfile.overrides.map.entries.len + lockfile.overrides.map.entries.len;
                         if (hashes_len == 0) break :brk &.{};
                         var all_name_hashes = try bun.default_allocator.alloc(PackageNameHash, hashes_len);
+// safe-transpile: @memcpy requires manual review
                         @memcpy(all_name_hashes[0..manager.lockfile.overrides.map.entries.len], manager.lockfile.overrides.map.keys());
+// safe-transpile: @memcpy requires manual review
                         @memcpy(all_name_hashes[manager.lockfile.overrides.map.entries.len..], lockfile.overrides.map.keys());
                         var i = manager.lockfile.overrides.map.entries.len;
                         while (i < all_name_hashes.len) {
@@ -277,7 +283,8 @@ pub fn installWithManager(
                     manager.lockfile.buffers.dependencies.items = manager.lockfile.buffers.dependencies.items.ptr[0 .. off + len];
                     manager.lockfile.buffers.resolutions.items = manager.lockfile.buffers.resolutions.items.ptr[0 .. off + len];
 
-                    for (new_dependencies, 0..) |new_dep, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (new_dependencies, 0..) |new_dep, i| {
                         dependencies[i] = try new_dep.clone(manager, lockfile.buffers.string_bytes.items, *Lockfile.StringBuilder, builder);
                         if (mapping[i] != invalid_package_id) {
                             resolutions[i] = old_resolutions[mapping[i]];
@@ -372,6 +379,7 @@ pub fn installWithManager(
                             if (std.mem.indexOfScalar(PackageNameHash, all_name_hashes, dependency.name_hash)) |_| {
                                 manager.lockfile.buffers.resolutions.items[dependency_i] = invalid_package_id;
                                 manager.enqueueDependencyWithMain(
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     @truncate(dependency_i),
                                     &dependency,
                                     invalid_package_id,
@@ -386,6 +394,7 @@ pub fn installWithManager(
                     if (manager.summary.catalogs_changed) {
                         const dependencies_len = manager.lockfile.buffers.dependencies.items.len;
                         for (0..dependencies_len) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const dep_id: DependencyID = @intCast(_dep_id);
                             const dep = manager.lockfile.buffers.dependencies.items[dep_id];
                             if (dep.version.tag != .catalog) continue;
@@ -404,6 +413,7 @@ pub fn installWithManager(
 
                     // Split this into two passes because the below may allocate memory or invalidate pointers
                     if (manager.summary.add > 0 or manager.summary.update > 0) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         const changes = @as(PackageID, @truncate(mapping.len));
                         var counter_i: PackageID = 0;
 
@@ -712,7 +722,8 @@ pub fn installWithManager(
     }
     {
         const packages = manager.lockfile.packages.slice();
-        for (packages.items(.resolution), packages.items(.meta), packages.items(.scripts)) |resolution, meta, scripts| {
+        // safe-transpile: for with index access requires manual review
+    for (packages.items(.resolution), packages.items(.meta), packages.items(.scripts)) |resolution, meta, scripts| {
             if (resolution.tag == .workspace) {
                 if (meta.hasInstallScript()) {
                     if (scripts.hasAny()) {
@@ -728,7 +739,8 @@ pub fn installWithManager(
                         }
 
                         if (first_index != -1) {
-                            inline for (entries, 0..) |maybe_entry, i| {
+                            // safe-transpile: for with index access requires manual review
+    inline for (entries, 0..) |maybe_entry, i| {
                                 if (maybe_entry) |entry| {
                                     @field(manager.lockfile.scripts, Lockfile.Scripts.names[i]).append(
                                         manager.lockfile.allocator,
@@ -749,7 +761,8 @@ pub fn installWithManager(
                             bun.assert(first_index != -1);
                         }
 
-                        inline for (entries, 0..) |maybe_entry, i| {
+                        // safe-transpile: for with index access requires manual review
+    inline for (entries, 0..) |maybe_entry, i| {
                             if (maybe_entry) |entry| {
                                 @field(manager.lockfile.scripts, Lockfile.Scripts.names[i]).append(
                                     manager.lockfile.allocator,
@@ -899,6 +912,7 @@ pub fn installWithManager(
     }
 
     if (needs_new_lockfile) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         manager.summary.add = @as(u32, @truncate(manager.lockfile.packages.len));
     }
 
@@ -1001,6 +1015,7 @@ fn printInstallSummary(
                 install_summary.success,
                 @as(
                     u32,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     @truncate(this.update_requests.len),
                 ),
             );
@@ -1024,6 +1039,7 @@ fn printInstallSummary(
             printed_timestamp = true;
             printBlockedPackagesInfo(install_summary, this.options.global);
         } else if (install_summary.skipped > 0 and install_summary.fail == 0 and this.update_requests.len == 0) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const count = @as(PackageID, @truncate(this.lockfile.packages.len));
             if (count != install_summary.skipped) {
                 if (!this.options.enable.only_missing) {
@@ -1086,6 +1102,7 @@ fn printBlockedPackagesInfo(summary: *const PackageInstall.Summary, global: bool
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getWorkspaceFilters(manager: *PackageManager, original_cwd: []const u8) !struct {
     []const WorkspaceFilter,
     bool,

@@ -54,7 +54,6 @@ pub const Orientation = enum(u8) {
 /// images; PNG eXIf and WebP EXIF chunks exist but are rare enough to leave
 /// for a follow-up.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readJpeg(bytes: []const u8) Orientation {
     if (bytes.len < 4 or bytes[0] != 0xFF or bytes[1] != 0xD8) return .normal;
     var i: usize = 2;
@@ -79,7 +78,7 @@ pub fn readJpeg(bytes: []const u8) Orientation {
         if (seglen < 2 or i + 2 + seglen > bytes.len) return .normal;
         if (marker == 0xE1 and seglen >= 8) {
             const seg = bytes[i + 4 .. i + 2 + seglen];
-            if (seg.len >= 6 and safe.SimdUtils.eql(seg[0..6], "Exif\x00\x00"))
+            if (seg.len >= 6 and std.mem.eql(u8, seg[0..6], "Exif\x00\x00"))
                 return parseTiff(seg[6..]) orelse .normal;
         }
         i += 2 + seglen;
@@ -88,11 +87,10 @@ pub fn readJpeg(bytes: []const u8) Orientation {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn parseTiff(tiff: []const u8) ?Orientation {
     if (tiff.len < 8) return null;
-    const big = safe.SimdUtils.eql(tiff[0..2], "MM");
-    if (!big and !safe.SimdUtils.eql(tiff[0..2], "II")) return null;
+    const big = std.mem.eql(u8, tiff[0..2], "MM");
+    if (!big and !std.mem.eql(u8, tiff[0..2], "II")) return null;
     if ((rd16(tiff, 2, big) orelse return null) != 42) return null;
     const ifd0 = rd32(tiff, 4, big) orelse return null;
     const count = rd16(tiff, ifd0, big) orelse return null;
@@ -117,12 +115,10 @@ fn parseTiff(tiff: []const u8) ?Orientation {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn rd16(b: []const u8, off: usize, big: bool) ?u16 {
     if (off + 2 > b.len) return null;
     return std.mem.readInt(u16, b[off..][0..2], if (big) .big else .little);
 }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn rd32(b: []const u8, off: usize, big: bool) ?u32 {
     if (off + 4 > b.len) return null;

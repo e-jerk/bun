@@ -136,10 +136,8 @@ pub const Yield = union(enum) {
     pub fn drainPipelines(pipeline_stack: *std.array_list.Managed(*Pipeline)) ?Yield {
         if (pipeline_stack.items.len == 0) return null;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var i: i64 = @as(i64, @intCast(pipeline_stack.items.len)) - 1;
         while (i >= 0 and i < pipeline_stack.items.len) : (i -= 1) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const pipeline = pipeline_stack.items[@intCast(i)];
             if (pipeline.state == .starting_cmds) return pipeline.next();

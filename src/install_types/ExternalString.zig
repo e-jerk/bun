@@ -3,12 +3,10 @@ pub const ExternalString = extern struct {
     hash: u64 = 0,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn fmt(this: *const ExternalString, buf: []const u8) String.Formatter {
         return this.value.fmt(buf);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn order(lhs: *const ExternalString, rhs: *const ExternalString, lhs_buf: []const u8, rhs_buf: []const u8) std.math.Order {
         if (lhs.hash == rhs.hash and lhs.hash > 0) return .eq;

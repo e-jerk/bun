@@ -263,14 +263,12 @@ pub fn fromJS(value: JSValue, globalThis: *JSGlobalObject) bun.JSError!?Readable
             .value = out,
             .ptr = .{
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 .Blob = @ptrCast(@alignCast((ptr.?))),
             },
         },
         .File => ReadableStream{
             .value = out,
             .ptr = .{
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 .File = @ptrCast(@alignCast((ptr.?))),
             },
@@ -279,7 +277,6 @@ pub fn fromJS(value: JSValue, globalThis: *JSGlobalObject) bun.JSError!?Readable
         .Bytes => ReadableStream{
             .value = out,
             .ptr = .{
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 .Bytes = @ptrCast(@alignCast((ptr.?))),
             },
@@ -308,7 +305,6 @@ pub fn fromNative(globalThis: *JSGlobalObject, native: jsc.JSValue) bun.JSError!
     return bun.jsc.fromJSHostCall(globalThis, @src(), ZigGlobalObject__createNativeReadableStream, .{ globalThis, native });
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn fromOwnedSlice(globalThis: *JSGlobalObject, bytes: []u8, recommended_chunk_size: Blob.SizeType) bun.JSError!jsc.JSValue {
     var blob = Blob.init(bytes, bun.default_allocator, globalThis);
@@ -420,7 +416,6 @@ pub fn used(globalThis: *JSGlobalObject) bun.JSError!jsc.JSValue {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn NewSource(
     comptime Context: type,
     comptime name_: []const u8,
@@ -454,7 +449,6 @@ pub fn NewSource(
         pub const deinit = bun.TrivialDeinit(@This());
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn pull(this: *This, buf: []u8) streams.Result {
             return onPull(&this.context, buf, JSValue.zero);
         }
@@ -481,7 +475,6 @@ pub fn NewSource(
             return onStart(&this.context);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onPullFromJS(this: *This, buf: []u8, view: JSValue) streams.Result {
             return onPull(&this.context, buf, view);

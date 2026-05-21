@@ -624,7 +624,8 @@ pub const BackgroundHandler = struct {
             .@"background-position" => |val| {
                 const x_positions = this.initSmallListHelper(HorizontalPosition, 1, "x_positions", allocator, val.len());
                 const y_positions = this.initSmallListHelper(VerticalPosition, 1, "y_positions", allocator, val.len());
-                for (val.slice(), x_positions, y_positions) |position, *x, *y| {
+                // safe-transpile: for with index access requires manual review
+    for (val.slice(), x_positions, y_positions) |position, *x, *y| {
                     x.* = position.x.deepClone(allocator);
                     y.* = position.y.deepClone(allocator);
                 }
@@ -678,6 +679,7 @@ pub const BackgroundHandler = struct {
             },
             .background => |*val| {
                 var images = SmallList(Image, 1).initCapacity(allocator, val.len());
+// safe-transpile: for loop with pointer capture requires manual review
                 for (val.slice()) |*b| {
                     images.appendAssumeCapacity(b.image.deepClone(allocator));
                 }
@@ -685,6 +687,7 @@ pub const BackgroundHandler = struct {
                 const color = val.last().?.color.deepClone(allocator);
                 this.flushHelper(allocator, "color", CssColor, &color, dest, context);
                 var clips = SmallList(BackgroundClip, 1).initCapacity(allocator, val.len());
+// safe-transpile: for loop with pointer capture requires manual review
                 for (val.slice()) |*b| {
                     clips.appendAssumeCapacity(b.clip.deepClone(allocator));
                 }
@@ -708,7 +711,8 @@ pub const BackgroundHandler = struct {
                 const attachments = this.initSmallListHelper(BackgroundAttachment, 1, "attachments", allocator, val.len());
                 const origins = this.initSmallListHelper(BackgroundOrigin, 1, "origins", allocator, val.len());
 
-                for (
+                // safe-transpile: for with index access requires manual review
+    for (
                     val.slice(),
                     x_positions,
                     y_positions,
@@ -747,6 +751,7 @@ pub const BackgroundHandler = struct {
     }
 
     // Either get the value from the field on `this` or initialize a new one
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn initSmallListHelper(
         this: *@This(),
         comptime T: type,
@@ -792,6 +797,7 @@ pub const BackgroundHandler = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn flushHelper(
         this: *@This(),
         allocator: Allocator,
@@ -813,6 +819,7 @@ pub const BackgroundHandler = struct {
         if (!this.has_any) return;
         this.has_any = false;
         const push = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
             fn push(self: *BackgroundHandler, alloc: Allocator, d: *css.DeclarationList, comptime property_field_name: []const u8, val: anytype) void {
                 bun.handleOom(d.append(alloc, @unionInit(Property, property_field_name, val)));
                 const prop = @field(BackgroundProperty, property_field_name);
@@ -879,7 +886,8 @@ pub const BackgroundHandler = struct {
                     null;
 
                 var backgrounds = SmallList(Background, 1).initCapacity(allocator, len);
-                for (
+                // safe-transpile: for with index access requires manual review
+    for (
                     images.slice(),
                     x_positions.slice(),
                     y_positions.slice(),
@@ -953,7 +961,8 @@ pub const BackgroundHandler = struct {
 
         if (maybe_x_positions != null and maybe_y_positions != null and maybe_x_positions.?.len() == maybe_y_positions.?.len()) {
             var positions = SmallList(BackgroundPosition, 1).initCapacity(allocator, maybe_x_positions.?.len());
-            for (maybe_x_positions.?.slice(), maybe_y_positions.?.slice()) |x, y| {
+            // safe-transpile: for with index access requires manual review
+    for (maybe_x_positions.?.slice(), maybe_y_positions.?.slice()) |x, y| {
                 positions.appendAssumeCapacity(BackgroundPosition{ .x = x, .y = y });
             }
             maybe_x_positions.?.clearRetainingCapacity();

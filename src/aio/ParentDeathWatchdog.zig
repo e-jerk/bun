@@ -403,7 +403,6 @@ fn parentPidOf(pid: std.c.pid_t) std.c.pid_t {
         const rc = bun.c.proc_pidinfo(pid, bun.c.PROC_PIDTBSDINFO, 0, &info, size);
         if (rc != size) return 0;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(info.pbi_ppid);
     }
     if (comptime Environment.isLinux) {
@@ -432,10 +431,8 @@ fn listChildPids(parent: std.c.pid_t, out: []std.c.pid_t) ?usize {
         // already divides the kernel's byte count by sizeof(int)); buffersize
         // is in bytes.
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = bun.c.proc_listchildpids(parent, out.ptr, @intCast(out.len * @sizeOf(std.c.pid_t)));
         if (rc <= 0) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@min(@as(usize, @intCast(rc)), out.len));
     }
@@ -486,7 +483,6 @@ fn listChildPidsLinux(parent: std.c.pid_t, out: []std.c.pid_t) ?usize {
 /// Single-shot open+read+close into `buf`. Exit-handler helper — avoids
 /// allocating (so no `File.readFrom`) and swallows the `bun.sys` error info
 /// we don't need.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn readFileOnce(path: [:0]const u8, buf: []u8) ?[]const u8 {
     const file = switch (bun.sys.File.open(path, bun.O.RDONLY, 0)) {

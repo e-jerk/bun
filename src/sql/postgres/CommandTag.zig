@@ -47,7 +47,6 @@ pub const CommandTag = union(enum) {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(tag: []const u8) CommandTag {
         const first_space_index = bun.strings.indexOfChar(tag, ' ') orelse return .{ .other = tag };
         const cmd = KnownCommand.Map.get(tag[0..first_space_index]) orelse return .{

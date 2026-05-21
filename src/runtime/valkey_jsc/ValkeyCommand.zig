@@ -23,6 +23,7 @@ pub fn write(this: *const Command, writer: anytype) !void {
 
     switch (this.args) {
         inline .slices, .args => |args| {
+// safe-transpile: for loop with pointer capture requires manual review
             for (args) |*arg| {
                 try writer.print("${d}\r\n{s}\r\n", .{ arg.byteLength(), arg.slice() });
             }
@@ -43,6 +44,7 @@ pub fn byteLength(this: *const Command) usize {
     return std.fmt.count("{f}", .{this.*});
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn serialize(this: *const Command, allocator: std.mem.Allocator) ![]u8 {
     var buf = try std.array_list.Managed(u8).initCapacity(allocator, this.byteLength());
     errdefer buf.deinit();

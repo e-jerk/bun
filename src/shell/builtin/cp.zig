@@ -101,7 +101,8 @@ pub fn ignoreEbusyErrorIfPossible(this: *Cp) Yield {
     if (!bun.Environment.isWindows) @compileError("dont call this plz");
 
     if (this.state.ebusy.idx < this.state.ebusy.state.tasks.items.len) {
-        outer_loop: for (this.state.ebusy.state.tasks.items[this.state.ebusy.idx..], 0..) |task_, i| {
+        // safe-transpile: for with index access requires manual review
+    outer_loop: for (this.state.ebusy.state.tasks.items[this.state.ebusy.idx..], 0..) |task_, i| {
             const task: *ShellCpTask = task_;
             const failure_src = task.src_absolute.?;
             const failure_tgt = task.tgt_absolute.?;
@@ -151,6 +152,7 @@ pub fn next(this: *Cp) Yield {
                 }
 
                 exec.started = true;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 exec.tasks_count = @intCast(exec.paths_to_copy.len);
 
                 const cwd_path = this.bltn().parentCmd().base.shell.cwdZ();
@@ -181,6 +183,7 @@ pub fn deinit(cp: *Cp) void {
     assert(cp.state == .done or cp.state == .waiting_write_err);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeFailingError(this: *Cp, buf: []const u8, exit_code: ExitCode) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .waiting_write_err;
@@ -202,6 +205,7 @@ pub fn onIOWriterChunk(this: *Cp, _: usize, e: ?jsc.SystemError) Yield {
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
+// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("cp", this));
     return @fieldParentPtr("impl", impl);
 }
@@ -274,6 +278,7 @@ pub const ShellCpOutputTask = OutputTask(Cp, .{
 });
 
 const ShellCpOutputTaskVTable = struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeErr(this: *Cp, childptr: anytype, errbuf: []const u8) ?Yield {
         if (this.state == .exec) this.state.exec.output_waiting += 1;
         if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -690,12 +695,14 @@ const Opts = packed struct(u16) {
         return Parse.parseFlags(opts, args);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         _ = this;
         _ = flag;
         return null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         switch (char) {
             'f' => {

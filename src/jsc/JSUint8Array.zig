@@ -8,7 +8,6 @@ pub const JSUint8Array = opaque {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *JSUint8Array) []u8 {
         return this.ptr()[0..this.len()];
     }
@@ -16,13 +15,11 @@ pub const JSUint8Array = opaque {
     extern fn JSUint8Array__fromDefaultAllocator(*jsc.JSGlobalObject, ptr: [*]u8, len: usize) jsc.JSValue;
     /// *bytes* must come from bun.default_allocator
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(globalThis: *JSGlobalObject, bytes: []u8) jsc.JSValue {
         return JSUint8Array__fromDefaultAllocator(globalThis, bytes.ptr, bytes.len);
     }
 
     extern fn Bun__createUint8ArrayForCopy(*jsc.JSGlobalObject, ptr: ?*const anyopaque, len: usize, buffer: bool) JSValue;
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytesCopy(globalThis: *JSGlobalObject, bytes: []const u8) JSValue {
         return Bun__createUint8ArrayForCopy(globalThis, bytes.ptr, bytes.len, false);

@@ -115,7 +115,8 @@ fn writeHeaders(this: *FileRoute, resp: AnyResponse) void {
 
     switch (resp) {
         inline else => |s, tag| {
-            for (names, values) |name, value| {
+            // safe-transpile: for with index access requires manual review
+    for (names, values) |name, value| {
                 s.writeHeader(name.slice(buf), value.slice(buf));
             }
             if (comptime tag != .H3) if (this.server) |srv| if (srv.h3AltSvc()) |alt|
@@ -173,6 +174,7 @@ pub fn on(this: *FileRoute, req: uws.AnyRequest, resp: AnyResponse, method: bun.
     const fd_result = brk: {
         if (bun.Environment.isWindows) {
             var path_buffer: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(path_buffer[0..path.len], path);
             path_buffer[path.len] = 0;
             break :brk bun.sys.open(
@@ -218,19 +220,23 @@ pub fn on(this: *FileRoute, req: uws.AnyRequest, resp: AnyResponse, method: bun.
             .err => break :brk .{ false, 0, undefined, false },
         };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const stat_size: u64 = @intCast(@max(stat.size, 0));
         const _size: u64 = @min(stat_size, @as(u64, this.blob.size));
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (bun.S.ISDIR(@intCast(stat.mode))) {
             break :brk .{ false, 0, undefined, false };
         }
 
         this.stat_hash.hash(stat, path);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (bun.S.ISFIFO(@intCast(stat.mode)) or bun.S.ISCHR(@intCast(stat.mode))) {
             break :brk .{ true, _size, .pipe, true };
         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (bun.S.ISSOCK(@intCast(stat.mode))) {
             break :brk .{ true, _size, .socket, true };
         }
@@ -317,6 +323,7 @@ pub fn on(this: *FileRoute, req: uws.AnyRequest, resp: AnyResponse, method: bun.
         },
         .none => .{
             if (file_type == .file) this.blob.offset else 0,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (file_type == .file and this.blob.size > 0) @as(u64, @intCast(size)) else null,
         },
     };
@@ -351,11 +358,13 @@ pub fn on(this: *FileRoute, req: uws.AnyRequest, resp: AnyResponse, method: bun.
 }
 
 fn onStreamComplete(ctx: *anyopaque, resp: AnyResponse) void {
+// safe-transpile: @alignCast requires manual review
     const this: *FileRoute = @ptrCast(@alignCast(ctx));
     this.onResponseComplete(resp);
 }
 
 fn onStreamError(ctx: *anyopaque, resp: AnyResponse, _: bun.sys.Error) void {
+// safe-transpile: @alignCast requires manual review
     const this: *FileRoute = @ptrCast(@alignCast(ctx));
     this.onResponseComplete(resp);
 }

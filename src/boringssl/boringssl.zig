@@ -66,7 +66,6 @@ export fn OPENSSL_memory_alloc(size: usize) ?*anyopaque {
 export fn OPENSSL_memory_free(ptr: *anyopaque) void {
     const len = bun.mimalloc.mi_usable_size(ptr);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     @memset(@as([*]u8, @ptrCast(ptr))[0..len], 0);
     bun.mimalloc.mi_free(ptr);
 }
@@ -79,7 +78,6 @@ const INET6_ADDRSTRLEN = if (bun.Environment.isWindows) 65 else 46;
 
 /// converts IP string to canonicalized IP string
 /// return null when the IP is invalid
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn canonicalizeIP(addr_str: []const u8, outIP: *[INET6_ADDRSTRLEN + 1]u8) ?[]const u8 {
     if (addr_str.len >= INET6_ADDRSTRLEN) {
@@ -123,7 +121,6 @@ pub fn ip2String(ip: *boring.ASN1_OCTET_STRING, outIP: *[INET6_ADDRSTRLEN + 1]u8
 /// Matches a DNS name pattern (possibly with a leading `*.` wildcard) against
 /// `hostname`. Mirrors Node.js `check()` in lib/tls.js for a single pattern.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn matchDnsName(pattern: []const u8, hostname: []const u8) bool {
     if (pattern.len == 0) return false;
     if (!X509.isSafeAltName(pattern, false)) return false;
@@ -155,7 +152,6 @@ fn matchDnsName(pattern: []const u8, hostname: []const u8) bool {
     return strings.eqlCaseInsensitiveASCII(pattern, hostname, true);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn checkX509ServerIdentity(
     x509: *boring.X509,
@@ -217,7 +213,6 @@ pub fn checkX509ServerIdentity(
                                     has_identifier_san = true;
                                     const dnsName = name.d.dNSName;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     const dnsNameSlice = dnsName.data[0..@as(usize, @intCast(dnsName.length))];
                                     if (matchDnsName(dnsNameSlice, hostname)) {
                                         return true;
@@ -248,7 +243,6 @@ pub fn checkX509ServerIdentity(
                 const cn_len = boring.ASN1_STRING_length(data);
                 if (cn_ptr == null or cn_len <= 0) continue;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const cn = cn_ptr[0..@intCast(cn_len)];
                 if (matchDnsName(cn, hostname)) {
                     return true;
@@ -260,7 +254,6 @@ pub fn checkX509ServerIdentity(
     return false;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn checkServerIdentity(
     ssl_ptr: *boring.SSL,

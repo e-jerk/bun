@@ -37,9 +37,7 @@ pub noinline fn computeChunks(
 
     // Create chunks for entry points
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (entry_source_indices, 0..) |source_index, entry_id_| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const entry_bit = @as(Chunk.EntryPoint.ID, @truncate(entry_id_));
 
@@ -129,7 +127,6 @@ pub noinline fn computeChunks(
         // always generated even if the resulting file is empty
         const js_chunk_entry = try js_chunks.getOrPut(js_chunk_key);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         entry_point_to_js_chunk_idx[entry_id_] = @intCast(js_chunk_entry.index);
         js_chunk_entry.value_ptr.* = .{
             .entry_point = .{
@@ -173,7 +170,6 @@ pub noinline fn computeChunks(
             const css_chunk_entry = try css_chunks.getOrPut(hash_to_use);
 
                 js_chunk_entry.value_ptr.content.javascript.css_chunks = try this.allocator().dupe(u32, &.{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @intCast(css_chunk_entry.index),
                 });
@@ -225,7 +221,6 @@ pub noinline fn computeChunks(
             if (chunk_idx == std.math.maxInt(u32)) return;
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const entry = c.chunks[chunk_idx].files_with_parts_in_chunk.getOrPut(c.allocator, @as(u32, @truncate(c.source_id))) catch unreachable;
             if (!entry.found_existing) {
                 entry.value_ptr.* = 0; // Initialize byte count to 0
@@ -272,7 +267,6 @@ pub noinline fn computeChunks(
                             js_chunk_entry.value_ptr.flags.is_browser_chunk_from_server_build = true;
                         }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         const entry = js_chunk_entry.value_ptr.files_with_parts_in_chunk.getOrPut(this.allocator(), @as(u32, @truncate(source_index.get()))) catch unreachable;
                         if (!entry.found_existing) {
@@ -351,18 +345,15 @@ pub noinline fn computeChunks(
             // may be interleaved with JS chunks, so js_chunks.count() would be
             // incorrect when HTML entry points are present.
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (sorted_css_keys, sorted_chunks.len..) |key, sorted_index| {
                 const index = css_chunks.getIndex(key) orelse unreachable;
                 sorted_chunks.appendAssumeCapacity(css_chunk_values[index]);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 remapped_css_indexes[index] = @intCast(sorted_index);
             }
 
             // Update all affected JS chunks to point at the correct CSS chunk index.
             for (js_chunk_indices_with_css.slice()) |js_index| {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                 for (sorted_chunks.slice()[js_index].content.javascript.css_chunks) |*idx| {
                     idx.* = remapped_css_indexes[idx.*];
@@ -381,7 +372,6 @@ pub noinline fn computeChunks(
     // a file contains a dynamic import to this entry point, since we'll need
     // to look up the path for this chunk to use with the import.
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, chunk_id| {
         if (chunk.entry_point.is_entry_point) {
             // JS entry points that import CSS files generate two chunks, a JS chunk
@@ -390,7 +380,6 @@ pub noinline fn computeChunks(
             if (chunk.content == .css and css_asts[chunk.entry_point.source_index] == null) {
                 continue;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             entry_point_chunk_indices[chunk.entry_point.source_index] = @intCast(chunk_id);
         }
@@ -417,7 +406,6 @@ pub noinline fn computeChunks(
     const kinds = this.graph.files.items(.entry_point_kind);
     const output_paths = this.graph.entry_points.items(.output_path);
     const bv2: *bundler.BundleV2 = @fieldParentPtr("linker", this);
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, chunk_id| {
         // Assign a unique key to each chunk. This key encodes the index directly so

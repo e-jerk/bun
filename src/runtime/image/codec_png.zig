@@ -70,7 +70,6 @@ const Trns = extern struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(bytes: []const u8, max_pixels: u64) codecs.Error!codecs.Decoded {
     const ctx = spng_ctx_new(0) orelse return error.OutOfMemory;
     defer spng_ctx_free(ctx);
@@ -124,11 +123,11 @@ fn embedIccp(ctx: *spng_ctx, icc_profile: ?[]const u8) void {
         .profile = @constCast(p.ptr),
     };
     const name = "ICC Profile";
-    safe.SimdUtils.copy(iccp.profile_name[0..name.len], name);
+// safe-transpile: @memcpy requires manual review
+    @memcpy(iccp.profile_name[0..name.len], name);
     _ = spng_set_iccp(ctx, &iccp);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encode(rgba: []const u8, w: u32, h: u32, level: i8, icc_profile: ?[]const u8) codecs.Error!codecs.Encoded {
     const ctx = spng_ctx_new(SPNG_CTX_ENCODER) orelse return error.OutOfMemory;
@@ -159,7 +158,6 @@ pub fn encode(rgba: []const u8, w: u32, h: u32, level: i8, icc_profile: ?[]const
 /// cut operates on the raw RGB numbers without converting colour spaces,
 /// so the palette entries are still in that space and need the profile
 /// to be interpreted correctly — same contract as truecolour encode.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeIndexed(rgba: []const u8, w: u32, h: u32, level: i8, colors: u16, dither: bool, icc_profile: ?[]const u8) codecs.Error!codecs.Encoded {
     var q = try quantize.quantize(rgba, w, h, .{ .max_colors = colors, .dither = dither });

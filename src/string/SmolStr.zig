@@ -26,7 +26,6 @@ pub const SmolStr = packed struct(u128) {
         /// ## Errors
         /// if `str` is longer than `max_len`
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(str: []const u8) !Inlined {
             if (str.len > max_len) {
                 @branchHint(.unlikely);
@@ -35,8 +34,8 @@ pub const SmolStr = packed struct(u128) {
             var inlined = Inlined.empty;
 
             if (str.len > 0) {
-                safe.SimdUtils.copy(inlined.allChars()[0..str.len], str[0..str.len]);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @memcpy requires manual review
+                @memcpy(inlined.allChars()[0..str.len], str[0..str.len]);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 inlined.setLen(@intCast(str.len));
             }
@@ -44,7 +43,6 @@ pub const SmolStr = packed struct(u128) {
         }
 
         pub inline fn len(this: Inlined) u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(this.__len);
         }
@@ -54,12 +52,10 @@ pub const SmolStr = packed struct(u128) {
         }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
         pub fn slice(this: *const Inlined) []const u8 {
             return @constCast(this).ptr()[0..this.__len];
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
         pub fn sliceMut(this: *Inlined) []u8 {
             return this.ptr()[0..this.__len];
@@ -70,7 +66,6 @@ pub const SmolStr = packed struct(u128) {
         }
 
         inline fn ptr(this: *Inlined) [*]u8 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as([*]u8, @ptrCast(@as(*u128, @ptrCast(this))));
         }
@@ -86,7 +81,6 @@ pub const SmolStr = packed struct(u128) {
 
     pub fn len(this: *const SmolStr) u32 {
         if (this.isInlined()) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast((this.__ptr >> 56) & 0b01111111);
         }
@@ -119,7 +113,6 @@ pub const SmolStr = packed struct(u128) {
     pub fn toInlined(this: *const SmolStr) Inlined {
         assert(this.len() <= Inlined.max_len);
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         var inlined: Inlined = @bitCast(@as(u128, @bitCast(this.*)));
         inlined._tag = 1;
         return inlined;
@@ -136,7 +129,6 @@ pub const SmolStr = packed struct(u128) {
     }
 
     pub fn fromInlined(inlined: Inlined) SmolStr {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         var smol_str: SmolStr = @bitCast(inlined);
         smol_str.markInlined();
@@ -162,7 +154,6 @@ pub const SmolStr = packed struct(u128) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromSlice(allocator: Allocator, values: []const u8) Allocator.Error!SmolStr {
         if (values.len > Inlined.max_len) {
             var baby_list = try BabyList(u8).initCapacity(allocator, values.len);
@@ -176,10 +167,8 @@ pub const SmolStr = packed struct(u128) {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const SmolStr) []const u8 {
         if (this.isInlined()) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const bytes: [*]const u8 = @ptrCast(this);
             return bytes[0..this.len()];
@@ -202,9 +191,7 @@ pub const SmolStr = packed struct(u128) {
             }
             inlined.allChars()[inlined.len()] = char;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             inlined.setLen(@intCast(inlined.len() + 1));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             this.* = @bitCast(inlined);
             this.markInlined();
@@ -225,7 +212,6 @@ pub const SmolStr = packed struct(u128) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn appendSlice(this: *SmolStr, allocator: Allocator, values: []const u8) Allocator.Error!void {
         if (this.isInlined()) {
             var inlined = this.toInlined();
@@ -236,8 +222,8 @@ pub const SmolStr = packed struct(u128) {
                 this.* = SmolStr.fromBabyList(baby_list);
                 return;
             }
-            safe.SimdUtils.copy(inlined.allChars()[inlined.len() .. inlined.len() + values.len], values);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+// safe-transpile: @memcpy requires manual review
+            @memcpy(inlined.allChars()[inlined.len() .. inlined.len() + values.len], values);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             inlined.setLen(@intCast(inlined.len() + values.len));
             this.* = SmolStr.fromInlined(inlined);

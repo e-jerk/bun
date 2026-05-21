@@ -39,7 +39,9 @@ pub fn arrayToJS(this: E.Array, allocator: std.mem.Allocator, globalObject: *jsc
     var array = try jsc.JSValue.createEmptyArray(globalObject, items.len);
     array.protect();
     defer array.unprotect();
+    // safe-transpile: for with index access requires manual review
     for (items, 0..) |expr, j| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try array.putIndex(globalObject, @as(u32, @truncate(j)), try dataToJS(expr.data, allocator, globalObject));
     }
 
@@ -86,15 +88,18 @@ pub fn stringToJS(s: *E.String, allocator: std.mem.Allocator, globalObject: *jsc
     if (s.isUTF8()) {
         if (try bun.strings.toUTF16Alloc(allocator, s.slice8(), false, false)) |utf16| {
             var out, const chars = bun.String.createUninitialized(.utf16, utf16.len);
+// safe-transpile: @memcpy requires manual review
             @memcpy(chars, utf16);
             return out.transferToJS(globalObject);
         } else {
             var out, const chars = bun.String.createUninitialized(.latin1, s.slice8().len);
+// safe-transpile: @memcpy requires manual review
             @memcpy(chars, s.slice8());
             return out.transferToJS(globalObject);
         }
     } else {
         var out, const chars = bun.String.createUninitialized(.utf16, s.slice16().len);
+// safe-transpile: @memcpy requires manual review
         @memcpy(chars, s.slice16());
         return out.transferToJS(globalObject);
     }

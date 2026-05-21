@@ -90,7 +90,6 @@ pub fn BindgenUnion(comptime children: []const type) type {
     var tagged_field_types: [children.len]type = undefined;
     var untagged_field_types: [children.len]type = undefined;
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (&tagged_field_types, &untagged_field_types, children) |*tagged, *untagged, *child| {
         tagged.* = child.ZigType;
         untagged.* = child.ExternType;
@@ -134,7 +133,6 @@ fn ExternUnion(comptime field_types: []const type) type {
     const info = @typeInfo(bun.meta.TaggedUnion(field_types)).@"union";
     var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (info.fields, 0..) |field, i| {
         fields[i] = .{
             .name = field.name,
@@ -159,9 +157,7 @@ pub fn BindgenArray(comptime Child: type) type {
 
         pub fn convertFromExtern(extern_value: ExternType) ZigType {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const length: usize = @intCast(extern_value.length);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const capacity: usize = @intCast(extern_value.capacity);
 
@@ -185,8 +181,7 @@ pub fn BindgenArray(comptime Child: type) type {
             {
                 // We can reuse the allocation, but we still need to convert the elements.
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-                var storage: safe.Slice(u8) = @ptrCast(unmanaged.allocatedSlice());
+                var storage: []u8 = @ptrCast(unmanaged.allocatedSlice());
 
                 // Convert the elements.
                 for (0..length) |i| {
@@ -222,7 +217,6 @@ pub fn BindgenArray(comptime Child: type) type {
                 };
 
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 const items_ptr: [*]Child.ZigType = @ptrCast(@alignCast(storage.ptr));
                 const new_unmanaged: std.ArrayListUnmanaged(Child.ZigType) = .{
                     .items = items_ptr[0..length],
@@ -235,7 +229,6 @@ pub fn BindgenArray(comptime Child: type) type {
                 if (bun.use_mimalloc) bun.default_allocator else @import("std-fs-compat").raw_c_allocator,
             );
             var result = bun.handleOom(ZigType.initCapacity(length));
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (unmanaged.items) |*item| {
                 result.appendAssumeCapacity(Child.convertFromExtern(item.*));

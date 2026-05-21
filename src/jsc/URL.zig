@@ -73,7 +73,6 @@ pub const URL = opaque {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUTF8(input: []const u8) ?*URL {
         return fromString(String.borrowUTF8(input));
     }
@@ -144,7 +143,6 @@ pub const URL = opaque {
     }
 
     extern fn URL__originLength(latin1_slice: [*]const u8, len: usize) u32;
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn originFromSlice(slice: []const u8) ?[]const u8 {
         jsc.markBinding(@src());

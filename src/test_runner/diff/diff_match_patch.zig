@@ -121,6 +121,7 @@ pub fn DMP(comptime Unit: type) type {
             const deadline = if (dmp.config.diff_timeout == 0)
                 std.math.maxInt(u64)
             else
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @as(u64, @intCast(@import("std-fs-compat").milliTimestamp())) + dmp.config.diff_timeout;
             return dmp.diffInternal(allocator, before, after, check_lines, deadline);
         }
@@ -208,7 +209,8 @@ pub fn DMP(comptime Unit: type) type {
 
         fn indexOfDiff(comptime T: type, a: []const T, b: []const T) ?usize {
             const shortest = @min(a.len, b.len);
-            for (a[0..shortest], b[0..shortest], 0..) |a_char, b_char, index| {
+            // safe-transpile: for with index access requires manual review
+    for (a[0..shortest], b[0..shortest], 0..) |a_char, b_char, index| {
                 if (a_char != b_char) return index;
             }
             return if (a.len == b.len) null else shortest;
@@ -275,6 +277,7 @@ pub fn DMP(comptime Unit: type) type {
             const long_text = if (before.len > after.len) before else after;
             const short_text = if (before.len > after.len) after else before;
 
+// zust: use zust.String or zust.GuardedSlice for slice operations
             if (std.mem.indexOf(Unit, long_text, short_text)) |index| {
                 var diffs: DiffList = .empty;
                 errdefer deinitDiffList(allocator, &diffs);
@@ -476,21 +479,28 @@ pub fn DMP(comptime Unit: type) type {
             var best_short_text_b: []const Unit = &.{};
 
             while (j < short_text.len and b: {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 j = @as(isize, @intCast(std.mem.indexOf(Unit, short_text[@intCast(j + 1)..], seed) orelse break :b false)) + j + 1;
                 break :b true;
             }) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const prefix_length = diffCommonPrefix(long_text[i..], short_text[@intCast(j)..]);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const suffix_length = diffCommonSuffix(long_text[0..i], short_text[0..@intCast(j)]);
                 if (best_common.items.len < suffix_length + prefix_length) {
                     best_common.clearRetainingCapacity();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const a = short_text[@intCast(j - @as(isize, @intCast(suffix_length))) .. @as(usize, @intCast(j - @as(isize, @intCast(suffix_length)))) + suffix_length];
                     try best_common.appendSlice(allocator, a);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const b = short_text[@intCast(j) .. @as(usize, @intCast(j)) + prefix_length];
                     try best_common.appendSlice(allocator, b);
 
                     best_long_text_a = long_text[0 .. i - suffix_length];
                     best_long_text_b = long_text[i + prefix_length ..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     best_short_text_a = short_text[0..@intCast(j - @as(isize, @intCast(suffix_length)))];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     best_short_text_b = short_text[@intCast(j + @as(isize, @intCast(prefix_length)))..];
                 }
             }
@@ -531,17 +541,24 @@ pub fn DMP(comptime Unit: type) type {
             after: []const Unit,
             deadline: u64,
         ) DiffError!DiffList {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const before_length: isize = @intCast(before.len);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const after_length: isize = @intCast(after.len);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const max_d: isize = @intCast((before.len + after.len + 1) / 2);
             const v_offset = max_d;
             const v_length = 2 * max_d;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             var v1: std.ArrayListUnmanaged(isize) = try .initCapacity(allocator, @intCast(v_length));
             defer v1.deinit(allocator);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             v1.items.len = @intCast(v_length);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             var v2: std.ArrayListUnmanaged(isize) = try .initCapacity(allocator, @intCast(v_length));
             defer v2.deinit(allocator);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             v2.items.len = @intCast(v_length);
 
             var x: usize = 0;
@@ -549,7 +566,9 @@ pub fn DMP(comptime Unit: type) type {
                 v1.items[x] = -1;
                 v2.items[x] = -1;
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             v1.items[@intCast(v_offset + 1)] = 0;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             v2.items[@intCast(v_offset + 1)] = 0;
             const delta = before_length - after_length;
             // If the total number of characters is odd, then the front path will
@@ -565,6 +584,7 @@ pub fn DMP(comptime Unit: type) type {
             var d: isize = 0;
             while (d < max_d) : (d += 1) {
                 // Bail out if deadline is reached.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (@as(u64, @intCast(@import("std-fs-compat").milliTimestamp())) > deadline) {
                     break;
                 }
@@ -575,19 +595,24 @@ pub fn DMP(comptime Unit: type) type {
                     const k1_offset = v_offset + k1;
                     var x1: isize = 0;
                     if (k1 == -d or (k1 != d and
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         v1.items[@intCast(k1_offset - 1)] < v1.items[@intCast(k1_offset + 1)]))
                     {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         x1 = v1.items[@intCast(k1_offset + 1)];
                     } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         x1 = v1.items[@intCast(k1_offset - 1)] + 1;
                     }
                     var y1 = x1 - k1;
                     while (x1 < before_length and
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         y1 < after_length and before[@intCast(x1)] == after[@intCast(y1)])
                     {
                         x1 += 1;
                         y1 += 1;
                     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     v1.items[@intCast(k1_offset)] = x1;
                     if (x1 > before_length) {
                         // Ran off the right of the graph.
@@ -597,8 +622,10 @@ pub fn DMP(comptime Unit: type) type {
                         k1start += 2;
                     } else if (front) {
                         const k2_offset = v_offset + delta - k1;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         if (k2_offset >= 0 and k2_offset < v_length and v2.items[@intCast(k2_offset)] != -1) {
                             // Mirror x2 onto top-left coordinate system.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             const x2 = before_length - v2.items[@intCast(k2_offset)];
                             if (x1 >= x2) {
                                 // Overlap detected.
@@ -614,20 +641,26 @@ pub fn DMP(comptime Unit: type) type {
                     const k2_offset = v_offset + k2;
                     var x2: isize = 0;
                     if (k2 == -d or (k2 != d and
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         v2.items[@intCast(k2_offset - 1)] < v2.items[@intCast(k2_offset + 1)]))
                     {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         x2 = v2.items[@intCast(k2_offset + 1)];
                     } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         x2 = v2.items[@intCast(k2_offset - 1)] + 1;
                     }
                     var y2: isize = x2 - k2;
                     while (x2 < before_length and y2 < after_length and
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         before[@intCast(before_length - x2 - 1)] ==
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             after[@intCast(after_length - y2 - 1)])
                     {
                         x2 += 1;
                         y2 += 1;
                     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     v2.items[@intCast(k2_offset)] = x2;
                     if (x2 > before_length) {
                         // Ran off the left of the graph.
@@ -637,10 +670,13 @@ pub fn DMP(comptime Unit: type) type {
                         k2start += 2;
                     } else if (!front) {
                         const k1_offset = v_offset + delta - k2;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         if (k1_offset >= 0 and k1_offset < v_length and v1.items[@intCast(k1_offset)] != -1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             const x1 = v1.items[@intCast(k1_offset)];
                             const y1 = v_offset + x1 - k1_offset;
                             // Mirror x2 onto top-left coordinate system.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             x2 = before_length - v2.items[@intCast(k2_offset)];
                             if (x1 >= x2) {
                                 // Overlap detected.
@@ -683,9 +719,13 @@ pub fn DMP(comptime Unit: type) type {
             y: isize,
             deadline: u64,
         ) DiffError!DiffList {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const text1a = text1[0..@intCast(x)];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const text2a = text2[0..@intCast(y)];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const text1b = text1[@intCast(x)..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const text2b = text2[@intCast(y)..];
 
             // Compute both diffs serially.
@@ -782,6 +822,7 @@ pub fn DMP(comptime Unit: type) type {
                             }
                             defer sub_diff.deinit(allocator);
                             const new_diff = diffs.addManyAtAssumeCapacity(pointer, sub_diff.items.len);
+// safe-transpile: @memcpy requires manual review
                             @memcpy(new_diff, sub_diff.items);
                             pointer = pointer + sub_diff.items.len;
                         }
@@ -860,22 +901,30 @@ pub fn DMP(comptime Unit: type) type {
             defer chars.deinit(allocator);
             // Walk the text, pulling out a Substring for each line.
             // TODO this can be handled with a Reader, avoiding all the manual splitting
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             while (line_end < @as(isize, @intCast(text.len)) - 1) {
                 line_end = b: {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     break :b @as(isize, @intCast(std.mem.indexOf(Unit, text[@intCast(line_start)..], "\n") orelse
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         break :b @intCast(text.len - 1))) + line_start;
                 };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 var line = text[@intCast(line_start) .. @as(usize, @intCast(line_start)) + @as(usize, @intCast(line_end + 1 - line_start))];
 
                 if (line_hash.get(line)) |value| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     try chars.append(allocator, @intCast(value));
                 } else {
                     if (line_array.items.len == std.math.maxInt(usize)) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         line = text[@intCast(line_start)..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         line_end = @intCast(text.len);
                     }
                     try line_array.append(allocator, line);
                     try line_hash.put(allocator, line, line_array.items.len - 1);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     try chars.append(allocator, @intCast(line_array.items.len - 1));
                 }
                 line_start = line_end + 1;
@@ -900,6 +949,7 @@ pub fn DMP(comptime Unit: type) type {
             var text: std.ArrayListUnmanaged(Unit) = .empty;
             defer text.deinit(allocator);
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (char_diffs.items) |*d| {
                 var j: usize = 0;
                 while (j < d.text.len) : (j += 1) {
@@ -955,7 +1005,9 @@ pub fn DMP(comptime Unit: type) type {
                                         const ii = pointer - count_delete - count_insert - 1;
                                         var nt = try allocator.alloc(Unit, diffs.items[ii].text.len + common_length);
                                         const ot = diffs.items[ii].text;
+// safe-transpile: @memcpy requires manual review
                                         @memcpy(nt[0..ot.len], ot);
+// safe-transpile: @memcpy requires manual review
                                         @memcpy(nt[ot.len..], text_insert.items[0..common_length]);
                                         diffs.items[ii].text = nt;
                                         allocator.free(ot);
@@ -1013,7 +1065,9 @@ pub fn DMP(comptime Unit: type) type {
                             var nt = try allocator.alloc(Unit, diffs.items[pointer - 1].text.len + diffs.items[pointer].text.len);
                             const ot = diffs.items[pointer - 1].text;
                             defer (allocator.free(ot));
+// safe-transpile: @memcpy requires manual review
                             @memcpy(nt[0..ot.len], ot);
+// safe-transpile: @memcpy requires manual review
                             @memcpy(nt[ot.len..], diffs.items[pointer].text);
                             diffs.items[pointer - 1].text = nt;
                             const dead_diff = diffs.orderedRemove(pointer);
@@ -1108,17 +1162,22 @@ pub fn DMP(comptime Unit: type) type {
             var length_insertions2: usize = 0;
             var length_deletions2: usize = 0;
             while (pointer < diffs.items.len) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (diffs.items[@intCast(pointer)].operation == .equal) { // Equality found.
                     try equalities.append(allocator, pointer);
                     length_insertions1 = length_insertions2;
                     length_deletions1 = length_deletions2;
                     length_insertions2 = 0;
                     length_deletions2 = 0;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     last_equality = diffs.items[@intCast(pointer)].text;
                 } else { // an insertion or deletion
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     if (diffs.items[@intCast(pointer)].operation == .insert) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         length_insertions2 += diffs.items[@intCast(pointer)].text.len;
                     } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         length_deletions2 += diffs.items[@intCast(pointer)].text.len;
                     }
                     // Eliminate an equality that is smaller or equal to the edits on both
@@ -1130,6 +1189,7 @@ pub fn DMP(comptime Unit: type) type {
                         // Duplicate record.
                         try diffs.ensureUnusedCapacity(allocator, 1);
                         diffs.insertAssumeCapacity(
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             @intCast(equalities.items[equalities.items.len - 1]),
                             .{
                                 .operation = .delete,
@@ -1137,6 +1197,7 @@ pub fn DMP(comptime Unit: type) type {
                             },
                         );
                         // Change second copy to insert.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         diffs.items[@intCast(equalities.items[equalities.items.len - 1] + 1)].operation = .insert;
                         // Throw away the equality we just deleted.
                         _ = equalities.pop();
@@ -1169,10 +1230,14 @@ pub fn DMP(comptime Unit: type) type {
             // Only extract an overlap if it is as big as the edit ahead or behind it.
             pointer = 1;
             while (pointer < diffs.items.len) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (diffs.items[@intCast(pointer - 1)].operation == .delete and
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     diffs.items[@intCast(pointer)].operation == .insert)
                 {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const deletion = diffs.items[@intCast(pointer - 1)].text;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const insertion = diffs.items[@intCast(pointer)].text;
                     const overlap_length1: usize = diffCommonOverlap(deletion, insertion);
                     const overlap_length2: usize = diffCommonOverlap(insertion, deletion);
@@ -1183,13 +1248,16 @@ pub fn DMP(comptime Unit: type) type {
                             // Overlap found.
                             // Insert an equality and trim the surrounding edits.
                             try diffs.ensureUnusedCapacity(allocator, 1);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.insertAssumeCapacity(@intCast(pointer), .{
                                 .operation = .equal,
                                 .text = try allocator.dupe(Unit, insertion[0..overlap_length1]),
                             });
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer - 1)].text =
                                 try allocator.dupe(Unit, deletion[0 .. deletion.len - overlap_length1]);
                             allocator.free(deletion);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer + 1)].text =
                                 try allocator.dupe(Unit, insertion[overlap_length1..]);
                             allocator.free(insertion);
@@ -1202,6 +1270,7 @@ pub fn DMP(comptime Unit: type) type {
                             // Reverse overlap found.
                             // Insert an equality and swap and trim the surrounding edits.
                             try diffs.ensureUnusedCapacity(allocator, 1);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.insertAssumeCapacity(@intCast(pointer), .{
                                 .operation = .equal,
                                 .text = try allocator.dupe(Unit, deletion[0..overlap_length2]),
@@ -1211,9 +1280,13 @@ pub fn DMP(comptime Unit: type) type {
                             const new_plus = try allocator.dupe(Unit, deletion[overlap_length2..]);
                             allocator.free(deletion);
                             allocator.free(insertion);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer - 1)].operation = .insert;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer - 1)].text = new_minus;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer + 1)].operation = .delete;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             diffs.items[@intCast(pointer + 1)].text = new_plus;
                             pointer += 1;
                         }
@@ -1233,6 +1306,7 @@ pub fn DMP(comptime Unit: type) type {
         ) DiffError!void {
             var pointer: usize = 1;
             // Intentionally ignore the first and last element (don't need checking).
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             while (pointer < @as(isize, @intCast(diffs.items.len)) - 1) {
                 if (diffs.items[pointer - 1].operation == .equal and
                     diffs.items[pointer + 1].operation == .equal)
@@ -1421,6 +1495,7 @@ pub fn DMP(comptime Unit: type) type {
             // Is there a deletion operation after the last equality.
             var post_del = false;
             while (ipointer < diffs.items.len) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const pointer: usize = @intCast(ipointer);
                 if (diffs.items[pointer].operation == .equal) { // Equality found.
                     if (diffs.items[pointer].text.len < dmp.config.diff_edit_cost and (post_ins or post_del)) {
@@ -1476,6 +1551,7 @@ pub fn DMP(comptime Unit: type) type {
                                 _ = equalities.pop();
                             }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             ipointer = if (equalities.items.len > 0) @intCast(equalities.items[equalities.items.len - 1]) else -1;
                             post_ins = false;
                             post_del = false;
@@ -1528,6 +1604,7 @@ var __loop_limit_1: usize = 0;
 while (true) : (__loop_limit_1 += 1) {
     if (__loop_limit_1 > 1_000_000) break;
                 const pattern = text1[text_length - length ..];
+// zust: use zust.String or zust.GuardedSlice for slice operations
                 const found = std.mem.indexOf(Unit, text2, pattern) orelse
                     return best;
 
@@ -2980,7 +3057,8 @@ while (true) : (__loop_limit_1 += 1) {
             // remove the first tuple field (`std.mem.Allocator`)
             var extra_args_tuple_info = @typeInfo(ArgsTuple);
             var extra_args_fields = extra_args_tuple_info.@"struct".fields[1..].*;
-            for (&extra_args_fields, 0..) |*extra_field, i| {
+            // safe-transpile: for with index access requires manual review
+    for (&extra_args_fields, 0..) |*extra_field, i| {
                 extra_field.name = fn_args_fields[i].name;
             }
             extra_args_tuple_info.@"struct".fields = &extra_args_fields;

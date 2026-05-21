@@ -75,7 +75,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) u8, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -88,7 +87,6 @@ pub const Reader = struct {
         if (arguments.len == 0 or !arguments[0].isNumber()) {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) u16, @ptrFromInt(addr)).*;
@@ -103,7 +101,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) u32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -116,7 +113,6 @@ pub const Reader = struct {
         if (arguments.len == 0 or !arguments[0].isNumber()) {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) u64, @ptrFromInt(addr)).*;
@@ -131,7 +127,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) i8, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -144,7 +139,6 @@ pub const Reader = struct {
         if (arguments.len == 0 or !arguments[0].isNumber()) {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) i16, @ptrFromInt(addr)).*;
@@ -159,7 +153,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) i32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -172,7 +165,6 @@ pub const Reader = struct {
         if (arguments.len == 0 or !arguments[0].isNumber()) {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) i64, @ptrFromInt(addr)).*;
@@ -188,7 +180,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) f32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -202,7 +193,6 @@ pub const Reader = struct {
         if (arguments.len == 0 or !arguments[0].isNumber()) {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) f64, @ptrFromInt(addr)).*;
@@ -218,7 +208,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) i64, @ptrFromInt(addr)).*;
         return JSValue.fromInt64NoTruncate(globalObject, value);
@@ -233,7 +222,6 @@ pub const Reader = struct {
             return globalObject.throwInvalidArguments("Expected a pointer", .{});
         }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = arguments[0].asPtrAddress() + if (arguments.len > 1) @as(usize, @intCast(arguments[1].to(i32))) else @as(usize, 0);
         const value = @as(*align(1) u64, @ptrFromInt(addr)).*;
         return JSValue.fromUInt64NoTruncate(globalObject, value);
@@ -246,7 +234,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) u8, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -257,7 +244,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) u16, @ptrFromInt(addr)).*;
@@ -270,7 +256,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) u32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -281,7 +266,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) u64, @ptrFromInt(addr)).*;
@@ -294,7 +278,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) i8, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -305,7 +288,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) i16, @ptrFromInt(addr)).*;
@@ -318,7 +300,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) i32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -329,7 +310,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) i64, @ptrFromInt(addr)).*;
@@ -343,7 +323,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) f32, @ptrFromInt(addr)).*;
         return JSValue.jsNumber(value);
@@ -355,7 +334,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) f64, @ptrFromInt(addr)).*;
@@ -369,7 +347,6 @@ pub const Reader = struct {
         offset: i32,
     ) callconv(jsc.conv) JSValue {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) u64, @ptrFromInt(addr)).*;
         return JSValue.fromUInt64NoTruncate(global, value);
@@ -381,7 +358,6 @@ pub const Reader = struct {
         raw_addr: i64,
         offset: i32,
     ) callconv(jsc.conv) JSValue {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const addr = @as(usize, @intCast(raw_addr)) + @as(usize, @intCast(offset));
         const value = @as(*align(1) i64, @ptrFromInt(addr)).*;
@@ -440,10 +416,8 @@ fn ptr_(
         const bytei64 = off.toInt64();
         if (bytei64 < 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             addr -|= @as(usize, @intCast(bytei64 * -1));
         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             addr += @as(usize, @intCast(bytei64));
         }
@@ -492,7 +466,6 @@ pub fn getPtrSlice(globalThis: *JSGlobalObject, value: JSValue, byteOffset: ?JSV
     // }
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     var addr = @as(usize, @bitCast(num));
 
     if (byteOffset) |byte_off| {
@@ -500,10 +473,8 @@ pub fn getPtrSlice(globalThis: *JSGlobalObject, value: JSValue, byteOffset: ?JSV
             const off = byte_off.toInt64();
             if (off < 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 addr -|= @as(usize, @intCast(off * -1));
             } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 addr +|= @as(usize, @intCast(off));
             }
@@ -546,7 +517,6 @@ pub fn getPtrSlice(globalThis: *JSGlobalObject, value: JSValue, byteOffset: ?JSV
             }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const length = @as(usize, @intCast(length_i));
             return .{ .slice = @as([*]u8, @ptrFromInt(addr))[0..length] };
         }
@@ -561,7 +531,6 @@ fn getCPtr(value: JSValue) ?usize {
         const addr = value.asPtrAddress();
         if (addr > 0) return addr;
     } else if (value.isBigInt()) {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         const addr = @as(u64, @bitCast(value.toUInt64NoTruncate()));
         if (addr > 0) {

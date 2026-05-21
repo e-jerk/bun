@@ -21,6 +21,7 @@ pub const JSBundler = struct {
         /// Returns the contents if the specifier exactly matches a key in the map,
         /// or if the specifier is a relative path that, when joined with a source
         /// directory, matches a key in the map.
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(self: *const FileMap, specifier: []const u8) ?[]const u8 {
             if (self.map.count() == 0) return null;
 
@@ -39,6 +40,7 @@ pub const JSBundler = struct {
         }
 
         /// Check if the file map contains a given specifier.
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn contains(self: *const FileMap, specifier: []const u8) bool {
             if (self.map.count() == 0) return false;
 
@@ -58,6 +60,7 @@ pub const JSBundler = struct {
         ///
         /// source_file: The path of the importing file (may be relative or absolute)
         /// specifier: The import specifier (e.g., "./utils.js" or "/lib.js")
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn resolve(self: *const FileMap, source_file: []const u8, specifier: []const u8) ?_resolver.Result {
             // Fast path: if the map is empty, return immediately
             if (self.map.count() == 0) return null;
@@ -146,6 +149,7 @@ pub const JSBundler = struct {
         }
 
         /// Check if a path is absolute (works for both posix and Windows paths)
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn isAbsolutePath(path: []const u8) bool {
             if (path.len == 0) return false;
             // Posix absolute path
@@ -181,6 +185,7 @@ pub const JSBundler = struct {
             }).init(globalThis, files_obj);
             defer files_iter.deinit();
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try self.map.ensureTotalCapacity(bun.default_allocator, @intCast(files_iter.len));
 
             while (try files_iter.next()) |prop| {
@@ -1036,7 +1041,8 @@ pub const JSBundler = struct {
 
                     const define_keys = compile.compile_target.defineKeys();
                     const define_values = compile.compile_target.defineValues();
-                    for (define_keys, define_values) |key, value| {
+                    // safe-transpile: for with index access requires manual review
+    for (define_keys, define_values) |key, value| {
                         try this.define.insert(key, value);
                     }
 
@@ -1642,6 +1648,7 @@ pub const JSBundler = struct {
             return JSBundlerPlugin__anyMatches(this, &namespace_string, &path_string, is_onLoad);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn matchOnLoad(
             this: *Plugin,
             path: []const u8,
@@ -1664,6 +1671,7 @@ pub const JSBundler = struct {
             JSBundlerPlugin__matchOnLoad(this, &namespace_string, &path_string, context, @intFromEnum(default_loader), is_server_side);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn matchOnResolve(
             this: *Plugin,
             path: []const u8,
@@ -1756,6 +1764,7 @@ pub const JSBundler = struct {
         /// exception and return a generic fallback message so `onResolveAsync`/`onLoadAsync`
         /// is still called and the bundler's pending-item counter is decremented. Returning
         /// early here would cause `Bun.build` to hang forever waiting on the counter.
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn msgFromJS(plugin: *Plugin, file: []const u8, exception: JSValue) logger.Msg {
             return logger.Msg.fromJS(
                 bun.default_allocator,

@@ -88,13 +88,11 @@ pub fn init(this: *@This(), globalThis: *jsc.JSGlobalObject, callframe: *jsc.Cal
     const params_ = arguments[0].asArrayBuffer(globalThis).?.asU32();
 
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (params_, 0..) |d, i| {
         // (d == -1) {
         if (d == std.math.maxInt(u32)) {
             continue;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         err = this.stream.setParams(@intCast(i), d);
         if (err.isError()) {
@@ -139,7 +137,6 @@ const Context = struct {
     flush: Op = .process,
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     last_result: extern union { e: c_int, d: c.BrotliDecoderResult } = @bitCast(@as(u32, 0)),
     error_: c.BrotliDecoderErrorCode2 = .NO_ERROR,
 
@@ -153,7 +150,6 @@ const Context = struct {
                     return Error.init("Could not initialize Brotli instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
                 }
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.state = @ptrCast((state.?));
                 return Error.ok;
             },
@@ -164,7 +160,6 @@ const Context = struct {
                 if (state == null) {
                     return Error.init("Could not initialize Brotli instance", -1, "ERR_ZLIB_INITIALIZATION_FAILED");
                 }
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.state = @ptrCast((state.?));
                 return Error.ok;
@@ -177,14 +172,12 @@ const Context = struct {
         switch (this.mode) {
             .BROTLI_ENCODE => {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (c.BrotliEncoderSetParameter(@ptrCast(this.state), key, value) == 0) {
                     return Error.init("Setting parameter failed", -1, "ERR_BROTLI_PARAM_SET_FAILED");
                 }
                 return Error.ok;
             },
             .BROTLI_DECODE => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (c.BrotliDecoderSetParameter(@ptrCast(this.state), key, value) == 0) {
                     return Error.init("Setting parameter failed", -1, "ERR_BROTLI_PARAM_SET_FAILED");
@@ -207,9 +200,7 @@ const Context = struct {
     fn deinitState(this: *Context) void {
         switch (this.mode) {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             .BROTLI_ENCODE => c.BrotliEncoderDestroyInstance(@ptrCast(@alignCast(this.state))),
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             .BROTLI_DECODE => c.BrotliDecoderDestroyInstance(@ptrCast(@alignCast(this.state))),
             else => unreachable,
@@ -233,18 +224,15 @@ const Context = struct {
             .BROTLI_ENCODE => {
                 var next_in = this.next_in;
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.last_result.e = c.BrotliEncoderCompressStream(@ptrCast(this.state), this.flush, &this.avail_in, &next_in, &this.avail_out, &this.next_out, null);
                 this.next_in.? += @intFromPtr((next_in.?)) - @intFromPtr(this.next_in.?);
             },
             .BROTLI_DECODE => {
                 var next_in = this.next_in;
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.last_result.d = c.BrotliDecoderDecompressStream(@ptrCast(this.state), &this.avail_in, &next_in, &this.avail_out, &this.next_out, null);
                 this.next_in.? += @intFromPtr((next_in.?)) - @intFromPtr(this.next_in.?);
                 if (this.last_result.d == .err) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     this.error_ = c.BrotliDecoderGetErrorCode(@ptrCast(this.state));
                 }
@@ -255,9 +243,7 @@ const Context = struct {
 
     pub fn updateWriteResult(this: *Context, avail_in: *u32, avail_out: *u32) void {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         avail_in.* = @intCast(this.avail_in);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         avail_out.* = @intCast(this.avail_out);
     }
@@ -292,7 +278,6 @@ const Context = struct {
         const names = comptime std.meta.fieldNames(E);
         const values = comptime std.enums.values(E);
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     inline for (names, values) |n, v| {
             if (err == v) {
                 return "ERR_BROTLI_DECODER_" ++ n;

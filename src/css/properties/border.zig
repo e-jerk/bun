@@ -127,7 +127,6 @@ pub fn GenericBorder(comptime S: type, comptime P: u8) type {
             out.setLen(fallbacks.len());
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (fallbacks.slice(), out.slice_mut()) |color, *o| {
                 o.* = .{
                     .color = color,
@@ -672,7 +671,6 @@ pub const BorderHandler = struct {
 
         const flushHelper = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn flushHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, comptime prop: []const u8, val: anytype, category: PropertyCategory) void {
                 if (category != self.category) {
                     self.flush(d, c);
@@ -686,7 +684,6 @@ pub const BorderHandler = struct {
 
         const propertyHelper = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn propertyHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, comptime prop: []const u8, val: anytype, category: PropertyCategory) void {
                 flushHelper(self, d, c, key, prop, val, category);
                 @field(@field(self, key), prop) = val.deepClone(c.allocator);
@@ -696,7 +693,6 @@ pub const BorderHandler = struct {
         }.propertyHelper;
 
         const setBorderHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn setBorderHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, val: anytype, category: PropertyCategory) void {
                 if (category != self.category) {
@@ -862,7 +858,6 @@ pub const BorderHandler = struct {
         logical_shorthand_supported: bool,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn logicalProp(f: *FlushContext, comptime ltr: []const u8, comptime ltr_key: []const u8, comptime rtl: []const u8, comptime rtl_key: []const u8, val: anytype) void {
             _ = ltr_key; // autofix
             _ = rtl_key; // autofix
@@ -870,13 +865,11 @@ pub const BorderHandler = struct {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn push(f: *FlushContext, comptime p: []const u8, val: anytype) void {
             bun.bits.insert(BorderProperty, &f.self.flushed_properties, @field(BorderProperty, p));
             bun.handleOom(f.dest.append(f.ctx.allocator, @unionInit(css.Property, p, val.deepClone(f.ctx.allocator))));
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn fallbacks(f: *FlushContext, comptime p: []const u8, _val: anytype) void {
             var val = _val;
@@ -890,123 +883,122 @@ pub const BorderHandler = struct {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn prop(f: *FlushContext, comptime prop_name: []const u8, val: anytype) void {
             @setEvalBranchQuota(10000);
-            if (comptime safe.SimdUtils.eql(prop_name, "border-inline-start")) {
+            if (comptime std.mem.eql(u8, prop_name, "border-inline-start")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-inline-start", val);
                 } else {
                     logicalProp(f, "border-left", "border_left", "border-right", "border_right", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-start-width")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-start-width")) {
                 if (f.logical_supported) {
                     push(f, "border-inline-start-width", val);
                 } else {
                     logicalProp(f, "border-left-width", "border_left_width", "border-right-width", "border_right_width", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-start-color")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-start-color")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-inline-start-color", val);
                 } else {
                     logicalProp(f, "border-left-color", "border_left_color", "border-right-color", "border_right_color", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-start-style")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-start-style")) {
                 if (f.logical_supported) {
                     push(f, "border-inline-start-style", val);
                 } else {
                     logicalProp(f, "border-left-style", "border_left_style", "border-right-style", "border_right_style", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-end")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-end")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-inline-end", val);
                 } else {
                     logicalProp(f, "border-right", "border_right", "border-left", "border_left", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-end-width")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-end-width")) {
                 if (f.logical_supported) {
                     push(f, "border-inline-end-width", val);
                 } else {
                     logicalProp(f, "border-right-width", "border_right_width", "border-left-width", "border_left_width", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-end-color")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-end-color")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-inline-end-color", val);
                 } else {
                     logicalProp(f, "border-right-color", "border_right_color", "border-left-color", "border_left_color", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-inline-end-style")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-inline-end-style")) {
                 if (f.logical_supported) {
                     push(f, "border-inline-end-style", val);
                 } else {
                     logicalProp(f, "border-right-style", "border_right_style", "border-left-style", "border_left_style", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-start")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-start")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-block-start", val);
                 } else {
                     fallbacks(f, "border-top", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-start-width")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-start-width")) {
                 if (f.logical_supported) {
                     push(f, "border-block-start-width", val);
                 } else {
                     push(f, "border-top-width", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-start-color")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-start-color")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-block-start-color", val);
                 } else {
                     fallbacks(f, "border-top-color", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-start-style")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-start-style")) {
                 if (f.logical_supported) {
                     push(f, "border-block-start-style", val);
                 } else {
                     push(f, "border-top-style", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-end")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-end")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-block-end", val);
                 } else {
                     fallbacks(f, "border-bottom", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-end-width")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-end-width")) {
                 if (f.logical_supported) {
                     push(f, "border-block-end-width", val);
                 } else {
                     push(f, "border-bottom-width", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-end-color")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-end-color")) {
                 if (f.logical_supported) {
                     fallbacks(f, "border-block-end-color", val);
                 } else {
                     fallbacks(f, "border-bottom-color", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-block-end-style")) {
+            } else if (comptime std.mem.eql(u8, prop_name, "border-block-end-style")) {
                 if (f.logical_supported) {
                     push(f, "border-block-end-style", val);
                 } else {
                     push(f, "border-bottom-style", val);
                 }
-            } else if (comptime safe.SimdUtils.eql(prop_name, "border-left-color") or
-                safe.SimdUtils.eql(prop_name, "border-right-color") or
-                safe.SimdUtils.eql(prop_name, "border-top-color") or
-                safe.SimdUtils.eql(prop_name, "border-bottom-color") or
-                safe.SimdUtils.eql(prop_name, "border-color") or
-                safe.SimdUtils.eql(prop_name, "border-block-color") or
-                safe.SimdUtils.eql(prop_name, "border-inline-color") or
-                safe.SimdUtils.eql(prop_name, "border-left") or
-                safe.SimdUtils.eql(prop_name, "border-right") or
-                safe.SimdUtils.eql(prop_name, "border-top") or
-                safe.SimdUtils.eql(prop_name, "border-bottom") or
-                safe.SimdUtils.eql(prop_name, "border-block-start") or
-                safe.SimdUtils.eql(prop_name, "border-block-end") or
-                safe.SimdUtils.eql(prop_name, "border-inline-start") or
-                safe.SimdUtils.eql(prop_name, "border-inline-end") or
-                safe.SimdUtils.eql(prop_name, "border-inline") or
-                safe.SimdUtils.eql(prop_name, "border-block") or
-                safe.SimdUtils.eql(prop_name, "border"))
+            } else if (comptime std.mem.eql(u8, prop_name, "border-left-color") or
+                std.mem.eql(u8, prop_name, "border-right-color") or
+                std.mem.eql(u8, prop_name, "border-top-color") or
+                std.mem.eql(u8, prop_name, "border-bottom-color") or
+                std.mem.eql(u8, prop_name, "border-color") or
+                std.mem.eql(u8, prop_name, "border-block-color") or
+                std.mem.eql(u8, prop_name, "border-inline-color") or
+                std.mem.eql(u8, prop_name, "border-left") or
+                std.mem.eql(u8, prop_name, "border-right") or
+                std.mem.eql(u8, prop_name, "border-top") or
+                std.mem.eql(u8, prop_name, "border-bottom") or
+                std.mem.eql(u8, prop_name, "border-block-start") or
+                std.mem.eql(u8, prop_name, "border-block-end") or
+                std.mem.eql(u8, prop_name, "border-inline-start") or
+                std.mem.eql(u8, prop_name, "border-inline-end") or
+                std.mem.eql(u8, prop_name, "border-inline") or
+                std.mem.eql(u8, prop_name, "border-block") or
+                std.mem.eql(u8, prop_name, "border"))
             {
                 fallbacks(f, prop_name, val);
             } else {
@@ -1014,7 +1006,6 @@ pub const BorderHandler = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         fn flushCategory(
             f: *FlushContext,
@@ -1048,7 +1039,6 @@ pub const BorderHandler = struct {
                 inline_end: *BorderShorthand,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn shorthand(s: *@This(), comptime p: type, comptime prop_name: []const u8, comptime key: []const u8) void {
                     const has_prop = @field(s.block_start, key) != null and @field(s.block_end, key) != null and @field(s.inline_start, key) != null and @field(s.inline_end, key) != null;
                     if (has_prop) {
@@ -1068,7 +1058,6 @@ pub const BorderHandler = struct {
                 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn logicalShorthand(
                     s: *@This(),
                     comptime P: type,
@@ -1087,7 +1076,6 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn is_eq(s: *@This(), comptime key: []const u8) bool {
                     return css.generic.eql(@TypeOf(@field(s.block_start, key)), &@field(s.block_start, key), &@field(s.block_end, key)) and
@@ -1123,7 +1111,6 @@ pub const BorderHandler = struct {
                 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn side_diff(s: *@This(), border: anytype, other: anytype, comptime prop_name: []const u8, width: anytype, style: anytype, comptime color: []const u8) void {
                     const eq_width = css.generic.eql(@TypeOf(border.width), &border.width, &other.width);
                     const eq_style = css.generic.eql(@TypeOf(border.style), &border.style, &other.style);
@@ -1142,7 +1129,6 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn side(s: *@This(), val: anytype, comptime short: []const u8, comptime width: []const u8, comptime style: []const u8, comptime color: []const u8) void {
                     if (val.isValid()) {
@@ -1163,7 +1149,6 @@ pub const BorderHandler = struct {
                 }
 
                 // If both values of an inline logical property are equal, then we can just convert them to physical properties.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn inlineProp(s: *@This(), comptime key: []const u8, comptime left: []const u8, comptime right: []const u8) void {
                     if (@field(s.inline_start, key) != null and css.generic.eql(@TypeOf(@field(s.inline_start, key)), &@field(s.inline_start, key), &@field(s.inline_end, key))) {
@@ -1442,7 +1427,6 @@ pub const BorderHandler = struct {
 
         const prop = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn prop(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, up: *const UnparsedProperty, comptime id: []const u8) void {
                 _ = d; // autofix
                 var upppppppppp = up.withPropertyId(c.allocator, @unionInit(css.PropertyId, id, {}));
@@ -1452,7 +1436,6 @@ pub const BorderHandler = struct {
         }.prop;
 
         const logical_prop = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn logical_prop(
                 c: *css.PropertyHandlerContext,

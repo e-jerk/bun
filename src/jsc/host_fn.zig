@@ -404,7 +404,6 @@ pub const DOMEffect = struct {
 };
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallArgumentType(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
     return switch (ChildType) {
@@ -418,7 +417,6 @@ fn DOMCallArgumentType(comptime Type: type) []const u8 {
     };
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallArgumentTypeWrapper(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
@@ -434,7 +432,6 @@ fn DOMCallArgumentTypeWrapper(comptime Type: type) []const u8 {
     };
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 fn DOMCallResultType(comptime Type: type) []const u8 {
     const ChildType = if (@typeInfo(Type) == .pointer) std.meta.Child(Type) else Type;
@@ -529,7 +526,6 @@ pub fn wrapInstanceMethod(
             const exception: jsc.C.ExceptionRef = if (comptime has_exception_ref) &exception_value else undefined;
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     inline for (FunctionTypeInfo.params, 0..) |param, i| {
                 const ArgType = param.type.?;
                 switch (ArgType) {
@@ -679,7 +675,6 @@ pub fn wrapStaticMethod(
             var args: Args = undefined;
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     inline for (FunctionTypeInfo.params, 0..) |param, i| {
                 const ArgType = param.type.?;
                 switch (param.type.?) {

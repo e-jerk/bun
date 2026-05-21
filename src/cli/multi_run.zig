@@ -16,7 +16,6 @@ const PipeReader = struct {
     line_buffer: std.array_list.Managed(u8) = std.array_list.Managed(u8).init(bun.default_allocator),
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onReadChunk(this: *This, chunk: []const u8, hasMore: bun.io.ReadState) bool {
         _ = hasMore;
         this.handle.state.readChunk(this, chunk) catch {};
@@ -178,7 +177,6 @@ const State = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn readChunk(this: *This, pipe: *PipeReader, chunk: []const u8) (std.Io.Writer.Error || bun.OOM)!void {
         try pipe.line_buffer.appendSlice(chunk);
 
@@ -196,7 +194,6 @@ const State = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeLineWithPrefix(this: *This, handle: *ProcessHandle, line: []const u8, writer: *std.Io.Writer) std.Io.Writer.Error!void {
         try this.writePrefix(handle, writer);
@@ -330,7 +327,6 @@ const State = struct {
     pub fn abort(this: *This) void {
         this.aborted = true;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.handles) |*handle| {
             if (handle.process) |*proc| {
                 if (proc.status == .running) {
@@ -400,7 +396,6 @@ const AbortHandler = struct {
 
 /// Simple glob matching: `*` matches any sequence of characters.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn matchesGlob(pattern: []const u8, name: []const u8) bool {
     var pi: usize = 0;
     var ni: usize = 0;
@@ -431,7 +426,6 @@ fn matchesGlob(pattern: []const u8, name: []const u8) bool {
 
 /// Add configs for a single script name (with pre/post handling).
 /// When `label_prefix` is non-null, labels become "{prefix}:{name}" (for workspace runs).
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn addScriptConfigs(
     configs: *std.array_list.Managed(ScriptConfig),
@@ -655,7 +649,6 @@ pub fn run(ctx: Command.Context) !noreturn {
                     }
                     std.mem.sort([]const u8, matches.items, {}, struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
                         fn lessThan(_: void, a: []const u8, b: []const u8) bool {
                             return std.mem.order(u8, a, b) == .lt;
                         }
@@ -716,7 +709,6 @@ pub fn run(ctx: Command.Context) !noreturn {
                     // Sort alphabetically
                     std.mem.sort([]const u8, matches.items, {}, struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
                         fn lessThan(_: void, a: []const u8, b: []const u8) bool {
                             return std.mem.order(u8, a, b) == .lt;
                         }
@@ -748,7 +740,6 @@ pub fn run(ctx: Command.Context) !noreturn {
     // Compute max label width
     var max_label_len: usize = 0;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (configs.items) |*config| {
         if (config.label.len > max_label_len) {
             max_label_len = config.label.len;
@@ -769,12 +760,10 @@ pub fn run(ctx: Command.Context) !noreturn {
 
     // Initialize handles
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (configs.items, 0..) |*config, i| {
         // Find which group this belongs to, for color assignment
         var color_idx: usize = 0;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (group_infos.items, 0..) |group, gi| {
             if (i >= group.start and i < group.start + group.count) {
                 color_idx = gi;
@@ -824,7 +813,6 @@ pub fn run(ctx: Command.Context) !noreturn {
 
     // Start handles with no dependencies
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (state.handles) |*handle| {
         if (handle.remaining_dependencies == 0) {
             handle.start() catch {
@@ -848,7 +836,6 @@ pub fn run(ctx: Command.Context) !noreturn {
     Global.exit(status);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn hasRunnableExtension(name: []const u8) bool {
     const ext = std.fs.path.extension(name);

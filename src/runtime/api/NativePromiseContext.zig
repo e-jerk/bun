@@ -61,7 +61,6 @@ pub fn create(global: *jsc.JSGlobalObject, ctx: anytype) jsc.JSValue {
 /// and the ref was released via the destructor on a prior GC cycle).
 pub fn take(comptime T: type, cell: jsc.JSValue) ?*T {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
     return @ptrCast(@alignCast(Bun__NativePromiseContext__take(cell)));
 }
 
@@ -133,7 +132,6 @@ pub const DeferredDerefTask = struct {
         var marker: DeferredDerefTask = undefined;
         var task = jsc.Task.init(&marker);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         task.setUintptr(@truncate(addr | @intFromEnum(tag)));
         vm.eventLoop().enqueueTask(task);
     }
@@ -143,15 +141,11 @@ pub const DeferredDerefTask = struct {
         const ctx: *anyopaque = @ptrFromInt(packed_ptr & ~tag_mask);
         switch (tag) {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             .HTTPServerRequestContext => @as(*server.HTTPServer.RequestContext, @ptrCast(@alignCast(ctx))).deref(),
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             .HTTPSServerRequestContext => @as(*server.HTTPSServer.RequestContext, @ptrCast(@alignCast(ctx))).deref(),
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             .DebugHTTPServerRequestContext => @as(*server.DebugHTTPServer.RequestContext, @ptrCast(@alignCast(ctx))).deref(),
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             .DebugHTTPSServerRequestContext => @as(*server.DebugHTTPSServer.RequestContext, @ptrCast(@alignCast(ctx))).deref(),
             .BodyValueBufferer => {
@@ -160,16 +154,12 @@ pub const DeferredDerefTask = struct {
                 // The pending-promise ref was taken on the owner, so we
                 // release it there.
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 const bufferer: *bun.webcore.Body.ValueBufferer = @ptrCast(@alignCast(ctx));
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 @as(*HTMLRewriter.BufferOutputSink, @ptrCast(@alignCast(bufferer.ctx))).deref();
             },
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             .HTTPSServerH3RequestContext => @as(*server.HTTPSServer.H3RequestContext, @ptrCast(@alignCast(ctx))).deref(),
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             .DebugHTTPSServerH3RequestContext => @as(*server.DebugHTTPSServer.H3RequestContext, @ptrCast(@alignCast(ctx))).deref(),
         }

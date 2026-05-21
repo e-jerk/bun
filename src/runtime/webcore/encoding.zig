@@ -81,7 +81,6 @@ export fn Bun__encoding__toString(input: [*]const u8, len: usize, globalObject: 
 //     return @intCast(i32, strings.copyUTF16IntoUTF8(to[0..to_len], []const u16, utf16[0..len]).written);
 // }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toString(input: []const u8, globalObject: *JSGlobalObject, encoding: Encoding) bun.JSError!JSValue {
     return switch (encoding) {
         // treat buffer as utf8
@@ -92,7 +91,6 @@ pub fn toString(input: []const u8, globalObject: *JSGlobalObject, encoding: Enco
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toBunStringFromOwnedSlice(input: []u8, encoding: Encoding) bun.String {
     if (input.len == 0)
@@ -140,7 +138,6 @@ pub fn toBunStringFromOwnedSlice(input: []u8, encoding: Encoding) bun.String {
 
             const as_u16 = std.mem.bytesAsSlice(u16, input[0..usable_len]);
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             return bun.String.createExternalGloballyAllocated(.utf16, @alignCast(as_u16));
         },
 
@@ -186,13 +183,11 @@ pub fn toBunStringFromOwnedSlice(input: []u8, encoding: Encoding) bun.String {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toStringComptime(input: []const u8, global: *JSGlobalObject, comptime encoding: Encoding) bun.JSError!JSValue {
     var bun_string = toBunStringComptime(input, encoding);
     return try bun_string.transferToJS(global);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toBunString(input: []const u8, encoding: Encoding) bun.String {
     return switch (encoding) {
@@ -200,7 +195,6 @@ pub fn toBunString(input: []const u8, encoding: Encoding) bun.String {
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toBunStringComptime(input: []const u8, comptime encoding: Encoding) bun.String {
     if (input.len == 0)
@@ -220,7 +214,8 @@ pub fn toBunStringComptime(input: []const u8, comptime encoding: Encoding) bun.S
             if (str.tag == .Dead) {
                 return str;
             }
-            safe.SimdUtils.copy(chars, input);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(chars, input);
             return str;
         },
         .buffer, .utf8 => {
@@ -244,7 +239,8 @@ pub fn toBunStringComptime(input: []const u8, comptime encoding: Encoding) bun.S
             var output_bytes = std.mem.sliceAsBytes(chars);
             output_bytes[output_bytes.len - 1] = 0;
 
-            safe.SimdUtils.copy(output_bytes, input[0..output_bytes.len]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(output_bytes, input[0..output_bytes.len]);
             return str;
         },
 
@@ -289,7 +285,8 @@ pub fn writeU8(input: [*]const u8, len: usize, to_ptr: [*]u8, to_len: usize, com
     switch (comptime encoding) {
         .buffer, .latin1 => {
             const written = @min(len, to_len);
-            safe.SimdUtils.copy(to_ptr[0..written], input[0..written]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(to_ptr[0..written], input[0..written]);
 
             return written;
         },
@@ -300,7 +297,8 @@ pub fn writeU8(input: [*]const u8, len: usize, to_ptr: [*]u8, to_len: usize, com
             var remain = input[0..written];
 
             if (bun.simdutf.validate.ascii(remain)) {
-                safe.SimdUtils.copy(to_ptr[0..written], remain[0..written]);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(to_ptr[0..written], remain[0..written]);
             } else {
                 strings.copyLatin1IntoASCII(to, remain);
             }
@@ -320,13 +318,11 @@ pub fn writeU8(input: [*]const u8, len: usize, to_ptr: [*]u8, to_len: usize, com
                 const buf = input[0..len];
 
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 const output = @as([*]u16, @ptrCast(@alignCast(to_ptr)))[0 .. to_len / 2];
                 const written = strings.copyLatin1IntoUTF16([]u16, output, buf).written;
                 return written * 2;
             } else {
                 const buf = input[0..len];
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const output = @as([*]align(1) u16, @ptrCast(to_ptr))[0 .. to_len / 2];
 
@@ -374,12 +370,10 @@ pub fn byteLengthU8(input: [*]const u8, len: usize, comptime encoding: Encoding)
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeIntoFrom16(input: []const u16, to: []u8, comptime encoding: Encoding, comptime allow_partial_write: bool) !usize {
     return writeU16(input.ptr, input.len, to.ptr, to.len, encoding, allow_partial_write);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeIntoFrom8(input: []const u8, to: []u8, comptime encoding: Encoding) !usize {
     return writeU8(input.ptr, input.len, to.ptr, to.len, encoding);
@@ -408,7 +402,6 @@ pub fn writeU16(input: [*]const u16, len: usize, to: [*]u8, to_len: usize, compt
                 const bytes_input_len = len * 2;
                 const written = @min(bytes_input_len, to_len);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const input_u8 = @as([*]const u8, @ptrCast(input));
                 bun.memmove(to[0..written], input_u8[0..written]);
                 return written;
@@ -418,7 +411,6 @@ pub fn writeU16(input: [*]const u16, len: usize, to: [*]u8, to_len: usize, compt
                 if (written < 2) return 0;
 
                 const fixed_len = (written / 2) * 2;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const input_u8 = @as([*]const u8, @ptrCast(input));
                 bun.memmove(to[0..written], input_u8[0..fixed_len]);
@@ -445,7 +437,6 @@ pub fn writeU16(input: [*]const u16, len: usize, to: [*]u8, to_len: usize, compt
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn constructFrom(comptime T: type, input: []const T, allocator: std.mem.Allocator, comptime encoding: Encoding) []u8 {
     return switch (comptime T) {
         u16 => constructFromU16(input.ptr, input.len, allocator, encoding),
@@ -455,19 +446,20 @@ pub fn constructFrom(comptime T: type, input: []const T, allocator: std.mem.Allo
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn constructFromU8(input: [*]const u8, len: usize, allocator: std.mem.Allocator, comptime encoding: Encoding) []u8 {
     if (len == 0) return &[_]u8{};
 
     switch (comptime encoding) {
         .buffer => {
             var to = allocator.alloc(u8, len) catch return &[_]u8{};
-            safe.SimdUtils.copy(to[0..len], input[0..len]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(to[0..len], input[0..len]);
             return to;
         },
         .latin1, .ascii => {
             var to = allocator.alloc(u8, len) catch return &[_]u8{};
-            safe.SimdUtils.copy(to[0..len], input[0..len]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(to[0..len], input[0..len]);
             return to;
         },
         .utf8 => {
@@ -516,7 +508,6 @@ pub fn constructFromU8(input: [*]const u8, len: usize, allocator: std.mem.Alloca
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn constructFromU16(input: [*]const u16, len: usize, allocator: std.mem.Allocator, comptime encoding: Encoding) []u8 {
     if (len == 0) return &[_]u8{};
 
@@ -533,7 +524,8 @@ pub fn constructFromU16(input: [*]const u16, len: usize, allocator: std.mem.Allo
         .ucs2, .utf16le => {
             var to = std.mem.sliceAsBytes(allocator.alloc(u16, len) catch return &[_]u8{});
             const bytes = std.mem.sliceAsBytes(input[0..len]);
-            safe.SimdUtils.copy(to[0..bytes.len], bytes);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(to[0..bytes.len], bytes);
             return to;
         },
 

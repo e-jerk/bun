@@ -260,7 +260,6 @@ pub fn load(
 
         if (config.scoped) |scoped| {
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (scoped.scopes.keys(), scoped.scopes.values()) |name, *registry_| {
                 var registry = registry_.*;
                 if (registry.url.len == 0) registry.url = base.url;

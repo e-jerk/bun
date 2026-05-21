@@ -16,7 +16,6 @@ pub fn get(self: *const IndexStringMap, index: Index.Int) ?[]const u8 {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn put(self: *IndexStringMap, allocator: std.mem.Allocator, index: Index.Int, value: []const u8) !void {
     const duped = try allocator.dupe(u8, value);
     errdefer allocator.free(duped);

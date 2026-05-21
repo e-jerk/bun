@@ -153,6 +153,7 @@ pub const InternalMsgHolder = struct {
         bun.assert(this.isReady());
         var messages = this.messages;
         this.messages = .empty;
+// safe-transpile: for loop with pointer capture requires manual review
         for (messages.items) |*strong| {
             if (strong.get()) |message| {
                 try this.dispatchUnsafe(message, globalThis);
@@ -163,10 +164,12 @@ pub const InternalMsgHolder = struct {
     }
 
     pub fn deinit(this: *InternalMsgHolder) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.callbacks.values()) |*strong| strong.deinit();
         this.callbacks.deinit(bun.default_allocator);
         this.worker.deinit();
         this.cb.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.messages.items) |*strong| strong.deinit();
         this.messages.deinit(bun.default_allocator);
     }

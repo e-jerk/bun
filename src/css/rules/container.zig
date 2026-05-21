@@ -66,6 +66,7 @@ pub const ContainerSizeFeatureId = enum {
         .orientation = css.MediaFeatureType.ident,
     };
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -78,6 +79,7 @@ pub const ContainerSizeFeatureId = enum {
         return css.enum_property_util.toCss(@This(), this, dest);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toCssWithPrefix(this: *const @This(), prefix: []const u8, dest: *Printer) PrintErr!void {
         try dest.writeStr(prefix);
         try this.toCss(dest);

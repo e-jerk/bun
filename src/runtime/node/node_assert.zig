@@ -104,9 +104,7 @@ fn diffLines(
 fn diffListToJS(comptime T: type, global: *jsc.JSGlobalObject, diff_list: MyersDiff.DiffList(T)) bun.JSError!jsc.JSValue {
     var array = try jsc.JSValue.createEmptyArray(global, diff_list.items.len);
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (diff_list.items, 0..) |*line, i| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try array.putIndex(global, @truncate(i), (try jsc.JSObject.createNullProto(line.*, global)).toJS());
     }

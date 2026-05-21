@@ -203,6 +203,7 @@ pub const JSPromise = opaque {
         scope.init(globalObject, @src());
         defer scope.deinit();
         var ctx = Wrapper{ .args = args };
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const promise = JSC__JSPromise__wrap(globalObject, &ctx, @ptrCast(&Wrapper.call));
         try scope.assertNoExceptionExceptTermination();
         return promise;

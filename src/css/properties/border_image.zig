@@ -172,7 +172,6 @@ pub const BorderImage = struct {
         var res = css.SmallList(BorderImage, 6).initCapacity(allocator, fallbacks.len());
         res.setLen(fallbacks.len());
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (fallbacks.slice(), res.slice_mut()) |fallback, *out| {
             out.* = this.deepClone(allocator);
             out.source = fallback;
@@ -407,13 +406,12 @@ pub const BorderImageProperty = packed struct(u8) {
 
     pub fn isEmpty(this: BorderImageProperty) bool {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         return @as(u8, @bitCast(this)) == 0;
     }
 
     pub fn tryFromPropertyId(property_id: css.PropertyIdTag) ?BorderImageProperty {
         inline for (std.meta.fields(BorderImageProperty)) |field| {
-            if (comptime safe.SimdUtils.eql(field.name, "__unused")) continue;
+            if (comptime std.mem.eql(u8, field.name, "__unused")) continue;
             const desired = comptime @field(css.PropertyIdTag, "border-image-" ++ field.name);
             if (desired == property_id) {
                 var result: BorderImageProperty = .{};
@@ -443,7 +441,6 @@ pub const BorderImageHandler = struct {
 
         const flushHelper = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn flushHelper(
                 self: *BorderImageHandler,
                 d: *css.DeclarationList,
@@ -458,7 +455,6 @@ pub const BorderImageHandler = struct {
         }.flushHelper;
 
         const propertyHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn propertyHelper(self: *BorderImageHandler, comptime field: []const u8, comptime T: type, val: *const T, d: *css.DeclarationList, ctx: *css.PropertyHandlerContext) void {
                 if (self.vendor_prefix != VendorPrefix{ .none = true }) {

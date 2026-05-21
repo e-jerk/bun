@@ -11,19 +11,16 @@ pub fn VersionedURLType(comptime SemverIntType: type) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn order(this: @This(), other: @This(), lhs_buf: []const u8, rhs_buf: []const u8) @import("std").math.Order {
             return this.version.order(other.version, lhs_buf, rhs_buf);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn count(this: @This(), buf: []const u8, comptime Builder: type, builder: Builder) void {
             this.version.count(buf, comptime Builder, builder);
             builder.count(this.url.slice(buf));
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn clone(this: @This(), buf: []const u8, comptime Builder: type, builder: Builder) @This() {
             return @This(){

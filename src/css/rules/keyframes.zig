@@ -11,6 +11,7 @@ pub const KeyframesListParser = struct {
     pub const DeclarationParser = struct {
         pub const Declaration = Keyframe;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(_: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             return .{ .err = input.newError(css.BasicParseErrorKind{ .unexpected_token = .{ .ident = name } }) };
         }
@@ -30,6 +31,7 @@ pub const KeyframesListParser = struct {
         pub const Prelude = void;
         pub const AtRule = Keyframe;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             return .{ .err = input.newError(css.BasicParseErrorKind{ .at_rule_invalid = name }) };
         }
@@ -270,6 +272,7 @@ pub const KeyframesRule = struct {
                 dest.indent();
 
                 var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                 for (this.keyframes.items) |*keyframe| {
                     if (first) {
                         first = false;

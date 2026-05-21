@@ -45,14 +45,17 @@ pub const debug_allocator_data = struct {
         return backing.?.allocator().rawAlloc(new_len, alignment, ret_addr);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize(_: *anyopaque, mem: []u8, alignment: std.mem.Alignment, new_len: usize, ret_addr: usize) bool {
         return backing.?.allocator().rawResize(mem, alignment, new_len, ret_addr);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn remap(_: *anyopaque, mem: []u8, alignment: std.mem.Alignment, new_len: usize, ret_addr: usize) ?[*]u8 {
         return backing.?.allocator().rawRemap(mem, alignment, new_len, ret_addr);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn free(_: *anyopaque, mem: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
         return backing.?.allocator().rawFree(mem, alignment, ret_addr);
     }
@@ -259,16 +262,21 @@ pub const PlatformIOVecConst = if (Environment.isWindows)
 else
     std.posix.iovec_const;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn platformIOVecCreate(input: []const u8) PlatformIOVec {
     // TODO: remove this constCast by making the input mutable
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return .{ .len = @truncate(input.len), .base = @constCast(input.ptr) };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn platformIOVecConstCreate(input: []const u8) PlatformIOVecConst {
     // TODO: remove this constCast by adding uv_buf_t_const
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return .{ .len = @truncate(input.len), .base = @constCast(input.ptr) };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn platformIOVecToSlice(iovec: PlatformIOVec) []u8 {
     if (Environment.isWindows) return windows.libuv.uv_buf_t.slice(iovec);
     return iovec.base[0..iovec.len];
@@ -336,22 +344,23 @@ pub fn ThreadlocalBuffers(comptime T: type) type {
 
         noinline fn alloc() *T {
             @branchHint(.cold);
-            const s = default_allocator.create(Storage) catch outOfMemory();
+            const s = safe.Box(Storage).init(default_allocator, undefined) catch outOfMemory();
             // Apply field default values. For the common case of
             // `field: PathBuffer = undefined` this is a no-op in release
             // builds; for wrappers around structs with real defaults (e.g.
             // `NodeFS{ .vm = null }`) it's required for correctness.
-            s.* = .{
+            s.ptr.* = .{
                 .node = .{ .next = threadlocal_buffers_head, .free = free },
                 .data = .{},
             };
-            threadlocal_buffers_head = &s.node;
-            instance = &s.data;
-            return &s.data;
+            threadlocal_buffers_head = &s.ptr.node;
+            instance = &s.ptr.data;
+            return &s.ptr.data;
         }
 
         fn free(node: *ThreadlocalBuffersNode) void {
             instance = null;
+// safe-transpile: @alignCast requires manual review
             const s: *Storage = @alignCast(@fieldParentPtr("node", node));
             default_allocator.destroy(s);
         }
@@ -387,6 +396,7 @@ pub inline fn cast(comptime To: type, value: anytype) To {
         return @ptrFromInt(@as(usize, value));
     }
 
+// safe-transpile: @alignCast requires manual review
     return @ptrCast(@alignCast(value));
 }
 
@@ -408,6 +418,7 @@ pub fn len(value: anytype) usize {
             .many => {
                 const sentinel_ptr = info.sentinel_ptr orelse
                     @compileError("length of pointer with no sentinel");
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const sentinel = @as(*align(1) const info.child, @ptrCast(sentinel_ptr)).*;
 
                 return std.mem.indexOfSentinel(info.child, sentinel, value);
@@ -476,6 +487,7 @@ pub fn span(pointer: anytype) Span(@TypeOf(pointer)) {
     const l = len(pointer);
     const ptr_info = @typeInfo(Result).pointer;
     if (ptr_info.sentinel_ptr) |s_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const s = @as(*align(1) const ptr_info.child, @ptrCast(s_ptr)).*;
         return pointer[0..l :s];
     } else {
@@ -490,6 +502,7 @@ pub const StringHashMapUnowned = struct {
         hash: u64,
         len: usize,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(str: []const u8) Key {
             return Key{
                 .hash = hash(str),
@@ -562,7 +575,8 @@ pub fn clone(item: anytype, allocator: std.mem.Allocator) !@TypeOf(item) {
     if (comptime trait.isContainer(Child)) {
         if (std.meta.hasFn(Child, "clone")) {
             const slice = try allocator.alloc(Child, item.len);
-            for (slice, 0..) |*val, i| {
+            // safe-transpile: for with index access requires manual review
+    for (slice, 0..) |*val, i| {
                 val.* = try item[i].clone(allocator);
             }
             return slice;
@@ -578,6 +592,7 @@ pub const LinearFifo = @import("./collections/linear_fifo.zig").LinearFifo;
 pub const LinearFifoBufferType = @import("./collections/linear_fifo.zig").LinearFifoBufferType;
 
 /// hash a string
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash(content: []const u8) u64 {
     return std.hash.Wyhash.hash(0, content);
 }
@@ -620,15 +635,19 @@ pub fn fastRandom() u64 {
     return pcrng.get();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hashWithSeed(seed: u64, content: []const u8) u64 {
     return std.hash.Wyhash.hash(seed, content);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash32(content: []const u8) u32 {
     const res = hash(content);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(res));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn csprng(bytes: []u8) void {
     _ = BoringSSL.c.RAND_bytes(bytes.ptr, bytes.len);
 }
@@ -685,6 +704,7 @@ pub fn isWritable(fd: FD) PollFlag {
             },
         };
         const rc = std.os.windows.ws2_32.WSAPoll(&polls, 1, 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const result = (if (rc != std.os.windows.ws2_32.SOCKET_ERROR) @as(usize, @intCast(rc)) else 0) != 0;
         global_scope_log("poll({f}) writable: {f} ({d})", .{ fd, result, polls[0].revents });
         if (result and polls[0].revents & std.posix.POLL.WRNORM != 0) {
@@ -727,11 +747,13 @@ pub fn isWritable(fd: FD) PollFlag {
 /// This function used to panic in debug, and be `unreachable` in release
 /// however, if something is possibly reachable, it should not be marked unreachable.
 /// It now panics in all release modes.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn unreachablePanic(comptime fmts: []const u8, args: anytype) noreturn {
     // if (comptime !Environment.allow_assert) unreachable;
     std.debug.panic(fmts, args);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn StringEnum(comptime Type: type, comptime Map: anytype, value: []const u8) ?Type {
     return ComptimeStringMap(Type, Map).get(value);
 }
@@ -783,6 +805,7 @@ pub const MaxHeapAllocator = allocators.MaxHeapAllocator;
 pub const isSliceInBuffer = allocators.isSliceInBuffer;
 pub const isSliceInBufferT = allocators.isSliceInBufferT;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn sliceInBuffer(stable: []const u8, value: []const u8) []const u8 {
     if (allocators.sliceRange(stable, value)) |_| {
         return value;
@@ -793,10 +816,13 @@ pub inline fn sliceInBuffer(stable: []const u8, value: []const u8) []const u8 {
     return value;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rangeOfSliceInBuffer(slice: []const u8, buffer: []const u8) ?[2]u32 {
     if (!isSliceInBuffer(slice, buffer)) return null;
     const r = [_]u32{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @as(u32, @truncate(@intFromPtr(slice.ptr) -| @intFromPtr(buffer.ptr))),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @as(u32, @truncate(slice.len)),
     };
     if (comptime Environment.allow_assert)
@@ -842,6 +868,7 @@ pub fn openFileZ(pathZ: [:0]const u8, open_flags: @import("std-fs-compat").File.
     return @import("std-fs-compat").File{ .handle = res.cast(), .flags = .{ .nonblocking = false } };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openFile(path_: []const u8, open_flags: @import("std-fs-compat").File.OpenFlags) !@import("std-fs-compat").File {
     if (comptime Environment.isWindows) {
         var flags: i32 = 0;
@@ -874,6 +901,7 @@ pub fn openDirNoRenamingOrDeletingWindows(dir: FD, path_: [:0]const u8) !@import
     return res.stdDir();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openDirA(dir: @import("std-fs-compat").Dir, path_: []const u8) !@import("std-fs-compat").Dir {
     if (comptime Environment.isWindows) {
         const res = try sys.openDirAtWindowsA(.fromStdDir(dir), path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap();
@@ -884,6 +912,7 @@ pub fn openDirA(dir: @import("std-fs-compat").Dir, path_: []const u8) !@import("
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openDirForIteration(dir: FD, path_: []const u8) sys.Maybe(FD) {
     if (comptime Environment.isWindows) {
         return sys.openDirAtWindowsA(dir, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true });
@@ -898,6 +927,7 @@ pub fn openDirForIterationOSPath(dir: FD, path_: []const OSPathChar) sys.Maybe(F
     return sys.openatA(dir, path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openDirAbsolute(path_: []const u8) !@import("std-fs-compat").Dir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap()
@@ -907,6 +937,7 @@ pub fn openDirAbsolute(path_: []const u8) !@import("std-fs-compat").Dir {
     return fd.stdDir();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !@import("std-fs-compat").Dir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true }).unwrap()
@@ -964,6 +995,7 @@ pub fn getenvTruthy(key: [:0]const u8) bool {
 
 pub const U32HashMapContext = struct {
     pub fn hash(_: @This(), value: u32) u64 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(value);
     }
     pub fn eql(_: @This(), a: u32, b: u32) bool {
@@ -981,6 +1013,7 @@ pub const U32HashMapContext = struct {
         input: u32,
         pub fn hash(this: @This(), value: u32) u64 {
             if (value == this.input) return this.value;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @intCast(value);
         }
 
@@ -991,13 +1024,17 @@ pub const U32HashMapContext = struct {
 };
 // These wrappers exist to use our strings.eqlLong function
 pub const StringArrayHashMapContext = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(_: @This(), s: []const u8) u32 {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(u32, @truncate(std.hash.Wyhash.hash(0, s)));
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(_: @This(), a: []const u8, b: []const u8, _: usize) bool {
         return strings.eqlLong(a, b, true);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pre(input: []const u8) Prehashed {
         return Prehashed{
             .value = @This().hash(.{}, input),
@@ -1009,12 +1046,15 @@ pub const StringArrayHashMapContext = struct {
         value: u32,
         input: []const u8,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hash(this: @This(), s: []const u8) u32 {
             if (s.ptr == this.input.ptr and s.len == this.input.len)
                 return this.value;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(std.hash.Wyhash.hash(0, s)));
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(_: @This(), a: []const u8, b: []const u8, _: usize) bool {
             return strings.eqlLong(a, b, true);
         }
@@ -1022,9 +1062,11 @@ pub const StringArrayHashMapContext = struct {
 };
 
 pub const CaseInsensitiveASCIIStringContext = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(_: @This(), str_: []const u8) u32 {
         var buf: [1024]u8 = undefined;
         if (str_.len < buf.len) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(std.hash.Wyhash.hash(0, strings.copyLowercase(str_, &buf)));
         }
         var str = str_;
@@ -1034,13 +1076,16 @@ pub const CaseInsensitiveASCIIStringContext = struct {
             wyhash.update(strings.copyLowercase(str[0..length], &buf));
             str = str[length..];
         }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @truncate(wyhash.final());
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(_: @This(), a: []const u8, b: []const u8, _: usize) bool {
         return strings.eqlCaseInsensitiveASCIIICheckLength(a, b);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pre(input: []const u8) Prehashed {
         return Prehashed{
             .value = @This().hash(.{}, input),
@@ -1052,12 +1097,14 @@ pub const CaseInsensitiveASCIIStringContext = struct {
         value: u32,
         input: []const u8,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hash(this: @This(), s: []const u8) u32 {
             if (s.ptr == this.input.ptr and s.len == this.input.len)
                 return this.value;
             return CaseInsensitiveASCIIStringContext.hash(.{}, s);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(_: @This(), a: []const u8, b: []const u8) bool {
             return strings.eqlCaseInsensitiveASCIIICheckLength(a, b);
         }
@@ -1065,13 +1112,16 @@ pub const CaseInsensitiveASCIIStringContext = struct {
 };
 
 pub const StringHashMapContext = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(_: @This(), s: []const u8) u64 {
         return std.hash.Wyhash.hash(0, s);
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(_: @This(), a: []const u8, b: []const u8) bool {
         return strings.eqlLong(a, b, true);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pre(input: []const u8) Prehashed {
         return Prehashed{
             .value = @This().hash(.{}, input),
@@ -1082,12 +1132,14 @@ pub const StringHashMapContext = struct {
     pub const Prehashed = struct {
         value: u64,
         input: []const u8,
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hash(this: @This(), s: []const u8) u64 {
             if (s.ptr == this.input.ptr and s.len == this.input.len)
                 return this.value;
             return StringHashMapContext.hash(.{}, s);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(_: @This(), a: []const u8, b: []const u8) bool {
             return strings.eqlLong(a, b, true);
         }
@@ -1096,6 +1148,7 @@ pub const StringHashMapContext = struct {
     pub const PrehashedCaseInsensitive = struct {
         value: u64,
         input: []const u8,
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(allocator: std.mem.Allocator, input: []const u8) PrehashedCaseInsensitive {
             const out = allocator.alloc(u8, input.len) catch unreachable;
             _ = strings.copyLowercase(input, out);
@@ -1107,12 +1160,14 @@ pub const StringHashMapContext = struct {
         pub fn deinit(this: @This(), allocator: std.mem.Allocator) void {
             allocator.free(this.input);
         }
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hash(this: @This(), s: []const u8) u64 {
             if (s.ptr == this.input.ptr and s.len == this.input.len)
                 return this.value;
             return StringHashMapContext.hash(.{}, s);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(_: @This(), a: []const u8, b: []const u8) bool {
             return strings.eqlCaseInsensitiveASCIIICheckLength(a, b);
         }
@@ -1161,6 +1216,7 @@ pub const copyFile = CopyFile.copyFile;
 pub const copyFileWithState = CopyFile.copyFileWithState;
 pub const CopyFileState = CopyFile.CopyFileState;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseDouble(input: []const u8) !f64 {
     if (comptime Environment.isWasm) {
         return try std.fmt.parseFloat(f64, input);
@@ -1230,6 +1286,7 @@ pub fn enumMap(comptime T: type, comptime args: anytype) (fn (T) [:0]const u8) {
 
 pub fn ComptimeEnumMap(comptime T: type) type {
     var entries: [std.enums.values(T).len]struct { [:0]const u8, T } = undefined;
+    // safe-transpile: for with index access requires manual review
     for (std.enums.values(T), &entries) |value, *entry| {
         entry.* = .{ .@"0" = @tagName(value), .@"1" = value };
     }
@@ -1240,7 +1297,9 @@ pub fn ComptimeEnumMap(comptime T: type) type {
 /// Ignores default struct values.
 pub fn zero(comptime Type: type) Type {
     var out: [@sizeOf(Type)]u8 align(@alignOf(Type)) = undefined;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     @memset(@as([*]u8, @ptrCast(&out))[0..out.len], 0);
+// safe-transpile: @bitCast requires manual review
     return @as(Type, @bitCast(out));
 }
 pub const c_ares = @import("./cares_sys/c_ares.zig");
@@ -1253,6 +1312,7 @@ var needs_proc_self_workaround: bool = false;
 // This is our "polyfill" when /proc/self/fd is not available it's only
 // necessary on linux because other platforms don't have an optional
 // /proc/self/fd
+// safe-transpile: function returns small constant slice — consider safe.String
 fn getFdPathViaCWD(fd: std.posix.fd_t, buf: *bun.PathBuffer) ![]u8 {
     const prev_fd = try std.posix.openatZ(std.c.AT.FDCWD, ".", .{ .DIRECTORY = true }, 0);
     var needs_chdir = false;
@@ -1265,6 +1325,7 @@ fn getFdPathViaCWD(fd: std.posix.fd_t, buf: *bun.PathBuffer) ![]u8 {
     return getcwd(buf);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getcwd(buf: []u8) ![]u8 {
     const result_ptr = std.c.getcwd(buf.ptr, buf.len) orelse return error.Unexpected;
     var result_len: usize = 0;
@@ -1281,6 +1342,7 @@ pub fn getcwdAlloc(allocator: std.mem.Allocator) ![:0]u8 {
 /// TODO: move to bun.sys and add a method onto FD
 /// Get the absolute path to a file descriptor.
 /// On Linux, when `/proc/self/fd` is not available, this function will attempt to use `fchdir` and `getcwd` to get the path instead.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getFdPath(fd: FD, buf: *bun.PathBuffer) ![]u8 {
     if (comptime Environment.isWindows) {
         var wide_buf: WPathBuffer = undefined;
@@ -1340,6 +1402,7 @@ fn lenSliceTo(pointer: anytype, comptime end: std.meta.Elem(@TypeOf(pointer))) u
             .one => switch (@typeInfo(ptr_info.child)) {
                 .array => |array_info| {
                     if (array_info.sentinel_ptr) |sentinel_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         const sentinel = @as(*align(1) const array_info.child, @ptrCast(sentinel_ptr)).*;
                         if (sentinel == end) {
                             return std.mem.indexOfSentinel(array_info.child, end, pointer);
@@ -1350,6 +1413,7 @@ fn lenSliceTo(pointer: anytype, comptime end: std.meta.Elem(@TypeOf(pointer))) u
                 else => {},
             },
             .many => if (ptr_info.sentinel_ptr) |sentinel_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const sentinel = @as(*align(1) const ptr_info.child, @ptrCast(sentinel_ptr)).*;
                 // We may be looking for something other than the sentinel,
                 // but iterating past the sentinel would be a bug so we need
@@ -1364,6 +1428,7 @@ fn lenSliceTo(pointer: anytype, comptime end: std.meta.Elem(@TypeOf(pointer))) u
             },
             .slice => {
                 if (ptr_info.sentinel_ptr) |sentinel_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const sentinel = @as(*align(1) const ptr_info.child, @ptrCast(sentinel_ptr)).*;
                     if (sentinel == end) {
                         return std.mem.indexOfSentinel(ptr_info.child, sentinel, pointer);
@@ -1394,6 +1459,7 @@ fn SliceTo(comptime T: type, comptime end: std.meta.Elem(T)) type {
                         // to find the value searched for, which is only the case if it matches
                         // the sentinel of the type passed.
                         if (array_info.sentinel_ptr) |sentinel_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             const sentinel = @as(*align(1) const array_info.child, @ptrCast(sentinel_ptr)).*;
                             if (end == sentinel) {
                                 new_ptr_info.sentinel_ptr = &end;
@@ -1409,6 +1475,7 @@ fn SliceTo(comptime T: type, comptime end: std.meta.Elem(T)) type {
                     // to find the value searched for, which is only the case if it matches
                     // the sentinel of the type passed.
                     if (ptr_info.sentinel_ptr) |sentinel_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         const sentinel = @as(*align(1) const ptr_info.child, @ptrCast(sentinel_ptr)).*;
                         if (end == sentinel) {
                             new_ptr_info.sentinel_ptr = &end;
@@ -1458,6 +1525,7 @@ pub fn sliceTo(pointer: anytype, comptime end: std.meta.Elem(@TypeOf(pointer))) 
     const length = lenSliceTo(pointer, end);
     const ptr_info = @typeInfo(Result).pointer;
     if (ptr_info.sentinel_ptr) |s_ptr| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const s = @as(*align(1) const ptr_info.child, @ptrCast(s_ptr)).*;
         return pointer[0..length :s];
     } else {
@@ -1484,6 +1552,7 @@ pub const renamer = @import("./js_printer/renamer.zig");
 pub const SourceMap = @import("./sourcemap/sourcemap.zig");
 
 /// Attempt to coerce some value into a byte slice.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn asByteSlice(buffer: anytype) []const u8 {
     return switch (@TypeOf(buffer)) {
         [*:0]u8, [*:0]const u8 => buffer[0..len(buffer)],
@@ -1533,6 +1602,7 @@ const FailingAllocator = struct {
         return null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize(_: *anyopaque, _: []u8, _: u8, _: usize, _: usize) bool {
         if (comptime Environment.allow_assert) {
             unreachablePanic("FailingAllocator should never be reached. This means some memory was not defined", .{});
@@ -1540,6 +1610,7 @@ const FailingAllocator = struct {
         return false;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn free(
         _: *anyopaque,
         _: []u8,
@@ -1640,6 +1711,7 @@ pub fn reloadProcess(
     }
 
     const dupe_argv = allocator.allocSentinel(?[*:0]const u8, bun.argv.len, null) catch unreachable;
+    // safe-transpile: for with index access requires manual review
     for (bun.argv, dupe_argv) |src, *dest| {
         dest.* = (allocator.dupeZ(u8, src) catch unreachable).ptr;
     }
@@ -1667,9 +1739,11 @@ pub fn reloadProcess(
     const exec_path = (bun.selfExePath() catch unreachable).ptr;
 
     // we clone argv so that the memory address isn't the same as the libc one
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const newargv = @as([*:null]?[*:0]const u8, @ptrCast(dupe_argv.ptr));
 
     // we clone envp so that the memory address of environment variables isn't the same as the libc one
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const envp = @as([*:null]?[*:0]const u8, @ptrCast(environ.ptr));
 
     // macOS doesn't have CLOEXEC, so we must go through posix_spawn
@@ -1691,6 +1765,7 @@ pub fn reloadProcess(
                 c.POSIX_SPAWN_SETEXEC |
                 c.POSIX_SPAWN_SETSIGDEF | c.POSIX_SPAWN_SETSIGMASK,
         ) catch unreachable;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         switch (spawn.spawnZ(exec_path, actions, attrs, @as([*:null]?[*:0]const u8, @ptrCast(newargv)), @as([*:null]?[*:0]const u8, @ptrCast(envp)))) {
             .err => |err| {
                 if (may_return) {
@@ -1770,6 +1845,7 @@ pub const StringSet = struct {
         return self.map.keys();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insert(self: *StringSet, key: []const u8) !void {
         const entry = try self.map.getOrPut(key);
         if (!entry.found_existing) {
@@ -1777,10 +1853,12 @@ pub const StringSet = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn contains(self: *StringSet, key: []const u8) bool {
         return self.map.contains(key);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn swapRemove(self: *StringSet, key: []const u8) bool {
         return self.map.swapRemove(key);
     }
@@ -1842,6 +1920,7 @@ pub const StringMap = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insert(self: *StringMap, key: []const u8, value: []const u8) !void {
         const entry = try self.map.getOrPut(key);
         if (!entry.found_existing) {
@@ -1855,6 +1934,7 @@ pub const StringMap = struct {
     }
     pub const put = insert;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn get(self: *const StringMap, key: []const u8) ?[]const u8 {
         return self.map.get(key);
     }
@@ -2060,6 +2140,7 @@ pub var argv: [][:0]const u8 = &[_][:0]const u8{};
 /// Used by standalone executables to include these in the parsed options window.
 pub var bun_options_argc: usize = 0;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendOptionsEnv(env: []const u8, comptime ArgType: type, args: *std.array_list.Managed(ArgType)) !void {
     var i: usize = 0;
     var offset_in_args: usize = 1;
@@ -2116,6 +2197,7 @@ pub fn appendOptionsEnv(env: []const u8, comptime ArgType: type, args: *std.arra
                 bun.String => bun.String.cloneUTF8(env[start..j]),
                 [:0]const u8 => arg: {
                     const arg = try bun.default_allocator.allocSentinel(u8, arg_len, 0);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(arg, env[start..j]);
                     break :arg arg;
                 },
@@ -2200,6 +2282,7 @@ extern "c" fn _NSGetArgv() *[*][*:0]u8;
 pub fn initArgv() !void {
     if (comptime Environment.isPosix) {
         if (comptime Environment.isMac) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const raw_argc = @as(usize, @intCast(_NSGetArgc().*));
             const raw_argv = _NSGetArgv().*;
             argv = try bun.default_allocator.alloc([:0]const u8, raw_argc);
@@ -2240,7 +2323,9 @@ pub fn initArgv() !void {
             }
         };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const argvu16 = argvu16_ptr[0..@intCast(length)];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const out_argv = try bun.default_allocator.alloc([:0]const u8, @intCast(length));
         var string_builder = StringBuilder{};
 
@@ -2251,7 +2336,8 @@ pub fn initArgv() !void {
 
         try string_builder.allocate(bun.default_allocator);
 
-        for (argvu16, out_argv) |argraw, *out| {
+        // safe-transpile: for with index access requires manual review
+    for (argvu16, out_argv) |argraw, *out| {
             const arg = std.mem.span(argraw);
 
             // Command line is expected to be valid UTF-16le
@@ -2276,6 +2362,7 @@ pub fn initArgv() !void {
 pub const spawn = @import("./runtime/api/bun/spawn.zig").PosixSpawn;
 
 pub fn isRegularFile(mode: anytype) bool {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return S.ISREG(@intCast(mode));
 }
 
@@ -2287,6 +2374,7 @@ pub const LazyBoolValue = enum {
 /// Create a lazily computed boolean value.
 /// Getter must be a function that takes a pointer to the parent struct and returns a boolean.
 /// Parent must be a type which contains the field we are getting.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn LazyBool(
     comptime Getter: anytype,
     comptime Parent: type,
@@ -2297,6 +2385,7 @@ pub fn LazyBool(
 
         pub fn get(self: *@This()) bool {
             if (self.value == .unknown) {
+// safe-transpile: @alignCast requires manual review
                 const parent: *Parent = @alignCast(@fieldParentPtr(field, self));
                 self.value = switch (Getter(parent)) {
                     true => .yes,
@@ -2319,6 +2408,7 @@ pub fn serializable(input: anytype) @TypeOf(input) {
         }
     }
     var zeroed: [@sizeOf(T)]u8 align(@alignOf(T)) = std.mem.zeroes([@sizeOf(T)]u8);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const result: *T = @ptrCast(&zeroed);
 
     inline for (comptime std.meta.fieldNames(T)) |field_name| {
@@ -2330,6 +2420,7 @@ pub fn serializable(input: anytype) @TypeOf(input) {
 
 pub inline fn serializableInto(comptime T: type, init: anytype) T {
     var zeroed: [@sizeOf(T)]u8 align(@alignOf(T)) = std.mem.zeroes([@sizeOf(T)]u8);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const result: *T = @ptrCast(&zeroed);
 
     inline for (comptime std.meta.fieldNames(@TypeOf(init))) |field_name| {
@@ -2341,6 +2432,7 @@ pub inline fn serializableInto(comptime T: type, init: anytype) T {
 
 /// Like @import("std-fs-compat").Dir.makePath except instead of infinite looping on dangling
 /// symlink, it deletes the symlink and tries again.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn makePath(dir: @import("std-fs-compat").Dir, sub_path: []const u8) !void {
     var it = try std.fs.path.componentIterator(sub_path);
     var component = it.last() orelse return;
@@ -2353,6 +2445,7 @@ pub fn makePath(dir: @import("std-fs-compat").Dir, sub_path: []const u8) !void {
                 path_buf2[component.path.len] = 0;
                 const path_to_use = path_buf2[0..component.path.len :0];
                 const result = try sys.lstat(path_to_use).unwrap();
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const is_dir = S.ISDIR(@intCast(result.mode));
                 // dangling symlink
                 if (!is_dir) {
@@ -2385,10 +2478,12 @@ pub const Async = @import("async");
 /// This is a helper for writing path string literals that are compatible with Windows.
 /// Returns the string as-is on linux, on windows replace `/` with `\`
 pub inline fn pathLiteral(comptime literal: anytype) *const [literal.len:0]u8 {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     if (!Environment.isWindows) return @ptrCast(literal);
     return comptime {
         var buf: [literal.len:0]u8 = undefined;
-        for (literal, 0..) |char, i| {
+        // safe-transpile: for with index access requires manual review
+    for (literal, 0..) |char, i| {
             buf[i] = if (char == '/') '\\' else char;
             assert(buf[i] != 0 and buf[i] < 128);
         }
@@ -2400,10 +2495,12 @@ pub inline fn pathLiteral(comptime literal: anytype) *const [literal.len:0]u8 {
 
 /// Same as `pathLiteral`, but the character type is chosen from platform.
 pub inline fn OSPathLiteral(comptime literal: anytype) *const [literal.len:0]OSPathChar {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     if (!Environment.isWindows) return @ptrCast(literal);
     return comptime {
         var buf: [literal.len:0]OSPathChar = undefined;
-        for (literal, 0..) |char, i| {
+        // safe-transpile: for with index access requires manual review
+    for (literal, 0..) |char, i| {
             buf[i] = if (char == '/') '\\' else char;
             assert(buf[i] != 0 and buf[i] < 128);
         }
@@ -2443,6 +2540,7 @@ pub const MakePath = struct {
                     // TODO: report this bug
                     // they always copy it
                     // it doesn't need to be [:0]const u16
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     @ptrCast(component.path))
             else
                 try w.sliceToPrefixedFileW(self.fd, component.path);
@@ -2472,6 +2570,7 @@ pub const MakePath = struct {
             .fd = undefined,
         };
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const path_len_bytes = @as(u16, @intCast(std.mem.sliceTo(sub_path_w, 0).len * 2));
         var nt_name = w.UNICODE_STRING{
             .Length = path_len_bytes,
@@ -2706,6 +2805,7 @@ pub const StackFallbackAllocator = struct {
     fixed: std.heap.FixedBufferAllocator,
     fallback: std.mem.Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(buf: []u8, fallback: std.mem.Allocator) StackFallbackAllocator {
         return .{
             .fixed = std.heap.FixedBufferAllocator.init(buf),
@@ -2726,12 +2826,15 @@ pub const StackFallbackAllocator = struct {
     }
 
     fn alloc(ctx: *anyopaque, n: usize, alignment: std.mem.Alignment, ra: usize) ?[*]u8 {
+// safe-transpile: @alignCast requires manual review
         const self: *StackFallbackAllocator = @ptrCast(@alignCast(ctx));
         return std.heap.FixedBufferAllocator.alloc(&self.fixed, n, alignment, ra) orelse
             self.fallback.rawAlloc(n, alignment, ra);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize) bool {
+// safe-transpile: @alignCast requires manual review
         const self: *StackFallbackAllocator = @ptrCast(@alignCast(ctx));
         if (self.fixed.ownsPtr(buf.ptr)) {
             return std.heap.FixedBufferAllocator.resize(&self.fixed, buf, alignment, new_len, ra);
@@ -2739,7 +2842,9 @@ pub const StackFallbackAllocator = struct {
         return self.fallback.rawResize(buf, alignment, new_len, ra);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn remap(ctx: *anyopaque, mem: []u8, alignment: std.mem.Alignment, new_len: usize, ra: usize) ?[*]u8 {
+// safe-transpile: @alignCast requires manual review
         const self: *StackFallbackAllocator = @ptrCast(@alignCast(ctx));
         if (self.fixed.ownsPtr(mem.ptr)) {
             return std.heap.FixedBufferAllocator.remap(&self.fixed, mem, alignment, new_len, ra);
@@ -2747,7 +2852,9 @@ pub const StackFallbackAllocator = struct {
         return self.fallback.rawRemap(mem, alignment, new_len, ra);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn free(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, ra: usize) void {
+// safe-transpile: @alignCast requires manual review
         const self: *StackFallbackAllocator = @ptrCast(@alignCast(ctx));
         if (self.fixed.ownsPtr(buf.ptr)) {
             return std.heap.FixedBufferAllocator.free(&self.fixed, buf, alignment, ra);
@@ -2756,6 +2863,7 @@ pub const StackFallbackAllocator = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn todoPanic(
     src: std.builtin.SourceLocation,
     comptime format: []const u8,
@@ -2769,9 +2877,9 @@ pub fn todoPanic(
 /// Wrapper around allocator.create(T) that safely initializes the pointer. Prefer this over
 /// `std.mem.Allocator.create`, but prefer using `bun.new` over `create(default_allocator, T, t)`
 pub fn create(allocator: std.mem.Allocator, comptime T: type, t: T) *T {
-    const pointer = allocator.create(T) catch outOfMemory();
-    pointer.* = t;
-    return pointer;
+    const pointer = safe.Box(T).init(allocator, undefined) catch outOfMemory();
+    pointer.ptr.* = t;
+    return pointer.ptr;
 }
 
 pub const heap_breakdown = @import("./bun_alloc/heap_breakdown.zig");
@@ -2793,7 +2901,7 @@ pub inline fn tryNew(comptime T: type, init: T) OOM!*T {
     const pointer = if (heap_breakdown.enabled)
         try heap_breakdown.getZoneT(T).tryCreate(T, init)
     else pointer: {
-        const pointer = try default_allocator.create(T);
+        const pointer = try safe.Box(T).init(default_allocator, undefined);
         pointer.* = init;
         break :pointer pointer;
     };
@@ -2953,10 +3061,12 @@ fn ReinterpretSliceType(comptime T: type, comptime slice: type) type {
 pub fn reinterpretSlice(comptime T: type, slice: anytype) ReinterpretSliceType(T, @TypeOf(slice)) {
     const is_const = @typeInfo(@TypeOf(slice)).pointer.is_const;
     const bytes = std.mem.sliceAsBytes(slice);
+// safe-transpile: @alignCast requires manual review
     const new_ptr = @as(if (is_const) [*]const T else [*]T, @ptrCast(@alignCast(bytes.ptr)));
     return new_ptr[0..@divTrunc(bytes.len, @sizeOf(T))];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn resolveSourcePath(
     comptime root: enum { codegen, src },
     comptime sub_path: []const u8,
@@ -2997,6 +3107,7 @@ const RuntimeEmbedRoot = enum {
 /// specifically when `Environment.codegen_embed` is false. This allows quick
 /// iteration on files, as this skips the Zig compiler. Once Zig gains good
 /// incremental support, the non-eager cases can be deleted.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn runtimeEmbedFile(
     comptime root: RuntimeEmbedRoot,
     comptime sub_path: []const u8,
@@ -3016,6 +3127,7 @@ pub fn runtimeEmbedFile(
             const bytes = switch (bun.sys.File.readFrom(bun.FD.cwd(), abs_path, default_allocator)) {
                 .result => |b| {
                     const buf = bun.handleOom(default_allocator.alloc(u8, b.len + 1));
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[0..b.len], b);
                     buf[b.len] = 0;
                     default_allocator.free(b);
@@ -3095,15 +3207,18 @@ pub fn selfExePath() ![:0]u8 {
                     const r = std.c.realpath(exe_path.ptr, &resolved);
                     if (r) |rp| {
                         const resolved_slice = std.mem.sliceTo(rp, 0);
+// safe-transpile: @memcpy requires manual review
                         @memcpy(value[0..resolved_slice.len], resolved_slice);
                         break :blk value[0..resolved_slice.len];
                     } else {
+// safe-transpile: @memcpy requires manual review
                         @memcpy(value[0..exe_path.len], exe_path);
                         break :blk value[0..exe_path.len];
                     }
                 } else if (Environment.isLinux) {
                     const n = std.c.readlink("/proc/self/exe", &value, value.len);
                     if (n < 0) return error.Unexpected;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :blk value[0..@as(usize, @intCast(n))];
                 } else if (Environment.isWindows) {
                     return error.Unsupported;
@@ -3174,6 +3289,7 @@ noinline fn assertionFailureAtLocation(src: std.builtin.SourceLocation) noreturn
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 noinline fn assertionFailureWithMsg(comptime msg: []const u8, args: anytype) noreturn {
     if (@inComptime()) {
         @compileError(std.fmt.comptimePrint("assertion failure: " ++ msg, args));
@@ -3248,6 +3364,7 @@ pub fn assert(ok: bool) callconv(callconv_inline) void {
 /// ```
 ///
 /// Use `releaseAssert` for assertions that should not be stripped in release builds.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn assertf(ok: bool, comptime format: []const u8, args: anytype) callconv(callconv_inline) void {
     if (comptime !Environment.allow_assert) {
         return;
@@ -3261,6 +3378,7 @@ pub fn assertf(ok: bool, comptime format: []const u8, args: anytype) callconv(ca
 /// Asserts that some condition holds. These assertions are not stripped
 /// in any build mode. Use `assert` to have assertions stripped in release
 /// builds.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn releaseAssert(ok: bool, comptime msg: []const u8, args: anytype) callconv(callconv_inline) void {
     if (!ok) {
         @branchHint(.cold);
@@ -3317,7 +3435,9 @@ pub fn getRoughTickCount(comptime mock_mode: timespec.MockMode) timespec {
 
     const ns_value = hw_timer.nowNs();
     return timespec{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .sec = @intCast(ns_value / std.time.ns_per_s),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .nsec = @intCast(ns_value % std.time.ns_per_s),
     };
 }
@@ -3394,10 +3514,12 @@ pub const timespec = extern struct {
         assert(this.nsec >= 0);
         const s_ns = std.math.mul(
             u64,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @as(u64, @intCast(@max(this.sec, 0))),
             std.time.ns_per_s,
         ) catch return std.math.maxInt(u64);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return std.math.add(u64, s_ns, @as(u64, @intCast(@max(this.nsec, 0)))) catch
             return std.math.maxInt(i64);
     }
@@ -3554,6 +3676,7 @@ pub fn OrdinalT(comptime Int: type) type {
 /// ABI-equivalent of WTF::OrdinalNumber
 pub const Ordinal = OrdinalT(c_int);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn memmove(output: []u8, input: []const u8) void {
     if (output.len == 0) {
         return;
@@ -3566,7 +3689,8 @@ pub fn memmove(output: []u8, input: []const u8) void {
     if (Environment.isNative and !@inComptime()) {
         _ = c.memmove(output.ptr, input.ptr, input.len);
     } else {
-        for (input, output) |input_byte, *out| {
+        // safe-transpile: for with index access requires manual review
+    for (input, output) |input_byte, *out| {
             out.* = input_byte;
         }
     }

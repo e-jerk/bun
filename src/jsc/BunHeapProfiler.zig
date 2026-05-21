@@ -83,7 +83,6 @@ fn buildOutputPath(path: *bun.AutoAbsPath, config: HeapProfilerConfig) !void {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn generateDefaultFilename(buf: *bun.PathBuffer, text_format: bool) ![]const u8 {
     // Generate filename like:
     // - Markdown format: Heap.{timestamp}.{pid}.md
@@ -94,7 +93,6 @@ fn generateDefaultFilename(buf: *bun.PathBuffer, text_format: bool) ![]const u8 
     else
         std.c.getpid();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const epoch_microseconds: u64 = @intCast(timespec.sec *% 1_000_000 +% @divTrunc(timespec.nsec, 1000));
 

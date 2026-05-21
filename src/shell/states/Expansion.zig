@@ -80,6 +80,7 @@ pub const Result = union(enum) {
                 return .moved;
             },
             .array_of_ptr => {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.handleOom(this.array_of_ptr.append(@as([*:0]const u8, @ptrCast(buf.ptr))));
                 return .moved;
             },
@@ -103,6 +104,7 @@ pub const Result = union(enum) {
                 return .moved;
             },
             .array_of_ptr => {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.handleOom(this.array_of_ptr.append(@as([*:0]const u8, @ptrCast(buf.items.ptr))));
                 return .moved;
             },
@@ -373,6 +375,7 @@ pub fn expandVarAndCmdSubst(this: *Expansion, start_word_idx: u32) ?Yield {
                 this.word_idx += 1;
                 break :brk 1;
             } else 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (cmp.atoms[start_word_idx + starting_offset ..]) |*simple_atom| {
                 const is_cmd_subst = this.expandSimpleNoIO(simple_atom, &this.current_out, true);
                 if (is_cmd_subst) {
@@ -409,6 +412,7 @@ pub fn expandVarAndCmdSubst(this: *Expansion, start_word_idx: u32) ?Yield {
 }
 
 /// Remove a set of values from the beginning and end of a slice.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn trim(slice: []u8, values_to_strip: []const u8) []u8 {
     var begin: usize = 0;
     var end: usize = slice.len;
@@ -420,6 +424,7 @@ pub fn trim(slice: []u8, values_to_strip: []const u8) []u8 {
 /// 1. Turn all newlines into spaces
 /// 2. Strip last newline if it exists
 /// 3. Trim leading, trailing, and consecutive whitespace
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn postSubshellExpansion(this: *Expansion, stdout_: []u8) void {
     // 1. and 2.
     var stdout = convertNewlinesToSpaces(stdout_);
@@ -432,6 +437,7 @@ fn postSubshellExpansion(this: *Expansion, stdout_: []u8) void {
     var prev_whitespace: bool = false;
     var a: usize = 0;
     var b: usize = 1;
+    // safe-transpile: for with index access requires manual review
     for (stdout[0..], 0..) |c, i| {
         if (prev_whitespace) {
             if (c != ' ') {
@@ -455,6 +461,7 @@ fn postSubshellExpansion(this: *Expansion, stdout_: []u8) void {
     bun.handleOom(this.current_out.appendSlice(stdout[a..b]));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn convertNewlinesToSpaces(stdout_: []u8) []u8 {
     var stdout = brk: {
         if (stdout_.len == 0) return stdout_;
@@ -484,7 +491,9 @@ fn convertNewlinesToSpaces(stdout_: []u8) []u8 {
     return stdout[0..];
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn convertNewlinesToSpacesSlow(i: usize, stdout: []u8) void {
+    // safe-transpile: for with index access requires manual review
     for (stdout[i..], i..) |c, j| {
         if (c == '\n') {
             stdout[j] = ' ';
@@ -643,6 +652,7 @@ pub fn expandSimpleNoIO(this: *Expansion, atom: *const ast.SimpleAtom, str_list:
     return false;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendSlice(this: *Expansion, buf: *std.array_list.Managed(u8), slice: []const u8) void {
     _ = this;
     bun.handleOom(buf.appendSlice(slice));
@@ -661,6 +671,7 @@ pub fn pushCurrentOut(this: *Expansion) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn expandVar(this: *const Expansion, label: []const u8) []const u8 {
     const value = this.base.shell.shell_env.get(EnvStr.initSlice(label)) orelse brk: {
         break :brk this.base.shell.export_env.get(EnvStr.initSlice(label)) orelse return "";
@@ -669,6 +680,7 @@ fn expandVar(this: *const Expansion, label: []const u8) []const u8 {
     return value.slice();
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 fn expandVarArgv(this: *const Expansion, original_int: u8) []const u8 {
     var int = original_int;
     switch (this.base.interpreter.event_loop) {
@@ -717,6 +729,7 @@ fn expansionSizeHint(this: *const Expansion, atom: *const ast.Atom, has_unknown:
             }
 
             var out: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (atom.compound.atoms) |*simple| {
                 out += this.expansionSizeHintSimple(simple, has_unknown);
             }

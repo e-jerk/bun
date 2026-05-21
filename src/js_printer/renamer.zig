@@ -77,10 +77,13 @@ pub const SymbolSlot = struct {
         bytes: [15]u8 = [_]u8{0} ** 15,
         len: u8 = 0,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(str: []const u8) InlineString {
             var this: InlineString = .{};
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.len = @as(u8, @intCast(@min(str.len, 15)));
-            for (this.bytes[0..this.len], str[0..this.len]) |*b, c| {
+            // safe-transpile: for with index access requires manual review
+    for (this.bytes[0..this.len], str[0..this.len]) |*b, c| {
                 b.* = c;
             }
             return this;
@@ -133,16 +136,17 @@ pub const MinifyRenamer = struct {
         first_top_level_slots: js_ast.SlotCounts,
         reserved_names: bun.StringHashMapUnmanaged(u32),
     ) !*MinifyRenamer {
-        const renamer = try allocator.create(MinifyRenamer);
+        const renamer = try safe.Box(MinifyRenamer).init(allocator, undefined);
         var slots = SymbolSlot.List.initUndefined();
 
-        for (first_top_level_slots.slots.values, 0..) |count, ns| {
+        // safe-transpile: for with index access requires manual review
+    for (first_top_level_slots.slots.values, 0..) |count, ns| {
             slots.values[ns] = try std.array_list.Managed(SymbolSlot).initCapacity(allocator, count);
             slots.values[ns].items.len = count;
             @memset(slots.values[ns].items[0..count], SymbolSlot{});
         }
 
-        renamer.* = MinifyRenamer{
+        renamer.ptr.* = MinifyRenamer{
             .symbols = symbols,
             .reserved_names = reserved_names,
             .slots = slots,
@@ -150,10 +154,11 @@ pub const MinifyRenamer = struct {
             .allocator = allocator,
         };
 
-        return renamer;
+        return renamer.ptr;
     }
 
     pub fn deinit(this: *MinifyRenamer, allocator: std.mem.Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (&this.slots.values) |*val| {
             val.deinit();
         }
@@ -274,8 +279,10 @@ pub const MinifyRenamer = struct {
             try sorted.ensureUnusedCapacity(slots.items.len);
             sorted.items.len = slots.items.len;
 
-            for (sorted.items, slots.items, 0..) |*elem, slot, i| {
+            // safe-transpile: for with index access requires manual review
+    for (sorted.items, slots.items, 0..) |*elem, slot, i| {
                 elem.* = SlotAndCount{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .slot = @as(u32, @intCast(i)),
                     .count = slot.count,
                 };
@@ -515,8 +522,8 @@ pub const NumberRenamer = struct {
         symbols: js_ast.Symbol.Map,
         root_names: bun.StringHashMapUnmanaged(u32),
     ) !*NumberRenamer {
-        var renamer = try allocator.create(NumberRenamer);
-        renamer.* = NumberRenamer{
+        var renamer = try safe.Box(NumberRenamer).init(allocator, undefined);
+        renamer.ptr.* = NumberRenamer{
             .symbols = symbols,
             .allocator = allocator,
             .temp_allocator = temp_allocator,
@@ -524,22 +531,22 @@ pub const NumberRenamer = struct {
             .number_scope_pool = undefined,
             .arena = bun.ArenaAllocator.init(temp_allocator),
         };
-        renamer.name_stack_fallback = .{
+        renamer.ptr.name_stack_fallback = .{
             .buffer = undefined,
-            .fallback_allocator = renamer.arena.allocator(),
+            .fallback_allocator = renamer.ptr.arena.allocator(),
             .fixed_buffer_allocator = undefined,
         };
-        renamer.name_temp_allocator = renamer.name_stack_fallback.get();
-        renamer.number_scope_pool = .init(renamer.arena.allocator());
-        renamer.root.name_counts = root_names;
+        renamer.ptr.name_temp_allocator = renamer.ptr.name_stack_fallback.get();
+        renamer.ptr.number_scope_pool = .init(renamer.ptr.arena.allocator());
+        renamer.ptr.root.name_counts = root_names;
         if (comptime Environment.allow_assert and !Environment.isWindows) {
             if (std.c.getenv("BUN_DUMP_SYMBOLS") != null)
                 symbols.dump();
         }
 
-        @memset(std.mem.sliceAsBytes(renamer.names), 0);
+        @memset(std.mem.sliceAsBytes(renamer.ptr.names), 0);
 
-        return renamer;
+        return renamer.ptr;
     }
 
     pub fn assignNamesRecursive(r: *NumberRenamer, scope: *js_ast.Scope, source_index: u32, parent: ?*NumberScope, sorted: *std.array_list.Managed(u32)) void {
@@ -580,6 +587,7 @@ pub const NumberRenamer = struct {
             std.sort.pdq(u32, sorted.items, {}, std.sort.asc(u32));
 
             for (sorted.items) |inner_index| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 r.assignName(s, Ref.init(@intCast(inner_index), source_index, false));
             }
         }
@@ -667,6 +675,7 @@ pub const NumberRenamer = struct {
             same_scope: u32,
             used: void,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn find(this: *NumberScope, name: []const u8) NameUse {
                 // This version doesn't allocate
                 if (comptime Environment.allow_assert)
@@ -697,6 +706,7 @@ pub const NumberRenamer = struct {
         };
 
         /// Caller must use an arena allocator
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn findUnusedName(this: *NumberScope, allocator: std.mem.Allocator, temp_allocator: std.mem.Allocator, input_name: []const u8) UnusedName {
             var name = bun.MutableString.ensureValidIdentifier(input_name, temp_allocator) catch unreachable;
 
@@ -811,6 +821,7 @@ pub const ExportRenamer = struct {
         this.string_buffer.deinit();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn nextRenamedName(this: *ExportRenamer, input: []const u8) string {
         var entry = this.used.getOrPut(input) catch unreachable;
         var tries: u32 = 1;
@@ -871,6 +882,7 @@ pub fn computeInitialReservedNames(
     try names.ensureTotalCapacityContext(
         allocator,
         cjs_names_len +
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @as(u32, @truncate(JSLexer.Keywords.keys().len + JSLexer.StrictModeReservedWords.keys().len + 1 + extras.len)),
         bun.StringHashMapContext{},
     );

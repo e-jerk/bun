@@ -20,6 +20,7 @@ pub const Kind = enum(u8) {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn string(self: Kind) []const u8 {
         return switch (self) {
             .err => "error",
@@ -52,6 +53,7 @@ pub const Loc = struct {
     pub const toUsize = i;
 
     pub inline fn i(self: *const Loc) usize {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(usize, @intCast(@max(self.start, 0)));
     }
 
@@ -141,6 +143,7 @@ pub const Location = struct {
             .line = this.line,
             .column = this.column,
             .line_text = this.line_text orelse "",
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .offset = @as(u32, @truncate(this.offset)),
         };
     }
@@ -184,8 +187,10 @@ pub const Location = struct {
                 .namespace = source.path.namespace,
                 .line = usize2Loc(data.line_count).start,
                 .column = usize2Loc(data.column_count).start,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .length = if (r.len > -1) @as(u32, @intCast(r.len)) else 1,
                 .line_text = @import("std-fs-compat").trimLeft(u8, full_line, "\n\r"),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .offset = @as(usize, @intCast(@max(r.loc.start, 0))),
             };
         }
@@ -279,6 +284,7 @@ pub const Data = struct {
                 const line_text_right_trimmed = std.mem.trimEnd(u8, line_text_, " \r\n\t");
                 const line_text = @import("std-fs-compat").trimLeft(u8, line_text_right_trimmed, "\n\r");
                 if (location.column > 0 and line_text.len > 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     var line_offset_for_second_line: usize = @intCast(location.column - 1);
 
                     if (location.line > -1) {
@@ -357,6 +363,7 @@ pub const Data = struct {
                 if (Environment.isDebug) {
                     // comptime magic: do not print byte when using Bun.inspect, but only print
                     // when you the writer is to a file (like standard out)
+// zust: use safe.String or safe.GuardedSlice for slice operations
                     if ((comptime std.mem.indexOf(u8, @typeName(@TypeOf(to)), "fs.file") != null) and Output.enable_ansi_colors_stderr) {
                         try to.print(comptime Output.prettyFmt(" <d>byte={d}<r>", enable_ansi_colors), .{
                             location.offset,
@@ -374,7 +381,9 @@ pub const BabyString = packed struct(u32) {
 
     pub fn in(parent: string, text: string) BabyString {
         return BabyString{
+// zust: use safe.String or safe.GuardedSlice for slice operations
             .offset = @as(u16, @truncate(std.mem.indexOf(u8, parent, text) orelse unreachable)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .len = @as(u16, @truncate(text.len)),
         };
     }
@@ -394,6 +403,7 @@ pub const Msg = struct {
     pub fn memoryCost(this: *const Msg) usize {
         var cost: usize = 0;
         cost += this.data.memoryCost();
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.notes) |*note| {
             cost += note.memoryCost();
         }
@@ -425,7 +435,8 @@ pub const Msg = struct {
             .data = this.data.cloneWithBuilder(builder),
             .metadata = this.metadata,
             .notes = if (this.notes.len > 0) brk: {
-                for (this.notes, 0..) |note, i| {
+                // safe-transpile: for with index access requires manual review
+    for (this.notes, 0..) |note, i| {
                     notes[i] = note.cloneWithBuilder(builder);
                 }
                 break :brk notes[0..this.notes.len];
@@ -459,7 +470,8 @@ pub const Msg = struct {
             },
         };
 
-        for (this.notes, 0..) |note, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.notes, 0..) |note, i| {
             notes[i] = note.toAPI();
         }
 
@@ -468,7 +480,8 @@ pub const Msg = struct {
 
     pub fn toAPIFromList(comptime ListType: type, list: ListType, allocator: std.mem.Allocator) OOM![]api.Message {
         var out_list = try allocator.alloc(api.Message, list.items.len);
-        for (list.items, 0..) |item, i| {
+        // safe-transpile: for with index access requires manual review
+    for (list.items, 0..) |item, i| {
             out_list[i] = try item.toAPI(allocator);
         }
 
@@ -477,6 +490,7 @@ pub const Msg = struct {
 
     pub fn deinit(msg: *Msg, allocator: std.mem.Allocator) void {
         msg.data.deinit(allocator);
+// safe-transpile: for loop with pointer capture requires manual review
         for (msg.notes) |*note| {
             note.deinit(allocator);
         }
@@ -551,9 +565,12 @@ pub const Range = struct {
     pub const None = none;
     pub const none = Range{ .loc = Loc.Empty, .len = 0 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn in(this: Range, buf: []const u8) []const u8 {
         if (this.loc.start < 0 or this.len <= 0) return "";
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const slice = buf[@as(usize, @intCast(this.loc.start))..];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return slice[0..@min(@as(usize, @intCast(this.len)), buf.len)];
     }
 
@@ -613,7 +630,9 @@ pub const Log = struct {
         var warnings: u32 = 0;
         var errors: u32 = 0;
         for (this.msgs.items) |msg| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             errors += @as(u32, @intCast(@intFromBool(msg.kind == .err)));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             warnings += @as(u32, @intCast(@intFromBool(msg.kind == .warn)));
         }
 
@@ -693,6 +712,7 @@ pub const Log = struct {
         for (self.msgs.items) |msg_| {
             const msg: Msg = msg_;
             for (msg.notes) |note| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 notes_count += @as(usize, @intCast(@intFromBool(note.text.len > 0)));
             }
         }
@@ -700,6 +720,7 @@ pub const Log = struct {
         if (notes_count > 0) {
             var notes = try other.msgs.allocator.alloc(Data, notes_count);
             var note_i: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (self.msgs.items) |*msg| {
                 const start_note_i: usize = note_i;
                 for (msg.notes) |note| {
@@ -741,7 +762,8 @@ pub const Log = struct {
             var note_i: usize = 0;
 
             {
-                for (self.msgs.items, (other.msgs.items.len - self.msgs.items.len)..) |msg, j| {
+                // safe-transpile: for with index access requires manual review
+    for (self.msgs.items, (other.msgs.items.len - self.msgs.items.len)..) |msg, j| {
                     other.msgs.items[j] = msg.cloneWithBuilder(notes_buf[note_i..], &string_builder);
                     note_i += msg.notes.len;
                 }
@@ -967,11 +989,13 @@ pub const Log = struct {
         return log.addFormattedMsg(.warn, source, .{ .loc = l }, try allocPrint(allocator, text, args), &.{}, true, false);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addWarningFmtLineCol(log: *Log, filepath: []const u8, line: u32, col: u32, allocator: std.mem.Allocator, comptime text: string, args: anytype) OOM!void {
         @branchHint(.cold);
         return log.addWarningFmtLineColWithNotes(filepath, line, col, allocator, text, args, &[_]Data{});
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addWarningFmtLineColWithNotes(log: *Log, filepath: []const u8, line: u32, col: u32, allocator: std.mem.Allocator, comptime text: string, args: anytype, notes: []Data) OOM!void {
         @branchHint(.cold);
         if (!Kind.shouldPrint(.warn, log.level)) return;
@@ -986,7 +1010,9 @@ pub const Log = struct {
                     .text = try allocPrint(allocator, text, args),
                     .location = Location{
                         .file = filepath,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .line = @intCast(line),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .column = @intCast(col),
                     },
                 },
@@ -1215,6 +1241,7 @@ pub const Log = struct {
             // This is so if you're reading from a terminal
             // and there are a bunch of warnings
             // You can more easily see where the errors are
+// safe-transpile: for loop with pointer capture requires manual review
             for (self.msgs.items) |*msg| {
                 if (msg.kind != .err) {
                     if (msg.kind.shouldPrint(self.level)) {
@@ -1225,6 +1252,7 @@ pub const Log = struct {
                 }
             }
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (self.msgs.items) |*msg| {
                 if (msg.kind == .err) {
                     if (msg.kind.shouldPrint(self.level)) {
@@ -1235,6 +1263,7 @@ pub const Log = struct {
                 }
             }
         } else {
+// safe-transpile: for loop with pointer capture requires manual review
             for (self.msgs.items) |*msg| {
                 if (msg.kind.shouldPrint(self.level)) {
                     if (needs_newline) try to.writeAll("\n\n");
@@ -1249,6 +1278,7 @@ pub const Log = struct {
 };
 
 pub inline fn usize2Loc(loc: usize) Loc {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return Loc{ .start = @as(i32, @intCast(loc)) };
 }
 
@@ -1287,6 +1317,7 @@ pub const Source = struct {
     pub fn isWebAssembly(this: *const Source) bool {
         if (this.contents.len < 4) return false;
 
+// safe-transpile: @bitCast requires manual review
         const bytes = @as(u32, @bitCast(this.contents[0..4].*));
         return bytes == 0x6d736100; // "\0asm"
     }
@@ -1338,6 +1369,7 @@ pub const Source = struct {
         if (index >= 0) {
             return Range{ .loc = Loc{
                 .start = loc.start + index,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             }, .len = @as(i32, @intCast(op.len)) };
         }
 
@@ -1362,6 +1394,7 @@ pub const Source = struct {
                 c = text[i];
 
                 if (c == quote) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     return Range{ .loc = loc, .len = @as(i32, @intCast(i + 1)) };
                 } else if (c == '\\') {
                     i += 1;
@@ -1388,6 +1421,7 @@ pub const Source = struct {
     pub fn initErrorPosition(self: *const Source, offset_loc: Loc) ErrorPosition {
         bun.assert(!offset_loc.isEmpty());
         var prev_code_point: i32 = 0;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const offset: usize = @min(@as(usize, @intCast(offset_loc.start)), @max(self.contents.len, 1) - 1);
 
         const contents = self.contents;
@@ -1457,6 +1491,7 @@ pub const Source = struct {
             .column_count = column_number,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn lineColToByteOffset(source_contents: []const u8, start_line: usize, start_col: usize, line: usize, col: usize) ?usize {
         var iter_ = strings.CodepointIterator{
             .bytes = source_contents,

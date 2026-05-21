@@ -44,6 +44,7 @@ pub fn crc32(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSE
 
     // crc32 returns a u64 but the data will always be within a u32 range so the outer @intCast is always safe.
     const slice_u8 = data.slice();
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return jsc.JSValue.jsNumber(@as(u32, @intCast(bun.zlib.crc32(value, slice_u8.ptr, @intCast(slice_u8.len)))));
 }
 
@@ -110,6 +111,7 @@ pub fn CompressionStream(comptime T: type) type {
             this.ref();
 
             this.stream.setBuffers(in, out);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.stream.setFlush(@intCast(flush));
 
             // Only create the strong handle when we have a pending write
@@ -230,6 +232,7 @@ pub fn CompressionStream(comptime T: type) type {
             this.ref();
 
             this.stream.setBuffers(in, out);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.stream.setFlush(@intCast(flush));
             const this_value = callframe.this();
 

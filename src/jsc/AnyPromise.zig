@@ -56,7 +56,6 @@ pub const AnyPromise = union(enum) {
         return switch (this) {
             .normal => |p| p,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .internal => |p| @ptrCast(p),
         };
     }
@@ -95,7 +94,6 @@ pub const AnyPromise = union(enum) {
         scope.init(globalObject, @src());
         defer scope.deinit();
         var ctx = Wrapper{ .args = args };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         JSC__AnyPromise__wrap(globalObject, this.asValue(), &ctx, @ptrCast(&Wrapper.call));
         try scope.assertNoExceptionExceptTermination();

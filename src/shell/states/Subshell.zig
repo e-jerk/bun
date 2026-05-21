@@ -181,6 +181,7 @@ pub fn deinit(this: *Subshell) void {
     this.parent.destroy(this);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFailingError(this: *Subshell, comptime fmt: []const u8, args: anytype) Yield {
     const handler = struct {
         fn enqueueCb(ctx: *Subshell) void {

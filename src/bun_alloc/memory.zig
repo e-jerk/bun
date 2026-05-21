@@ -9,9 +9,9 @@ pub fn create(comptime T: type, allocator: std.mem.Allocator, value: T) bun.OOM!
     if ((comptime Environment.allow_assert) and isDefault(allocator)) {
         return bun.tryNew(T, value);
     }
-    const ptr = try allocator.create(T);
-    ptr.* = value;
-    return ptr;
+    const ptr = try safe.Box(T).init(allocator, undefined);
+    ptr.ptr.* = value;
+    return ptr.ptr;
 }
 
 /// Frees memory previously allocated by `create`.
@@ -86,6 +86,7 @@ pub fn deinit(ptr_or_slice: anytype) void {
     const ptr_info = @typeInfo(PtrType);
     switch (comptime ptr_info.pointer.size) {
         .slice => {
+// safe-transpile: for loop with pointer capture requires manual review
             for (ptr_or_slice) |*elem| {
                 deinit(elem);
             }
@@ -107,6 +108,7 @@ pub fn deinit(ptr_or_slice: anytype) void {
         .void, .bool, .int, .float, .pointer, .comptime_float, .comptime_int => return,
         .undefined, .null, .error_set, .@"enum", .vector => return,
         .array => {
+// safe-transpile: for loop with pointer capture requires manual review
             for (ptr_or_slice) |*elem| {
                 deinit(elem);
             }
@@ -165,6 +167,7 @@ pub fn deinit(ptr_or_slice: anytype) void {
 ///                    ^
 ///                    |<-- output -->|
 /// ```
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rebaseSlice(slice: []const u8, old_base: [*]const u8, new_base: [*]const u8) []const u8 {
     const offset = @intFromPtr(slice.ptr) - @intFromPtr(old_base);
     return new_base[offset..][0..slice.len];

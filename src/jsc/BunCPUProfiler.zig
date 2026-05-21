@@ -13,7 +13,6 @@ extern fn Bun__setSamplingInterval(intervalMicroseconds: c_int) void;
 
 pub fn setSamplingInterval(interval: u32) void {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     Bun__setSamplingInterval(@intCast(interval));
 }
 
@@ -111,7 +110,6 @@ fn buildOutputPath(path: *bun.AutoAbsPath, config: CPUProfilerConfig, is_md_form
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn generateDefaultFilename(buf: *bun.PathBuffer, md_format: bool) ![]const u8 {
     // Generate filename like: CPU.{timestamp}.{pid}.cpuprofile (or .md for markdown format)
     // Use microsecond timestamp for uniqueness
@@ -121,7 +119,6 @@ fn generateDefaultFilename(buf: *bun.PathBuffer, md_format: bool) ![]const u8 {
     else
         std.c.getpid();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const epoch_microseconds: u64 = @intCast(timespec.sec *% 1_000_000 +% @divTrunc(timespec.nsec, 1000));
 

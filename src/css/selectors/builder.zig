@@ -154,6 +154,7 @@ pub fn SelectorBuilder(comptime Impl: type) type {
             var components = ArrayList(T).empty;
 
             var current_simple_selectors_i: usize = 0;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             var combinator_i: i64 = @as(i64, @intCast(this.combinators.len())) - 1;
             var rest_of_simple_selectors = rest;
             var current_simple_selectors = current;
@@ -167,6 +168,7 @@ pub fn SelectorBuilder(comptime Impl: type) type {
                     current_simple_selectors_i += 1;
                 } else {
                     if (combinator_i >= 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const combo: Combinator, const len: usize = combinators[@intCast(combinator_i)];
                         const rest2, const current2 = splitFromEnd(GenericComponent(Impl), rest_of_simple_selectors, len);
                         rest_of_simple_selectors = rest2;

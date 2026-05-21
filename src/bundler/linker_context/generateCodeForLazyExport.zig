@@ -132,7 +132,6 @@ pub fn generateCodeForLazyExport(this: *LinkerContext, source_index: Index.Int) 
                         bun.assert(css_ref.tag.class);
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                         for (composes.composes.slice()) |*compose| {
                             // it is imported
                             if (compose.from != null) {

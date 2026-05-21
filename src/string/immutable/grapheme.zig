@@ -86,7 +86,6 @@ const Precompute = struct {
 
         fn index(self: Key) usize {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             return @intCast(@as(u13, @bitCast(self)));
         }
     };

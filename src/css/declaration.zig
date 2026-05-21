@@ -106,6 +106,7 @@ pub const DeclarationBlock = struct {
             const decls = &@field(this, decl_field_name);
             const is_important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (decls.items) |*decl| {
                 try decl.toCss(dest, is_important);
                 if (i != length - 1) {
@@ -133,6 +134,7 @@ pub const DeclarationBlock = struct {
         inline for (DECLS) |decl_field_name| {
             const decls = &@field(this, decl_field_name);
             const is_important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
+// safe-transpile: for loop with pointer capture requires manual review
             for (decls.items) |*decl| {
                 try dest.newline();
                 try decl.toCss(dest, is_important);
@@ -155,6 +157,7 @@ pub const DeclarationBlock = struct {
         context: *css.PropertyHandlerContext,
     ) void {
         const handle = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn handle(
                 self: *This,
                 ctx: *css.PropertyHandlerContext,
@@ -162,6 +165,7 @@ pub const DeclarationBlock = struct {
                 comptime decl_field: []const u8,
                 comptime important: bool,
             ) void {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (@field(self, decl_field).items) |*prop| {
                     ctx.is_important = important;
 
@@ -197,10 +201,12 @@ pub const DeclarationBlock = struct {
     }
 
     pub fn hashPropertyIds(this: *const @This(), hasher: *std.hash.Wyhash) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.declarations.items) |*decl| {
             decl.propertyId().hash(hasher);
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.important_declarations.items) |*decl| {
             decl.propertyId().hash(hasher);
         }
@@ -226,6 +232,7 @@ pub const PropertyDeclarationParser = struct {
         pub const Prelude = void;
         pub const AtRule = void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             return .{
                 .err = input.newError(css.BasicParseErrorKind{ .at_rule_invalid = name }),
@@ -261,6 +268,7 @@ pub const PropertyDeclarationParser = struct {
     pub const DeclarationParser = struct {
         pub const Declaration = void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(this: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             return parse_declaration(
                 name,
@@ -285,6 +293,7 @@ pub const PropertyDeclarationParser = struct {
     };
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parse_declaration(
     name: []const u8,
     input: *css.Parser,
@@ -295,6 +304,7 @@ pub fn parse_declaration(
     return parse_declaration_impl(name, input, declarations, important_declarations, options, {});
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parse_declaration_impl(
     name: []const u8,
     input: *css.Parser,

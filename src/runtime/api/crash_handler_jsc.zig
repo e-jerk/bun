@@ -65,7 +65,6 @@ pub const js_bindings = struct {
         const bits = bun.analytics.packedFeatures();
         var buf = bun.BoundedArray(u8, 16){};
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         crash_handler.writeU64AsTwoVLQs(buf.writer(), @bitCast(bits)) catch {
             // there is definitely enough space in the bounded array
             unreachable;
@@ -79,9 +78,7 @@ pub const js_bindings = struct {
         const list = bun.analytics.packed_features_list;
         const array = try JSValue.createEmptyArray(global, list.len);
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (list, 0..) |feature, i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try array.putIndex(global, @intCast(i), try bun.String.static(feature).toJS(global));
         }

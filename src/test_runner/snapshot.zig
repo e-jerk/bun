@@ -48,6 +48,7 @@ pub const Snapshots = struct {
         while (it.next()) |v| v.* = 0;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addCount(this: *Snapshots, expect: *Expect, hint: []const u8) !struct { []const u8, usize } {
         this.total += 1;
         const snapshot_name = try expect.getSnapshotName(this.allocator, hint);
@@ -60,6 +61,7 @@ pub const Snapshots = struct {
         count_entry.value_ptr.* = 1;
         return .{ count_entry.key_ptr.*, count_entry.value_ptr.* };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOrPut(this: *Snapshots, expect: *Expect, target_value: []const u8, hint: string) !?string {
         var buntest_strong = expect.bunTest() orelse return error.SnapshotFailed;
         defer buntest_strong.deinit();
@@ -234,7 +236,8 @@ pub const Snapshots = struct {
         const vm = VirtualMachine.get();
         const opts = js_parser.Parser.Options.init(vm.transpiler.options.jsx, .js);
 
-        for (this.inline_snapshots_to_write.keys(), this.inline_snapshots_to_write.values()) |file_id, *ils_info| {
+        // safe-transpile: for with index access requires manual review
+    for (this.inline_snapshots_to_write.keys(), this.inline_snapshots_to_write.values()) |file_id, *ils_info| {
             _ = arena_backing.reset(.retain_capacity);
 
             var log = bun.logger.Log.init(arena);
@@ -280,6 +283,7 @@ pub const Snapshots = struct {
                 if (ils.line == last_line and ils.col == last_col) {
                     if (!bun.strings.eql(ils.value, last_value)) {
                         const DiffFormatter = @import("./diff_format.zig").DiffFormatter;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         try log.addErrorFmt(source, .{ .start = @intCast(uncommitted_segment_end) }, arena, "Failed to update inline snapshot: Multiple inline snapshots on the same line must all have the same value:\n{f}", .{DiffFormatter{
                             .received_string = ils.value,
                             .expected_string = last_value,
@@ -292,6 +296,7 @@ pub const Snapshots = struct {
                 inline_snapshot_dbg("Finding byte for {}/{}", .{ ils.line, ils.col });
                 const byte_offset_add = logger.Source.lineColToByteOffset(file_text[last_byte..], last_line, last_col, ils.line, ils.col) orelse {
                     inline_snapshot_dbg("-> Could not find byte", .{});
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try log.addErrorFmt(source, .{ .start = @intCast(uncommitted_segment_end) }, arena, "Failed to update inline snapshot: Ln {d}, Col {d} not found", .{ ils.line, ils.col });
                     continue;
                 };
@@ -315,6 +320,7 @@ pub const Snapshots = struct {
                     };
                     const fn_name = ils.kind;
                     if (!bun.strings.startsWith(file_text[next_start..], fn_name)) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         try log.addErrorFmt(source, .{ .start = @intCast(next_start) }, arena, "Failed to update inline snapshot: Could not find '{s}' here", .{fn_name});
                         continue;
                     }
@@ -417,7 +423,8 @@ pub const Snapshots = struct {
                 const start_indent = ils.start_indent orelse D: {
                     const source_until_final_start = source.contents[0..final_start_usize];
                     const line_start = if (std.mem.lastIndexOfScalar(u8, source_until_final_start, '\n')) |newline_loc| newline_loc + 1 else 0;
-                    const indent_count = for (source_until_final_start[line_start..], 0..) |char, j| {
+                    const indent_count = // safe-transpile: for with index access requires manual review
+    for (source_until_final_start[line_start..], 0..) |char, j| {
                         if (char != ' ' and char != '\t') break j;
                     } else source_until_final_start[line_start..].len;
                     needs_more_spaces = true;
@@ -541,6 +548,7 @@ pub const Snapshots = struct {
             } else {
                 const length_raw = std.c.lseek(file.file.handle, 0, std.c.SEEK.END);
                 if (length_raw < 0) return error.Unexpected;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const length = @as(usize, @intCast(length_raw));
                 if (length == 0) {
                     try this.file_buf.appendSlice(file_header);

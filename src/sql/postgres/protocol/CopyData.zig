@@ -6,7 +6,6 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
     const length = try reader.length();
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const data = try reader.read(@intCast(length -| 5));
     this.* = .{
         .data = data,

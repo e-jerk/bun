@@ -57,6 +57,7 @@ fn configureArchiveReader(archive: *libarchive.lib.Archive) void {
 }
 
 /// Count the number of files in an archive
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn countFilesInArchive(data: []const u8) u32 {
     const archive = libarchive.lib.Archive.readNew();
     defer _ = archive.readFree();
@@ -153,6 +154,7 @@ fn parseCompressionOptions(globalThis: *jsc.JSGlobalObject, options_arg: jsc.JSV
             if (level_num < 1 or level_num > 12) {
                 return globalThis.throwInvalidArguments("Archive: level must be between 1 and 12", .{});
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             level = @intCast(level_num);
         }
 
@@ -163,6 +165,7 @@ fn parseCompressionOptions(globalThis: *jsc.JSGlobalObject, options_arg: jsc.JSV
     return .none;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn createArchive(data: []u8, compress: Compression) *Archive {
     const store = jsc.WebCore.Blob.Store.init(data, bun.default_allocator);
     return bun.new(Archive, .{ .store = store, .compress = compress });
@@ -189,7 +192,9 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
     }
 
     if (lib.archive_write_open2(
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(archive),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(&growing_buffer),
         &lib.GrowingBuffer.openCallback,
         &lib.GrowingBuffer.writeCallback,
@@ -202,6 +207,7 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
     const entry = lib.Archive.Entry.new();
     defer entry.free();
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const now_secs: isize = @intCast(@divTrunc(@import("std-fs-compat").milliTimestamp(), 1000));
 
     // Iterate over object properties and write directly to archive
@@ -231,6 +237,7 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
         const data = data_slice.slice();
         _ = entry.clear();
         entry.setPathnameUtf8(key_str);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setSize(@intCast(data.len));
         entry.setFiletype(@intFromEnum(lib.FileType.regular));
         entry.setPerm(0o644);
@@ -358,6 +365,7 @@ pub fn extract(this: *Archive, globalThis: *jsc.JSGlobalObject, callframe: *jsc.
 
 /// Parse a string or array of strings into a pattern list.
 /// Returns null for empty strings or empty arrays (treated as "no filter").
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn parsePatternArg(globalThis: *jsc.JSGlobalObject, arg: jsc.JSValue, api_name: []const u8, name: []const u8) bun.JSError!?[]const []const u8 {
     const allocator = bun.default_allocator;
 
@@ -380,6 +388,7 @@ fn parsePatternArg(globalThis: *jsc.JSGlobalObject, arg: jsc.JSValue, api_name: 
         // Empty array = no filter
         if (len == 0) return null;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var patterns = std.ArrayList([]const u8).initCapacity(allocator, @intCast(len)) catch return error.OutOfMemory;
         errdefer {
             for (patterns.items) |p| allocator.free(p);
@@ -580,6 +589,7 @@ const ExtractContext = struct {
 
 pub const ExtractTask = AsyncTask(ExtractContext);
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn startExtractTask(
     globalThis: *jsc.JSGlobalObject,
     store: *jsc.WebCore.Blob.Store,
@@ -732,6 +742,7 @@ const WriteContext = struct {
 
 pub const WriteTask = AsyncTask(WriteContext);
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn startWriteTask(
     globalThis: *jsc.JSGlobalObject,
     data: WriteContext.Data,
@@ -818,6 +829,7 @@ const FilesContext = struct {
                 if (!matchGlobPatterns(patterns, pathname)) continue;
             }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const size: usize = @intCast(@max(entry.size(), 0));
             const mtime = entry.mtime();
 
@@ -837,6 +849,7 @@ const FilesContext = struct {
                         return if (cloneErrorString(archive)) |err| .{ .libarchive_err = err } else .{ .err = error.ReadError };
                     }
                     if (read == 0) break;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     total_read += @intCast(read);
                 }
             }
@@ -859,6 +872,7 @@ const FilesContext = struct {
                     return .{ .reject = globalThis.createErrorInstance("Failed to create Map", .{}) };
                 };
 
+// safe-transpile: for loop with pointer capture requires manual review
                 for (entries.items) |*entry| {
                     const blob_ptr = jsc.WebCore.Blob.new(jsc.WebCore.Blob.createWithBytesAndAllocator(entry.data, bun.default_allocator, globalThis, false));
                     entry.data = &.{}; // Ownership transferred
@@ -905,9 +919,11 @@ fn startFilesTask(globalThis: *jsc.JSGlobalObject, store: *jsc.WebCore.Blob.Stor
 // Helpers
 // ============================================================================
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn compressGzip(data: []const u8, level: u8) ![]u8 {
     libdeflate.load();
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const compressor = libdeflate.Compressor.alloc(@intCast(level)) orelse return error.GzipInitFailed;
     defer compressor.deinit();
 
@@ -933,6 +949,7 @@ fn compressGzip(data: []const u8, level: u8) ![]u8 {
 }
 
 /// Check if a path is safe (no absolute paths or path traversal)
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn isSafePath(pathname: []const u8) bool {
     // Reject empty paths
     if (pathname.len == 0) return false;
@@ -961,6 +978,7 @@ fn isSafePath(pathname: []const u8) bool {
 /// Positive patterns: at least one must match for the path to be included.
 /// Negative patterns (starting with "!"): if any matches, the path is excluded.
 /// Returns true if the path should be included, false if excluded.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn matchGlobPatterns(patterns: []const []const u8, pathname: []const u8) bool {
     var has_positive_patterns = false;
     var matches_positive = false;
@@ -989,6 +1007,7 @@ fn matchGlobPatterns(patterns: []const []const u8, pathname: []const u8) bool {
 
 /// Extract archive to disk with glob pattern filtering.
 /// Supports negative patterns with "!" prefix (e.g., "!node_modules/**").
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn extractToDiskFiltered(
     file_buffer: []const u8,
     root: []const u8,
@@ -1044,10 +1063,12 @@ fn extractToDiskFiltered(
                 count += 1;
             },
             .file => {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const size: usize = @intCast(@max(entry.size(), 0));
                 // Sanitize permissions: use entry perms masked to 0o777, or default 0o644
                 const entry_perm = entry.perm();
                 const mode: bun.Mode = if (entry_perm != 0)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(entry_perm & 0o777)
                 else
                     0o644;
@@ -1084,6 +1105,7 @@ fn extractToDiskFiltered(
                             write_success = false;
                             break;
                         }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const bytes_read: usize = @intCast(read);
                         // Write all bytes, handling partial writes
                         var written: usize = 0;

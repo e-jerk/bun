@@ -429,7 +429,6 @@ pub const Bunfig = struct {
 
                                 const patterns = try allocator.alloc(string, arr.items.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (arr.items.slice(), 0..) |item, i| {
                                     if (item.data != .e_string) {
                                         try this.addError(item.loc, "concurrentTestGlob array must contain only strings");
@@ -464,7 +463,6 @@ pub const Bunfig = struct {
 
                                 const patterns = try allocator.alloc(string, arr.items.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (arr.items.slice(), 0..) |item, i| {
                                     if (item.data != .e_string) {
                                         try this.addError(item.loc, "coveragePathIgnorePatterns array must contain only strings");
@@ -497,7 +495,6 @@ pub const Bunfig = struct {
 
                                 const patterns = try allocator.alloc(string, arr.items.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (arr.items.slice(), 0..) |item, i| {
                                     if (item.data != .e_string) {
                                         try this.addError(item.loc, "pathIgnorePatterns array must contain only strings");
@@ -555,7 +552,6 @@ pub const Bunfig = struct {
                             .e_array => |arr| {
                                 var list = try allocator.alloc([]const u8, arr.items.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (arr.items.slice(), 0..) |item, i| {
                                     list[i] = try item.asStringCloned(allocator) orelse {
                                         try this.addError(item.loc, "Invalid CA. Expected a string.");
@@ -814,7 +810,6 @@ pub const Bunfig = struct {
 
                                 const exclusions_list = try this.allocator.alloc(string, raw_exclusions.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (raw_exclusions, 0..) |p, i| {
                                     try this.expectString(p);
                                     exclusions_list[i] = try p.data.e_string.string(allocator);
@@ -922,7 +917,6 @@ pub const Bunfig = struct {
                                 if (raw_plugins.len == 0) break :plugins null;
                                 const plugins = try this.allocator.alloc(string, raw_plugins.len);
                                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (raw_plugins, 0..) |p, i| {
                                     try this.expectString(p);
                                     plugins[i] = try p.data.e_string.string(allocator);
@@ -1052,7 +1046,6 @@ pub const Bunfig = struct {
                         const items = entryPoints.data.e_array.items.slice();
                         var names = try this.allocator.alloc(string, items.len);
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (items, 0..) |item, i| {
                             try this.expectString(item);
                             names[i] = try item.data.e_string.string(allocator);
@@ -1186,7 +1179,6 @@ pub const Bunfig = struct {
                         var externals = try allocator.alloc(string, array.items.len);
 
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (array.items.slice(), 0..) |item, i| {
                             try this.expectString(item);
                             externals[i] = try item.data.e_string.string(allocator);
@@ -1205,7 +1197,6 @@ pub const Bunfig = struct {
                 var loader_values = try this.allocator.alloc(api.Loader, properties.len);
 
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (properties, 0..) |item, i| {
                     const key = item.key.?.asString(allocator).?;
                     if (key.len == 0) continue;

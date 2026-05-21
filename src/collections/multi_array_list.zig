@@ -34,7 +34,8 @@ pub fn MultiArrayList(comptime T: type) type {
             .@"union" => |u| struct {
                 pub const Bare = blk: {
                     var bare_fields: [u.fields.len]std.builtin.Type.UnionField = undefined;
-                    for (u.fields, 0..) |field, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (u.fields, 0..) |field, i| {
                         bare_fields[i] = .{
                             .name = field.name,
                             .type = field.type,
@@ -101,6 +102,7 @@ pub fn MultiArrayList(comptime T: type) type {
                 const casted_ptr: [*]F = if (@sizeOf(F) == 0)
                     undefined
                 else
+// safe-transpile: @alignCast requires manual review
                     @ptrCast(@alignCast(byte_ptr));
                 return casted_ptr[0..self.len];
             }
@@ -111,14 +113,16 @@ pub fn MultiArrayList(comptime T: type) type {
                     .@"union" => Elem.fromT(elem),
                     else => unreachable,
                 };
-                inline for (fields, 0..) |field_info, i| {
+                // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                     self.items(@as(Field, @enumFromInt(i)))[index] = @field(e, field_info.name);
                 }
             }
 
             pub fn get(self: Slice, index: usize) T {
                 var result: Elem = undefined;
-                inline for (fields, 0..) |field_info, i| {
+                // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                     @field(result, field_info.name) = self.items(@as(Field, @enumFromInt(i)))[index];
                 }
                 return switch (@typeInfo(T)) {
@@ -133,6 +137,7 @@ pub fn MultiArrayList(comptime T: type) type {
                     return .{};
                 }
                 const unaligned_ptr = self.ptrs[sizes.fields[0]];
+// safe-transpile: @alignCast requires manual review
                 const aligned_ptr: [*]align(@alignOf(Elem)) u8 = @alignCast(unaligned_ptr);
                 return .{
                     .bytes = aligned_ptr,
@@ -169,7 +174,8 @@ pub fn MultiArrayList(comptime T: type) type {
                 alignment: usize,
             };
             var data: [fields.len]Data = undefined;
-            for (fields, 0..) |field_info, i| {
+            // safe-transpile: for with index access requires manual review
+    for (fields, 0..) |field_info, i| {
                 data[i] = .{
                     .size = @sizeOf(field_info.type),
                     .size_index = i,
@@ -186,7 +192,8 @@ pub fn MultiArrayList(comptime T: type) type {
             mem.sort(Data, &data, {}, Sort.lessThan);
             var sizes_bytes: [fields.len]usize = undefined;
             var field_indexes: [fields.len]usize = undefined;
-            for (data, 0..) |elem, i| {
+            // safe-transpile: for with index access requires manual review
+    for (data, 0..) |elem, i| {
                 sizes_bytes[i] = elem.size;
                 field_indexes[i] = elem.size_index;
             }
@@ -220,7 +227,8 @@ pub fn MultiArrayList(comptime T: type) type {
                 .capacity = self.capacity,
             };
             var ptr: [*]u8 = self.bytes;
-            for (sizes.bytes, sizes.fields) |field_size, i| {
+            // safe-transpile: for with index access requires manual review
+    for (sizes.bytes, sizes.fields) |field_size, i| {
                 result.ptrs[i] = ptr;
                 ptr += field_size * self.capacity;
             }
@@ -312,7 +320,8 @@ pub fn MultiArrayList(comptime T: type) type {
                 else => unreachable,
             };
             const slices = self.slice();
-            inline for (fields, 0..) |field_info, field_index| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, field_index| {
                 const field_slice = slices.items(@as(Field, @enumFromInt(field_index)));
                 var i: usize = self.len - 1;
                 while (i > index) : (i -= 1) {
@@ -327,9 +336,11 @@ pub fn MultiArrayList(comptime T: type) type {
             self.len += other.len;
             const other_slice = other.slice();
             const this_slice = self.slice();
-            inline for (fields, 0..) |field_info, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                 if (@sizeOf(field_info.type) != 0) {
                     const field = @as(Field, @enumFromInt(i));
+// safe-transpile: @memcpy requires manual review
                     @memcpy(this_slice.items(field)[offset..], other_slice.items(field));
                 }
             }
@@ -340,7 +351,8 @@ pub fn MultiArrayList(comptime T: type) type {
         /// retain list ordering.
         pub fn swapRemove(self: *Self, index: usize) void {
             const slices = self.slice();
-            inline for (fields, 0..) |_, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |_, i| {
                 const field_slice = slices.items(@as(Field, @enumFromInt(i)));
                 field_slice[index] = field_slice[self.len - 1];
                 field_slice[self.len - 1] = undefined;
@@ -352,7 +364,8 @@ pub fn MultiArrayList(comptime T: type) type {
         /// after it to preserve order.
         pub fn orderedRemove(self: *Self, index: usize) void {
             const slices = self.slice();
-            inline for (fields, 0..) |_, field_index| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |_, field_index| {
                 const field_slice = slices.items(@as(Field, @enumFromInt(field_index)));
                 var i = index;
                 while (i < self.len - 1) : (i += 1) {
@@ -387,7 +400,8 @@ pub fn MultiArrayList(comptime T: type) type {
                 capacityInBytes(new_len),
             ) catch {
                 const self_slice = self.slice();
-                inline for (fields, 0..) |field_info, i| {
+                // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                     if (@sizeOf(field_info.type) != 0) {
                         const field = @as(Field, @enumFromInt(i));
                         const dest_slice = self_slice.items(field)[new_len..];
@@ -408,9 +422,11 @@ pub fn MultiArrayList(comptime T: type) type {
             self.len = new_len;
             const self_slice = self.slice();
             const other_slice = other.slice();
-            inline for (fields, 0..) |field_info, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                 if (@sizeOf(field_info.type) != 0) {
                     const field = @as(Field, @enumFromInt(i));
+// safe-transpile: @memcpy requires manual review
                     @memcpy(other_slice.items(field), self_slice.items(field));
                 }
             }
@@ -492,9 +508,11 @@ pub fn MultiArrayList(comptime T: type) type {
             };
             const self_slice = self.slice();
             const other_slice = other.slice();
-            inline for (fields, 0..) |field_info, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                 if (@sizeOf(field_info.type) != 0) {
                     const field = @as(Field, @enumFromInt(i));
+// safe-transpile: @memcpy requires manual review
                     @memcpy(other_slice.items(field), self_slice.items(field));
                 }
             }
@@ -511,9 +529,11 @@ pub fn MultiArrayList(comptime T: type) type {
             result.len = self.len;
             const self_slice = self.slice();
             const result_slice = result.slice();
-            inline for (fields, 0..) |field_info, i| {
+            // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                 if (@sizeOf(field_info.type) != 0) {
                     const field = @as(Field, @enumFromInt(i));
+// safe-transpile: @memcpy requires manual review
                     @memcpy(result_slice.items(field), self_slice.items(field));
                 }
             }
@@ -528,7 +548,8 @@ pub fn MultiArrayList(comptime T: type) type {
                 slice: Slice,
 
                 pub fn swap(sc: @This(), a_index: usize, b_index: usize) void {
-                    inline for (fields, 0..) |field_info, i| {
+                    // safe-transpile: for with index access requires manual review
+    inline for (fields, 0..) |field_info, i| {
                         if (@sizeOf(field_info.type) != 0) {
                             const field: Field = @enumFromInt(i);
                             const ptr = sc.slice.items(field);

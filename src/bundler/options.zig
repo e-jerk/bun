@@ -41,8 +41,10 @@ pub fn validatePath(
 pub fn stringHashMapFromArrays(comptime t: type, allocator: std.mem.Allocator, total_capacity: usize, keys: anytype, values: anytype) !t {
     var hash_map = t.init(allocator);
     if (keys.len > 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try hash_map.ensureTotalCapacity(@as(u32, @intCast(total_capacity)));
-        for (keys, 0..) |key, i| {
+        // safe-transpile: for with index access requires manual review
+    for (keys, 0..) |key, i| {
             hash_map.putAssumeCapacity(key, values[i]);
         }
     }
@@ -69,6 +71,7 @@ pub const AllowUnresolved = union(enum) {
     }
 
     /// shape is the extracted template representation (may be "").
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn allows(self: AllowUnresolved, shape: []const u8) bool {
         return switch (self) {
             .all => true,
@@ -239,6 +242,7 @@ pub const ExternalModules = struct {
 
     pub const NodeBuiltinPatterns = NodeBuiltinPatternsRaw ++ brk: {
         var builtins = NodeBuiltinPatternsRaw;
+// safe-transpile: for loop with pointer capture requires manual review
         for (&builtins) |*builtin| {
             builtin.* = "node:" ++ builtin.*;
         }
@@ -1564,6 +1568,7 @@ pub fn loadersFromTransformOptions(allocator: std.mem.Allocator, _loaders: ?api.
     const loader_values = try allocator.alloc(Loader, input_loaders.loaders.len);
     defer allocator.free(loader_values);
 
+    // safe-transpile: for with index access requires manual review
     for (loader_values, input_loaders.loaders) |*loader, input| {
         loader.* = Loader.fromAPI(input);
     }
@@ -2238,7 +2243,8 @@ pub const Env = struct {
 
         try this.defaults.ensureTotalCapacity(this.allocator, defaults.keys.len);
 
-        for (defaults.keys, 0..) |key, i| {
+        // safe-transpile: for with index access requires manual review
+    for (defaults.keys, 0..) |key, i| {
             this.defaults.appendAssumeCapacity(.{ .key = key, .value = defaults.values[i] });
         }
     }
@@ -2510,6 +2516,7 @@ pub const PathTemplate = struct {
         return strings.containsComptime(this.data, "[" ++ @tagName(field) ++ "]");
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn writeReplacingSlashesOnWindows(w: anytype, slice: []const u8) !void {
         if (Environment.isWindows) {
             var remain = slice;
@@ -2537,6 +2544,7 @@ pub const PathTemplate = struct {
 
             var count: isize = 1;
             var end_len: usize = remain.len;
+// safe-transpile: for loop with pointer capture requires manual review
             for (remain) |*c| {
                 count += switch (c.*) {
                     '[' => 1,

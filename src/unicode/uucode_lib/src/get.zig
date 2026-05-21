@@ -11,7 +11,6 @@ fn TableData(comptime Table: anytype) type {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn tableInfoFor(comptime field: []const u8) std.builtin.Type.StructField {
     inline for (@typeInfo(@TypeOf(tables)).@"struct".fields) |tableInfo| {
         if (@hasField(TableData(tableInfo.type), field)) {
@@ -23,10 +22,9 @@ fn tableInfoFor(comptime field: []const u8) std.builtin.Type.StructField {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn getTableInfo(comptime table_name: []const u8) std.builtin.Type.StructField {
     inline for (@typeInfo(@TypeOf(tables)).@"struct".fields) |tableInfo| {
-        if (safe.SimdUtils.eql(tableInfo.name, table_name)) {
+        if (std.mem.eql(u8, tableInfo.name, table_name)) {
             return tableInfo;
         }
     }
@@ -35,7 +33,6 @@ fn getTableInfo(comptime table_name: []const u8) std.builtin.Type.StructField {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn BackingFor(comptime field: []const u8) type {
     const tableInfo = tableInfoFor(field);
     const Backing = @FieldType(@FieldType(@TypeOf(tables), tableInfo.name), "backing");
@@ -43,13 +40,11 @@ fn BackingFor(comptime field: []const u8) type {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn backingFor(comptime field: []const u8) BackingFor(field) {
     const tableInfo = tableInfoFor(field);
     return @field(@field(tables, tableInfo.name).backing, field);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn TableFor(comptime field: []const u8) type {
     const tableInfo = tableInfoFor(field);
@@ -57,19 +52,16 @@ fn TableFor(comptime field: []const u8) type {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn tableFor(comptime field: []const u8) TableFor(field) {
     return @field(tables, tableInfoFor(field).name);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn GetTable(comptime table_name: []const u8) type {
     const tableInfo = getTableInfo(table_name);
     return @FieldType(@TypeOf(tables), tableInfo.name);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn getTable(comptime table_name: []const u8) GetTable(table_name) {
     return @field(tables, getTableInfo(table_name).name);
@@ -86,13 +78,11 @@ fn data(comptime table: anytype, cp: u21) TableData(@TypeOf(table)) {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getAll(comptime table_name: []const u8, cp: u21) TypeOfAll(table_name) {
     const table = comptime getTable(table_name);
     return data(table, cp);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn TypeOfAll(comptime table_name: []const u8) type {
     return TableData(getTableInfo(table_name).type);
@@ -136,12 +126,10 @@ pub const FieldEnum = blk: {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn DataField(comptime field: []const u8) type {
     return @FieldType(TableData(tableInfoFor(field).type), field);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn FieldValue(comptime field: []const u8) type {
     const D = DataField(field);

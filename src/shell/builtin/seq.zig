@@ -18,7 +18,7 @@ pub fn start(this: *@This()) Yield {
     while (iter.next()) |item| {
         const arg = bun.sliceTo(item, 0);
 
-        if (zust.SimdUtils.eql(arg, "-s") or zust.SimdUtils.eql(arg, "--separator")) {
+        if (std.mem.eql(u8, arg, "-s") or std.mem.eql(u8, arg, "--separator")) {
             this.separator = bun.sliceTo(iter.next() orelse return this.fail("seq: option requires an argument -- s\n"), 0);
             continue;
         }
@@ -27,7 +27,7 @@ pub fn start(this: *@This()) Yield {
             continue;
         }
 
-        if (zust.SimdUtils.eql(arg, "-t") or zust.SimdUtils.eql(arg, "--terminator")) {
+        if (std.mem.eql(u8, arg, "-t") or std.mem.eql(u8, arg, "--terminator")) {
             this.terminator = bun.sliceTo(iter.next() orelse return this.fail("seq: option requires an argument -- t\n"), 0);
             continue;
         }
@@ -36,7 +36,7 @@ pub fn start(this: *@This()) Yield {
             continue;
         }
 
-        if (zust.SimdUtils.eql(arg, "-w") or zust.SimdUtils.eql(arg, "--fixed-width")) {
+        if (std.mem.eql(u8, arg, "-w") or std.mem.eql(u8, arg, "--fixed-width")) {
             this.fixed_width = true;
             continue;
         }
@@ -76,7 +76,6 @@ pub fn start(this: *@This()) Yield {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn fail(this: *@This(), msg: []const u8) Yield {
     if (this.bltn().stderr.needsIO()) |safeguard| {
         this.state = .err;
@@ -107,7 +106,6 @@ fn do(this: *@This()) Yield {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn print(this: *@This(), msg: []const u8) void {
     if (this.bltn().stdout.needsIO() != null) {
         bun.handleOom(this.buf.appendSlice(bun.default_allocator, msg));
@@ -136,7 +134,6 @@ pub fn deinit(this: *@This()) void {
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("seq", this));
     return @fieldParentPtr("impl", impl);

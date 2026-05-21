@@ -51,7 +51,6 @@ pub const ToJSOptions = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn valkeyStrToJSValue(globalObject: *jsc.JSGlobalObject, str: []const u8, options: *const ToJSOptions) bun.JSError!jsc.JSValue {
     if (options.return_as_buffer) {
         // TODO: handle values > 4.7 GB
@@ -76,10 +75,8 @@ pub fn respValueToJSWithOptions(self: *RESPValue, globalObject: *jsc.JSGlobalObj
         .Array => |array| {
             var js_array = try jsc.JSValue.createEmptyArray(globalObject, array.len);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (array, 0..) |*item, i| {
                 const js_item = try respValueToJSWithOptions(item, globalObject, options);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try js_array.putIndex(globalObject, @intCast(i), js_item);
             }
@@ -92,7 +89,6 @@ pub fn respValueToJSWithOptions(self: *RESPValue, globalObject: *jsc.JSGlobalObj
         .VerbatimString => |verbatim| return valkeyStrToJSValue(globalObject, verbatim.content, &options),
         .Map => |entries| {
             var js_obj = jsc.JSValue.createEmptyObjectWithNullPrototype(globalObject);
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (entries) |*entry| {
                 const js_key = try respValueToJSWithOptions(&entry.key, globalObject, .{});
@@ -107,10 +103,8 @@ pub fn respValueToJSWithOptions(self: *RESPValue, globalObject: *jsc.JSGlobalObj
         .Set => |set| {
             var js_array = try jsc.JSValue.createEmptyArray(globalObject, set.len);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (set, 0..) |*item, i| {
                 const js_item = try respValueToJSWithOptions(item, globalObject, options);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try js_array.putIndex(globalObject, @intCast(i), js_item);
             }
@@ -131,10 +125,8 @@ pub fn respValueToJSWithOptions(self: *RESPValue, globalObject: *jsc.JSGlobalObj
             // Add the data as an array
             var data_array = try jsc.JSValue.createEmptyArray(globalObject, push.data.len);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (push.data, 0..) |*item, i| {
                 const js_item = try respValueToJSWithOptions(item, globalObject, options);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try data_array.putIndex(globalObject, @intCast(i), js_item);
             }

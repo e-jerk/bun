@@ -6,12 +6,10 @@ algorithm: EVP.Algorithm,
 pub const new = bun.TrivialNew(@This());
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(algorithm: EVP.Algorithm, key: []const u8) ?*HMAC {
     const md = algorithm.md() orelse return null;
     var ctx: BoringSSL.HMAC_CTX = undefined;
     BoringSSL.HMAC_CTX_init(&ctx);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (BoringSSL.HMAC_Init_ex(&ctx, key.ptr, @intCast(key.len), md, null) != 1) {
         BoringSSL.HMAC_CTX_cleanup(&ctx);
@@ -23,7 +21,6 @@ pub fn init(algorithm: EVP.Algorithm, key: []const u8) ?*HMAC {
     });
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn update(this: *HMAC, data: []const u8) void {
     _ = BoringSSL.HMAC_Update(&this.ctx, data.ptr, data.len);
@@ -46,7 +43,6 @@ pub fn copy(this: *HMAC) !*HMAC {
     });
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn final(this: *HMAC, out: []u8) []u8 {
     var outlen: c_uint = undefined;

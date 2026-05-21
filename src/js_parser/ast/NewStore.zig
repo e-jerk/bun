@@ -49,7 +49,6 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
                 const start = std.mem.alignForward(usize, block.bytes_used, @alignOf(T));
                 if (start + @sizeOf(T) > block.buffer.len) return null;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 defer block.bytes_used = @intCast(start + @sizeOf(T));
 
                 // it's simpler to use @ptrCast, but as a sanity check, we also
@@ -59,7 +58,6 @@ pub fn NewStore(comptime types: []const type, comptime count: usize) type {
                     _ = block.buffer[block.bytes_used..][0..@sizeOf(T)];
                 }
 
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 return @ptrCast(@alignCast(&block.buffer[start]));
             }

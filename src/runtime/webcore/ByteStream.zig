@@ -56,7 +56,6 @@ pub fn onStart(this: *@This()) streams.Start {
     // For HTTPS, the size is probably quite a bit lower like 64 KB due to TLS transmission.
     // We add 1 extra page size so that if there's a little bit of excess buffered data, we avoid extra allocations.
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const page_size: Blob.SizeType = @intCast(std.heap.pageSize());
     return .{ .chunk_size = @min(512 * 1024 + page_size, @max(this.highWaterMark, page_size)) };
 }
@@ -167,7 +166,8 @@ pub fn onData(
         const to_copy = this.pending_buffer[0..@min(chunk.len, this.pending_buffer.len)];
         const pending_buffer_len = this.pending_buffer.len;
         bun.assert(to_copy.ptr != chunk.ptr);
-        safe.SimdUtils.copy(to_copy, chunk[0..to_copy.len]);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(to_copy, chunk[0..to_copy.len]);
         this.pending_buffer = &.{};
 
         const is_really_done = this.has_received_last_chunk and to_copy.len <= pending_buffer_len;
@@ -190,7 +190,6 @@ pub fn onData(
                     .into_array_and_done = .{
                         .value = this.value(),
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         .len = @as(Blob.SizeType, @truncate(to_copy.len)),
                     },
                 };
@@ -199,7 +198,6 @@ pub fn onData(
             this.pending.result = .{
                 .into_array = .{
                     .value = this.value(),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .len = @as(Blob.SizeType, @truncate(to_copy.len)),
                 },
@@ -222,7 +220,6 @@ pub fn onData(
     this.append(stream, 0, chunk, allocator) catch @panic("Out of memory while copying request body");
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn append(
     this: *@This(),
@@ -290,7 +287,6 @@ pub fn parent(this: *@This()) *Source {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
     jsc.markBinding(@src());
     bun.assert(buffer.len > 0);
@@ -304,7 +300,8 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
         );
         const remaining_in_buffer = this.buffer.items[this.offset..][0..to_write];
 
-        safe.SimdUtils.copy(buffer[0..to_write], this.buffer.items[this.offset..][0..to_write]);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(buffer[0..to_write], this.buffer.items[this.offset..][0..to_write]);
 
         if (this.offset + to_write == this.buffer.items.len) {
             this.offset = 0;
@@ -321,7 +318,6 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
                 .into_array_and_done = .{
                     .value = view,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .len = @as(Blob.SizeType, @truncate(to_write)),
                 },
             };
@@ -330,7 +326,6 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
         return .{
             .into_array = .{
                 .value = view,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(Blob.SizeType, @truncate(to_write)),
             },

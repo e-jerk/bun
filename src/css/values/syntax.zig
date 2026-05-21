@@ -42,6 +42,7 @@ pub const SyntaxString = union(enum) {
             .universal => try dest.writeChar('*'),
             .components => |*components| {
                 var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                 for (components.items) |*component| {
                     if (first) {
                         first = false;
@@ -68,6 +69,7 @@ pub const SyntaxString = union(enum) {
     }
 
     /// Parses a syntax string.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseString(allocator: std.mem.Allocator, input: []const u8) css.Maybe(SyntaxString, void) {
         // https://drafts.css-houdini.org/css-properties-values-api/#parsing-syntax
         var trimmed_input = @import("std-fs-compat").trimLeft(u8, input, SPACE_CHARACTERS);
@@ -485,6 +487,7 @@ pub const ParsedComponent = union(enum) {
             .literal => |*v| css.serializer.serializeIdentifier(v.v, dest) catch return dest.addFmtError(),
             .repeated => |*r| {
                 var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                 for (r.components.items) |*component| {
                     if (!first) {
                         switch (r.multiplier) {

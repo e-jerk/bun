@@ -607,7 +607,6 @@ pub fn NewSizeHandler(
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn flushHelper(
             this: *@This(),
             comptime field: []const u8,
@@ -626,7 +625,6 @@ pub fn NewSizeHandler(
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn propertyHelper(
             this: *@This(),
             comptime field: []const u8,
@@ -642,7 +640,6 @@ pub fn NewSizeHandler(
             this.has_any = true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         fn logicalPropertyHelper(
             this: *@This(),
@@ -778,7 +775,6 @@ pub fn NewSizeHandler(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn logicalSideHelper(
             this: *@This(),

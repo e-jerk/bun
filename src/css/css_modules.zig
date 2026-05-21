@@ -61,6 +61,7 @@ pub const CssModule = struct {
         // TODO: deinit
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getReference(this: *CssModule, allocator: Allocator, name: []const u8, source_index: u32) void {
         const gop = bun.handleOom(this.exports_by_source_index.items[source_index].getOrPut(allocator, name));
         if (gop.found_existing) {
@@ -74,6 +75,7 @@ pub const CssModule = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn referenceDashed(
         this: *CssModule,
         dest: *css.Printer,
@@ -138,6 +140,7 @@ pub const CssModule = struct {
         _: u32,
     ) css.Maybe(void, css.PrinterErrorKind) {
         // const allocator = dest.allocator;
+// safe-transpile: for loop with pointer capture requires manual review
         for (selectors.v.slice()) |*sel| {
             if (sel.len() == 1 and sel.components.items[0] == .class) {
                 continue;
@@ -150,6 +153,7 @@ pub const CssModule = struct {
         return .success;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addDashed(this: *CssModule, allocator: Allocator, local: []const u8, source_index: u32) void {
         const gop = bun.handleOom(this.exports_by_source_index.items[source_index].getOrPut(allocator, local));
         if (!gop.found_existing) {
@@ -168,6 +172,7 @@ pub const CssModule = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addLocal(this: *CssModule, allocator: Allocator, exported: []const u8, local: []const u8, source_index: u32) void {
         const gop = bun.handleOom(this.exports_by_source_index.items[source_index].getOrPut(allocator, exported));
         if (!gop.found_existing) {
@@ -215,6 +220,7 @@ pub const Pattern = struct {
     segments: css.SmallList(Segment, 3) = css.SmallList(Segment, 3).initInlined(&[_]Segment{ .local, .{ .literal = "_" }, .hash }),
 
     /// Write the substituted pattern to a destination.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(
         this: *const Pattern,
         hash_: []const u8,
@@ -223,6 +229,7 @@ pub const Pattern = struct {
         closure: anytype,
         comptime writefn: *const fn (@TypeOf(closure), []const u8, replace_dots: bool) void,
     ) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.segments.slice()) |*segment| {
             switch (segment.*) {
                 .literal => |s| {
@@ -230,6 +237,7 @@ pub const Pattern = struct {
                 },
                 .name => {
                     const stem = std.fs.path.stem(path);
+// zust: use safe.String or safe.GuardedSlice for slice operations
                     if (std.mem.indexOf(u8, stem, ".")) |_| {
                         writefn(closure, stem, true);
                     } else {
@@ -246,6 +254,7 @@ pub const Pattern = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeToStringWithPrefix(
         this: *const Pattern,
         allocator: Allocator,
@@ -262,12 +271,14 @@ pub const Pattern = struct {
             local,
             &closure,
             struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn writefn(self: *Closure, slice: []const u8, replace_dots: bool) void {
                     bun.handleOom(self.res.appendSlice(self.allocator, prefix));
                     if (replace_dots) {
                         const start = self.res.items.len;
                         bun.handleOom(self.res.appendSlice(self.allocator, slice));
                         const end = self.res.items.len;
+// safe-transpile: for loop with pointer capture requires manual review
                         for (self.res.items[start..end]) |*c| {
                             if (c.* == '.') {
                                 c.* = '-';
@@ -282,6 +293,7 @@ pub const Pattern = struct {
         return closure.res.items;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeToString(
         this: *const Pattern,
         allocator: Allocator,
@@ -299,11 +311,13 @@ pub const Pattern = struct {
             local,
             &closure,
             struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn writefn(self: *Closure, slice: []const u8, replace_dots: bool) void {
                     if (replace_dots) {
                         const start = self.res.items.len;
                         bun.handleOom(self.res.appendSlice(self.allocator, slice));
                         const end = self.res.items.len;
+// safe-transpile: for loop with pointer capture requires manual review
                         for (self.res.items[start..end]) |*c| {
                             if (c.* == '.') {
                                 c.* = '-';
@@ -391,6 +405,7 @@ pub const CssModuleReference = union(enum) {
 };
 
 // TODO: replace with bun's hash
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash(allocator: Allocator, comptime fmt: []const u8, args: anytype, at_start: bool) []const u8 {
     const count = std.fmt.count(fmt, args);
     var stack_fallback = std.heap.stackFallback(128, allocator);
@@ -399,6 +414,7 @@ pub fn hash(allocator: Allocator, comptime fmt: []const u8, args: anytype, at_st
     var fmt_str = bun.handleOom(std.fmt.allocPrint(fmt_alloc, fmt, args));
     hasher.update(fmt_str);
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const h: u32 = @truncate(hasher.final());
     var h_bytes: [4]u8 = undefined;
     std.mem.writeInt(u32, &h_bytes, h, .little);

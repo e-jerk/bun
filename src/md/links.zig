@@ -1,3 +1,4 @@
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn processLink(self: *Parser, content: []const u8, start: usize, base_off: OFF, is_image: bool) Parser.Error!?usize {
     _ = base_off;
     // start points at '['
@@ -195,6 +196,7 @@ pub fn processLink(self: *Parser, content: []const u8, start: usize, base_off: O
 
 /// Try to match a bracket pair starting at `start` and check if it forms a link.
 /// Returns whether it's a link, where the label ends, and the full link end position.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn tryMatchBracketLink(self: *Parser, content: []const u8, start: usize) struct { is_link: bool, label_end: usize, link_end: usize } {
     var pos = start + 1;
     var depth: u32 = 1;
@@ -316,6 +318,7 @@ pub fn tryMatchBracketLink(self: *Parser, content: []const u8, start: usize) str
 
 /// Check if a link label contains an inner link construct.
 /// Used to enforce the "links cannot contain other links" rule (CommonMark §6.7).
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn labelContainsLink(self: *Parser, label: []const u8) bool {
     var pos: usize = 0;
     while (pos < label.len) {
@@ -360,6 +363,7 @@ pub fn labelContainsLink(self: *Parser, label: []const u8) bool {
 }
 
 /// Process wiki link: [[destination]] or [[destination|label]]
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn processWikiLink(self: *Parser, content: []const u8, start: usize) Parser.Error!?usize {
     // start points at first '[', next char is also '['
     var pos = start + 2;
@@ -415,6 +419,7 @@ pub fn processWikiLink(self: *Parser, content: []const u8, start: usize) Parser.
 }
 
 /// Render a reference link/image given the resolved ref def.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderRefLink(self: *Parser, label_content: []const u8, ref: RefDef, is_image: bool) Parser.Error!void {
     if (self.image_nesting_level > 0) {
         // Inside image alt text — emit only text, no HTML tags
@@ -434,6 +439,7 @@ pub fn renderRefLink(self: *Parser, label_content: []const u8, ref: RefDef, is_i
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findAutolink(self: *const Parser, content: []const u8, start: usize) ?struct { end_pos: usize, is_email: bool } {
     _ = self;
     if (start + 1 >= content.len) return null;
@@ -507,6 +513,7 @@ pub fn findAutolink(self: *const Parser, content: []const u8, start: usize) ?str
     return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderAutolink(self: *Parser, url: []const u8, is_email: bool) bun.JSError!void {
     try self.renderer.enterSpan(.a, .{ .href = url, .autolink = true, .autolink_email = is_email });
     try self.emitText(.normal, url);

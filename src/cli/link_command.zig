@@ -117,10 +117,12 @@ fn link(ctx: Command.Context) !void {
                 // create the symlink
                 var link_buf: bun.PathBuffer = undefined;
                 const link_target = Fs.FileSystem.instance.topLevelDirWithoutTrailingSlash();
-                safe.SimdUtils.copy(link_buf[0..link_target.len], link_target);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(link_buf[0..link_target.len], link_target);
                 link_buf[link_target.len] = 0;
                 var name_buf: bun.PathBuffer = undefined;
-                safe.SimdUtils.copy(name_buf[0..name.len], name);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(name_buf[0..name.len], name);
                 name_buf[name.len] = 0;
                 bun.sys.symlinkat(link_buf[0..link_target.len :0], bun.FD.fromSystem(node_modules.fd), name_buf[0..name.len :0]).unwrap() catch |err| {
                     if (manager.options.log_level != .silent)

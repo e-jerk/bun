@@ -68,7 +68,6 @@ pub fn onStart(this: *ByteBlobLoader) streams.Start {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onPull(this: *ByteBlobLoader, buffer: []u8, array: JSValue) streams.Result {
     array.ensureStillAlive();
     defer array.ensureStillAlive();
@@ -89,13 +88,13 @@ pub fn onPull(this: *ByteBlobLoader, buffer: []u8, array: JSValue) streams.Resul
     }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const copied = @as(Blob.SizeType, @intCast(temporary.len));
 
     this.remain -|= copied;
     this.offset +|= copied;
     bun.assert(buffer.ptr != temporary.ptr);
-    safe.SimdUtils.copy(buffer[0..temporary.len], temporary);
+// safe-transpile: @memcpy requires manual review
+    @memcpy(buffer[0..temporary.len], temporary);
     if (this.remain == 0) {
         return .{ .into_array_and_done = .{ .value = array, .len = copied } };
     }

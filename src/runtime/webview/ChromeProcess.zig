@@ -207,7 +207,8 @@ fn findPlaywrightShell(alloc: std.mem.Allocator) ?[:0]const u8 {
         if (rev > best_rev) {
             best_rev = rev;
             best_len = @min(name.len, best_name.len);
-            safe.SimdUtils.copy(best_name[0..best_len], name[0..best_len]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(best_name[0..best_len], name[0..best_len]);
         }
     }
     if (best_rev == 0) return null;
@@ -283,7 +284,6 @@ fn spawn(vm: *jsc.VirtualMachine, userDataDir: ?[*:0]const u8, explicitPath: ?[*
         // pid_t → u32 cast so {d} formats. Fresh dir per parent process;
         // multiple Bun.WebView instances in one process share the Chrome.
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pid: u32 = @intCast(std.c.getpid());
         break :blk try std.fmt.allocPrintSentinel(alloc, "--user-data-dir=/tmp/bun-chrome-{d}", .{pid}, 0);
     };
@@ -337,9 +337,7 @@ fn spawn(vm: *jsc.VirtualMachine, userDataDir: ?[*:0]const u8, explicitPath: ?[*
     var spawned = try (try bun.spawn.spawnProcess(
         &opts,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(argv.items.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(env.ptr),
     )).unwrap();
@@ -471,7 +469,8 @@ pub export fn Bun__Chrome__autoDetect(out_buf: [*]u8, out_cap: usize) usize {
     defer buf.deinit(bun.default_allocator);
     if (readDevToolsActivePort(&buf)) |_| {
         if (buf.items.len > out_cap) return 0;
-        safe.SimdUtils.copy(out_buf[0..buf.items.len], buf.items);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(out_buf[0..buf.items.len], buf.items);
         return buf.items.len;
     }
     return 0;

@@ -174,7 +174,6 @@ pub fn renameSymbolsInChunk(
                 if (c.options.output_format.keepES6ImportExportSyntax()) {
                     const import_records = all_import_records[source_index].slice();
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                     for (parts) |*part| {
                         for (part.stmts) |stmt| {
                             switch (stmt.data) {
@@ -187,7 +186,6 @@ pub fn renameSymbolsInChunk(
                                             }
                                         }
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                                         for (import.items) |*item| {
                                             if (item.name.ref) |ref| {
@@ -205,7 +203,6 @@ pub fn renameSymbolsInChunk(
                                     if (!import_records[export_.import_record_index].source_index.isValid()) {
                                         r.addTopLevelSymbol(export_.namespace_ref);
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                                         for (export_.items) |*item| {
                                             if (item.name.ref) |ref| {
@@ -244,7 +241,6 @@ pub fn renameSymbolsInChunk(
             else => {},
         }
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (parts) |*part| {
             if (!part.is_live) continue;

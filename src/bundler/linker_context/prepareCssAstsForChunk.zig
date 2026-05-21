@@ -174,7 +174,6 @@ fn prepareCssAstsForChunkImpl(c: *LinkerContext, chunk: *Chunk, allocator: std.m
                         var layer_count: usize = 0;
                         var prefix_end: usize = original_rules.len;
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     prefix_scan: for (original_rules, 0..) |rule, idx| {
                             switch (rule) {
                                 .import, .ignored => {},

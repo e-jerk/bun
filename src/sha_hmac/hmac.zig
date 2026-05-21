@@ -1,5 +1,4 @@
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn generate(key: []const u8, data: []const u8, algorithm: bun.jsc.API.Bun.Crypto.EVP.Algorithm, out: *[boring.EVP_MAX_MD_SIZE]u8) ?[]const u8 {
     var outlen: c_uint = boring.EVP_MAX_MD_SIZE;
     if (boring.HMAC(

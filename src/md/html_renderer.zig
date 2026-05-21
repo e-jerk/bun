@@ -16,7 +16,6 @@ pub const HtmlRenderer = struct {
         oom: bool,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn write(self: *OutputBuffer, data: []const u8) void {
             if (self.oom) return;
             self.list.appendSlice(self.allocator, data) catch {
@@ -32,7 +31,6 @@ pub const HtmlRenderer = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: Allocator, src_text: []const u8, render_opts: RenderOptions) HtmlRenderer {
         return .{
@@ -74,13 +72,11 @@ pub const HtmlRenderer = struct {
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: BlockType, data: u32, flags: u32) bun.JSError!void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         const self: *HtmlRenderer = @ptrCast(@alignCast(ptr));
         self.enterBlock(block_type, data, flags);
     }
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: BlockType, data: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const self: *HtmlRenderer = @ptrCast(@alignCast(ptr));
         self.leaveBlock(block_type, data);
@@ -88,22 +84,18 @@ pub const HtmlRenderer = struct {
 
     fn enterSpanImpl(ptr: *anyopaque, span_type: SpanType, detail: SpanDetail) bun.JSError!void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         const self: *HtmlRenderer = @ptrCast(@alignCast(ptr));
         self.enterSpan(span_type, detail);
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: SpanType) bun.JSError!void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         const self: *HtmlRenderer = @ptrCast(@alignCast(ptr));
         self.leaveSpan(span_type);
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn textImpl(ptr: *anyopaque, text_type: TextType, content: []const u8) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         const self: *HtmlRenderer = @ptrCast(@alignCast(ptr));
         self.text(text_type, content);
@@ -377,7 +369,6 @@ pub const HtmlRenderer = struct {
     // ========================================
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn text(self: *HtmlRenderer, text_type: TextType, content: []const u8) void {
         const in_image = self.image_nesting_level > 0;
 
@@ -406,7 +397,6 @@ pub const HtmlRenderer = struct {
                 // In code spans, newlines become spaces
                 var start: usize = 0;
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (content, 0..) |byte, j| {
                     if (byte == '\n') {
                         if (j > start) self.writeHtmlEscaped(content[start..j]);
@@ -432,7 +422,6 @@ pub const HtmlRenderer = struct {
     // ========================================
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(self: *HtmlRenderer, data: []const u8) void {
         if (self.heading_tracker.in_heading) {
             self.heading_buf.appendSlice(self.allocator, data) catch {
@@ -457,7 +446,6 @@ pub const HtmlRenderer = struct {
     /// When an opening disallowed tag is seen, increment depth.
     /// When a closing disallowed tag is seen, decrement depth.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn updateTagFilterRawDepth(self: *HtmlRenderer, content: []const u8) void {
         if (content.len < 2 or content[0] != '<') return;
         if (content[1] == '/') {
@@ -478,7 +466,6 @@ pub const HtmlRenderer = struct {
 
     /// Write HTML content with GFM tag filter applied. Scans for disallowed
     /// tags and replaces their leading `<` with `&lt;`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeHtmlWithTagFilter(self: *HtmlRenderer, content: []const u8) void {
         var start: usize = 0;
@@ -512,7 +499,6 @@ pub const HtmlRenderer = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeHtmlEscaped(self: *HtmlRenderer, txt: []const u8) void {
         var i: usize = 0;
         const needle = "&<>\"";
@@ -540,7 +526,6 @@ pub const HtmlRenderer = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeUrlEscaped(self: *HtmlRenderer, txt: []const u8) void {
         for (txt) |byte| {
@@ -587,7 +572,6 @@ pub const HtmlRenderer = struct {
 
     /// Write URL with backslash escape and entity processing.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeUrlWithEscapes(self: *HtmlRenderer, txt: []const u8) void {
         var i: usize = 0;
         while (i < txt.len) {
@@ -610,7 +594,6 @@ pub const HtmlRenderer = struct {
     }
 
     /// Write title attribute with backslash escape and entity processing (HTML-escaped).
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeTitleWithEscapes(self: *HtmlRenderer, txt: []const u8) void {
         var i: usize = 0;
@@ -636,7 +619,6 @@ pub const HtmlRenderer = struct {
     /// Write text with entity and backslash escape decoding, then HTML-escape the result.
     /// Used for code fence info strings where entities are recognized.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeWithEntityDecoding(self: *HtmlRenderer, txt: []const u8) void {
         var i: usize = 0;
         while (i < txt.len) {
@@ -657,7 +639,6 @@ pub const HtmlRenderer = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEntity(self: *HtmlRenderer, entity_text: []const u8) void {
         var buf: [8]u8 = undefined;
         if (helpers.decodeEntityToUtf8(entity_text, &buf)) |decoded| {
@@ -668,7 +649,6 @@ pub const HtmlRenderer = struct {
     }
 
     /// Decode an entity and write its UTF-8 bytes as percent-encoded URL bytes.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEntityToUrl(self: *HtmlRenderer, entity_text: []const u8) void {
         var buf: [8]u8 = undefined;
@@ -690,7 +670,6 @@ pub const HtmlRenderer = struct {
         while (v > 0) {
             i -= 1;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             buf[i] = @intCast('0' + v % 10);
             v /= 10;
         }
@@ -707,7 +686,6 @@ pub const HtmlRenderer = struct {
 
     /// GFM 6.11: Check if HTML content starts with a disallowed tag.
     /// Disallowed tags have their leading `<` replaced with `&lt;`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn isDisallowedTag(content: []const u8) bool {
         // Must start with '<', optionally followed by '/'
@@ -728,7 +706,6 @@ pub const HtmlRenderer = struct {
     /// Case-insensitive match of tag name at `pos` in `content`.
     /// After the name, the next char must be '>', '/', whitespace, or end of string.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn matchTagNameCI(content: []const u8, pos: usize, tag: []const u8) bool {
         if (pos + tag.len > content.len) return false;
         if (!bun.strings.eqlCaseInsensitiveASCIIIgnoreLength(content[pos..][0..tag.len], tag)) return false;
@@ -742,7 +719,6 @@ pub const HtmlRenderer = struct {
     }
 
     /// Find an entity in text starting at `start`. Delegates to helpers.findEntity.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn findEntityInText(content: []const u8, start: usize) ?usize {
         return helpers.findEntity(content, start);

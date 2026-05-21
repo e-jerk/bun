@@ -286,7 +286,6 @@ pub fn ParsePrefix(
                     const private = value.data.e_index.index.data.e_private_identifier;
                     const name = p.loadNameFromRef(private.ref);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const range = logger.Range{ .loc = value.loc, .len = @as(i32, @intCast(name.len)) };
                     p.log.addRangeErrorFmt(p.source, range, p.allocator, "Deleting the private name \"{s}\" is forbidden", .{name}) catch unreachable;
                 }

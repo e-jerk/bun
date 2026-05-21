@@ -81,7 +81,6 @@ pub fn from(other: anytype) File {
     if (comptime Environment.isLinux) {
         if (T == u64) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return File{ .handle = .fromNative(@intCast(other)) };
         }
     }
@@ -92,7 +91,6 @@ pub fn from(other: anytype) File {
 
     if (T == comptime_int or @typeInfo(T) == .int) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return File{ .handle = .fromNative(@intCast(other)) };
     }
 
@@ -100,24 +98,20 @@ pub fn from(other: anytype) File {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(self: File, buf: []const u8) Maybe(usize) {
     return sys.write(self.handle, buf);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn read(self: File, buf: []u8) Maybe(usize) {
     return sys.read(self.handle, buf);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readAll(self: File, buf: []u8) Maybe(usize) {
     return sys.readAll(self.handle, buf);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pwriteAll(self: File, buf: []const u8, initial_offset: i64) Maybe(void) {
     var remain = buf;
@@ -132,7 +126,6 @@ pub fn pwriteAll(self: File, buf: []const u8, initial_offset: i64) Maybe(void) {
                 }
                 remain = remain[amt..];
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 offset += @intCast(amt);
             },
         }
@@ -141,7 +134,6 @@ pub fn pwriteAll(self: File, buf: []const u8, initial_offset: i64) Maybe(void) {
     return .success;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeAll(self: File, buf: []const u8) Maybe(void) {
     var remain = buf;
@@ -161,7 +153,6 @@ pub fn writeAll(self: File, buf: []const u8) Maybe(void) {
     return .success;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeFile(
     relative_dir_or_cwd: anytype,
@@ -192,7 +183,6 @@ pub fn closeAndMoveTo(this: File, src: [:0]const u8, dest: [:0]const u8) !void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn stdIoRead(this: File, buf: []u8) ReadError!usize {
     return try this.read(buf).unwrap();
 }
@@ -205,14 +195,12 @@ pub fn reader(self: File) Reader {
 
 pub const WriteError = anyerror;
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn stdIoWrite(this: File, bytes: []const u8) WriteError!usize {
     try this.writeAll(bytes).unwrap();
 
     return bytes.len;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn stdIoWriteQuietDebug(this: File, bytes: []const u8) WriteError!usize {
     bun.Output.disableScopedDebugWriter();
@@ -301,7 +289,6 @@ pub const ReadToEndResult = struct {
     err: ?Error = null,
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn unwrap(self: *const ReadToEndResult) ![]u8 {
         if (self.err) |err| {
             try (bun.sys.Maybe(void){ .err = err }).unwrap();
@@ -311,12 +298,10 @@ pub const ReadToEndResult = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn readFillBuf(this: File, buf: []u8) Maybe([]u8) {
     var read_amount: usize = 0;
     while (read_amount < buf.len) {
         switch (if (comptime Environment.isPosix)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             pread(this.handle, buf[read_amount..], @intCast(read_amount))
         else
@@ -371,13 +356,11 @@ pub fn readToEndWithArrayList(this: File, list: *std.array_list.Managed(u8), siz
 
                 list.items.len += bytes_read;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 total += @intCast(bytes_read);
             },
         }
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ .result = @intCast(total) };
 }
@@ -455,7 +438,6 @@ pub fn readFileFrom(dir_fd: anytype, path: anytype, allocator: std.mem.Allocator
     if (result.bytes.items.len == 0) {
         // Don't allocate an empty string.
         // We won't be modifying an empty slice, anyway.
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return .{ .result = .{ this, @ptrCast(@constCast("")) } };
     }

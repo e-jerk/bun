@@ -6,6 +6,7 @@ iteration_count: u32 = 1,
 length: i32 = 0,
 algorithm: EVP.Algorithm,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn run(this: *PBKDF2, output: []u8) bool {
     const password = this.password.slice();
     const salt = this.salt.slice();
@@ -14,15 +15,20 @@ pub fn run(this: *PBKDF2, output: []u8) bool {
     const length = this.length;
 
     @memset(output, 0);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     assert(this.length <= @as(i32, @intCast(output.len)));
     BoringSSL.ERR_clear_error();
     const rc = BoringSSL.PKCS5_PBKDF2_HMAC(
         if (password.len > 0) password.ptr else null,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(password.len),
         salt.ptr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(salt.len),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(iteration_count),
         algorithm.md().?,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(length),
         output.ptr,
     );
@@ -49,6 +55,7 @@ pub const Job = struct {
     pub fn runTask(task: *jsc.WorkPoolTask) void {
         const job: *PBKDF2.Job = @fieldParentPtr("task", task);
         defer job.vm.enqueueTaskConcurrent(jsc.ConcurrentTask.create(job.any_task.task()));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         job.output = bun.default_allocator.alloc(u8, @as(usize, @intCast(job.pbkdf2.length))) catch {
             job.err = BoringSSL.EVP_R_MEMORY_LIMIT_EXCEEDED;
             return;
@@ -76,6 +83,7 @@ pub const Job = struct {
         }
 
         const output_slice = this.output;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         assert(output_slice.len == @as(usize, @intCast(this.pbkdf2.length)));
         const buffer_value = jsc.JSValue.createBuffer(globalThis, output_slice);
         this.output = &[_]u8{};
@@ -178,6 +186,7 @@ pub fn fromJS(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFrame, is_asy
     };
 
     var out = PBKDF2{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .iteration_count = @intCast(iteration_count),
         .length = keylen,
         .algorithm = algorithm,
@@ -218,6 +227,7 @@ pub fn fromJS(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFrame, is_asy
 }
 
 /// For usage in Zig
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pbkdf2(
     output: []u8,
     password: []const u8,
@@ -230,6 +240,7 @@ pub fn pbkdf2(
         .password = jsc.Node.StringOrBuffer{ .encoded_slice = jsc.ZigString.Slice.fromUTF8NeverFree(password) },
         .salt = jsc.Node.StringOrBuffer{ .encoded_slice = jsc.ZigString.Slice.fromUTF8NeverFree(salt) },
         .iteration_count = iteration_count,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .length = @intCast(output.len),
     };
 

@@ -184,6 +184,7 @@ pub const FileSystemRouter = struct {
     const win32_normalize_bufs = bun.ThreadlocalBuffers(struct {
         buf: if (Environment.isWindows) [bun.MAX_PATH_BYTES * 2]u8 else void = undefined,
     });
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn bustDirCacheRecursive(this: *FileSystemRouter, globalThis: *jsc.JSGlobalObject, inputPath: []const u8) void {
         var vm = globalThis.bunVM();
         var path = inputPath;
@@ -367,7 +368,8 @@ pub const FileSystemRouter = struct {
         var name_strings = try bun.default_allocator.alloc(ZigString, names.len * 2);
         defer bun.default_allocator.free(name_strings);
         var paths_strings = name_strings[names.len..];
-        for (names, 0..) |name, i| {
+        // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name, i| {
             name_strings[i] = ZigString.init(name).withEncoding();
             paths_strings[i] = ZigString.init(paths[i]).withEncoding();
         }
@@ -441,9 +443,9 @@ pub const MatchedRoute = struct {
     ) !*MatchedRoute {
         const params_list = try match.params.clone(allocator);
 
-        var route = try allocator.create(MatchedRoute);
+        var route = try safe.Box(MatchedRoute).init(allocator, undefined);
 
-        route.* = MatchedRoute{
+        route.ptr.* = MatchedRoute{
             .route_holder = match,
             .route = undefined,
             .asset_prefix = asset_prefix,
@@ -451,9 +453,9 @@ pub const MatchedRoute = struct {
             .base_dir = base_dir,
         };
         base_dir.ref();
-        route.params_list_holder = params_list;
-        route.route = &route.route_holder;
-        route.route_holder.params = &route.params_list_holder;
+        route.ptr.params_list_holder = params_list;
+        route.ptr.route = &route.ptr.route_holder;
+        route.ptr.route_holder.params = &route.ptr.params_list_holder;
         if (origin) |o| {
             o.ref();
         }
@@ -462,7 +464,7 @@ pub const MatchedRoute = struct {
             prefix.ref();
         }
 
-        return route;
+        return route.ptr;
     }
 
     pub fn deinit(this: *MatchedRoute) void {
@@ -560,7 +562,8 @@ pub const MatchedRoute = struct {
                     bun.assert(entry.values.len > 0);
                     if (entry.values.len > 1) {
                         var values = query_string_value_refs_buf[0..entry.values.len];
-                        for (entry.values, 0..) |value, i| {
+                        // safe-transpile: for with index access requires manual review
+    for (entry.values, 0..) |value, i| {
                             values[i] = ZigString.init(value).withEncoding();
                         }
                         try obj.putRecord(global, &str, values);
@@ -579,6 +582,7 @@ pub const MatchedRoute = struct {
         return value;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getScriptSrcString(
         origin: []const u8,
         comptime Writer: type,

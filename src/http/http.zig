@@ -57,6 +57,7 @@ pub var temp_hostname: [8192]u8 = undefined;
 /// Priority: tls_props.server_name > client.hostname > client.url.hostname
 /// The Host header value (client.hostname) may contain a port suffix which
 /// must be stripped because it is not part of the DNS name in certificates.
+// safe-transpile: function returns small constant slice — consider zust.String
 fn getTlsHostname(client: *const HTTPClient, allowProxyUrl: bool) []const u8 {
     if (allowProxyUrl) {
         if (client.http_proxy) |proxy| {
@@ -79,6 +80,7 @@ fn getTlsHostname(client: *const HTTPClient, allowProxyUrl: bool) []const u8 {
 
 /// Strips an optional port suffix from a host string (e.g. "example.com:443" -> "example.com").
 /// Handles IPv6 bracket notation correctly (e.g. "[::1]:443" -> "[::1]").
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn stripPortFromHost(host: []const u8) []const u8 {
     if (host.len == 0) return host;
     // IPv6 with brackets: "[::1]:port"
@@ -114,6 +116,7 @@ pub fn checkServerIdentity(
                 if (client.signals.get(.cert_errors)) {
                     // clone the relevant data
                     const cert_size = BoringSSL.i2d_X509(x509, null);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const cert = bun.handleOom(bun.default_allocator.alloc(u8, @intCast(cert_size)));
                     var cert_ptr = cert.ptr;
                     const result_size = BoringSSL.i2d_X509(x509, &cert_ptr);
@@ -226,6 +229,7 @@ pub fn onOpen(
         client.state.request_stage = .opened;
 
     if (comptime is_ssl) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var ssl_ptr: *BoringSSL.SSL = @ptrCast(socket.getNativeHandle());
         if (!ssl_ptr.isInitFinished()) {
             const _hostname = getTlsHostname(client, client.http_proxy != null);
@@ -234,6 +238,7 @@ pub fn onOpen(
             var hostname_needs_free = false;
             if (!strings.isIPAddress(_hostname)) {
                 if (_hostname.len < temp_hostname.len) {
+// safe-transpile: @memcpy requires manual review
                     @memcpy(temp_hostname[0.._hostname.len], _hostname);
                     temp_hostname[_hostname.len] = 0;
                     hostname = temp_hostname[0.._hostname.len :0];
@@ -308,6 +313,7 @@ pub fn firstCall(
     }
 
     if (comptime is_ssl) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const ssl_ptr: *BoringSSL.SSL = @ptrCast(socket.getNativeHandle());
         var proto: [*c]const u8 = null;
         var proto_len: c_uint = 0;
@@ -531,7 +537,8 @@ fn writeProxyConnect(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        for (names, 0..) |name_ptr, idx| {
+        // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name_ptr, idx| {
             _ = writer.write(hdrs.asStr(name_ptr)) catch 0;
             _ = writer.write(": ") catch 0;
             _ = writer.write(hdrs.asStr(values[idx])) catch 0;
@@ -581,7 +588,8 @@ fn writeProxyRequest(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        for (names, 0..) |name_ptr, idx| {
+        // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name_ptr, idx| {
             _ = writer.write(hdrs.asStr(name_ptr)) catch 0;
             _ = writer.write(": ") catch 0;
             _ = writer.write(hdrs.asStr(values[idx])) catch 0;
@@ -813,7 +821,8 @@ pub fn proxyAuthHash(this: *const HTTPClient) u64 {
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        for (names, 0..) |name_ptr, idx| {
+        // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name_ptr, idx| {
             const name = hdrs.asStr(name_ptr);
             const value = hdrs.asStr(values[idx]);
             // HTTP header names are case-insensitive (RFC 7230 §3.2) —
@@ -953,6 +962,7 @@ pub fn buildRequest(this: *HTTPClient, body_len: usize) picohttp.Request {
     const max_default_headers = 6;
     const max_user_headers = max_request_headers - max_default_headers;
 
+    // safe-transpile: for with index access requires manual review
     for (header_names, 0..) |head, i| {
         const name = this.headerStr(head);
         // Hash it as lowercase
@@ -1349,6 +1359,7 @@ pub const HTTPResponseMetadata = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn printRequest(protocol: Protocol, request: picohttp.Request, url: string, ignore_insecure: bool, body: []const u8, curl: bool) void {
     @branchHint(.cold);
     var request_ = request;
@@ -1462,6 +1473,7 @@ noinline fn sendInitialRequestPayload(this: *HTTPClient, comptime is_first_call:
         var remain = temporary_send_buffer.items.ptr[temporary_send_buffer.items.len..temporary_send_buffer.capacity];
         const wrote = @min(remain.len, this.state.request_body.len);
         assert(wrote > 0);
+// safe-transpile: @memcpy requires manual review
         @memcpy(remain[0..wrote], this.state.request_body[0..wrote]);
         temporary_send_buffer.items.len += wrote;
     }
@@ -1502,6 +1514,7 @@ noinline fn sendInitialRequestPayload(this: *HTTPClient, comptime is_first_call:
     return .{
         .has_sent_headers = has_sent_headers,
         .has_sent_body = has_sent_body,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .try_sending_more_data = amount == @as(c_int, @intCast(to_send.len)) and (!has_sent_body or !has_sent_headers),
     };
 }
@@ -1512,6 +1525,7 @@ pub fn flushStream(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPCont
 }
 
 /// Write data to the socket (Just a error wrapper to easly handle amount written and error handling)
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeToSocket(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, data: []const u8) !usize {
     var remaining = data;
     var total_written: usize = 0;
@@ -1520,6 +1534,7 @@ fn writeToSocket(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocke
         if (amount < 0) {
             return error.WriteFailed;
         }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const wrote: usize = @intCast(amount);
         total_written += wrote;
         remaining = remaining[wrote..];
@@ -1529,15 +1544,18 @@ fn writeToSocket(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocke
 }
 
 /// Write data to the socket and buffer the unwritten data if there is backpressure
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeToSocketWithBufferFallback(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, buffer: *bun.io.StreamBuffer, data: []const u8) !usize {
     const amount = try writeToSocket(is_ssl, socket, data);
     if (amount < data.len) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(buffer.write(data[@intCast(amount)..]));
     }
     return amount;
 }
 
 /// Write buffered data to the socket returning true if there is backpressure
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn writeToStreamUsingBuffer(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, buffer: *bun.io.StreamBuffer, data: []const u8) !bool {
     const to_send = buffer.slice();
     if (to_send.len > 0) {
@@ -1569,6 +1587,7 @@ fn writeToStreamUsingBuffer(this: *HTTPClient, comptime is_ssl: bool, socket: Ne
     return false;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeToStream(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, data: []const u8) void {
     log("flushStream", .{});
     if (this.state.original_request_body != .stream) {
@@ -1795,6 +1814,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     var remain = temporary_send_buffer.items.ptr[temporary_send_buffer.items.len..temporary_send_buffer.capacity];
                     const wrote = @min(remain.len, this.state.request_body.len);
                     assert(wrote > 0);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(remain[0..wrote], this.state.request_body[0..wrote]);
                     temporary_send_buffer.items.len += wrote;
                 }
@@ -1814,6 +1834,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     }
                 }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.state.request_sent_len += @as(usize, @intCast(amount));
                 const has_sent_headers = this.state.request_sent_len >= headers_len;
 
@@ -1837,6 +1858,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     assert(this.state.request_body.len > 0);
 
                     // we sent everything, but there's some body leftover
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     if (amount == @as(c_int, @intCast(to_send.len))) {
                         this.onWritable(false, is_ssl, socket);
                     }
@@ -1855,6 +1877,7 @@ pub fn closeAndFail(this: *HTTPClient, err: anyerror, comptime is_ssl: bool, soc
     this.fail(err);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn startProxyHandshake(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, start_payload: []const u8) void {
     log("startProxyHandshake", .{});
     // if we have options we pass them (ca, reject_unauthorized, etc) otherwise use the default
@@ -1862,6 +1885,7 @@ fn startProxyHandshake(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTP
     ProxyTunnel.start(this, is_ssl, socket, ssl_options, start_payload);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 inline fn handleShortRead(
     this: *HTTPClient,
     comptime is_ssl: bool,
@@ -1881,6 +1905,7 @@ inline fn handleShortRead(
     this.setTimeout(socket);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleOnDataHeaders(
     this: *HTTPClient,
     comptime is_ssl: bool,
@@ -1933,6 +1958,7 @@ pub fn handleOnDataHeaders(
         // we save the successful parsed response
         this.state.pending_response = response;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         to_read = to_read[@min(@as(usize, @intCast(response.bytes_read)), to_read.len)..];
 
         if (response.status_code == 101) {
@@ -2050,6 +2076,7 @@ pub fn handleOnDataHeaders(
         return;
     }
 }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn onData(
     this: *HTTPClient,
     comptime is_ssl: bool,
@@ -2526,6 +2553,7 @@ pub const HTTPClientResult = struct {
                 }
 
                 pub fn wrapped_callback(ptr: *anyopaque, async_http: *AsyncHTTP, result: HTTPClientResult) void {
+// safe-transpile: @alignCast requires manual review
                     const casted = @as(Type, @ptrCast(@alignCast(ptr)));
                     @call(bun.callmod_inline, callback, .{ casted, async_http, result });
                 }
@@ -2584,6 +2612,7 @@ pub fn toResult(this: *HTTPClient) HTTPClientResult {
 // never finishing sending the body
 const preallocate_max = 1024 * 1024 * 256;
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleResponseBody(this: *HTTPClient, incoming_data: []const u8, is_only_buffer: bool) !bool {
     assert(this.state.transfer_encoding == .identity);
     const content_length = this.state.content_length;
@@ -2596,6 +2625,7 @@ pub fn handleResponseBody(this: *HTTPClient, incoming_data: []const u8, is_only_
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn handleResponseBodyFromSinglePacket(this: *HTTPClient, incoming_data: []const u8) !void {
     if (!this.state.isChunkedEncoding()) {
         this.state.total_body_received += incoming_data.len;
@@ -2628,6 +2658,7 @@ fn handleResponseBodyFromSinglePacket(this: *HTTPClient, incoming_data: []const 
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn handleResponseBodyFromMultiplePackets(this: *HTTPClient, incoming_data: []const u8) !bool {
     var buffer = this.state.getBodyBuffer();
     const content_length = this.state.content_length;
@@ -2677,6 +2708,7 @@ fn handleResponseBodyFromMultiplePackets(this: *HTTPClient, incoming_data: []con
     return false;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn handleResponseBodyChunkedEncoding(
     this: *HTTPClient,
     incoming_data: []const u8,
@@ -2688,6 +2720,7 @@ pub fn handleResponseBodyChunkedEncoding(
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn handleResponseBodyChunkedEncodingFromMultiplePackets(
     this: *HTTPClient,
     incoming_data: []const u8,
@@ -2758,6 +2791,7 @@ fn handleResponseBodyChunkedEncodingFromMultiplePackets(
 // is usually pretty small or sometimes even just a length
 // so we can avoid allocating a temporary buffer to copy the data in
 var single_packet_small_buffer: [16 * 1024]u8 = undefined;
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn handleResponseBodyChunkedEncodingFromSinglePacket(
     this: *HTTPClient,
     incoming_data: []const u8,
@@ -2777,6 +2811,7 @@ fn handleResponseBodyChunkedEncodingFromSinglePacket(
         buffer = @constCast(incoming_data);
     } else {
         buffer = single_packet_small_buffer[0..incoming_data.len];
+// safe-transpile: @memcpy requires manual review
         @memcpy(buffer[0..incoming_data.len], incoming_data);
     }
 
@@ -2845,6 +2880,7 @@ pub fn handleResponseMetadata(
     var location: string = "";
     var pretend_304 = false;
     var is_server_sent_events = false;
+    // safe-transpile: for with index access requires manual review
     for (response.headers.list, 0..) |header, header_i| {
         switch (hashHeaderName(header.name)) {
             hashHeaderConst("Content-Length") => {
@@ -2865,15 +2901,19 @@ pub fn handleResponseMetadata(
                 if (!this.flags.disable_decompression) {
                     if (strings.eqlComptime(header.value, "gzip")) {
                         this.state.encoding = Encoding.gzip;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "deflate")) {
                         this.state.encoding = Encoding.deflate;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "br")) {
                         this.state.encoding = Encoding.brotli;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "zstd")) {
                         this.state.encoding = Encoding.zstd;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     }
                 }
@@ -3208,7 +3248,8 @@ pub fn handleResponseMetadata(
                         inline for (headers_to_remove) |header| {
                             const names = this.header_entries.items(.name);
 
-                            for (names, 0..) |name_ptr, i| {
+                            // safe-transpile: for with index access requires manual review
+    for (names, 0..) |name_ptr, i| {
                                 const name = this.headerStr(name_ptr);
                                 if (name.len == header.name.len) {
                                     const hash = hashHeaderName(name);

@@ -157,12 +157,14 @@ pub const IdentOrRef = packed struct(u128) {
 
     const DebugIdent = if (bun.Environment.isDebug) struct { []const u8, Allocator } else void;
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn debugIdent(this: @This()) []const u8 {
         if (comptime !bun.Environment.isDebug) {
             @compileError("debugIdent is only available in debug mode");
         }
 
         if (this.__ref_bit) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const ptr: *const []const u8 = @ptrFromInt(@as(usize, @intCast(this.__ptrbits)));
             return ptr.*;
         }
@@ -180,6 +182,7 @@ pub const IdentOrRef = packed struct(u128) {
 
     pub fn fromIdent(ident: Ident) @This() {
         return @This(){
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .__ptrbits = @intCast(@intFromPtr(ident.v.ptr)),
             .__len = ident.v.len,
             .__ref_bit = false,
@@ -188,6 +191,7 @@ pub const IdentOrRef = packed struct(u128) {
 
     pub fn fromRef(ref: bun.bundle_v2.Ref, debug_ident: DebugIdent) @This() {
         var this = @This(){
+// safe-transpile: @bitCast requires manual review
             .__len = @bitCast(ref),
             .__ref_bit = true,
         };
@@ -195,6 +199,7 @@ pub const IdentOrRef = packed struct(u128) {
         if (comptime bun.Environment.isDebug) {
             const heap_ptr: *[]const u8 = bun.handleOom(debug_ident[1].create([]const u8));
             heap_ptr.* = debug_ident[0];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.__ptrbits = @intCast(@intFromPtr(heap_ptr));
         }
 
@@ -211,6 +216,7 @@ pub const IdentOrRef = packed struct(u128) {
 
     pub inline fn asIdent(this: @This()) ?Ident {
         if (!this.__ref_bit) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const ptr: [*]const u8 = @ptrFromInt(@as(usize, @intCast(this.__ptrbits)));
             return Ident{ .v = ptr[0..this.__len] };
         }
@@ -219,6 +225,7 @@ pub const IdentOrRef = packed struct(u128) {
 
     pub inline fn asRef(this: @This()) ?bun.bundle_v2.Ref {
         if (this.__ref_bit) {
+// safe-transpile: @bitCast requires manual review
             const out: bun.bundle_v2.Ref = @bitCast(this.__len);
             return out;
         }
@@ -232,6 +239,7 @@ pub const IdentOrRef = packed struct(u128) {
         return local_names.?.get(final_ref);
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asOriginalString(this: @This(), symbols: *const Symbol.List) []const u8 {
         if (this.isIdent()) return this.asIdent().?.v;
         const ref = this.asRef().?;
@@ -242,7 +250,9 @@ pub const IdentOrRef = packed struct(u128) {
         if (this.isIdent()) {
             hasher.update(this.asIdent().?.v);
         } else {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const slice: [*]const u64 = @ptrCast(this);
+// safe-transpile: @alignCast requires manual review
             const slice_u8: [*]align(8) const u8 = @ptrCast(@alignCast(slice));
             hasher.update(slice_u8[0..2]);
         }

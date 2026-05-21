@@ -2,6 +2,7 @@
 const Auth = @This();
 
 pub const mysql_native_password = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn scramble(password: []const u8, nonce: []const u8) ![20]u8 {
         // SHA1( password ) XOR SHA1( nonce + SHA1( SHA1( password ) ) ) )
         var stage1 = [_]u8{0} ** 20;
@@ -33,7 +34,8 @@ pub const mysql_native_password = struct {
         sha1.final(&stage3);
 
         // Final: stage1 XOR stage3
-        for (&result, &stage1, &stage3) |*out, d1, d3| {
+        // safe-transpile: for with index access requires manual review
+    for (&result, &stage1, &stage3) |*out, d1, d3| {
             out.* = d3 ^ d1;
         }
 
@@ -42,6 +44,7 @@ pub const mysql_native_password = struct {
 };
 
 pub const caching_sha2_password = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn scramble(password: []const u8, nonce: []const u8) ![32]u8 {
         // XOR(SHA256(password), SHA256(SHA256(SHA256(password)), nonce))
         var digest1 = [_]u8{0} ** 32;
@@ -58,12 +61,15 @@ pub const caching_sha2_password = struct {
         // SHA256(SHA256(SHA256(password)) + nonce)
         const combined = try bun.default_allocator.alloc(u8, nonce.len + digest2.len);
         defer bun.default_allocator.free(combined);
+// safe-transpile: @memcpy requires manual review
         @memcpy(combined[0..nonce.len], nonce);
+// safe-transpile: @memcpy requires manual review
         @memcpy(combined[nonce.len..], &digest2);
         bun.sha.SHA256.hash(combined, &digest3, jsc.VirtualMachine.get().rareData().boringEngine());
 
         // XOR(SHA256(password), digest3)
-        for (&result, &digest1, &digest3) |*out, d1, d3| {
+        // safe-transpile: for with index access requires manual review
+    for (&result, &digest1, &digest3) |*out, d1, d3| {
             out.* = d1 ^ d3;
         }
 
@@ -131,16 +137,19 @@ pub const caching_sha2_password = struct {
                     break :brk password_buf[0..needed_len];
                 }
             };
+// safe-transpile: @memcpy requires manual review
             @memcpy(plain_password[0..this.password.len], this.password);
             plain_password[this.password.len] = 0;
             defer if (needs_to_free_password) bun.default_allocator.free(plain_password);
 
-            for (plain_password, 0..) |*c, i| {
+            // safe-transpile: for with index access requires manual review
+    for (plain_password, 0..) |*c, i| {
                 c.* ^= this.nonce[i % this.nonce.len];
             }
             BoringSSL.load();
             BoringSSL.c.ERR_clear_error();
             // Decode public key
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const bio = BoringSSL.c.BIO_new_mem_buf(&this.public_key[0], @intCast(this.public_key.len)) orelse return error.InvalidPublicKey;
             defer _ = BoringSSL.c.BIO_free(bio);
 
@@ -171,6 +180,7 @@ pub const caching_sha2_password = struct {
             defer if (needs_to_free_encrypted_password) bun.default_allocator.free(encrypted_password);
 
             const encrypted_password_len = BoringSSL.c.RSA_public_encrypt(
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(plain_password.len),
                 plain_password.ptr,
                 encrypted_password.ptr,
@@ -180,6 +190,7 @@ pub const caching_sha2_password = struct {
             if (encrypted_password_len == -1) {
                 return error.FailedToEncryptPassword;
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const encrypted_password_slice = encrypted_password[0..@intCast(encrypted_password_len)];
 
             var packet = try writer.start(this.sequence_id);

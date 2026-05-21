@@ -160,12 +160,12 @@ pub fn ObjectPool(
             if (comptime @import("../bun_core/env.zig").allow_assert)
                 bun.assert(!full());
 
-            const new_node = allocator.create(LinkedList.Node) catch unreachable;
-            new_node.* = LinkedList.Node{
+            const new_node = safe.Box(LinkedList.Node).init(allocator, undefined) catch unreachable;
+            new_node.ptr.* = LinkedList.Node{
                 .allocator = allocator,
                 .data = pooled,
             };
-            release(new_node);
+            release(new_node.ptr);
         }
 
         pub fn getIfExists() ?*LinkedList.Node {
@@ -195,8 +195,8 @@ pub fn ObjectPool(
 
             if (comptime log_allocations) @import("std-fs-compat").File.stderr().writeAll(comptime std.fmt.comptimePrint("Allocate {s} - {d} bytes\n", .{ @typeName(Type), @sizeOf(Type) })) catch {};
 
-            const new_node = allocator.create(LinkedList.Node) catch unreachable;
-            new_node.* = LinkedList.Node{
+            const new_node = safe.Box(LinkedList.Node).init(allocator, undefined) catch unreachable;
+            new_node.ptr.* = LinkedList.Node{
                 .allocator = allocator,
                 .data = if (comptime Init) |init_|
                     (init_(
@@ -206,7 +206,7 @@ pub fn ObjectPool(
                     undefined,
             };
 
-            return new_node;
+            return new_node.ptr;
         }
 
         pub fn releaseValue(value: *Type) void {

@@ -70,16 +70,13 @@ pub fn init(comptime T: type, ctx: *T, fs: *bun.fs.FileSystem, allocator: std.me
     const wrapped = struct {
         fn onFileUpdateWrapped(ctx_opaque: *anyopaque, events: []WatchEvent, changed_files: []?[:0]u8, watchlist: WatchList) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             T.onFileUpdate(@ptrCast(@alignCast(ctx_opaque)), events, changed_files, watchlist);
         }
         fn onErrorWrapped(ctx_opaque: *anyopaque, err: bun.sys.Error) void {
             if (@hasDecl(T, "onWatchError")) {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 T.onWatchError(@ptrCast(@alignCast(ctx_opaque)), err);
             } else {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 T.onError(@ptrCast(@alignCast(ctx_opaque)), err);
             }
@@ -143,7 +140,6 @@ pub fn deinit(this: *Watcher, close_descriptors: bool) void {
 
 pub fn getHash(filepath: string) HashType {
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     return @as(HashType, @truncate(bun.hash(filepath)));
 }
 
@@ -205,7 +201,7 @@ pub const WatchEvent = struct {
             try w.writeAll("{");
             var first = true;
             inline for (comptime std.meta.fieldNames(Op)) |name| {
-                if (comptime zust.SimdUtils.eql(name, "_padding")) continue;
+                if (comptime std.mem.eql(u8, name, "_padding")) continue;
                 if (@field(op, name)) {
                     if (!first) {
                         try w.writeAll(",");
@@ -362,11 +358,9 @@ pub fn addFileDescriptorToKQueueWithoutChecks(this: *Watcher, fd: bun.FD, watchl
 
     // id
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     event.ident = @intCast(fd.native());
 
     // Store the index for fast filtering later
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     event.udata = @as(usize, @intCast(watchlist_id));
     var events: [1]KEvent = .{event};
@@ -502,11 +496,9 @@ fn appendDirectoryAssumeCapacity(
 
         // id
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         event.ident = @intCast(fd.native());
 
         // Store the index for fast filtering later
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         event.udata = @as(usize, @intCast(watchlist_id));
         var events: [1]KEvent = .{event};
@@ -532,7 +524,8 @@ fn appendDirectoryAssumeCapacity(
             file_path_[0 .. file_path_.len - 1 :0]
         else brk: {
             const trailing_slash = if (file_path_.len > 1) std.mem.trimEnd(u8, file_path_, &.{ 0, '/' }) else file_path_;
-            zust.SimdUtils.copy(buf[0..trailing_slash.len], trailing_slash);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(buf[0..trailing_slash.len], trailing_slash);
             buf[trailing_slash.len] = 0;
             break :brk buf[0..trailing_slash.len :0];
         };
@@ -545,7 +538,6 @@ fn appendDirectoryAssumeCapacity(
 
     this.watchlist.appendAssumeCapacity(item);
     return .{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .result = @as(WatchItemIndex, @truncate(this.watchlist.len - 1)),
     };
@@ -581,7 +573,6 @@ pub fn appendFileMaybeLock(
             const fds = watchlist_slice.items(.fd);
             if (std.mem.indexOfScalar(bun.FD, fds, dir_fd)) |i| {
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 parent_watch_item = @as(WatchItemIndex, @truncate(i));
             }
         }
@@ -590,12 +581,10 @@ pub fn appendFileMaybeLock(
             const hashes = watchlist_slice.items(.hash);
             if (std.mem.indexOfScalar(HashType, hashes, parent_dir_hash)) |i| {
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 parent_watch_item = @as(WatchItemIndex, @truncate(i));
             }
         }
     }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     bun.handleOom(this.watchlist.ensureUnusedCapacity(this.allocator, 1 + @as(usize, @intCast(@intFromBool(parent_watch_item == null)))));
 
@@ -660,7 +649,6 @@ pub fn addDirectory(
     defer this.mutex.unlock();
 
     if (this.indexOf(hash)) |idx| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return .{ .result = @truncate(idx) };
     }
@@ -773,10 +761,8 @@ pub fn addFile(
 
 pub fn indexOf(this: *Watcher, hash: HashType) ?u32 {
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.watchlist.items(.hash), 0..) |other, i| {
         if (hash == other) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(i));
         }
@@ -788,7 +774,6 @@ pub fn remove(this: *Watcher, hash: HashType) void {
     this.mutex.lock();
     defer this.mutex.unlock();
     if (this.indexOf(hash)) |index| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         this.removeAtIndex(@truncate(index), hash, &[_]HashType{}, .file);
     }
@@ -803,7 +788,6 @@ pub fn removeAtIndex(this: *Watcher, index: WatchItemIndex, hash: HashType, pare
     if (comptime kind == .directory) {
         for (parents) |parent| {
             if (parent == hash) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.evict_list[this.evict_list_i] = @as(WatchItemIndex, @truncate(parent));
                 this.evict_list_i += 1;
@@ -820,7 +804,6 @@ pub fn onMaybeWatchDirectory(watch: *Watcher, file_path: string, dir_fd: bun.FD)
     // We don't want to watch:
     // - Directories outside the root directory
     // - Directories inside node_modules
-// zust: use zust.String or zust.GuardedSlice for slice operations
 // zust: use zust.String or zust.GuardedSlice for slice operations
     if (std.mem.indexOf(u8, file_path, "node_modules") == null and std.mem.indexOf(u8, file_path, watch.fs.top_level_dir) != null) {
         _ = watch.addDirectory(dir_fd, file_path, getHash(file_path), false);

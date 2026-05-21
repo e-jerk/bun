@@ -3,12 +3,19 @@ const Serializer = @This();
 pub const version = "bun-lockfile-format-v0\n";
 const header_bytes: string = "#!/usr/bin/env bun\n" ++ version;
 
+// safe-transpile: @bitCast requires manual review
 const has_patched_dependencies_tag: u64 = @bitCast(@as([8]u8, "pAtChEdD".*));
+// safe-transpile: @bitCast requires manual review
 const has_workspace_package_ids_tag: u64 = @bitCast(@as([8]u8, "wOrKsPaC".*));
+// safe-transpile: @bitCast requires manual review
 const has_trusted_dependencies_tag: u64 = @bitCast(@as([8]u8, "tRuStEDd".*));
+// safe-transpile: @bitCast requires manual review
 const has_empty_trusted_dependencies_tag: u64 = @bitCast(@as([8]u8, "eMpTrUsT".*));
+// safe-transpile: @bitCast requires manual review
 const has_overrides_tag: u64 = @bitCast(@as([8]u8, "oVeRriDs".*));
+// safe-transpile: @bitCast requires manual review
 const has_catalogs_tag: u64 = @bitCast(@as([8]u8, "cAtAlOgS".*));
+// safe-transpile: @bitCast requires manual review
 const has_config_version_tag: u64 = @bitCast(@as([8]u8, "cNfGvRsN".*));
 
 pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std.array_list.Managed(u8), total_size: *usize, end_pos: *usize) !void {
@@ -34,6 +41,7 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
             return s.bytes.items.len;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn pwrite(
             s: @This(),
             data: []const u8,
@@ -142,7 +150,8 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
         var external_overrides = try std.ArrayListUnmanaged(Dependency.External).initCapacity(z_allocator, this.overrides.map.count());
         defer external_overrides.deinit(z_allocator);
         external_overrides.items.len = this.overrides.map.count();
-        for (external_overrides.items, this.overrides.map.values()) |*dest, src| {
+        // safe-transpile: for with index access requires manual review
+    for (external_overrides.items, this.overrides.map.values()) |*dest, src| {
             dest.* = src.toExternal();
         }
 
@@ -195,7 +204,8 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
         var external_deps_buf: std.ArrayListUnmanaged(Dependency.External) = try .initCapacity(z_allocator, this.catalogs.default.count());
         defer external_deps_buf.deinit(z_allocator);
         external_deps_buf.items.len = this.catalogs.default.count();
-        for (external_deps_buf.items, this.catalogs.default.values()) |*dest, src| {
+        // safe-transpile: for with index access requires manual review
+    for (external_deps_buf.items, this.catalogs.default.values()) |*dest, src| {
             dest.* = src.toExternal();
         }
 
@@ -232,7 +242,8 @@ pub fn save(this: *Lockfile, options: *const PackageManager.Options, bytes: *std
             external_deps_buf.items.len = catalog_deps.count();
             defer external_deps_buf.clearRetainingCapacity();
 
-            for (external_deps_buf.items, catalog_deps.values()) |*dest, src| {
+            // safe-transpile: for with index access requires manual review
+    for (external_deps_buf.items, catalog_deps.values()) |*dest, src| {
                 dest.* = src.toExternal();
             }
 
@@ -377,7 +388,9 @@ pub fn load(
                     defer workspace_versions_list.deinit(allocator);
                     try lockfile.workspace_versions.ensureTotalCapacity(allocator, workspace_versions_list.items.len);
                     lockfile.workspace_versions.entries.len = workspace_versions_list.items.len;
+// safe-transpile: @memcpy requires manual review
                     @memcpy(lockfile.workspace_versions.keys(), workspace_package_name_hashes.items);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(lockfile.workspace_versions.values(), workspace_versions_list.items);
                     try lockfile.workspace_versions.reIndex(allocator);
                 }
@@ -399,7 +412,9 @@ pub fn load(
                     try lockfile.workspace_paths.ensureTotalCapacity(allocator, workspace_paths_strings.items.len);
 
                     lockfile.workspace_paths.entries.len = workspace_paths_strings.items.len;
+// safe-transpile: @memcpy requires manual review
                     @memcpy(lockfile.workspace_paths.keys(), workspace_paths_hashes.items);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(lockfile.workspace_paths.values(), workspace_paths_strings.items);
                     try lockfile.workspace_paths.reIndex(allocator);
                 }
@@ -427,6 +442,7 @@ pub fn load(
                 try lockfile.trusted_dependencies.?.ensureTotalCapacity(allocator, trusted_dependencies_hashes.items.len);
 
                 lockfile.trusted_dependencies.?.entries.len = trusted_dependencies_hashes.items.len;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(lockfile.trusted_dependencies.?.keys(), trusted_dependencies_hashes.items);
                 try lockfile.trusted_dependencies.?.reIndex(allocator);
             } else if (next_num == has_empty_trusted_dependencies_tag) {
@@ -466,7 +482,8 @@ pub fn load(
                     .buffer = lockfile.buffers.string_bytes.items,
                     .package_manager = manager,
                 };
-                for (overrides_name_hashes.items, override_versions_external.items) |name, value| {
+                // safe-transpile: for with index access requires manual review
+    for (overrides_name_hashes.items, override_versions_external.items) |name, value| {
                     map.putAssumeCapacity(name, Dependency.toDependency(value, context));
                 }
             } else {
@@ -499,7 +516,8 @@ pub fn load(
                     std.ArrayListUnmanaged(PatchedDep),
                 );
 
-                for (patched_dependencies_name_and_version_hashes.items, patched_dependencies_paths.items) |name_hash, patch_path| {
+                // safe-transpile: for with index access requires manual review
+    for (patched_dependencies_name_and_version_hashes.items, patched_dependencies_paths.items) |name_hash, patch_path| {
                     map.putAssumeCapacity(name_hash, patch_path);
                 }
             } else {
@@ -531,7 +549,8 @@ pub fn load(
                     .package_manager = manager,
                 };
 
-                for (default_dep_names.items, default_deps.items) |dep_name, dep| {
+                // safe-transpile: for with index access requires manual review
+    for (default_dep_names.items, default_deps.items) |dep_name, dep| {
                     lockfile.catalogs.default.putAssumeCapacityContext(dep_name, Dependency.toDependency(dep, context), String.arrayHashContext(lockfile, null));
                 }
 
@@ -551,7 +570,8 @@ pub fn load(
 
                     try group.ensureTotalCapacity(allocator, catalog_deps.items.len);
 
-                    for (catalog_dep_names.items, catalog_deps.items) |dep_name, dep| {
+                    // safe-transpile: for with index access requires manual review
+    for (catalog_dep_names.items, catalog_deps.items) |dep_name, dep| {
                         group.putAssumeCapacityContext(dep_name, Dependency.toDependency(dep, context), String.arrayHashContext(lockfile, null));
                     }
                 }
@@ -578,13 +598,16 @@ pub fn load(
     lockfile.scratch = Lockfile.Scratch.init(allocator);
     lockfile.package_index = PackageIndex.Map.initContext(allocator, .{});
     lockfile.string_pool = StringPool.init(allocator);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     try lockfile.package_index.ensureTotalCapacity(@as(u32, @truncate(lockfile.packages.len)));
 
     if (!has_workspace_name_hashes) {
         const slice = lockfile.packages.slice();
         const name_hashes = slice.items(.name_hash);
         const resolutions = slice.items(.resolution);
-        for (name_hashes, resolutions, 0..) |name_hash, resolution, id| {
+        // safe-transpile: for with index access requires manual review
+    for (name_hashes, resolutions, 0..) |name_hash, resolution, id| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try lockfile.getOrPutID(@as(PackageID, @truncate(id)), name_hash);
 
             // compatibility with < Bun v1.0.4
@@ -598,7 +621,9 @@ pub fn load(
     } else {
         const slice = lockfile.packages.slice();
         const name_hashes = slice.items(.name_hash);
-        for (name_hashes, 0..) |name_hash, id| {
+        // safe-transpile: for with index access requires manual review
+    for (name_hashes, 0..) |name_hash, id| {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try lockfile.getOrPutID(@as(PackageID, @truncate(id)), name_hash);
         }
     }

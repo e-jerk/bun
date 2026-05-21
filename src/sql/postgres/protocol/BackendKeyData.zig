@@ -11,9 +11,7 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
 
     this.* = .{
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         .process_id = @bitCast(try reader.int4()),
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         .secret_key = @bitCast(try reader.int4()),
     };

@@ -132,6 +132,7 @@ pub const Printer = struct {
 
     const This = @This();
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn lookupSymbol(this: *This, ref: bun.bundle_v2.Ref) []const u8 {
         const symbols = this.symbols;
 
@@ -144,6 +145,7 @@ pub const Printer = struct {
         return original_name;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn lookupIdentOrRef(this: *This, ident: css.css_values.ident.IdentOrRef) []const u8 {
         if (comptime bun.Environment.isDebug) {
             if (in_debug_fmt) {
@@ -165,6 +167,7 @@ pub const Printer = struct {
     }
 
     /// Returns the current source filename that is being printed.
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn filename(this: *const This) []const u8 {
         if (this.sources) |sources| {
             if (this.loc.source_index < sources.items.len) return sources.items[this.loc.source_index];
@@ -313,18 +316,22 @@ pub const Printer = struct {
     ///
     /// NOTE: Same constraints as `writeStr`, the `str` param is assumted to not
     /// contain any newline characters
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(this: *This, str: []const u8) !void {
         return this.writeStr(str) catch std.mem.Allocator.Error.OutOfMemory;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeComment(this: *This, comment: []const u8) PrintErr!void {
         _ = this.dest.writeAll(comment) catch {
             return this.addFmtError();
         };
         const new_lines = std.mem.count(u8, comment, "\n");
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.line += @intCast(new_lines);
         this.col = 0;
         const last_line_start = comment.len - (std.mem.lastIndexOfScalar(u8, comment, '\n') orelse comment.len);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.col += @intCast(last_line_start);
         return;
     }
@@ -333,10 +340,12 @@ pub const Printer = struct {
     ///
     /// NOTE: Is is assumed that the string does not contain any newline characters.
     /// If such a string is written, it will break source maps.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeStr(this: *This, s: []const u8) PrintErr!void {
         if (comptime bun.Environment.isDebug) {
             bun.assert(std.mem.indexOfScalar(u8, s, '\n') == null);
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.col += @intCast(s.len);
         _ = this.dest.writeAll(s) catch {
             return this.addFmtError();
@@ -348,14 +357,17 @@ pub const Printer = struct {
     ///
     /// NOTE: Is is assumed that the formatted string does not contain any newline characters.
     /// If such a string is written, it will break source maps.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeFmt(this: *This, comptime fmt: []const u8, args: anytype) PrintErr!void {
         // assuming the writer comes from an ArrayList
         const start: usize = getWrittenAmt(this.dest);
         this.dest.print(fmt, args) catch return this.addFmtError();
         const written = getWrittenAmt(this.dest) - start;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.col += @intCast(written);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn replaceDots(allocator: Allocator, s: []const u8) []const u8 {
         var str = bun.handleOom(allocator.dupe(u8, s));
         std.mem.replaceScalar(u8, str[0..], '.', '-');
@@ -380,6 +392,7 @@ pub const Printer = struct {
     /// Writes a CSS identifier to the underlying destination, escaping it
     /// as appropriate. If the `css_modules` option was enabled, then a hash
     /// is added, and the mapping is added to the CSS module.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeIdent(this: *This, ident: []const u8, handle_css_module: bool) PrintErr!void {
         if (handle_css_module) {
             if (this.css_module) |*css_module| {
@@ -391,10 +404,12 @@ pub const Printer = struct {
                     ident,
                     &closure,
                     struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
                         pub fn writeFn(self: *Closure, s1: []const u8, replace_dots: bool) void {
                             // PERF: stack fallback?
                             const s = if (!replace_dots) s1 else replaceDots(self.printer.allocator, s1);
                             defer if (replace_dots) self.printer.allocator.free(s);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             self.printer.col += @intCast(s.len);
                             if (self.first) {
                                 self.first = false;
@@ -420,9 +435,11 @@ pub const Printer = struct {
         if (this.css_module) |*css_module| {
             if (css_module.config.dashed_idents) {
                 const Fn = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn writeFn(self: *This, s1: []const u8, replace_dots: bool) void {
                         const s = if (!replace_dots) s1 else replaceDots(self.allocator, s1);
                         defer if (replace_dots) self.allocator.free(s);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         self.col += @intCast(s.len);
                         return css.serializer.serializeName(s, self) catch |e| css.OOM(e);
                     }
@@ -549,6 +566,7 @@ pub const Printer = struct {
         break :indents indents;
     };
 
+// safe-transpile: function returns small constant slice — consider safe.String
     fn getIndent(this: *This, idnt: u8) []const u8 {
         // divide by 2 to get index into table
         const i = idnt >> 1;

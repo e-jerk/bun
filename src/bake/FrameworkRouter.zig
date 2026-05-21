@@ -122,7 +122,6 @@ pub const Type = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn initEmpty(root: []const u8, types: []Type, allocator: Allocator) !FrameworkRouter {
     bun.assert(std.fs.path.isAbsolute(root));
 
@@ -130,14 +129,12 @@ pub fn initEmpty(root: []const u8, types: []Type, allocator: Allocator) !Framewo
     errdefer routes.deinit(allocator);
 
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (types, 0..) |*ty, type_index| {
         ty.abs_root = bun.strings.withoutTrailingSlashWindowsPath(ty.abs_root);
         bun.assert(bun.strings.hasPrefix(ty.abs_root, root));
 
         routes.appendAssumeCapacity(.{
             .part = .{ .text = "" },
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .type = Type.Index.init(@intCast(type_index)),
             .parent = .none,
@@ -177,10 +174,8 @@ pub fn memoryCost(fr: *FrameworkRouter) usize {
 
 pub fn scanAll(fr: *FrameworkRouter, allocator: Allocator, r: *Resolver, ctx: anytype) !void {
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (fr.types, 0..) |ty, i| {
         _ = ty;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try fr.scan(allocator, FrameworkRouter.Type.Index.init(@intCast(i)), r, ctx);
     }
@@ -230,7 +225,6 @@ pub const EncodedPattern = struct {
         offset: usize,
 
         pub fn readWithSize(it: Iterator) struct { Part, usize } {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             const header: Part.SerializedHeader = @bitCast(mem.readInt(
                 u32,
@@ -286,7 +280,6 @@ pub const EncodedPattern = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn matches(p: EncodedPattern, path: []const u8, params: *MatchedParams) bool {
         var param_num: usize = 0;
         var it = p.iterate();
@@ -309,7 +302,6 @@ pub const EncodedPattern = struct {
                         bun.Output.panic("Route pattern matched more than {d} parameters. Path: {s}", .{ MatchedParams.max_count, path });
                     }
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     params.params.len = @intCast(param_num + 1);
                     params.params.buffer[param_num] = .{
                         .key = name,
@@ -331,7 +323,6 @@ pub const EncodedPattern = struct {
                                     bun.Output.panic("Route pattern matched more than {d} parameters. Path: {s}", .{ MatchedParams.max_count, path });
                                 }
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 params.params.len = @intCast(param_num + 1);
                                 params.params.buffer[param_num] = .{
                                     .key = name,
@@ -352,7 +343,6 @@ pub const EncodedPattern = struct {
 
     pub const EffectiveURLContext = struct {
         pub fn hash(_: @This(), p: EncodedPattern) u32 {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return @truncate(p.effectiveURLHash());
         }
@@ -427,10 +417,8 @@ pub const Part = union(enum(u3)) {
             inline else => |t| t,
         };
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         try writer.writeInt(u32, @bitCast(SerializedHeader{
             .tag = std.meta.activeTag(part),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .len = @intCast(payload.len),
         }), .little);
@@ -521,7 +509,6 @@ pub const Style = union(enum) {
     const NextRoutingConvention = enum { app, pages };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parse(style: Style, file_path: []const u8, ext: []const u8, log: *TinyLog, allow_layouts: bool, arena: Allocator) !?ParsedPattern {
         bun.assert(file_path[0] == '/');
 
@@ -539,7 +526,6 @@ pub const Style = union(enum) {
 
     /// Implements the pages router parser from Next.js:
     /// https://nextjs.org/docs/getting-started/project-structure#pages-routing-conventions
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseNextJsPages(file_path_raw: []const u8, ext: []const u8, log: *TinyLog, allow_layouts: bool, arena: Allocator) !?ParsedPattern {
         var file_path = file_path_raw[0 .. file_path_raw.len - ext.len];
@@ -563,7 +549,6 @@ pub const Style = union(enum) {
 
     /// Implements the app router parser from Next.js:
     /// https://nextjs.org/docs/getting-started/project-structure#app-routing-conventions
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseNextJsApp(
         file_path_raw: []const u8,
@@ -613,7 +598,6 @@ pub const Style = union(enum) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseNextJsLikeRouteSegment(
         raw_input: []const u8,
@@ -738,7 +722,6 @@ const InsertKind = enum {
 /// This function is designed so that any insertion order will create an
 /// equivalent routing tree, but it does not guarantee that route indices
 /// would match up if a different insertion order was picked.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn insert(
     fr: *FrameworkRouter,
@@ -887,7 +870,6 @@ pub const MatchedParams = struct {
 /// complicated data structure that production uses to efficiently map
 /// urls to routes instead of this tree-traversal algorithm.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn matchSlow(fr: *FrameworkRouter, path: []const u8, params: *MatchedParams) ?Route.Index {
     params.* = .{ .params = .{} };
 
@@ -896,7 +878,6 @@ pub fn matchSlow(fr: *FrameworkRouter, path: []const u8, params: *MatchedParams)
         return static;
     }
 
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (fr.dynamic_routes.keys(), 0..) |pattern, i| {
         if (pattern.matches(path, params)) {
@@ -918,7 +899,6 @@ pub fn typePtr(fr: *FrameworkRouter, i: Type.Index) *Type {
 fn newRoute(fr: *FrameworkRouter, alloc: Allocator, route_data: Route) !Route.Index {
     const i = fr.routes.items.len;
     try fr.routes.append(alloc, route_data);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return Route.Index.init(@intCast(i));
 }
@@ -946,31 +926,26 @@ pub const TinyLog = struct {
     pub const empty: TinyLog = .{ .cursor_at = std.math.maxInt(u32), .cursor_len = 0, .msg = .{} };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fail(log: *TinyLog, comptime fmt: []const u8, args: anytype, cursor_at: usize, cursor_len: usize) PatternParseError {
         log.write(fmt, args);
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         log.cursor_at = @intCast(cursor_at);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         log.cursor_len = @intCast(cursor_len);
         return PatternParseError.InvalidRoutePattern;
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(log: *TinyLog, comptime fmt: []const u8, args: anytype) void {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         log.msg.len = @intCast(if (std.fmt.bufPrint(&log.msg.buffer, fmt, args)) |slice| slice.len else |_| brk: {
             // truncation should never happen because the buffer is HUGE. handle it anyways
-            zust.SimdUtils.copy(log.msg.buffer[log.msg.buffer.len - 3 ..], "...");
+// safe-transpile: @memcpy requires manual review
+            @memcpy(log.msg.buffer[log.msg.buffer.len - 3 ..], "...");
             break :brk log.msg.buffer.len;
         });
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn print(log: *const TinyLog, rel_path: []const u8) void {
         const after = rel_path[@max(0, log.cursor_at)..];
@@ -1014,26 +989,20 @@ pub const InsertionContext = struct {
     pub fn wrap(comptime T: type, ctx: *T) InsertionContext {
         const wrapper = struct {
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
             fn getFileIdForRouter(opaque_ctx: *anyopaque, abs_path: []const u8, associated_route: Route.Index, kind: Route.FileKind) bun.OOM!OpaqueFileId {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const cast_ctx: *T = @ptrCast(@alignCast(opaque_ctx));
                 return try cast_ctx.getFileIdForRouter(abs_path, associated_route, kind);
             }
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
             fn onRouterSyntaxError(opaque_ctx: *anyopaque, rel_path: []const u8, log: TinyLog) bun.OOM!void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const cast_ctx: *T = @ptrCast(@alignCast(opaque_ctx));
                 if (!@hasDecl(T, "onRouterSyntaxError")) @panic("TODO: onRouterSyntaxError for " ++ @typeName(T));
                 return try cast_ctx.onRouterSyntaxError(rel_path, log);
             }
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
             fn onRouterCollisionError(opaque_ctx: *anyopaque, rel_path: []const u8, other_id: OpaqueFileId, file_kind: Route.FileKind) bun.OOM!void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const cast_ctx: *T = @ptrCast(@alignCast(opaque_ctx));
                 if (!@hasDecl(T, "onRouterCollisionError")) @panic("TODO: onRouterCollisionError for " ++ @typeName(T));
@@ -1127,7 +1096,6 @@ fn scanInner(
                     var log = TinyLog.empty;
                     defer _ = arena_state.reset(.retain_capacity);
                     const parsed = (t.style.parse(rel_path, ext, &log, t.allow_layouts, arena_state.allocator()) catch {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         log.cursor_at += @intCast(t.abs_root.len - fr.root.len);
                         try ctx.vtable.onRouterSyntaxError(ctx.opaque_ctx, full_rel_path, log);
@@ -1286,11 +1254,9 @@ pub const JSFrameworkRouter = struct {
         if (jsfr.stored_parse_errors.items.len > 0) {
             const arr = try JSValue.createEmptyArray(global, jsfr.stored_parse_errors.items.len);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (jsfr.stored_parse_errors.items, 0..) |*item, i| {
                 try arr.putIndex(
                     global,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(i),
                     global.createErrorInstance("Invalid route {f}: {s}", .{
@@ -1439,15 +1405,12 @@ pub const JSFrameworkRouter = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getFileIdForRouter(jsfr: *JSFrameworkRouter, abs_path: []const u8, _: Route.Index, _: Route.FileKind) !OpaqueFileId {
         try jsfr.files.append(bun.default_allocator, bun.String.cloneUTF8(abs_path));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return OpaqueFileId.init(@intCast(jsfr.files.items.len - 1));
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onRouterSyntaxError(jsfr: *JSFrameworkRouter, rel_path: []const u8, log: TinyLog) !void {
         const rel_path_dupe = try bun.default_allocator.dupe(u8, rel_path);

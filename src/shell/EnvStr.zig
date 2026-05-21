@@ -25,7 +25,6 @@ pub const EnvStr = packed struct(u128) {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn initSlice(str: []const u8) EnvStr {
         if (str.len == 0)
             // Zero length strings may have invalid pointers, leading to a bad integer cast.
@@ -40,15 +39,12 @@ pub const EnvStr = packed struct(u128) {
 
     fn toPtr(ptr_val: *const anyopaque) u48 {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         const num: [8]u8 = @bitCast(@intFromPtr(ptr_val));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @bitCast(num[0..6].*);
     }
 
     /// Same thing as `initRefCounted` except it duplicates thepassed string
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn dupeRefCounted(old_str: []const u8) EnvStr {
         if (old_str.len == 0)
@@ -63,7 +59,6 @@ pub const EnvStr = packed struct(u128) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn initRefCounted(str: []const u8) EnvStr {
         if (str.len == 0)
             return .{ .tag = .empty, .ptr = 0, .len = 0 };
@@ -74,7 +69,6 @@ pub const EnvStr = packed struct(u128) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: EnvStr) []const u8 {
         return switch (this.tag) {
@@ -117,15 +111,12 @@ pub const EnvStr = packed struct(u128) {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     inline fn castSlice(this: EnvStr) []const u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as([*]u8, @ptrFromInt(@as(usize, @intCast(this.ptr))))[0..this.len];
     }
 
     inline fn castRefCounted(this: EnvStr) *RefCountedStr {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @ptrFromInt(@as(usize, @intCast(this.ptr)));
     }

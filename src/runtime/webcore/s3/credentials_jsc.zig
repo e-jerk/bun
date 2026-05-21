@@ -132,15 +132,12 @@ pub fn getCredentialsWithOptions(this: S3Credentials, default_options: MultiPart
                 if (pageSize < MultiPartUploadOptions.MIN_SINGLE_UPLOAD_SIZE or pageSize > MultiPartUploadOptions.MAX_SINGLE_UPLOAD_SIZE) {
                     return globalObject.throwRangeError(pageSize, .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .min = @intCast(MultiPartUploadOptions.MIN_SINGLE_UPLOAD_SIZE),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .max = @intCast(MultiPartUploadOptions.MAX_SINGLE_UPLOAD_SIZE),
                         .field_name = "pageSize",
                     });
                 } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     new_credentials.options.partSize = @intCast(pageSize);
                 }
@@ -149,15 +146,12 @@ pub fn getCredentialsWithOptions(this: S3Credentials, default_options: MultiPart
                 if (partSize < MultiPartUploadOptions.MIN_SINGLE_UPLOAD_SIZE or partSize > MultiPartUploadOptions.MAX_SINGLE_UPLOAD_SIZE) {
                     return globalObject.throwRangeError(partSize, .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .min = @intCast(MultiPartUploadOptions.MIN_SINGLE_UPLOAD_SIZE),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .max = @intCast(MultiPartUploadOptions.MAX_SINGLE_UPLOAD_SIZE),
                         .field_name = "partSize",
                     });
                 } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     new_credentials.options.partSize = @intCast(partSize);
                 }
@@ -171,7 +165,6 @@ pub fn getCredentialsWithOptions(this: S3Credentials, default_options: MultiPart
                     });
                 } else {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     new_credentials.options.queueSize = @intCast(@min(queueSize, std.math.maxInt(u8)));
                 }
             }
@@ -184,7 +177,6 @@ pub fn getCredentialsWithOptions(this: S3Credentials, default_options: MultiPart
                         .field_name = "retry",
                     });
                 } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     new_credentials.options.retry = @intCast(retry);
                 }
@@ -262,7 +254,6 @@ pub fn getCredentialsWithOptions(this: S3Credentials, default_options: MultiPart
     return new_credentials;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn containsNewlineOrCR(value: []const u8) bool {
     return strings.indexOfAny(value, "\r\n") != null;

@@ -12,13 +12,11 @@ const primes = [_]u64{
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn read_bytes(comptime bytes: u8, data: []const u8) u64 {
     const T = std.meta.Int(.unsigned, 8 * bytes);
     return mem.readInt(T, data[0..bytes], .little);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn read_8bytes_swapped(data: []const u8) u64 {
     return (read_bytes(4, data) << 32 | read_bytes(4, data[4..]));
@@ -27,7 +25,6 @@ fn read_8bytes_swapped(data: []const u8) u64 {
 fn mum(a: u64, b: u64) u64 {
     var r = std.math.mulWide(u64, a, b);
     r = (r >> 64) ^ r;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u64, @truncate(r));
 }
@@ -55,7 +52,6 @@ const WyhashStateless = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn round(self: *WyhashStateless, b: []const u8) void {
         assert(b.len == 32);
 
@@ -71,7 +67,6 @@ const WyhashStateless = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn update(self: *WyhashStateless, b: []const u8) void {
         assert(b.len % 32 == 0);
 
@@ -85,12 +80,10 @@ const WyhashStateless = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn final(self: *WyhashStateless, b: []const u8) u64 {
         assert(b.len < 32);
 
         const seed = self.seed;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rem_len = @as(u5, @intCast(b.len));
         const rem_key = b[0..rem_len];
@@ -135,7 +128,6 @@ const WyhashStateless = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u64, input: []const u8) u64 {
         const aligned_len = input.len - (input.len % 32);
 
@@ -164,7 +156,6 @@ pub const Wyhash11 = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn update(self: *Wyhash11, b: []const u8) void {
         var off: usize = 0;
 
@@ -181,7 +172,6 @@ pub const Wyhash11 = struct {
 
         mem.copyForwards(u8, self.buf[self.buf_len..], b[off + aligned_len ..]);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.buf_len += @as(u8, @intCast(b[off + aligned_len ..].len));
     }
 
@@ -191,7 +181,6 @@ pub const Wyhash11 = struct {
         return self.state.final(rem_key);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u64, input: []const u8) u64 {
         return WyhashStateless.hash(seed, input);

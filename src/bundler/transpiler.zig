@@ -24,6 +24,7 @@ pub const ParseResult = struct {
         bytecode: []u8,
         bytecode_cjs: []u8,
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn bytecodeSlice(this: AlreadyBundled) []u8 {
             return switch (this) {
                 inline .bytecode, .bytecode_cjs => |slice| slice,
@@ -185,12 +186,12 @@ pub const Transpiler = struct {
         );
 
         var env_loader: *DotEnv.Loader = env_loader_ orelse DotEnv.instance orelse brk: {
-            const map = try allocator.create(DotEnv.Map);
-            map.* = DotEnv.Map.init(allocator);
+            const map = try safe.Box(DotEnv.Map).init(allocator, undefined);
+            map.ptr.* = DotEnv.Map.init(allocator);
 
-            const loader = try allocator.create(DotEnv.Loader);
-            loader.* = DotEnv.Loader.init(map, allocator);
-            break :brk loader;
+            const loader = try safe.Box(DotEnv.Loader).init(allocator, undefined);
+            loader.ptr.* = DotEnv.Loader.init(map.ptr, allocator);
+            break :brk loader.ptr;
         };
 
         if (DotEnv.instance == null) {
@@ -204,8 +205,8 @@ pub const Transpiler = struct {
         // try pool.init(ThreadPool.InitConfig{
         //     .allocator = allocator,
         // });
-        const resolve_results = try allocator.create(ResolveResults);
-        resolve_results.* = ResolveResults.init(allocator);
+        const resolve_results = try safe.Box(ResolveResults).init(allocator, undefined);
+        resolve_results.ptr.* = ResolveResults.init(allocator);
         return Transpiler{
             .options = bundle_options,
             .fs = fs,
@@ -216,7 +217,7 @@ pub const Transpiler = struct {
             // .thread_pool = pool,
             .linker = undefined,
             .result = options.TransformResult{ .outbase = bundle_options.output_dir },
-            .resolve_results = resolve_results,
+            .resolve_results = resolve_results.ptr,
             .resolve_queue = ResolveQueue.init(allocator),
             .output_files = std.array_list.Managed(options.OutputFile).init(allocator),
             .env = env_loader,
@@ -972,6 +973,7 @@ pub const Transpiler = struct {
                                 const default_value: ParseResult.AlreadyBundled = if (already_bundled == .bytecode_cjs) .source_code_cjs else .source_code;
                                 if (this_parse.virtual_source == null and this_parse.allow_bytecode_cache) {
                                     var path_buf2: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
                                     @memcpy(path_buf2[0..path.text.len], path.text);
                                     path_buf2[path.text.len..][0..bun.bytecode_extension.len].* = bun.bytecode_extension.*;
                                     const bytecode = bun.sys.File.toSourceAt(dirname_fd.unwrapValid() orelse bun.FD.cwd(), path_buf2[0 .. path.text.len + bun.bytecode_extension.len], bun.default_allocator, .{}).asValue() orelse break :brk default_value;
@@ -1032,7 +1034,8 @@ pub const Transpiler = struct {
                             var duplicate_key_checker = bun.StringHashMap(u32).init(allocator);
                             defer duplicate_key_checker.deinit();
                             var count: usize = 0;
-                            for (properties, decls.items, symbols, 0..) |*prop, *decl, *symbol, i| {
+                            // safe-transpile: for with index access requires manual review
+    for (properties, decls.items, symbols, 0..) |*prop, *decl, *symbol, i| {
                                 const name = prop.key.?.data.e_string.slice(allocator);
                                 // Do not make named exports for "default" exports
                                 if (strings.eqlComptime(name, "default"))
@@ -1043,12 +1046,14 @@ pub const Transpiler = struct {
                                     decls.items[visited.value_ptr.*].value = prop.value.?;
                                     continue;
                                 }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 visited.value_ptr.* = @truncate(i);
 
                                 symbol.* = js_ast.Symbol{
                                     .original_name = MutableString.ensureValidIdentifier(name, allocator) catch return null,
                                 };
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 const ref = Ref.init(@truncate(i), 0, false);
                                 decl.* = js_ast.G.Decl{
                                     .binding = js_ast.Binding.alloc(allocator, js_ast.B.Identifier{
@@ -1224,6 +1229,7 @@ pub const Transpiler = struct {
         var entry = transpiler.fs.abs(&paths);
 
         var entry_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(entry_buf[0..entry.len], entry);
         entry_buf[entry.len] = 0;
         const entryz = entry_buf[0..entry.len :0];

@@ -310,7 +310,6 @@ pub fn convertStmtsForChunk(
                         // TODO: is this allocation necessary?
                         const items = allocator.alloc(js_ast.ClauseItem, s.items.len) catch unreachable;
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (s.items, items) |src, *dest| {
                             dest.* = .{
                                 .alias = src.original_name,

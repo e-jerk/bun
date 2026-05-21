@@ -63,6 +63,7 @@ const ScanOpts = struct {
         return cwd_str;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn fromJS(globalThis: *JSGlobalObject, arguments: *ArgumentsSlice, comptime fnName: []const u8, arena: *Arena) bun.JSError!?ScanOpts {
         const optsObj: JSValue = arguments.nextEat() orelse return null;
         var out: ScanOpts = .{
@@ -151,14 +152,14 @@ pub const WalkTask = struct {
         globWalker: *GlobWalker,
         has_pending_activity: *std.atomic.Value(usize),
     ) !*AsyncGlobWalkTask {
-        const walkTask = try alloc.create(WalkTask);
-        walkTask.* = .{
+        const walkTask = try zust.Box(WalkTask).init(alloc, undefined);
+        walkTask.ptr.* = .{
             .walker = globWalker,
             .global = globalThis,
             .alloc = alloc,
             .has_pending_activity = has_pending_activity,
         };
-        return AsyncGlobWalkTask.createOnJSThread(alloc, globalThis, walkTask);
+        return AsyncGlobWalkTask.createOnJSThread(alloc, globalThis, walkTask.ptr);
     }
 
     pub fn run(this: *WalkTask) void {
@@ -205,6 +206,7 @@ fn globWalkResultToJS(globWalk: *GlobWalker, globalThis: *JSGlobalObject) bun.JS
 /// The reference to the arena is not used after the scope because it is copied
 /// by `GlobWalker.init`/`GlobWalker.initWithCwd` if all allocations work and no
 /// errors occur
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn makeGlobWalker(
     this: *Glob,
     globalThis: *JSGlobalObject,
@@ -221,12 +223,12 @@ fn makeGlobWalker(
     const error_on_broken_symlinks = matchOpts.error_on_broken_symlinks;
     const only_files = matchOpts.only_files;
 
-    var globWalker = try alloc.create(GlobWalker);
-    errdefer alloc.destroy(globWalker);
-    globWalker.* = .{};
+    var globWalker = try zust.Box(GlobWalker).init(alloc, undefined);
+    defer _ = globWalker.deinit();
+    globWalker.ptr.* = .{};
 
     if (cwd != null) {
-        switch (try globWalker.initWithCwd(
+        switch (try globWalker.ptr.initWithCwd(
             arena,
             this.pattern,
             (cwd.?),
@@ -241,10 +243,10 @@ fn makeGlobWalker(
             },
             else => {},
         }
-        return globWalker;
+        return globWalker.ptr;
     }
 
-    switch (try globWalker.init(
+    switch (try globWalker.ptr.init(
         arena,
         this.pattern,
         dot,
@@ -258,7 +260,7 @@ fn makeGlobWalker(
         },
         else => {},
     }
-    return globWalker;
+    return globWalker.ptr;
 }
 
 pub fn constructor(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSError!*Glob {

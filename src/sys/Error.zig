@@ -3,10 +3,8 @@ const Error = @This();
 
 const retry_errno = if (Environment.isWindows)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     @as(Int, @intCast(@intFromEnum(E.INTR)))
 else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     @as(Int, @intCast(@intFromEnum(E.AGAIN)));
 
@@ -34,7 +32,6 @@ pub fn clone(this: *const Error, allocator: std.mem.Allocator) Error {
 pub fn fromCode(errno: E, syscall_tag: sys.Tag) Error {
     return .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .errno = @as(Int, @intCast(@intFromEnum(errno))),
         .syscall = syscall_tag,
     };
@@ -42,7 +39,6 @@ pub fn fromCode(errno: E, syscall_tag: sys.Tag) Error {
 
 pub fn fromCodeInt(errno: anytype, syscall_tag: sys.Tag) Error {
     return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .errno = @as(Int, @intCast(if (Environment.isWindows) @abs(errno) else errno)),
         .syscall = syscall_tag,
@@ -155,7 +151,6 @@ pub fn withoutPath(this: *const Error) Error {
     return copy;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn name(this: *const Error) []const u8 {
     if (comptime Environment.isWindows) {
@@ -321,7 +316,6 @@ pub fn toSystemError(this: Error) SystemError {
     return err;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn appendStr(buf: []u8, pos: usize, str: []const u8) usize {
     const end = @min(pos + str.len, buf.len);

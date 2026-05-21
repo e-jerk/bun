@@ -178,7 +178,6 @@ pub const MultiPartUpload = struct {
         }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
         fn allocatedSlice(this: *@This()) []const u8 {
             if (this.allocated_size > 0) {
                 return this.data.ptr[0..this.allocated_size];
@@ -244,7 +243,6 @@ pub const MultiPartUpload = struct {
                 .body = this.data,
                 .search_params = search_params,
                 .request_payer = this.ctx.request_payer,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             }, .{ .part = @ptrCast(&onPartResponse) }, this);
         }
@@ -325,7 +323,6 @@ pub const MultiPartUpload = struct {
                         .storage_class = this.storage_class,
                         .request_payer = this.request_payer,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     }, .{ .upload = @ptrCast(&singleSendUploadResponse) }, this);
 
                     return;
@@ -346,7 +343,6 @@ pub const MultiPartUpload = struct {
     }
 
     /// This is the only place we allocate the queue or the parts, this is responsible for the flow of parts and the max allowed concurrency
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn getCreatePart(this: *@This(), chunk: []const u8, allocated_size: usize, needs_clone: bool) ?*UploadPart {
         const index = this.available.findFirstSet() orelse {
@@ -386,7 +382,6 @@ pub const MultiPartUpload = struct {
             .partNumber = this.currentPartNumber,
             .ctx = this,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .index = @truncate(index),
             .retry = this.options.retry,
             .state = .pending,
@@ -402,7 +397,6 @@ pub const MultiPartUpload = struct {
         // check pending to start or transformed buffered ones into tasks
         if (this.state == .multipart_completed) {
             if (this.queue) |queue| {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                 for (queue) |*part| {
                     if (part.state == .pending) {
@@ -438,7 +432,6 @@ pub const MultiPartUpload = struct {
         log("fail {s}:{s}", .{ _err.code, _err.message });
         this.ended = true;
         if (this.queue) |queue| {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (queue) |*task| {
                 if (task.state != .not_assigned) {
@@ -591,7 +584,6 @@ pub const MultiPartUpload = struct {
             .search_params = searchParams,
             .request_payer = this.request_payer,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         }, .{ .commit = @ptrCast(&onCommitMultiPartRequest) }, this);
     }
     fn rollbackMultiPartRequest(this: *@This()) bun.JSTerminated!void {
@@ -609,10 +601,8 @@ pub const MultiPartUpload = struct {
             .search_params = search_params,
             .request_payer = this.request_payer,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         }, .{ .upload = @ptrCast(&onRollbackMultiPartRequest) }, this);
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn enqueuePart(this: *@This(), chunk: []const u8, allocated_size: usize, needs_clone: bool) bun.JSTerminated!bool {
         const part = this.getCreatePart(chunk, allocated_size, needs_clone) orelse return false;
@@ -633,7 +623,6 @@ pub const MultiPartUpload = struct {
                 .acl = this.acl,
                 .storage_class = this.storage_class,
                 .request_payer = this.request_payer,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             }, .{ .download = @ptrCast(&startMultiPartRequestResult) }, this);
         } else if (this.state == .multipart_completed) {
@@ -715,7 +704,6 @@ pub const MultiPartUpload = struct {
                 .storage_class = this.storage_class,
                 .request_payer = this.request_payer,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             }, .{ .upload = @ptrCast(&singleSendUploadResponse) }, this) catch {}; // TODO: properly propagate exception upwards
         } else {
             // we need to split
@@ -754,7 +742,6 @@ pub const MultiPartUpload = struct {
     };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn write(this: *@This(), chunk: []const u8, is_last: bool, comptime encoding: WriteEncoding) bun.OOM!ResumableSinkBackpressure {
         if (this.ended) return .done; // no backpressure since we are done
         // we may call done inside processBuffered so we ensure that we keep a ref until we are done
@@ -775,7 +762,6 @@ pub const MultiPartUpload = struct {
                     .bytes => try this.buffered.write(chunk),
                     .latin1 => try this.buffered.writeLatin1(chunk, true),
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                     .utf16 => try this.buffered.writeUTF16(@alignCast(std.mem.bytesAsSlice(u16, chunk))),
                 }
             }
@@ -786,7 +772,6 @@ pub const MultiPartUpload = struct {
             switch (encoding) {
                 .bytes => try this.buffered.write(chunk),
                 .latin1 => try this.buffered.writeLatin1(chunk, true),
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 .utf16 => try this.buffered.writeUTF16(@alignCast(std.mem.bytesAsSlice(u16, chunk))),
             }
@@ -802,18 +787,15 @@ pub const MultiPartUpload = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeLatin1(this: *@This(), chunk: []const u8, is_last: bool) bun.OOM!ResumableSinkBackpressure {
         return try this.write(chunk, is_last, .latin1);
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeUTF16(this: *@This(), chunk: []const u8, is_last: bool) bun.OOM!ResumableSinkBackpressure {
         return try this.write(chunk, is_last, .utf16);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeBytes(this: *@This(), chunk: []const u8, is_last: bool) bun.OOM!ResumableSinkBackpressure {
         return try this.write(chunk, is_last, .bytes);

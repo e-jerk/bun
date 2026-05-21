@@ -893,6 +893,7 @@ pub const DescribeScope = struct {
         });
     }
     pub fn destroy(this: *DescribeScope, gpa: std.mem.Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.entries.items) |*entry| entry.deinit(gpa);
         for (this.beforeAll.items) |item| item.destroy(gpa);
         for (this.beforeEach.items) |item| item.destroy(gpa);

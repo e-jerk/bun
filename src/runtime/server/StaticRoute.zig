@@ -332,7 +332,6 @@ fn doWriteHeaders(this: *StaticRoute, resp: AnyResponse) void {
             const buf = this.headers.buf.items;
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (names, values) |name, value| {
                 s.writeHeader(name.slice(buf), value.slice(buf));
             }

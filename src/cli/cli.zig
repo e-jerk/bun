@@ -32,6 +32,7 @@ pub const debug_flags = if (Environment.show_crash_trace) struct {
     pub var resolve_breakpoints: []const []const u8 = &.{};
     pub var print_breakpoints: []const []const u8 = &.{};
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasResolveBreakpoint(str: []const u8) bool {
         for (resolve_breakpoints) |bp| {
             if (strings.contains(str, bp)) {
@@ -56,6 +57,7 @@ pub const debug_flags = if (Environment.show_crash_trace) struct {
 
 pub const LoaderColonList = ColonListType(api.Loader, Arguments.loader_resolver);
 pub const DefineColonList = ColonListType(string, Arguments.noop_resolver);
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn invalidTarget(diag: *clap.Diagnostic, _target: []const u8) noreturn {
     @branchHint(.cold);
     diag.name.long = "target";
@@ -203,6 +205,7 @@ pub const HelpCommand = struct {
     ;
 
     pub fn printWithReason(comptime reason: Reason, show_all_flags: bool) void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var rand_state = std.Random.DefaultPrng.init(@as(u64, @intCast(@max(@import("std-fs-compat").milliTimestamp(), 0))));
         const rand = rand_state.random();
 
@@ -373,6 +376,7 @@ pub const Command = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isBunX(argv0: []const u8) bool {
         if (Environment.isWindows) {
             return strings.endsWithComptime(argv0, "bunx.exe") or strings.endsWithComptime(argv0, "bunx");
@@ -380,6 +384,7 @@ pub const Command = struct {
         return strings.endsWithComptime(argv0, "bunx");
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isNode(argv0: []const u8) bool {
         if (Environment.isWindows) {
             return strings.endsWithComptime(argv0, "node.exe") or strings.endsWithComptime(argv0, "node");
@@ -1176,7 +1181,9 @@ pub const Command = struct {
         var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
         var path_buf: bun.PathBuffer = undefined;
         const cwd = try bun.sys.getcwd(&path_buf).unwrap();
+// safe-transpile: @memcpy requires manual review
         @memcpy(entry_point_buf[0..cwd.len], cwd);
+// safe-transpile: @memcpy requires manual review
         @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
         ctx.passthrough = try std.mem.concat(ctx.allocator, []const u8, &.{ ctx.positionals, ctx.passthrough });
         try bun_js.Run.boot(ctx, entry_point_buf[0 .. cwd.len + trigger.len], null);
@@ -1186,6 +1193,7 @@ pub const Command = struct {
         for (bun.argv) |arg| {
             if (strings.eqlComptime(arg, "--hash")) {
                 var path_buf: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(path_buf[0..ctx.args.entry_points[0].len], ctx.args.entry_points[0]);
                 path_buf[ctx.args.entry_points[0].len] = 0;
                 const lockfile_path = path_buf[0..ctx.args.entry_points[0].len :0];
@@ -1210,7 +1218,8 @@ pub const Command = struct {
         const ctx = try Command.init(allocator, log, .GetCompletionsCommand);
         var filter = ctx.positionals;
 
-        for (filter, 0..) |item, i| {
+        // safe-transpile: for with index access requires manual review
+    for (filter, 0..) |item, i| {
             if (strings.eqlComptime(item, "getcompletes")) {
                 if (i + 1 < filter.len) {
                     filter = filter[i + 1 ..];
@@ -1404,7 +1413,8 @@ pub const Command = struct {
                 bunx_args[1] = "--bun";
             }
             bunx_args[1 + @as(usize, @intFromBool(dash_dash_bun))] = try BunxCommand.addCreatePrefix(allocator, template_name);
-            for (bunx_args[2 + @as(usize, @intFromBool(dash_dash_bun)) ..], args[template_name_start..]) |*dest, src| {
+            // safe-transpile: for with index access requires manual review
+    for (bunx_args[2 + @as(usize, @intFromBool(dash_dash_bun)) ..], args[template_name_start..]) |*dest, src| {
                 dest.* = src;
             }
 

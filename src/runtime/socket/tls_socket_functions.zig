@@ -99,6 +99,7 @@ pub fn setMaxSendFragment(this: *This, globalObject: *jsc.JSGlobalObject, callfr
     }
 
     const ssl_ptr = this.socket.ssl() orelse return .false;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return JSValue.jsBoolean(BoringSSL.SSL_set_max_send_fragment(ssl_ptr, @as(usize, @intCast(size))) == 1);
 }
 
@@ -168,11 +169,14 @@ pub fn getTLSFinishedMessage(this: *This, globalObject: *jsc.JSGlobalObject, _: 
     // sections 7.21.2.1, 7.21.1.2, and 7.1.4, would be violated.
     // Thus, we use a dummy byte.
     var dummy: [1]u8 = undefined;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const size = BoringSSL.SSL_get_finished(ssl_ptr, @as(*anyopaque, @ptrCast(&dummy)), @sizeOf(@TypeOf(dummy)));
     if (size == 0) return .js_undefined;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const buffer_size = @as(usize, @intCast(size));
     var buffer = try JSValue.createBufferFromLength(globalObject, buffer_size);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buffer_ptr = @as(*anyopaque, @ptrCast(buffer.asArrayBuffer(globalObject).?.ptr));
 
     const result_size = BoringSSL.SSL_get_finished(ssl_ptr, buffer_ptr, buffer_size);
@@ -187,13 +191,16 @@ pub fn getSharedSigalgs(this: *This, globalObject: *jsc.JSGlobalObject, _: *jsc.
 
     const nsig = BoringSSL.SSL_get_shared_sigalgs(ssl_ptr, 0, null, null, null, null, null);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const array = try jsc.JSValue.createEmptyArray(globalObject, @as(usize, @intCast(nsig)));
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     for (0..@as(usize, @intCast(nsig))) |i| {
         var hash_nid: c_int = 0;
         var sign_nid: c_int = 0;
         var sig_with_md: []const u8 = "";
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = BoringSSL.SSL_get_shared_sigalgs(ssl_ptr, @as(c_int, @intCast(i)), &sign_nid, &hash_nid, null, null, null);
         switch (sign_nid) {
             BoringSSL.EVP_PKEY_RSA => {
@@ -248,6 +255,7 @@ pub fn getSharedSigalgs(this: *This, globalObject: *jsc.JSGlobalObject, _: *jsc.
             bun.copy(u8, buffer, sig_with_md);
             buffer[sig_with_md.len] = '+';
             bun.copy(u8, buffer[sig_with_md.len + 1 ..], hash_slice);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try array.putIndex(globalObject, @as(u32, @intCast(i)), jsc.ZigString.fromUTF8(buffer).toJS(globalObject));
         } else {
             const buffer = bun.handleOom(bun.default_allocator.alloc(u8, sig_with_md.len + 6));
@@ -255,6 +263,7 @@ pub fn getSharedSigalgs(this: *This, globalObject: *jsc.JSGlobalObject, _: *jsc.
 
             bun.copy(u8, buffer, sig_with_md);
             bun.copy(u8, buffer[sig_with_md.len..], "+UNDEF");
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try array.putIndex(globalObject, @as(u32, @intCast(i)), jsc.ZigString.fromUTF8(buffer).toJS(globalObject));
         }
     }
@@ -305,11 +314,14 @@ pub fn getTLSPeerFinishedMessage(this: *This, globalObject: *jsc.JSGlobalObject,
     // sections 7.21.2.1, 7.21.1.2, and 7.1.4, would be violated.
     // Thus, we use a dummy byte.
     var dummy: [1]u8 = undefined;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const size = BoringSSL.SSL_get_peer_finished(ssl_ptr, @as(*anyopaque, @ptrCast(&dummy)), @sizeOf(@TypeOf(dummy)));
     if (size == 0) return .js_undefined;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const buffer_size = @as(usize, @intCast(size));
     var buffer = try JSValue.createBufferFromLength(globalObject, buffer_size);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buffer_ptr = @as(*anyopaque, @ptrCast(buffer.asArrayBuffer(globalObject).?.ptr));
 
     const result_size = BoringSSL.SSL_get_peer_finished(ssl_ptr, buffer_ptr, buffer_size);
@@ -357,10 +369,13 @@ pub fn exportKeyingMaterial(this: *This, globalObject: *jsc.JSGlobalObject, call
             defer sb.deinit();
             const context_slice = sb.slice();
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const buffer_size = @as(usize, @intCast(length));
             var buffer = try JSValue.createBufferFromLength(globalObject, buffer_size);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const buffer_ptr = @as([*c]u8, @ptrCast(buffer.asArrayBuffer(globalObject).?.ptr));
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const result = BoringSSL.SSL_export_keying_material(ssl_ptr, buffer_ptr, buffer_size, @as([*c]const u8, @ptrCast(label_slice.ptr)), label_slice.len, @as([*c]const u8, @ptrCast(context_slice.ptr)), context_slice.len, 1);
             if (result != 1) {
                 return globalObject.throwValue(getSSLException(globalObject, "Failed to export keying material"));
@@ -370,10 +385,13 @@ pub fn exportKeyingMaterial(this: *This, globalObject: *jsc.JSGlobalObject, call
             return globalObject.throw("Expected context to be a string, Buffer or TypedArray", .{});
         }
     } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const buffer_size = @as(usize, @intCast(length));
         var buffer = try JSValue.createBufferFromLength(globalObject, buffer_size);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const buffer_ptr = @as([*c]u8, @ptrCast(buffer.asArrayBuffer(globalObject).?.ptr));
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const result = BoringSSL.SSL_export_keying_material(ssl_ptr, buffer_ptr, buffer_size, @as([*c]const u8, @ptrCast(label_slice.ptr)), label_slice.len, null, 0, 0);
         if (result != 1) {
             return globalObject.throwValue(getSSLException(globalObject, "Failed to export keying material"));
@@ -470,8 +488,10 @@ pub fn getSession(this: *This, globalObject: *jsc.JSGlobalObject, _: *jsc.CallFr
         return .js_undefined;
     }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const buffer_size = @as(usize, @intCast(size));
     var buffer = try JSValue.createBufferFromLength(globalObject, buffer_size);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     var buffer_ptr = @as([*c]u8, @ptrCast(buffer.asArrayBuffer(globalObject).?.ptr));
 
     const result_size = BoringSSL.i2d_SSL_SESSION(session, &buffer_ptr);
@@ -498,7 +518,9 @@ pub fn setSession(this: *This, globalObject: *jsc.JSGlobalObject, callframe: *js
         defer sb.deinit();
         const session_slice = sb.slice();
         const ssl_ptr = this.socket.ssl();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var tmp = @as([*c]const u8, @ptrCast(session_slice.ptr));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const session = BoringSSL.d2i_SSL_SESSION(null, &tmp, @as(c_long, @intCast(session_slice.len))) orelse return .js_undefined;
         // SSL_set_session takes its own reference ("the caller retains ownership of |session|"),
         // so we must release the one returned by d2i_SSL_SESSION on every path.
@@ -518,6 +540,7 @@ pub fn getTLSTicket(this: *This, globalObject: *jsc.JSGlobalObject, _: *jsc.Call
     var ticket: [*c]const u8 = undefined;
     var length: usize = 0;
     //The pointer is only valid while the connection is in use so we need to copy it
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     BoringSSL.SSL_SESSION_get0_ticket(session, @as([*c][*c]const u8, @ptrCast(&ticket)), &length);
 
     if (ticket == null or length == 0) {
@@ -583,6 +606,7 @@ fn alwaysAllowSSLVerifyCallback(_: c_int, _: ?*BoringSSL.X509_STORE_CTX) callcon
     return 1;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 noinline fn getSSLException(globalThis: *jsc.JSGlobalObject, defaultMessage: []const u8) JSValue {
     var zig_str: ZigString = ZigString.init("");
     var output_buf: [4096]u8 = undefined;
@@ -603,6 +627,7 @@ noinline fn getSSLException(globalThis: *jsc.JSGlobalObject, defaultMessage: []c
             if (reason.len == 0) {
                 break;
             }
+// safe-transpile: @memcpy requires manual review
             @memcpy(output_buf[written..][0..reason.len], reason);
             written += reason.len;
         }
@@ -614,6 +639,7 @@ noinline fn getSSLException(globalThis: *jsc.JSGlobalObject, defaultMessage: []c
             if (reason.len > 0) {
                 output_buf[written..][0.." via ".len].* = " via ".*;
                 written += " via ".len;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(output_buf[written..][0..reason.len], reason);
                 written += reason.len;
             }
@@ -626,6 +652,7 @@ noinline fn getSSLException(globalThis: *jsc.JSGlobalObject, defaultMessage: []c
             if (reason.len > 0) {
                 output_buf[written..][0] = ' ';
                 written += 1;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(output_buf[written..][0..reason.len], reason);
                 written += reason.len;
             }

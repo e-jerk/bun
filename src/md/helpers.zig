@@ -45,7 +45,6 @@ pub inline fn isHexDigit(c: u8) bool {
 /// This includes ASCII whitespace + Unicode Zs category.
 pub fn isUnicodeWhitespace(codepoint: u21) bool {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (codepoint < 128) return isWhitespace(@intCast(codepoint));
     return switch (codepoint) {
         0x00A0, // NO-BREAK SPACE
@@ -61,7 +60,6 @@ pub fn isUnicodeWhitespace(codepoint: u21) bool {
 
 /// Check if a Unicode codepoint is punctuation per CommonMark spec.
 pub fn isUnicodePunctuation(codepoint: u21) bool {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (codepoint < 128) return isAsciiPunctuation(@intCast(codepoint));
     // Unicode categories Pc, Pd, Pe, Pf, Pi, Po, Ps, Sc, Sk, Sm, So
@@ -91,7 +89,6 @@ fn isUnicodePunctuationExtended(codepoint: u21) bool {
 
 /// Check if a character at a given offset matches any character in the set.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub inline fn isAnyOf(text: []const u8, off: OFF, chars: []const u8) bool {
     if (off >= text.len) return false;
     const c = text[off];
@@ -103,7 +100,6 @@ pub inline fn isAnyOf(text: []const u8, off: OFF, chars: []const u8) bool {
 
 /// Get the indentation of a line starting from `off`, counting spaces and tabs.
 /// Returns the indent width and advances `off` past the whitespace.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn lineIndentation(text: []const u8, total_indent: u32, off_start: OFF) struct { indent: u32, off: OFF } {
     var off = off_start;
@@ -124,7 +120,6 @@ pub const Utf8DecodeResult = struct { codepoint: u21, len: u3 };
 /// Decode a UTF-8 codepoint from the text at the given offset.
 /// Returns the codepoint and the number of bytes consumed.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decodeUtf8(text: []const u8, off: usize) Utf8DecodeResult {
     if (off >= text.len) return .{ .codepoint = 0, .len = 1 };
     const b0 = text[off];
@@ -137,12 +132,11 @@ pub fn decodeUtf8(text: []const u8, off: usize) Utf8DecodeResult {
 
     var buf: [4]u8 = .{ 0, 0, 0, 0 };
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const n: usize = @intCast(seq_len);
-    zust.SimdUtils.copy(buf[0..n], text[off..][0..n]);
+// safe-transpile: @memcpy requires manual review
+    @memcpy(buf[0..n], text[off..][0..n]);
 
     const cp = bun.strings.decodeWTF8RuneT(&buf, seq_len, u21, 0xFFFD);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return .{ .codepoint = cp, .len = @intCast(seq_len) };
 }
@@ -150,7 +144,6 @@ pub fn decodeUtf8(text: []const u8, off: usize) Utf8DecodeResult {
 /// Decode the UTF-8 codepoint ending just before position `off` (i.e. the
 /// codepoint whose last byte is at `text[off - 1]`).
 /// Returns the codepoint and the number of bytes it occupies.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decodeUtf8Backward(text: []const u8, off: usize) Utf8DecodeResult {
     if (off == 0 or off > text.len) return .{ .codepoint = 0, .len = 1 };
@@ -168,12 +161,10 @@ pub fn decodeUtf8Backward(text: []const u8, off: usize) Utf8DecodeResult {
 /// Encode a Unicode codepoint as UTF-8.
 pub fn encodeUtf8(codepoint: u21, buf: *[4]u8) u3 {
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(bun.strings.encodeWTF8RuneT(buf, u21, codepoint));
 }
 
 /// Skip UTF-8 BOM if present at the start of the text.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn skipUtf8Bom(text: []const u8) []const u8 {
     if (text.len >= 3 and text[0] == 0xEF and text[1] == 0xBB and text[2] == 0xBF) {
@@ -184,14 +175,12 @@ pub fn skipUtf8Bom(text: []const u8) []const u8 {
 
 /// Case-insensitive ASCII comparison.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn asciiCaseEql(a: []const u8, b: []const u8) bool {
     return bun.strings.eqlCaseInsensitiveASCIIICheckLength(a, b);
 }
 
 /// Find an HTML entity starting at `start` (which must point to '&').
 /// Returns the end position (one past the ';') or null if no valid entity found.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn findEntity(content: []const u8, start: usize) ?usize {
     if (start + 2 >= content.len) return null;
@@ -327,7 +316,6 @@ const unicode_punctuation_ranges = &[_][2]u21{
 
 /// Parse a numeric character reference (&#DDD; or &#xHHH;) and return the codepoint.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseEntityCodepoint(entity_text: []const u8) ?u21 {
     if (entity_text.len < 4 or entity_text[0] != '&' or entity_text[1] != '#') return null;
     var cp: u32 = 0;
@@ -349,13 +337,11 @@ pub fn parseEntityCodepoint(entity_text: []const u8) ?u21 {
     }
     if (cp == 0 or cp > 0x10FFFF or (cp >= 0xD800 and cp <= 0xDFFF)) cp = 0xFFFD;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(cp);
 }
 
 /// Decode an HTML entity to raw UTF-8 bytes.
 /// Returns decoded bytes as a slice of `out`, or null for unknown entities.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decodeEntityToUtf8(entity_text: []const u8, out: *[8]u8) ?[]const u8 {
     if (parseEntityCodepoint(entity_text)) |cp| {
@@ -367,7 +353,8 @@ pub fn decodeEntityToUtf8(entity_text: []const u8, out: *[8]u8) ?[]const u8 {
         if (codepoints[1] != 0) {
             var tmp: [4]u8 = undefined;
             const len2 = encodeUtf8(codepoints[1], &tmp);
-            zust.SimdUtils.copy(out[len1..][0..len2], tmp[0..len2]);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(out[len1..][0..len2], tmp[0..len2]);
             return out[0 .. len1 + len2];
         }
         return out[0..len1];
@@ -377,7 +364,6 @@ pub fn decodeEntityToUtf8(entity_text: []const u8, out: *[8]u8) ?[]const u8 {
 
 /// Generate a GitHub-compatible slug from text content.
 /// Modifies text_buf in-place. Uses slug_counts for -N deduplication.
-// safe-transpile: function returns small constant slice — consider zust.String
 // safe-transpile: function returns small constant slice — consider zust.String
 pub fn generateSlug(
     text_buf: *std.ArrayListUnmanaged(u8),
@@ -441,7 +427,6 @@ pub fn generateSlug(
     while (v > 0) {
         i -= 1;
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         dec_buf[i] = @intCast('0' + v % 10);
         v /= 10;
     }
@@ -478,7 +463,6 @@ pub const HeadingIdTracker = struct {
 
     /// Call from text callback to accumulate text for slug.
     /// No-op if not inside a heading or disabled.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn trackText(self: *HeadingIdTracker, text_type: TextType, content: []const u8, allocator: Allocator) void {
         if (!self.in_heading) return;

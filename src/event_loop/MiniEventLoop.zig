@@ -87,6 +87,7 @@ pub fn throwError(_: *MiniEventLoop, err: bun.sys.Error) void {
     bun.Output.flush();
 }
 
+// safe-transpile: function returns small constant slice — consider zust.String
 pub fn pipeReadBuffer(this: *MiniEventLoop) []u8 {
     return this.pipe_read_buffer orelse {
         const box = bun.handleOom(zust.Box(PipeReadBuffer).init(this.allocator, undefined));
@@ -247,6 +248,7 @@ pub fn stderr(this: *MiniEventLoop) *jsc.WebCore.Blob.Store {
 
         switch (bun.sys.fstat(fd)) {
             .result => |stat| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},
@@ -278,6 +280,7 @@ pub fn stdout(this: *MiniEventLoop) *jsc.WebCore.Blob.Store {
 
         switch (bun.sys.fstat(fd)) {
             .result => |stat| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},

@@ -107,7 +107,6 @@ pub const OutdatedCommand = struct {
         path: []const u8,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(pattern: []const u8, is_path: bool) @This() {
             return if (is_path) .{
                 .path = pattern,
@@ -131,10 +130,8 @@ pub const OutdatedCommand = struct {
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
@@ -156,10 +153,8 @@ pub const OutdatedCommand = struct {
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
@@ -169,7 +164,6 @@ pub const OutdatedCommand = struct {
         const converted_filters = converted_filters: {
             const buf = try allocator.alloc(WorkspaceFilter, filters.len);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (filters, buf) |filter, *converted| {
                 converted.* = try WorkspaceFilter.init(allocator, filter, original_cwd, &path_buf);
             }
@@ -314,7 +308,6 @@ pub const OutdatedCommand = struct {
                 try workspace_names.appendSlice("catalog (");
             }
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (workspace_list.items, 0..) |workspace_id, i| {
                 if (i > 0) try workspace_names.appendSlice(", ");
                 const workspace_name = pkg_names[workspace_id].slice(string_buf);
@@ -348,7 +341,6 @@ pub const OutdatedCommand = struct {
 
             const patterns_buf = bun.handleOom(bun.default_allocator.alloc(FilterType, args.len));
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (args, patterns_buf) |arg, *converted| {
                 if (arg.len == 0) {
                     converted.* = FilterType.init(&.{}, false);
@@ -502,7 +494,6 @@ pub const OutdatedCommand = struct {
                     bun.default_allocator,
                     .{
                         .package_id = package_id,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .dep_id = @intCast(dep_id),
                         .workspace_pkg_id = workspace_pkg_id,

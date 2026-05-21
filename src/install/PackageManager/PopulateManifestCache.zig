@@ -1,6 +1,5 @@
 const StartManifestTaskError = bun.OOM || error{InvalidURL};
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn startManifestTask(manager: *PackageManager, pkg_name: []const u8, dep: *const Dependency, needs_extended_manifest: bool) StartManifestTaskError!void {
     const task_id = Task.Id.forManifest(pkg_name);
     if (manager.hasCreatedNetworkTask(task_id, dep.behavior.optional)) {
@@ -43,9 +42,7 @@ pub fn populateManifestCache(manager: *PackageManager, packages: Packages) !void
             defer seen_pkg_ids.deinit();
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (dependencies, 0..) |*dep, _dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
 

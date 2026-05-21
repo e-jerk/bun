@@ -97,6 +97,7 @@ pub fn resetConnectionTimeout(this: *@This()) void {
         this._connection.isProcessingData() or
         interval == 0) return;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.timer.next = bun.timespec.msFromNow(.allow_mocked_time, @intCast(interval));
     this._vm.timer.insert(&this.timer);
 }
@@ -141,6 +142,7 @@ fn setupMaxLifetimeTimerIfNecessary(this: *@This()) void {
     if (this.max_lifetime_interval_ms == 0) return;
     if (this.max_lifetime_timer.state == .ACTIVE) return;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.max_lifetime_timer.next = bun.timespec.msFromNow(.allow_mocked_time, @intCast(this.max_lifetime_interval_ms));
     this._vm.timer.insert(&this.max_lifetime_timer);
 }
@@ -267,6 +269,7 @@ pub fn SocketHandler(comptime ssl: bool) type {
             this.fail("Connection timeout", error.ConnectionTimedOut);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(this: *JSMySQLConnection, _: SocketType, data: []const u8) void {
             this.ref();
             defer this.deref();
@@ -443,8 +446,11 @@ pub fn createInstance(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFra
     var ptr = bun.new(JSMySQLConnection, .{
         ._globalObject = globalObject,
         ._vm = vm,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .idle_timeout_interval_ms = @intCast(idle_timeout),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .connection_timeout_ms = @intCast(connection_timeout),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .max_lifetime_interval_ms = @intCast(max_lifetime),
         ._connection = MySQLConnection.init(
             database,
@@ -647,6 +653,7 @@ fn failWithJSValue(this: *@This(), value: JSValue) void {
     loop.runCallback(on_close, this._globalObject, .js_undefined, &[_]JSValue{ js_error, queries_array });
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn fail(this: *@This(), message: []const u8, err: AnyMySQLError.Error) void {
     const instance = AnyMySQLError.mysqlErrorToJS(this._globalObject, message, err);
     this.failWithJSValue(instance);

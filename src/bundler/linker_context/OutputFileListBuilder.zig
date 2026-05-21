@@ -52,9 +52,7 @@ pub fn init(
         .output_files = output_files,
         .index_for_chunk = 0,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .index_for_sourcemaps_and_bytecode = if (supplementary_file_count == 0) null else @as(u32, @truncate(chunks.len)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .additional_output_files_start = @as(u32, @intCast(chunks.len)) + supplementary_file_count,
         .total_insertions = 0,
@@ -75,7 +73,6 @@ pub fn calculateOutputFileListCapacity(c: *const bun.bundle_v2.LinkerContext, ch
     const source_map_count = if (c.options.source_maps.hasExternalFiles()) brk: {
         var count: usize = 0;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*chunk| {
             if (chunk.content.sourcemap(c.options.source_maps).hasExternalFiles()) {
                 count += 1;
@@ -85,7 +82,6 @@ pub fn calculateOutputFileListCapacity(c: *const bun.bundle_v2.LinkerContext, ch
     } else 0;
     const bytecode_count = if (c.options.generate_bytecode_cache) bytecode_count: {
         var bytecode_count: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*chunk| {
             const loader: bun.options.Loader = if (chunk.entry_point.is_entry_point)
@@ -106,7 +102,6 @@ pub fn calculateOutputFileListCapacity(c: *const bun.bundle_v2.LinkerContext, ch
     const module_info_count = if (c.options.generate_bytecode_cache and c.options.output_format == .esm and c.options.compile) bytecode_count else 0;
 
     const additional_output_files_count = if (c.options.compile_to_standalone_html) 0 else c.parse_graph.additional_output_files.items.len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ @intCast(chunks.len + source_map_count + bytecode_count + module_info_count + additional_output_files_count), @intCast(source_map_count + bytecode_count + module_info_count) };
 }
@@ -134,7 +129,6 @@ pub fn insertAdditionalOutputFiles(this: *OutputFileList, additional_output_file
         this.getMutableAdditionalOutputFiles(),
         additional_output_files,
     );
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.total_insertions += @as(u32, @intCast(additional_output_files.len));
 }

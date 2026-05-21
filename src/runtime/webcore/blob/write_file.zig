@@ -57,7 +57,6 @@ pub const WriteFile = struct {
         return io.Action{
             .writable = .{
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .onError = @ptrCast(&onIOError),
                 .ctx = this,
                 .fd = this.opened_fd,
@@ -112,14 +111,12 @@ pub const WriteFile = struct {
             file_blob,
             bytes_blob,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*anyopaque, @ptrCast(context)),
             Handler.run,
             mkdirp_if_not_exists,
         );
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn doWrite(
         this: *WriteFile,
@@ -185,7 +182,6 @@ while (true) : (__loop_limit_1 += 1) {
 
         const wrote = this.total_written;
         bun.destroy(this);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         try cb(cb_ctx, .{ .result = @as(SizeType, @truncate(wrote)) });
     }
@@ -281,7 +277,6 @@ while (true) : (__loop_limit_1 += 1) {
                 bun.sys.preallocate_file(
                     fd.cast(),
                     0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(this.bytes_blob.sharedView().len),
                 ) catch {}; // we don't care if it fails.
@@ -438,7 +433,6 @@ pub const WriteFileWindows = struct {
             uv.O.CREAT | uv.O.WRONLY | uv.O.NOCTTY | uv.O.NONBLOCK | uv.O.SEQUENTIAL | uv.O.TRUNC,
             0o644,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(&onOpen),
         );
 
@@ -458,7 +452,6 @@ pub const WriteFileWindows = struct {
 
     pub fn onOpen(req: *uv.fs_t) callconv(.c) void {
         var this: *WriteFileWindows = @fieldParentPtr("io_request", req);
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         bun.assert(this == @as(*WriteFileWindows, @ptrCast(@alignCast(req.data.?))));
         const rc = this.io_request.result;
@@ -487,7 +480,6 @@ pub const WriteFileWindows = struct {
         }
 
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.fd = @intCast(rc.int());
 
         // the loop must be copied
@@ -503,7 +495,6 @@ pub const WriteFileWindows = struct {
 
         const path = this.file_blob.store.?.data.file.pathlike.path.slice();
         jsc.Node.fs.Async.AsyncMkdirp.new(.{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .completion = @ptrCast(&onMkdirpCompleteConcurrent),
             .completion_ctx = this,
@@ -535,18 +526,16 @@ pub const WriteFileWindows = struct {
         log("mkdirp complete", .{});
         bun.assert(this.err == null);
         this.err = if (err_ == .err) err_.err else null;
-        this.event_loop.enqueueTaskConcurrent(zust.Box(jsc.ManagedTask.New(WriteFileWindows, onMkdirpComplete).init(this)).init(jsc.ConcurrentTask, undefined));
+        this.event_loop.enqueueTaskConcurrent(jsc.ConcurrentTask.create(jsc.ManagedTask.New(WriteFileWindows, onMkdirpComplete).init(this)));
     }
 
     fn onWriteComplete(req: *uv.fs_t) callconv(.c) void {
         var this: *WriteFileWindows = @fieldParentPtr("io_request", req);
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         bun.assert(this == @as(*WriteFileWindows, @ptrCast(@alignCast(req.data.?))));
         const rc = this.io_request.result;
         if (rc.errno()) |err| {
             switch (this.throw(.{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .errno = @intCast(err),
                 .syscall = .write,
@@ -557,7 +546,6 @@ pub const WriteFileWindows = struct {
             return;
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.total_written += @intCast(rc.int());
         this.doWriteLoop(this.loop()) catch |e| switch (e) {
@@ -585,7 +573,6 @@ pub const WriteFileWindows = struct {
         } else {
             const wrote = this.total_written;
             this.deinit();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             try cb(cb_ctx, .{ .result = @as(SizeType, @truncate(wrote)) });
         }
@@ -621,7 +608,6 @@ pub const WriteFileWindows = struct {
         }
 
         this.uv_bufs[0].base = @constCast(remain.ptr);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         this.uv_bufs[0].len = @truncate(remain.len);
 
@@ -671,9 +657,7 @@ pub const WriteFileWindows = struct {
             bytes_blob,
             event_loop,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*anyopaque, @ptrCast(context)),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(callback),
             mkdirp_if_not_exists,

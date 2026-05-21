@@ -10,8 +10,11 @@ os: Environment.OperatingSystem = Environment.os,
 arch: Environment.Architecture = Environment.arch,
 baseline: bool = !Environment.enableSIMD,
 version: bun.Semver.Version = .{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .major = @truncate(Environment.version.major),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .minor = @truncate(Environment.version.minor),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .patch = @truncate(Environment.version.patch),
 },
 libc: Libc = if (Environment.isMusl) .musl else if (Environment.isAndroid) .android else .default,
@@ -26,6 +29,7 @@ const Libc = enum {
     android,
 
     /// npm package name, `@oven-sh/bun-{os}-{arch}`
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn npmName(this: Libc) []const u8 {
         return switch (this) {
             .default => "",
@@ -66,6 +70,7 @@ pub fn isDefault(this: *const CompileTarget) bool {
     return this.eql(&.{});
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toNPMRegistryURL(this: *const CompileTarget, buf: []u8) ![]const u8 {
     if (bun.env_var.BUN_COMPILE_TARGET_TARBALL_URL.get()) |url| {
         if (strings.hasPrefixComptime(url, "http://") or strings.hasPrefixComptime(url, "https://"))
@@ -75,6 +80,7 @@ pub fn toNPMRegistryURL(this: *const CompileTarget, buf: []u8) ![]const u8 {
     return try this.toNPMRegistryURLWithURL(buf, "https://registry.npmjs.org");
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toNPMRegistryURLWithURL(this: *const CompileTarget, buf: []u8, registry_url: []const u8) ![]const u8 {
     // Validate the target is supported before building URL
     if (!this.isSupported()) {
@@ -133,6 +139,7 @@ pub fn format(this: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void {
 pub fn exePath(this: *const CompileTarget, buf: *bun.PathBuffer, version_str: [:0]const u8, env: *bun.DotEnv.Loader, needs_download: *bool) [:0]const u8 {
     if (this.isDefault()) brk: {
         const self_exe_path = bun.selfExePath() catch break :brk;
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf, self_exe_path);
         buf[self_exe_path.len] = 0;
         needs_download.* = false;
@@ -169,9 +176,9 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
         refresher.refresh();
 
         // TODO: This is way too much code necessary to send a single HTTP request...
-        var async_http = try allocator.create(HTTP.AsyncHTTP);
-        var compressed_archive_bytes = try allocator.create(MutableString);
-        compressed_archive_bytes.* = try MutableString.init(allocator, 24 * 1024 * 1024);
+        var async_http = try safe.Box(HTTP.AsyncHTTP).init(allocator, undefined);
+        var compressed_archive_bytes = try safe.Box(MutableString).init(allocator, undefined);
+        compressed_archive_bytes.ptr.* = try MutableString.init(allocator, 24 * 1024 * 1024);
         var url_buffer: [2048]u8 = undefined;
         const url_str = this.toNPMRegistryURL(&url_buffer) catch |err| {
             // Return error without printing - let caller decide how to handle
@@ -184,22 +191,22 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
             defer progress.end();
             const http_proxy: ?bun.URL = env.getHttpProxyFor(url);
 
-            async_http.* = HTTP.AsyncHTTP.initSync(
+            async_http.ptr.* = HTTP.AsyncHTTP.initSync(
                 allocator,
                 .GET,
                 url,
                 .{},
                 "",
-                compressed_archive_bytes,
+                compressed_archive_bytes.ptr,
                 "",
                 http_proxy,
                 null,
                 HTTP.FetchRedirect.follow,
             );
-            async_http.client.progress_node = progress;
-            async_http.client.flags.reject_unauthorized = env.getTLSRejectUnauthorized();
+            async_http.ptr.client.progress_node = progress;
+            async_http.ptr.client.flags.reject_unauthorized = env.getTLSRejectUnauthorized();
 
-            const response = try async_http.sendSync();
+            const response = try async_http.ptr.sendSync();
 
             switch (response.status_code) {
                 404 => {
@@ -218,9 +225,9 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
         var tarball_bytes = std.ArrayListUnmanaged(u8).empty;
         {
             refresher.refresh();
-            defer compressed_archive_bytes.list.deinit(allocator);
+            defer compressed_archive_bytes.ptr.list.deinit(allocator);
 
-            if (compressed_archive_bytes.list.items.len == 0) {
+            if (compressed_archive_bytes.ptr.list.items.len == 0) {
                 // Return error without printing - let caller handle the messaging
                 return error.InvalidResponse;
             }
@@ -228,7 +235,7 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
             {
                 var node = refresher.start("Decompressing", 0);
                 defer node.end();
-                var gunzip = bun.zlib.ZlibReaderArrayList.init(compressed_archive_bytes.list.items, &tarball_bytes, allocator) catch {
+                var gunzip = bun.zlib.ZlibReaderArrayList.init(compressed_archive_bytes.ptr.list.items, &tarball_bytes, allocator) catch {
                     node.end();
                     // Return error without printing - let caller handle the messaging
                     return error.InvalidResponse;
@@ -315,6 +322,7 @@ pub const ParseError = error{
     InvalidTarget,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn tryFrom(input_: []const u8) ParseError!CompileTarget {
     var this = CompileTarget{};
     const input = bun.strings.trim(input_, " \t\r");
@@ -408,6 +416,7 @@ pub fn tryFrom(input_: []const u8) ParseError!CompileTarget {
     return this;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn from(input_: []const u8) CompileTarget {
     return tryFrom(input_) catch |err| {
         switch (err) {

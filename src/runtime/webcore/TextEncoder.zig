@@ -23,6 +23,7 @@ pub export fn TextEncoder__encode8(
         bun.assert(result.read == slice.len);
         const array_buffer = uint8array.asArrayBuffer(globalThis) orelse return .zero;
         bun.assert(result.written == array_buffer.len);
+// safe-transpile: @memcpy requires manual review
         @memcpy(array_buffer.byteSlice()[0..result.written], buf[0..result.written]);
         return uint8array;
     } else {
@@ -58,6 +59,7 @@ pub export fn TextEncoder__encode16(
             const uint8array = jsc.JSValue.createUninitializedUint8Array(globalThis, 3) catch return .zero;
             const array_buffer = uint8array.asArrayBuffer(globalThis).?;
             const replacement_char = [_]u8{ 239, 191, 189 };
+// safe-transpile: @memcpy requires manual review
             @memcpy(array_buffer.slice()[0..replacement_char.len], &replacement_char);
             return uint8array;
         }
@@ -66,6 +68,7 @@ pub export fn TextEncoder__encode16(
         bun.assert(result.read == slice.len);
         const array_buffer = uint8array.asArrayBuffer(globalThis).?;
         bun.assert(result.written == array_buffer.len);
+// safe-transpile: @memcpy requires manual review
         @memcpy(array_buffer.slice()[0..result.written], buf[0..result.written]);
         return uint8array;
     } else {
@@ -103,6 +106,7 @@ pub export fn c(
             const uint8array = jsc.JSValue.createUninitializedUint8Array(globalThis, 3) catch return .zero;
             const array_buffer = uint8array.asArrayBuffer(globalThis).?;
             const replacement_char = [_]u8{ 239, 191, 189 };
+// safe-transpile: @memcpy requires manual review
             @memcpy(array_buffer.slice()[0..replacement_char.len], &replacement_char);
             return uint8array;
         }
@@ -111,6 +115,7 @@ pub export fn c(
         bun.assert(result.read == slice.len);
         const array_buffer = uint8array.asArrayBuffer(globalThis).?;
         bun.assert(result.written == array_buffer.len);
+// safe-transpile: @memcpy requires manual review
         @memcpy(array_buffer.slice()[0..result.written], buf[0..result.written]);
         return uint8array;
     } else {
@@ -206,6 +211,7 @@ pub export fn TextEncoder__encodeRopeString(
     if (array == .zero) {
         array = jsc.JSValue.createUninitializedUint8Array(globalThis, length) catch return .zero;
         array.ensureStillAlive();
+// safe-transpile: @memcpy requires manual review
         @memcpy(array.asArrayBuffer(globalThis).?.byteSlice(), buf_to_use[0..length]);
     }
 
@@ -223,11 +229,13 @@ pub export fn TextEncoder__encodeInto16(
     var result: strings.EncodeIntoResult = strings.copyUTF16IntoUTF8(output, input);
     if (output.len >= 3 and (result.read == 0 or result.written == 0)) {
         const replacement_char = [_]u8{ 239, 191, 189 };
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf_ptr[0..replacement_char.len], &replacement_char);
         result.read = 1;
         result.written = 3;
     }
     const sized: [2]u32 = .{ result.read, result.written };
+// safe-transpile: @bitCast requires manual review
     return @bitCast(sized);
 }
 
@@ -242,6 +250,7 @@ pub export fn TextEncoder__encodeInto8(
     const result: strings.EncodeIntoResult =
         strings.copyLatin1IntoUTF8(output, input);
     const sized: [2]u32 = .{ result.read, result.written };
+// safe-transpile: @bitCast requires manual review
     return @bitCast(sized);
 }
 

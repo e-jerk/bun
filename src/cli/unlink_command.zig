@@ -58,7 +58,6 @@ fn unlink(ctx: Command.Context) !void {
         switch (Syscall.lstat(Path.joinAbsStringZ(manager.globalLinkDirPath(), &.{name}, .auto))) {
             .result => |stat| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (!bun.S.ISLNK(@intCast(stat.mode))) {
                     Output.prettyErrorln("<r><green>success:<r> package \"{s}\" is not globally linked, so there's nothing to do.", .{name});
                     Global.exit(0);

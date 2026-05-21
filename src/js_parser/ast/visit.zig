@@ -134,6 +134,7 @@ pub fn Visit(
             else
                 null;
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (args) |*arg| {
                 if (arg.ts_decorators.len > 0) {
                     arg.ts_decorators = p.visitTSDecorators(arg.ts_decorators);
@@ -147,6 +148,7 @@ pub fn Visit(
         }
 
         pub fn visitTSDecorators(p: *P, decs: ExprNodeList) ExprNodeList {
+// safe-transpile: for loop with pointer capture requires manual review
             for (decs.slice()) |*dec| {
                 dec.* = p.visitExpr(dec.*);
             }
@@ -157,6 +159,7 @@ pub fn Visit(
         pub fn visitDecls(noalias p: *P, decls: []G.Decl, was_const: bool, comptime is_possibly_decl_to_remove: bool) usize {
             var j: usize = 0;
             var out_decls = decls;
+// safe-transpile: for loop with pointer capture requires manual review
             for (decls) |*decl| {
                 p.visitBinding(decl.binding, null);
 
@@ -313,8 +316,10 @@ pub fn Visit(
                     {
                         var array = expr.data.e_array;
 
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         array.items.len = @min(array.items.len, @as(u32, @truncate(bound_array.items.len)));
-                        for (bound_array.items[0..array.items.len], array.items.slice()) |item, *child_expr| {
+                        // safe-transpile: for with index access requires manual review
+    for (bound_array.items[0..array.items.len], array.items.slice()) |item, *child_expr| {
                             if (item.binding.data == .b_missing) {
                                 child_expr.* = p.newExpr(E.Missing{}, expr.loc);
                                 continue;
@@ -371,6 +376,7 @@ pub fn Visit(
                     st.value = p.visitExprInOut(st.value, ExprIn{ .assign_target = assign_target });
                 },
                 .s_local => |st| {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (st.decls.slice()) |*dec| {
                         p.visitBinding(dec.binding, null);
                         if (dec.value) |val| {
@@ -409,6 +415,7 @@ pub fn Visit(
                     }
                 },
                 .b_array => |bind| {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (bind.items) |*item| {
                         p.visitBinding(item.binding, duplicate_arg_check);
                         if (item.default_value) |default_value| {
@@ -437,6 +444,7 @@ pub fn Visit(
                     }
                 },
                 .b_object => |bind| {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (bind.properties) |*property| {
                         if (!property.flags.contains(.is_spread)) {
                             property.key = p.visitExpr(property.key);
@@ -571,6 +579,7 @@ pub fn Visit(
                 }
 
                 var constructor_function: ?*E.Function = null;
+// safe-transpile: for loop with pointer capture requires manual review
                 for (class.properties) |*property| {
                     if (property.kind == .class_static_block) {
                         const old_fn_or_arrow_data = p.fn_or_arrow_data_visit;
@@ -693,7 +702,8 @@ pub fn Visit(
                         // if this is an expression, we can move statements after super() because there will be 0 decorators
                         var super_index: ?usize = null;
                         if (class.extends != null) {
-                            for (constructor.func.body.stmts, 0..) |stmt, index| {
+                            // safe-transpile: for with index access requires manual review
+    for (constructor.func.body.stmts, 0..) |stmt, index| {
                                 if (stmt.data != .s_expr or stmt.data.s_expr.value.data != .e_call or stmt.data.s_expr.value.data.e_call.target.data != .e_super) continue;
                                 super_index = index;
                                 break;
@@ -798,6 +808,7 @@ pub fn Visit(
                 defer preprocessed_enums.deinit(p.allocator);
                 if (p.scopes_in_order_for_enum.count() > 0) {
                     var found: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (stmts.items) |*stmt| {
                         if (stmt.data == .s_enum) {
                             const old_scopes_in_order = p.scope_order_to_visit;
@@ -827,6 +838,7 @@ pub fn Visit(
 
                 var preprocessed_enum_i: usize = 0;
 
+// safe-transpile: for loop with pointer capture requires manual review
                 for (stmts.items) |*stmt| {
                     const list = list_getter: {
                         switch (stmt.data) {
@@ -901,6 +913,7 @@ pub fn Visit(
                                 const gpe = bun.handleOom(fn_stmts.getOrPut(name_ref));
                                 var index = gpe.value_ptr.*;
                                 if (!gpe.found_existing) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     index = @as(u32, @intCast(let_decls.items.len));
                                     gpe.value_ptr.* = index;
                                     let_decls.append(.{
@@ -1039,6 +1052,7 @@ pub fn Visit(
                 // if they are exported (which could be in a nested TypeScript namespace).
                 if (p.const_values.count() > 0) {
                     const items: []Stmt = stmts.items;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (items) |*stmt| {
                         switch (stmt.data) {
                             .s_empty, .s_comment, .s_directive, .s_debugger, .s_type_script => continue,
@@ -1067,6 +1081,7 @@ pub fn Visit(
                                         decls[end] = decl;
                                         end += 1;
                                     }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     local.decls.len = @as(u32, @truncate(end));
                                     if (any_decl_in_const_values) {
                                         if (end == 0) {

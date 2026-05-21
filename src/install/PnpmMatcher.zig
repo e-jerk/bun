@@ -105,7 +105,6 @@ pub fn fromExpr(allocator: std.mem.Allocator, expr: ast.Expr, log: *logger.Log, 
 const CreateMatcherError = OOM || error{InvalidRegExp};
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn createMatcher(raw: []const u8, buf: *std.Io.Writer.Allocating) CreateMatcherError!Matcher {
     buf.clearRetainingCapacity();
     const writer = &buf.writer;
@@ -137,7 +136,6 @@ fn createMatcher(raw: []const u8, buf: *std.Io.Writer.Allocating) CreateMatcherE
     return .{ .pattern = .{ .regex = regex }, .is_exclude = is_exclude };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isMatch(this: *const PnpmMatcher, name: []const u8) bool {
     if (this.matchers.len == 0) {

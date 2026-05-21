@@ -1,5 +1,4 @@
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn get(comptime name: []const u8) comptime_int {
     return if (@hasDecl(bun.O, name))
         return @field(bun.O, name)

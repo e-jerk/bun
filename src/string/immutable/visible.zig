@@ -675,12 +675,10 @@ pub const visible = struct {
         const printable = @select(bool, ge_20, not_c1, @as(@Vector(16, bool), @splat(false))) &
             not_ad;
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         return @bitCast(@as(@Vector(16, u1), @bitCast(printable)));
     }
 
     // Ref: https://cs.stanford.edu/people/miles/iso8859.html
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn visibleLatin1Width(input_: []const u8) usize {
         var length: usize = 0;
@@ -737,7 +735,6 @@ pub const visible = struct {
             const shifted = chunk -% lo;
             const in_range = shifted <= range;
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             const mask: MaskInt = @bitCast(@as(@Vector(stride, u1), @bitCast(in_range)));
             if (mask != 0) return i + @ctz(mask);
         }
@@ -762,7 +759,6 @@ pub const visible = struct {
             inline for (targets[1..]) |t| {
                 hit = hit | (chunk == @as(@Vector(stride, T), @splat(t)));
             }
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             const mask: MaskInt = @bitCast(@as(@Vector(stride, u1), @bitCast(hit)));
             if (mask != 0) return i + @ctz(mask);
@@ -833,7 +829,6 @@ pub const visible = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn visibleUTF8WidthFn(input: []const u8, comptime asciiFn: anytype) usize {
         var bytes = input;
         var len: usize = 0;
@@ -903,7 +898,6 @@ pub const visible = struct {
 
             self.s = .{
                 .count = 1,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .base_width = @truncate(w),
                 .non_emoji_width = w,
@@ -1000,7 +994,6 @@ pub const visible = struct {
                 const ge_low = chunk >= l;
                 const lt_high = chunk < h;
                 const printable = @select(bool, ge_low, lt_high, @as(@Vector(vec_len, bool), @splat(false)));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                 return @bitCast(@as(@Vector(vec_len, u1), @bitCast(printable)));
             }
@@ -1188,18 +1181,15 @@ pub const visible = struct {
                     if (!exclude_ansi_colors or cp != 0x1b) {
                         if (prev_visible) |prev_| {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             const should_break = grapheme.graphemeBreak(@truncate(prev_), @truncate(cp), &break_state);
                             if (should_break) {
                                 len += grapheme_state.width();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 grapheme_state.reset(@truncate(cp), ambiguousAsWide);
                             } else {
                                 grapheme_state.add(cp, ambiguousAsWide);
                             }
                         } else {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             grapheme_state.reset(@truncate(cp), ambiguousAsWide);
                         }
@@ -1222,7 +1212,6 @@ pub const visible = struct {
             defer input = input[replacement.len..];
             // Skip invalid sequences and lone surrogates (treat as zero-width)
             if (replacement.fail or replacement.is_lead) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const cp: u32 = @intCast(replacement.code_point);
             defer prev = cp;
@@ -1255,7 +1244,6 @@ pub const visible = struct {
 
             if (prev_visible) |prev_| {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 const should_break = grapheme.graphemeBreak(@truncate(prev_), @truncate(cp), &break_state);
                 if (should_break) {
                     len += grapheme_state.width();
@@ -1274,19 +1262,16 @@ pub const visible = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn visibleLatin1WidthFn(input: []const u8) usize {
         return visibleLatin1Width(input);
     }
 
     pub const width = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn latin1(input: []const u8) usize {
             return visibleLatin1Width(input);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn utf8(input: []const u8) usize {
             return visibleUTF8WidthFn(input, visibleLatin1Width);
@@ -1298,12 +1283,10 @@ pub const visible = struct {
 
         pub const exclude_ansi_colors = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn latin1(input: []const u8) usize {
                 return visibleLatin1WidthExcludeANSIColors(input);
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn utf8(input: []const u8) usize {
                 return visibleUTF8WidthFn(input, visibleLatin1WidthExcludeANSIColors);
@@ -1318,14 +1301,12 @@ pub const visible = struct {
             /// and are always included in the prefix. Never splits a
             /// multi-byte UTF-8 codepoint.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn utf8IndexAtWidth(input: []const u8, max_width: usize) usize {
                 return utf8IndexAtWidthExcludeANSI(input, max_width);
             }
         };
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn utf8IndexAtWidthExcludeANSI(input_: []const u8, max_width: usize) usize {
         var input = input_;
@@ -1370,7 +1351,6 @@ pub const visible = struct {
     /// accumulating visible width. Returns the absolute byte index at
     /// which adding the next codepoint would exceed `max_width`, or null
     /// if the whole run fits. Mirrors visibleUTF8WidthFn's decode loop.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn utf8WalkRun(input: []const u8, start: usize, len: usize, max_width: usize, w: *usize) ?usize {
         var bytes = input[start .. start + len];
@@ -1443,7 +1423,6 @@ export fn Bun__visibleWidthExcludeANSI_latin1(ptr: [*]const u8, len: usize) usiz
 /// Calculate visible width of a single codepoint
 export fn Bun__codepointWidth(cp: u32, ambiguous_as_wide: bool) u8 {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(visibleCodepointWidth(cp, ambiguous_as_wide));
 }
 
@@ -1452,7 +1431,6 @@ export fn Bun__codepointWidth(cp: u32, ambiguous_as_wide: bool) u8 {
 /// `state` is an opaque u8 that must be initialized to 0 and passed between calls.
 export fn Bun__graphemeBreak(cp1: u32, cp2: u32, state_ptr: *u8) bool {
     var state: grapheme.BreakState = @enumFromInt(state_ptr.*);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const result = grapheme.graphemeBreak(@truncate(cp1), @truncate(cp2), &state);
     state_ptr.* = @intFromEnum(state);

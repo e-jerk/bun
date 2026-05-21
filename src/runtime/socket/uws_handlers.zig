@@ -33,12 +33,10 @@ fn PtrHandler(comptime T: type, comptime ssl: bool) type {
             return S.from(s);
         }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onOpen(ext: Ext, s: *us_socket_t, _: bool, _: []const u8) void {
             const this = ext.* orelse return;
             if (@hasDecl(T, "onOpen")) swallow(this.onOpen(wrap(s)));
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(ext: Ext, s: *us_socket_t, data: []const u8) void {
             const this = ext.* orelse return;
@@ -117,7 +115,6 @@ pub fn BunListener(comptime ssl: bool) type {
     return struct {
         // No `Ext` decl — owner comes from `s.group().owner(Listener)`.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onOpen(s: *us_socket_t, _: bool, _: []const u8) void {
             const listener = s.group().owner(api.Listener);
             // onCreate allocates the NewSocket, stashes it in ext, and
@@ -135,7 +132,6 @@ pub fn BunListener(comptime ssl: bool) type {
         pub fn onClose(s: *us_socket_t, code: i32, reason: ?*anyopaque) void {
             if (s.ext(?*NS).*) |ns| swallow(ns.onClose(S.from(s), code, reason));
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(s: *us_socket_t, data: []const u8) void {
             if (s.ext(?*NS).*) |ns| swallow(ns.onData(S.from(s), data));
@@ -167,12 +163,10 @@ fn NsHandler(comptime Owner: type, comptime H: type, comptime ssl: bool) type {
             return S.from(s);
         }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onOpen(ext: Ext, s: *us_socket_t, _: bool, _: []const u8) void {
             const this = ext.* orelse return;
             if (@hasDecl(H, "onOpen")) swallow(H.onOpen(this, wrap(s)));
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(ext: Ext, s: *us_socket_t, data: []const u8) void {
             const this = ext.* orelse return;
@@ -237,17 +231,14 @@ pub fn HTTPClient(comptime ssl: bool) type {
             return S.from(s);
         }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn fwd(ext: Ext, comptime name: []const u8, args: anytype) void {
             if (@hasDecl(H, name) and @TypeOf(@field(H, name)) != @TypeOf(null))
                 swallow(@call(.auto, @field(H, name), .{ext.* orelse return} ++ args));
         }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onOpen(ext: Ext, s: *us_socket_t, _: bool, _: []const u8) void {
             fwd(ext, "onOpen", .{wrap(s)});
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(ext: Ext, s: *us_socket_t, data: []const u8) void {
             fwd(ext, "onData", .{ wrap(s), data });
@@ -314,9 +305,7 @@ pub const SpawnIPC = struct {
     const S = uws.NewSocketHandler(false);
     pub const Ext = *?*IPC.SendQueue;
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onOpen(_: Ext, _: *us_socket_t, _: bool, _: []const u8) void {}
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onData(ext: Ext, s: *us_socket_t, data: []const u8) void {
         H.onData(ext.* orelse return, S.from(s), data);

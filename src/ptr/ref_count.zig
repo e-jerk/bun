@@ -65,7 +65,6 @@ pub const Options = struct {
 /// can remove the forwarded `ref` and `deref` methods from `RefCount`.
 /// If these methods are not forwarded, keep in mind that it should use the wrapper.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn RefCount(T: type, field_name: []const u8, destructor: anytype, options: Options) type {
     return struct {
         raw_count: u32,
@@ -215,7 +214,6 @@ pub fn RefCount(T: type, field_name: []const u8, destructor: anytype, options: O
 /// Avoid reference counting when an object only has one owner.
 /// Avoid thread-safe reference counting when only one thread allocates and frees.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn ThreadSafeRefCount(T: type, field_name: []const u8, destructor: fn (*T) void, options: Options) type {
     return struct {
         raw_count: std.atomic.Value(u32),
@@ -289,7 +287,6 @@ pub fn ThreadSafeRefCount(T: type, field_name: []const u8, destructor: fn (*T) v
 
         pub fn dumpActiveRefs(count: *@This()) void {
             if (enable_debug) {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const ptr: *T = @alignCast(@fieldParentPtr(field_name, count));
                 count.debug.dump(@typeName(T), ptr, count.raw_count.load(.seq_cst));
@@ -550,7 +547,6 @@ pub fn DebugData(thread_safe: bool) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn deinit(debug: *@This(), data: []const u8, ret_addr: usize) void {
             assertValid(debug);
             debug.magic = undefined;
@@ -564,9 +560,7 @@ pub fn DebugData(thread_safe: bool) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         fn onAllocationLeak(ptr: *anyopaque, data: []u8) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             const debug: *@This() = @ptrCast(@alignCast(ptr));
             debug.lock.lock();

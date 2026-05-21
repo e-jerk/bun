@@ -243,6 +243,7 @@ pub const ImageSet = struct {
         try this.vendor_prefix.toCss(dest);
         try dest.writeStr("image-set(");
         var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.options.items) |*option| {
             if (first) {
                 first = false;

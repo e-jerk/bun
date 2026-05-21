@@ -29,12 +29,10 @@ ts_namespace: ?*TSNamespaceScope = null,
 pub const NestedScopeMap = std.array_hash_map.Auto(u32, bun.BabyList(*Scope));
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getMemberHash(name: []const u8) u64 {
     return bun.StringHashMapContext.hash(.{}, name);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getMemberWithHash(this: *const Scope, name: []const u8, hash_value: u64) ?Member {
     const hashed = bun.StringHashMapContext.Prehashed{
@@ -44,7 +42,6 @@ pub fn getMemberWithHash(this: *const Scope, name: []const u8, hash_value: u64) 
     return this.members.getAdapted(name, hashed);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getOrPutMemberWithHash(
     this: *Scope,

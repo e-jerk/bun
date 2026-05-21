@@ -6,7 +6,7 @@ fn isOomOnlyError(comptime ErrorUnionOrSet: type) bool {
         else => return false,
     };
     for (@typeInfo(ErrorSet).error_set orelse return false) |err| {
-        if (!safe.SimdUtils.eql(err.name, "OutOfMemory")) return false;
+        if (!std.mem.eql(u8, err.name, "OutOfMemory")) return false;
     }
     return true;
 }

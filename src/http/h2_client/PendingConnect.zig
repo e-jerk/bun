@@ -10,14 +10,12 @@ ssl_config: ?*SSLConfig,
 waiters: std.ArrayListUnmanaged(*HTTPClient) = .empty,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn matches(this: *const @This(), hostname: []const u8, port: u16, ssl_config: ?*SSLConfig) bool {
     return this.port == port and this.ssl_config == ssl_config and strings.eqlLong(this.hostname, hostname, true);
 }
 
 pub fn unregisterFrom(this: *@This(), ctx: *NewHTTPContext(true)) void {
     const list = &ctx.pending_h2_connects;
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (list.items, 0..) |p, i| {
         if (p == this) {

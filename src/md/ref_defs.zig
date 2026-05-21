@@ -6,6 +6,7 @@ pub const RefDef = struct {
 
 /// Normalize a link label for comparison: collapse whitespace runs to single space,
 /// strip leading/trailing whitespace, case-fold.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn normalizeLabel(self: *Parser, raw: []const u8) []const u8 {
     // Collapse whitespace and apply Unicode case folding (per CommonMark §6.7)
     var result = std.ArrayListUnmanaged(u8).empty;
@@ -52,6 +53,7 @@ pub fn normalizeLabel(self: *Parser, raw: []const u8) []const u8 {
 }
 
 /// Look up a reference definition by label (case-insensitive, whitespace-normalized).
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn lookupRefDef(self: *Parser, raw_label: []const u8) ?RefDef {
     if (raw_label.len == 0) return null;
     const normalized = self.normalizeLabel(raw_label);
@@ -64,6 +66,7 @@ pub fn lookupRefDef(self: *Parser, raw_label: []const u8) ?RefDef {
 
 /// Try to parse a link reference definition from merged paragraph text at position `pos`.
 /// Returns the end position and the parsed ref def, or null if not a valid ref def.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseRefDef(self: *Parser, text: []const u8, pos: usize) ?struct { end_pos: usize, label: []const u8, dest: []const u8, title: []const u8 } {
     var p = pos;
 
@@ -156,6 +159,7 @@ pub fn parseRefDef(self: *Parser, text: []const u8, pos: usize) ?struct { end_po
     return .{ .end_pos = p, .label = label, .dest = dest, .title = title };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn skipRefDefWhitespace(self: *const Parser, text: []const u8, start: usize) usize {
     _ = self;
     var p = start;
@@ -167,6 +171,7 @@ pub fn skipRefDefWhitespace(self: *const Parser, text: []const u8, start: usize)
     return p;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseRefDefDest(self: *const Parser, text: []const u8, start: usize) ?struct { dest: []const u8, end_pos: usize } {
     _ = self;
     var p = start;
@@ -209,6 +214,7 @@ pub fn parseRefDefDest(self: *const Parser, text: []const u8, start: usize) ?str
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseRefDefTitle(self: *const Parser, text: []const u8, start: usize) ?struct { title: []const u8, end_pos: usize } {
     _ = self;
     var p = start;
@@ -248,6 +254,7 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
         off = (off + align_mask) & ~align_mask;
         if (off + @sizeOf(BlockHeader) > bytes.len) break;
 
+// safe-transpile: @alignCast requires manual review
         const hdr: *BlockHeader = @ptrCast(@alignCast(bytes.ptr + off));
         const hdr_off = off;
         off += @sizeOf(BlockHeader);
@@ -256,6 +263,7 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
         const lines_size = n_lines * @sizeOf(VerbatimLine);
         if (off + lines_size > bytes.len) break;
 
+// safe-transpile: @alignCast requires manual review
         const line_ptr: [*]VerbatimLine = @ptrCast(@alignCast(bytes.ptr + off));
         const block_lines = line_ptr[0..n_lines];
         off += lines_size;
@@ -326,6 +334,7 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
                 hdr.flags |= types.BLOCK_REF_DEF_ONLY;
             } else {
                 // Mark consumed lines as invalid (beg > end triggers skip in processLeafBlock)
+// safe-transpile: @alignCast requires manual review
                 const line_base: [*]VerbatimLine = @ptrCast(@alignCast(bytes.ptr + hdr_off + @sizeOf(BlockHeader)));
                 var i: u32 = 0;
                 while (i < lines_consumed) : (i += 1) {

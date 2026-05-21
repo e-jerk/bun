@@ -61,7 +61,6 @@ const State = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn skipToSeparator(self: *State, path: []const u8, is_end_invalid: bool) void {
         if (self.path_index == path.len) {
             self.wildcard.path_index += 1;
@@ -119,7 +118,6 @@ const Wildcard = struct {
 // TODO: consider just taking arena and resetting to initial state,
 // all usages of this function pass in Arena.allocator()
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn match(glob: []const u8, path: []const u8) MatchResult {
     var state = State{};
 
@@ -143,7 +141,6 @@ pub fn match(glob: []const u8, path: []const u8) MatchResult {
 }
 
 // `glob_start` is the index where the glob pattern starts
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn globMatchImpl(state: *State, glob: []const u8, glob_start: u32, path: []const u8, brace_stack: *BraceStack) bool {
     main_loop: while (state.glob_index < glob.len or state.path_index < path.len) {
@@ -293,7 +290,7 @@ inline fn globMatchImpl(state: *State, glob: []const u8, glob_start: u32, path: 
                 const is_match = if (cc == '/')
                     isSeparator(path[state.path_index])
                 else if (cc_len > 1)
-                    state.path_index + cc_len <= path.len and safe.SimdUtils.eql(path[state.path_index..][0..cc_len], glob[state.glob_index..][0..cc_len])
+                    state.path_index + cc_len <= path.len and std.mem.eql(u8, path[state.path_index..][0..cc_len], glob[state.glob_index..][0..cc_len])
                 else
                     path[state.path_index] == cc;
 
@@ -321,7 +318,6 @@ inline fn globMatchImpl(state: *State, glob: []const u8, glob_start: u32, path: 
     return true;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn matchBrace(state: *State, glob: []const u8, path: []const u8, brace_stack: *BraceStack) bool {
     var brace_depth: i16 = 0;
@@ -368,7 +364,6 @@ fn matchBrace(state: *State, glob: []const u8, path: []const u8, brace_stack: *B
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn matchBraceBranch(state: *State, glob: []const u8, path: []const u8, open_brace_index: u32, branch_index: u32, brace_stack: *BraceStack) bool {
     brace_stack.append(Brace{ .open_brace_idx = open_brace_index, .branch_idx = branch_index }) catch
         return false; // exceeded brace depth
@@ -376,7 +371,6 @@ fn matchBraceBranch(state: *State, glob: []const u8, path: []const u8, open_brac
     // Clone state
     var branch_state = state.*;
     branch_state.glob_index = branch_index;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     branch_state.brace_depth = @intCast(brace_stack.len);
 
@@ -387,7 +381,6 @@ fn matchBraceBranch(state: *State, glob: []const u8, path: []const u8, open_brac
     return matched;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn skipBranch(state: *State, glob: []const u8) void {
     var in_brackets = false;
@@ -421,7 +414,6 @@ inline fn isSeparator(c: u8) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn unescape(c: *u8, glob: []const u8, glob_index: *u32) bool {
     if (c.* == '\\') {
         glob_index.* += 1;
@@ -447,7 +439,6 @@ inline fn unescape(c: *u8, glob: []const u8, glob_index: *u32) bool {
 ///
 /// `c` must point to a u32 initialized to `glob[glob_index]`
 /// `clen` must point to a u8 initialized to 1
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn getUnicode(c: *u32, clen: *u8, glob: []const u8, glob_index: *u32) bool {
     bun.debugAssert(clen.* == 1);
@@ -481,7 +472,6 @@ inline fn getUnicode(c: *u32, clen: *u8, glob: []const u8, glob_index: *u32) boo
         // multi-byte sequences
         else => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const len = bun.strings.wtf8ByteSequenceLength(@truncate(c.*));
             clen.* = len;
 
@@ -493,15 +483,14 @@ inline fn getUnicode(c: *u32, clen: *u8, glob: []const u8, glob_index: *u32) boo
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 inline fn skipGlobstars(glob: []const u8, glob_index: *u32) void {
     glob_index.* += 2;
 
-    while (glob_index.* + 4 <= glob.len and safe.SimdUtils.eql(glob[glob_index.*..][0..4], "/**/")) {
+    while (glob_index.* + 4 <= glob.len and std.mem.eql(u8, glob[glob_index.*..][0..4], "/**/")) {
         glob_index.* += 3;
     }
 
-    if (glob_index.* + 3 == glob.len and safe.SimdUtils.eql(glob[glob_index.*..][0..3], "/**")) {
+    if (glob_index.* + 3 == glob.len and std.mem.eql(u8, glob[glob_index.*..][0..3], "/**")) {
         glob_index.* += 3;
     }
 

@@ -207,7 +207,6 @@ pub fn runTasks(
 
                         if (manager.subcommand != .remove) {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                             for (manager.update_requests) |*request| {
                                 if (strings.eql(request.name, name.slice())) {
                                     request.failed = true;
@@ -264,7 +263,6 @@ pub fn runTasks(
                     }
                     if (manager.subcommand != .remove) {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                         for (manager.update_requests) |*request| {
                             if (strings.eql(request.name, name.slice())) {
                                 request.failed = true;
@@ -295,7 +293,6 @@ pub fn runTasks(
                         entry.value_ptr.* = .{ .manifest = manifest };
 
                         if (timestamp_this_tick == null) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             timestamp_this_tick = @as(u32, @truncate(@as(u64, @intCast(@max(0, @import("std-fs-compat").timestamp()))))) +| 300;
                         }
@@ -459,7 +456,6 @@ pub fn runTasks(
                     }
                     if (manager.subcommand != .remove) {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                         for (manager.update_requests) |*request| {
                             if (strings.eql(request.name, extract.name.slice())) {
                                 request.failed = true;
@@ -549,7 +545,6 @@ pub fn runTasks(
                         ) catch |err| bun.handleOom(err);
                     }
                     if (manager.subcommand != .remove) {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                         for (manager.update_requests) |*request| {
                             if (strings.eql(request.name, extract.name.slice())) {
@@ -1138,7 +1133,6 @@ pub fn flushDependencyQueue(this: *PackageManager) void {
 pub fn scheduleTasks(manager: *PackageManager) usize {
     const count = manager.task_batch.len + manager.network_resolve_batch.len + manager.network_tarball_batch.len + manager.patch_apply_batch.len + manager.patch_calc_hash_batch.len;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     manager.incrementPendingTasks(@intCast(count));
     manager.thread_pool.schedule(manager.patch_apply_batch);

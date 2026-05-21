@@ -358,7 +358,7 @@ pub const coreutils_error_map = brk: {
     }
 
     // sanity check
-    bun.assert(safe.SimdUtils.eql(map.get(SystemErrno.ENOENT).?, "No such file or directory"));
+    bun.assert(std.mem.eql(u8, map.get(SystemErrno.ENOENT).?, "No such file or directory"));
 
     break :brk map;
 };

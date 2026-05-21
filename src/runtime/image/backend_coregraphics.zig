@@ -45,7 +45,6 @@ fn mapErr(rc: i32) BackendError {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     var w: u32 = 0;
     var h: u32 = 0;
@@ -67,7 +66,6 @@ pub fn decode(bytes: []const u8, max_pixels: u64) BackendError!codecs.Decoded {
     return .{ .rgba = out, .width = w, .height = h };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encode(rgba: []const u8, width: u32, height: u32, opts: codecs.EncodeOptions) BackendError![]u8 {
     // codecs.encode only routes heic/avif here, so the "knob ImageIO can't
@@ -104,7 +102,6 @@ extern fn bun_coregraphics_reflect(src: [*]const u8, w: u32, h: u32, dst: [*]u8,
 /// we only take this path for the `.lanczos3` default — explicit non-Lanczos
 /// filters fall through to the Highway kernel which honours them exactly.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn scale(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, filter: codecs.Filter) BackendError![]u8 {
     if (filter != .lanczos3) return error.BackendUnavailable;
     const out = try bun.default_allocator.alloc(u8, @as(usize, dw) * dh * 4);
@@ -115,7 +112,6 @@ pub fn scale(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, filter: codecs
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rotate(src: []const u8, w: u32, h: u32, quarters: u32) BackendError![]u8 {
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * h * 4);
     errdefer bun.default_allocator.free(out);
@@ -124,7 +120,6 @@ pub fn rotate(src: []const u8, w: u32, h: u32, quarters: u32) BackendError![]u8 
     return out;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn flip(src: []const u8, w: u32, h: u32, horizontal: bool) BackendError![]u8 {
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * h * 4);

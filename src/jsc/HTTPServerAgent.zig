@@ -21,7 +21,6 @@ pub fn notifyServerStarted(this: *HTTPServerAgent, instance: jsc.API.AnyServer) 
         agent.notifyServerStarted(
             this.next_server_id,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(instance.vm().hot_reload_counter),
             &url,
             @floatFromInt(bun.timespec.now(.allow_mocked_time).ms()),
@@ -42,7 +41,6 @@ pub fn notifyServerRoutesUpdated(this: *const HTTPServerAgent, server: jsc.API.A
         var routes = std.array_list.Managed(Route).init(bun.default_allocator);
         defer {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
             for (routes.items) |*route| {
                 route.deinit();
             }
@@ -54,12 +52,10 @@ pub fn notifyServerRoutesUpdated(this: *const HTTPServerAgent, server: jsc.API.A
         switch (server.userRoutes()) {
             inline else => |user_routes| {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (user_routes) |*user_route| {
                     const decl: *const jsc.API.ServerConfig.RouteDeclaration = &user_route.route;
                     max_id = @max(max_id, user_route.id);
                     try routes.append(.{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .route_id = @intCast(user_route.id),
                         .path = bun.String.init(decl.path),
@@ -75,10 +71,8 @@ pub fn notifyServerRoutesUpdated(this: *const HTTPServerAgent, server: jsc.API.A
         }
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (config.static_routes.items) |*route| {
             try routes.append(.{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .route_id = @intCast(max_id + 1),
                 .path = bun.String.init(route.path),
@@ -99,7 +93,6 @@ pub fn notifyServerRoutesUpdated(this: *const HTTPServerAgent, server: jsc.API.A
             max_id += 1;
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         agent.notifyServerRoutesUpdated(server.inspectorServerID(), @intCast(jsc.VirtualMachine.get().hot_reload_counter), routes.items);
     }
@@ -134,7 +127,6 @@ pub const Route = extern struct {
 
     pub fn deinit(this: *Route) void {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.params()) |*param_name| {
             param_name.deref();
         }
@@ -165,7 +157,6 @@ pub const InspectorHTTPServerAgent = opaque {
     }
 
     pub fn notifyServerRoutesUpdated(agent: *InspectorHTTPServerAgent, serverId: ServerId, hotReloadId: HotReloadId, routes: []Route) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         bun.cpp.Bun__HTTPServerAgent__notifyServerRoutesUpdated(agent, serverId, hotReloadId, @ptrCast(routes.ptr), routes.len);
     }

@@ -30,6 +30,7 @@ pub fn resetArena(this: *ModuleLoader, jsc_vm: *VirtualMachine) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resolveEmbeddedFile(vm: *VirtualMachine, path_buf: *bun.PathBuffer, input_path: []const u8, extname: []const u8) ?[]const u8 {
     if (input_path.len == 0) return null;
     var graph = vm.standalone_module_graph orelse return null;
@@ -548,6 +549,7 @@ pub fn transpileSourceCode(
                 }
             }
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const module_info_deserialized: ?*anyopaque = if (module_info) |mi| @ptrCast(mi.asDeserialized()) else null;
 
             if (jsc_vm.isWatcherEnabled()) {
@@ -639,6 +641,7 @@ pub fn transpileSourceCode(
                     if (globalObject) |globalThis| {
                         // attempt to avoid reading the WASM file twice.
                         const decoded: jsc.DecodedJSValue = .{
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             .u = .{ .ptr = @ptrCast(globalThis) },
                         };
                         const globalValue = decoded.encode();

@@ -45,7 +45,7 @@ const StrokeDasharray = union(enum) {
     /// No dashing is used.
     None,
     /// Specifies a dashing pattern to use.
-    Values: safe.ArrayList(LengthPercentage),
+    Values: ArrayList(LengthPercentage),
 };
 
 /// A value for the [marker](https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties) properties.

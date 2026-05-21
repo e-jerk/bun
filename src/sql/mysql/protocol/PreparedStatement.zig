@@ -39,7 +39,6 @@ pub const Execute = struct {
 
     pub fn deinit(this: *Execute) void {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.params) |*param| {
             param.deinit(bun.default_allocator);
         }
@@ -57,10 +56,8 @@ pub const Execute = struct {
         @memset(null_bitmap, 0);
 
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.params, 0..) |param, i| {
             if (param == .null) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 null_bitmap[i >> 3] |= @as(u8, 1) << @as(u3, @truncate(i & 7));
             }
@@ -92,7 +89,6 @@ pub const Execute = struct {
 
             // Write parameter values
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.params, this.param_types) |*param, param_type| {
                 if (param.* == .null or param_type.type == .MYSQL_TYPE_NULL) continue;
 

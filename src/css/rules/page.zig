@@ -58,6 +58,7 @@ pub const PageSelector = struct {
             try dest.writeStr(name);
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.pseudo_classes.items) |*pseudo| {
             try dest.writeChar(':');
             try pseudo.toCss(dest);
@@ -167,6 +168,7 @@ pub const PageRule = struct {
         inline for (DECLS) |decl_field_name| {
             const decls: *const ArrayList(css.Property) = &@field(this.declarations, decl_field_name);
             const important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
+// safe-transpile: for loop with pointer capture requires manual review
             for (decls.items) |*decl| {
                 try dest.newline();
                 try decl.toCss(dest, important);
@@ -184,6 +186,7 @@ pub const PageRule = struct {
             try dest.newline();
 
             var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.rules.items) |*rule| {
                 if (first) {
                     first = false;
@@ -222,6 +225,7 @@ pub const PagePseudoClass = enum {
     /// The `:blank` pseudo class.
     blank,
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -278,6 +282,7 @@ pub const PageMarginBox = enum {
     /// A fixed-size box defined by the intersection of the bottom and right margins of the page box.
     @"bottom-right-corner",
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -301,6 +306,7 @@ pub const PageRuleParser = struct {
     pub const DeclarationParser = struct {
         pub const Declaration = void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(this: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             return css.declaration.parse_declaration(
                 name,
@@ -326,6 +332,7 @@ pub const PageRuleParser = struct {
         pub const Prelude = PageMarginBox;
         pub const AtRule = void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             const loc = input.currentSourceLocation();
             return switch (css.parse_utility.parseString(

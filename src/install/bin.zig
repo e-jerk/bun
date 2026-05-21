@@ -10,6 +10,7 @@ pub const Bin = extern struct {
     // Largest member must be zero initialized
     value: Value = Value{ .map = ExternalStringList{} },
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn count(this: *const Bin, buf: []const u8, extern_strings: []const ExternalString, comptime StringBuilder: type, builder: StringBuilder) u32 {
         switch (this.tag) {
             .file => builder.count(this.value.file.slice(buf)),
@@ -20,9 +21,11 @@ pub const Bin = extern struct {
             .dir => builder.count(this.value.dir.slice(buf)),
             .map => {
                 const list = this.value.map.get(extern_strings);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (list) |*extern_string| {
                     builder.count(extern_string.slice(buf));
                 }
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @as(u32, @truncate(list.len));
             },
             else => {},
@@ -75,6 +78,7 @@ pub const Bin = extern struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(this: *const Bin, buf: []const u8, prev_external_strings: []const ExternalString, all_extern_strings: []ExternalString, extern_strings_slice: []ExternalString, comptime StringBuilder: type, builder: StringBuilder) Bin {
         switch (this.tag) {
             .none => {
@@ -109,7 +113,8 @@ pub const Bin = extern struct {
                 };
             },
             .map => {
-                for (this.value.map.get(prev_external_strings), 0..) |extern_string, i| {
+                // safe-transpile: for with index access requires manual review
+    for (this.value.map.get(prev_external_strings), 0..) |extern_string, i| {
                     extern_strings_slice[i] = builder.append(ExternalString, extern_string.slice(buf));
                 }
 
@@ -498,6 +503,7 @@ pub const Bin = extern struct {
     pub const PriorityQueue = std.PriorityQueue(Install.DependencyID, PriorityQueueContext, PriorityQueueContext.lessThan);
 
     // https://github.com/npm/npm-normalize-package-bin/blob/574e6d7cd21b2f3dee28a216ec2053c2551f7af9/lib/index.js#L38
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn normalizedBinName(name: []const u8) []const u8 {
         if (std.mem.lastIndexOfAny(u8, name, "/\\:")) |i| {
             return name[i + 1 ..];
@@ -557,9 +563,11 @@ pub const Bin = extern struct {
 
             var dest_buf: bun.WPathBuffer = undefined;
             const abs_dest_w = strings.convertUTF8toUTF16InBuffer(&dest_buf, abs_dest);
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf[abs_dest_w.len..][0..".bunx\x00".len], comptime strings.literal(u16, ".bunx\x00"));
             const abs_bunx_file: [:0]const u16 = dest_buf[0 .. abs_dest_w.len + ".bunx".len :0];
             _ = bun.sys.unlinkW(abs_bunx_file);
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf[abs_dest_w.len..][0..".exe\x00".len], comptime strings.literal(u16, ".exe\x00"));
             const abs_exe_file: [:0]const u16 = dest_buf[0 .. abs_dest_w.len + ".exe".len :0];
             _ = bun.sys.unlinkW(abs_exe_file);
@@ -671,6 +679,7 @@ pub const Bin = extern struct {
 
             // Get original file permissions to preserve them (including setuid/setgid/sticky bits)
             const original_stat = bun.sys.fstatat(.cwd(), abs_target).unwrap() catch return;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const original_mode = @as(bun.Mode, @intCast(original_stat.mode));
 
             // Create temporary file path
@@ -696,6 +705,7 @@ pub const Bin = extern struct {
                 }
 
                 // Reapply original permissions (umask was applied during openat, so we need to restore)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 _ = bun.sys.fchmodat(.cwd(), tmppath, @as(bun.Mode, @intCast(original_stat.mode & 0o777)), 0).unwrap() catch return;
             }
 
@@ -717,6 +727,7 @@ pub const Bin = extern struct {
             var target_buf: bun.WPathBuffer = undefined;
 
             const abs_dest_w = strings.convertUTF8toUTF16InBuffer(&dest_buf, abs_dest);
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf[abs_dest_w.len..][0..".bunx\x00".len], comptime strings.literal(u16, ".bunx\x00"));
 
             const abs_bunx_file: [:0]const u16 = dest_buf[0 .. abs_dest_w.len + ".bunx".len :0];
@@ -785,6 +796,7 @@ pub const Bin = extern struct {
                 return;
             };
 
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf[abs_dest_w.len..][0..".exe\x00".len], comptime strings.literal(u16, ".exe\x00"));
             const abs_exe_file: [:0]const u16 = dest_buf[0 .. abs_dest_w.len + ".exe".len :0];
 
@@ -882,6 +894,7 @@ pub const Bin = extern struct {
         ///
         /// Falls through to (1) when nothing exists so the existing
         /// `skipped_due_to_missing_bin` retry-without-redirect path still fires.
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn resolveBinTarget(this: *const Linker, package_dir: []const u8, target: []const u8, bin_name: []const u8) [:0]const u8 {
             const primary = path.joinAbsStringZ(package_dir, &.{target}, .auto);
 
@@ -907,17 +920,20 @@ pub const Bin = extern struct {
         }
 
         /// uses `this.abs_target_buf`
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn buildTargetPackageDir(this: *const Linker) []const u8 {
             const dest_dir_without_trailing_slash = strings.withoutTrailingSlash(this.target_node_modules_path.slice());
 
             var remain = this.abs_target_buf;
 
+// safe-transpile: @memcpy requires manual review
             @memcpy(remain[0..dest_dir_without_trailing_slash.len], dest_dir_without_trailing_slash);
             remain = remain[dest_dir_without_trailing_slash.len..];
             remain[0] = std.fs.path.sep;
             remain = remain[1..];
 
             const package_name = this.target_package_name.slice();
+// safe-transpile: @memcpy requires manual review
             @memcpy(remain[0..package_name.len], package_name);
             remain = remain[package_name.len..];
             remain[0] = std.fs.path.sep;
@@ -926,19 +942,23 @@ pub const Bin = extern struct {
             return this.abs_target_buf[0 .. @intFromPtr(remain.ptr) - @intFromPtr(this.abs_target_buf.ptr)];
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn buildDestinationDir(this: *const Linker, global: bool) []u8 {
             const dest_dir_without_trailing_slash = strings.withoutTrailingSlash(this.node_modules_path.slice());
 
             var remain = this.abs_dest_buf;
             if (global) {
                 const global_bin_path_without_trailing_slash = strings.withoutTrailingSlash(this.global_bin_path);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(remain[0..global_bin_path_without_trailing_slash.len], global_bin_path_without_trailing_slash);
                 remain = remain[global_bin_path_without_trailing_slash.len..];
                 remain[0] = std.fs.path.sep;
                 remain = remain[1..];
             } else {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(remain[0..dest_dir_without_trailing_slash.len], dest_dir_without_trailing_slash);
                 remain = remain[dest_dir_without_trailing_slash.len..];
+// safe-transpile: @memcpy requires manual review
                 @memcpy(remain[0.."/.bin/".len], std.fs.path.sep_str ++ ".bin" ++ std.fs.path.sep_str);
                 remain = remain["/.bin/".len..];
             }
@@ -965,6 +985,7 @@ pub const Bin = extern struct {
                     // for normalizing `target`
                     const abs_target = this.resolveBinTarget(package_dir, target, unscoped_package_name);
 
+// safe-transpile: @memcpy requires manual review
                     @memcpy(abs_dest_buf_remain[0..unscoped_package_name.len], unscoped_package_name);
                     abs_dest_buf_remain = abs_dest_buf_remain[unscoped_package_name.len..];
                     abs_dest_buf_remain[0] = 0;
@@ -982,6 +1003,7 @@ pub const Bin = extern struct {
                     // for normalizing `target`
                     const abs_target = this.resolveBinTarget(package_dir, target, normalized_name);
 
+// safe-transpile: @memcpy requires manual review
                     @memcpy(abs_dest_buf_remain[0..normalized_name.len], normalized_name);
                     abs_dest_buf_remain = abs_dest_buf_remain[normalized_name.len..];
                     abs_dest_buf_remain[0] = 0;
@@ -1005,6 +1027,7 @@ pub const Bin = extern struct {
                         const abs_target = this.resolveBinTarget(package_dir, bin_target, normalized_bin_dest);
 
                         abs_dest_buf_remain = abs_dest_dir_end;
+// safe-transpile: @memcpy requires manual review
                         @memcpy(abs_dest_buf_remain[0..normalized_bin_dest.len], normalized_bin_dest);
                         abs_dest_buf_remain = abs_dest_buf_remain[normalized_bin_dest.len..];
                         abs_dest_buf_remain[0] = 0;
@@ -1042,6 +1065,7 @@ pub const Bin = extern struct {
                                 const abs_target = path.joinAbsStringBufZ(abs_target_dir, this.abs_target_buf, &.{entry.name}, .auto);
 
                                 abs_dest_buf_remain = abs_dest_dir_end;
+// safe-transpile: @memcpy requires manual review
                                 @memcpy(abs_dest_buf_remain[0..entry.name.len], entry.name);
                                 abs_dest_buf_remain = abs_dest_buf_remain[entry.name.len..];
                                 abs_dest_buf_remain[0] = 0;
@@ -1067,6 +1091,7 @@ pub const Bin = extern struct {
                 .none => {},
                 .file => {
                     const unscoped_package_name = Dependency.unscopedPackageName(this.package_name.slice());
+// safe-transpile: @memcpy requires manual review
                     @memcpy(abs_dest_buf_remain[0..unscoped_package_name.len], unscoped_package_name);
                     abs_dest_buf_remain = abs_dest_buf_remain[unscoped_package_name.len..];
                     abs_dest_buf_remain[0] = 0;
@@ -1080,6 +1105,7 @@ pub const Bin = extern struct {
                     const normalized_name = normalizedBinName(name);
                     if (normalized_name.len == 0) return;
 
+// safe-transpile: @memcpy requires manual review
                     @memcpy(abs_dest_buf_remain[0..normalized_name.len], normalized_name);
                     abs_dest_buf_remain = abs_dest_buf_remain[normalized_name.len..];
                     abs_dest_buf_remain[0] = 0;
@@ -1100,6 +1126,7 @@ pub const Bin = extern struct {
                         if (normalized_bin_dest.len == 0) continue;
 
                         abs_dest_buf_remain = abs_dest_dir_end;
+// safe-transpile: @memcpy requires manual review
                         @memcpy(abs_dest_buf_remain[0..normalized_bin_dest.len], normalized_bin_dest);
                         abs_dest_buf_remain = abs_dest_buf_remain[normalized_bin_dest.len..];
                         abs_dest_buf_remain[0] = 0;
@@ -1128,6 +1155,7 @@ pub const Bin = extern struct {
                         switch (entry.kind) {
                             .sym_link, .file => {
                                 abs_dest_buf_remain = abs_dest_dir_end;
+// safe-transpile: @memcpy requires manual review
                                 @memcpy(abs_dest_buf_remain[0..entry.name.len], entry.name);
                                 abs_dest_buf_remain = abs_dest_buf_remain[entry.name.len..];
                                 abs_dest_buf_remain[0] = 0;

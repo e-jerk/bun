@@ -357,6 +357,7 @@ pub const PackageInstall = struct {
         patching,
 
         /// "error: failed {s} for package"
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn name(this: Step) []const u8 {
             return switch (this) {
                 .copyfile, .copying_files => "copying files from cache to destination",
@@ -623,10 +624,12 @@ pub const PackageInstall = struct {
                             return error.NameTooLong;
                         }
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into1[0..entry.path.len], entry.path);
                         head1[entry.path.len + (head1.len - to_copy_into1.len)] = 0;
                         const dest: [:0]u16 = head1[0 .. entry.path.len + head1.len - to_copy_into1.len :0];
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into2[0..entry.path.len], entry.path);
                         head2[entry.path.len + (head1.len - to_copy_into2.len)] = 0;
                         const src: [:0]u16 = head2[0 .. entry.path.len + head2.len - to_copy_into2.len :0];
@@ -689,6 +692,7 @@ pub const PackageInstall = struct {
 
                         if (comptime Environment.isPosix) {
                             const stat = in_file.stat().unwrap() catch continue;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             _ = bun.c.fchmod(outfile.handle, @intCast(stat.mode));
                         }
 
@@ -766,11 +770,13 @@ pub const PackageInstall = struct {
 
             const combined = bun.handleOom(bun.default_allocator.alloc(u16, allocation_size));
             var remaining = combined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(remaining[0..src.len], src);
             remaining[src.len] = 0;
             const src_ = remaining[0..src.len :0];
             remaining = remaining[src.len + 1 ..];
 
+// safe-transpile: @memcpy requires manual review
             @memcpy(remaining[0..dest.len], dest);
             remaining[dest.len] = 0;
             const dest_ = remaining[0..dest.len :0];
@@ -780,6 +786,7 @@ pub const PackageInstall = struct {
                 .bytes = combined,
                 .src = src_,
                 .dest = dest_,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .basename = @truncate(basename.len),
             });
         }
@@ -915,10 +922,12 @@ pub const PackageInstall = struct {
                             return error.NameTooLong;
                         }
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into1[0..entry.path.len], entry.path);
                         head1[entry.path.len + (head1.len - to_copy_into1.len)] = 0;
                         const dest: [:0]u16 = head1[0 .. entry.path.len + head1.len - to_copy_into1.len :0];
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into2[0..entry.path.len], entry.path);
                         head2[entry.path.len + (head1.len - to_copy_into2.len)] = 0;
                         const src: [:0]u16 = head2[0 .. entry.path.len + head2.len - to_copy_into2.len :0];
@@ -1002,6 +1011,7 @@ pub const PackageInstall = struct {
                                 bun.MakePath.makePath(std.meta.Elem(@TypeOf(entry.path)), destination_dir, entry.path) catch {};
                             },
                             .file => {
+// safe-transpile: @memcpy requires manual review
                                 @memcpy(to_copy_into2[0..entry.path.len], entry.path);
                                 head2[entry.path.len + (head2.len - to_copy_into2.len)] = 0;
                                 const target: [:0]u8 = head2[0 .. entry.path.len + head2.len - to_copy_into2.len :0];
@@ -1029,10 +1039,12 @@ pub const PackageInstall = struct {
                             return error.NameTooLong;
                         }
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into1[0..entry.path.len], entry.path);
                         head1[entry.path.len + (head1.len - to_copy_into1.len)] = 0;
                         const dest: [:0]u16 = head1[0 .. entry.path.len + head1.len - to_copy_into1.len :0];
 
+// safe-transpile: @memcpy requires manual review
                         @memcpy(to_copy_into2[0..entry.path.len], entry.path);
                         head2[entry.path.len + (head1.len - to_copy_into2.len)] = 0;
                         const src: [:0]u16 = head2[0 .. entry.path.len + head2.len - to_copy_into2.len :0];
@@ -1232,6 +1244,7 @@ pub const PackageInstall = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isDanglingWindowsBinLink(node_mod_fd: bun.FD, path: []const u16, temp_buffer: []u8) bool {
         const WinBinLinkingShim = @import("./windows-shim/BinLinkingShim.zig");
         const bin_path = bin_path: {
@@ -1305,6 +1318,7 @@ pub const PackageInstall = struct {
                 dest_buf[offset] = std.fs.path.sep_windows;
                 offset += 1;
             }
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf[offset .. offset + dest.len], dest);
             offset += dest.len;
             dest_buf[offset] = 0;
@@ -1343,9 +1357,11 @@ pub const PackageInstall = struct {
 
             const target = Path.relative(dest_dir_path, to_path.?);
             var target_buf: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(target_buf[0..target.len], target);
             target_buf[target.len] = 0;
             var dest_buf2: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(dest_buf2[0..dest.len], dest);
             dest_buf2[dest.len] = 0;
             bun.sys.symlinkat(target_buf[0..target.len :0], bun.FD.fromSystem(dest_dir.fd), dest_buf2[0..dest.len :0]).unwrap() catch |err| return Result.fail(err, .linking_dependency, null);
@@ -1380,6 +1396,7 @@ pub const PackageInstall = struct {
                             const subpath_len = strings.withoutTrailingSlash(this.cache_dir_subpath).len;
                             buf[subpath_len] = std.fs.path.sep;
                             defer buf[subpath_len] = 0;
+// safe-transpile: @memcpy requires manual review
                             @memcpy(buf[subpath_len + 1 ..][0.."package.json\x00".len], "package.json\x00");
                             const subpath = buf[0 .. subpath_len + 1 + "package.json".len :0];
                             break :package_json_exists Syscall.existsAt(.fromStdDir(this.cache_dir), subpath);
@@ -1390,6 +1407,7 @@ pub const PackageInstall = struct {
                     break :brk !exists;
                 }
                 const cache_dir_subpath_without_patch_hash = this.cache_dir_subpath[0 .. std.mem.lastIndexOf(u8, this.cache_dir_subpath, "_patch_hash=") orelse @panic("Patched dependency cache dir subpath does not have the \"_patch_hash=HASH\" suffix. This is a bug, please file a GitHub issue.")];
+// safe-transpile: @memcpy requires manual review
                 @memcpy(bun.path.join_buf[0..cache_dir_subpath_without_patch_hash.len], cache_dir_subpath_without_patch_hash);
                 bun.path.join_buf[cache_dir_subpath_without_patch_hash.len] = 0;
                 const exists = Syscall.directoryExistsAt(.fromStdDir(this.cache_dir), bun.path.join_buf[0..cache_dir_subpath_without_patch_hash.len :0]).unwrap() catch false;

@@ -55,7 +55,6 @@ fn packages(
     var all_requested_versions = all_requested_versions_buf;
     defer this.lockfile.allocator.free(all_requested_versions_buf);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const package_count = @as(PackageID, @truncate(names.len));
     var alphabetized_names = try this.lockfile.allocator.alloc(PackageID, package_count - 1);
     defer this.lockfile.allocator.free(alphabetized_names);
@@ -120,7 +119,6 @@ fn packages(
 
             var prev_dependency_version: ?Dependency.Version = null;
             var needs_comma = false;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (dependency_versions) |*dependency_version| {
                 if (needs_comma) {

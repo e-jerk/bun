@@ -43,6 +43,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
     if (comptime Environment.enable_logs)
         Debugger.log("waitForDebugger: {f}", .{Output.ElapsedFormatter{
             .colors = Output.enable_ansi_colors_stderr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .duration_ns = @truncate(@as(u128, @intCast(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))),
         }});
 
@@ -57,17 +58,19 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
         // TODO: remove this when tickWithTimeout actually works properly on Windows.
         if (debugger.wait_for_connection == .shortly) {
             uv.uv_update_time(this.uvLoop());
-            var timer = bun.handleOom(bun.default_allocator.create(uv.Timer));
+            var timer = bun.handleOom(safe.Box(uv.Timer).init(bun.default_allocator, undefined));
             timer.* = std.mem.zeroes(uv.Timer);
             timer.init(this.uvLoop());
             const onDebuggerTimer = struct {
                 fn call(handle: *uv.Timer) callconv(.c) void {
                     const vm = VirtualMachine.get();
                     vm.debugger.?.poll_ref.unref(vm);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     uv.uv_close(@ptrCast(handle), deinitTimer);
                 }
 
                 fn deinitTimer(handle: *anyopaque) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
                     bun.default_allocator.destroy(@as(*uv.Timer, @ptrCast(@alignCast(handle))));
                 }
             }.call;
@@ -83,6 +86,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                 this.eventLoop().autoTickActive();
 
                 if (comptime Environment.enable_logs)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     log("waited: {d}", .{@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))});
             },
             .shortly => {
@@ -98,6 +102,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                 this.uwsLoop().tickWithTimeout(&deadline);
 
                 if (comptime Environment.enable_logs)
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     log("waited: {d}", .{@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))});
 
                 const elapsed = bun.timespec.now(.force_real_time);
@@ -148,16 +153,16 @@ pub fn startJSDebuggerThread(other_vm: *VirtualMachine) void {
 
     // Create a thread-local env_loader to avoid allocator threading violations
     const thread_allocator = arena.allocator();
-    const env_map = thread_allocator.create(DotEnv.Map) catch @panic("Failed to create debugger env map");
-    env_map.* = DotEnv.Map.init(thread_allocator);
-    const env_loader = thread_allocator.create(DotEnv.Loader) catch @panic("Failed to create debugger env loader");
-    env_loader.* = DotEnv.Loader.init(env_map, thread_allocator);
+    const env_map = safe.Box(DotEnv.Map).init(thread_allocator, undefined) catch @panic("Failed to create debugger env map");
+    env_map.ptr.* = DotEnv.Map.init(thread_allocator);
+    const env_loader = safe.Box(DotEnv.Loader).init(thread_allocator, undefined) catch @panic("Failed to create debugger env loader");
+    env_loader.ptr.* = DotEnv.Loader.init(env_map.ptr, thread_allocator);
 
     var vm = VirtualMachine.init(.{
         .allocator = thread_allocator,
         .args = std.mem.zeroes(bun.schema.api.TransformOptions),
         .store_fd = false,
-        .env_loader = env_loader,
+        .env_loader = env_loader.ptr,
     }) catch @panic("Failed to create Debugger VM");
     vm.allocator = arena.allocator();
     vm.arena = &arena;
@@ -374,6 +379,7 @@ pub const TestReporterAgent = struct {
     }
 
     fn retroactivelyReportScope(agent: *Handle, scope: *bun_test.DescribeScope, parent_id: i32, max_id: *i32, source_url: *bun.String) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (scope.entries.items) |*entry| {
             switch (entry.*) {
                 .describe => |describe| {
@@ -390,6 +396,7 @@ pub const TestReporterAgent = struct {
                             .describe,
                             parent_id,
                             source_url,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @intCast(describe.base.line_no),
                         );
                         // Recursively report children with this describe as parent
@@ -413,6 +420,7 @@ pub const TestReporterAgent = struct {
                             .@"test",
                             parent_id,
                             source_url,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @intCast(test_entry.base.line_no),
                         );
                     }

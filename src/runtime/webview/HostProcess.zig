@@ -88,7 +88,6 @@ fn spawn(vm: *jsc.VirtualMachine, stdoutInherit: bool, stderrInherit: bool) !bun
     const base = try vm.transpiler.env.map.createNullDelimitedEnvMap(alloc);
     try env.ensureTotalCapacity(alloc, base.len + 2);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     env.appendSliceAssumeCapacity(@ptrCast(base));
     env.appendAssumeCapacity("BUN_INTERNAL_WEBVIEW_HOST=3");
     env.appendAssumeCapacity(null);
@@ -109,9 +108,7 @@ fn spawn(vm: *jsc.VirtualMachine, stdoutInherit: bool, stderrInherit: bool) !bun
     var spawned = try (try bun.spawn.spawnProcess(
         &opts,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(&argv),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(env.items.ptr),
     )).unwrap();

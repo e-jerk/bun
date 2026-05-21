@@ -93,7 +93,6 @@ pub fn postProcessCSSChunk(ctx: GenerateChunkCtx, worker: *ThreadPool.Worker, ch
         worker.allocator,
         &j,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @as(u32, @truncate(ctx.chunks.len)),
     ) catch |err| bun.handleOom(err);
     // TODO: meta contents

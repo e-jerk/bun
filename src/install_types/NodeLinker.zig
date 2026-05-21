@@ -11,7 +11,6 @@ pub const NodeLinker = enum(u8) {
     isolated,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromStr(input: []const u8) ?NodeLinker {
         if (strings.eqlComptime(input, "hoisted")) {
             return .hoisted;

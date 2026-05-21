@@ -117,6 +117,7 @@ pub fn writeRequest(session: *ClientSession, client: *HTTPClient, stream: *Strea
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeHeaderBlock(session: *ClientSession, stream_id: u31, block: []const u8, end_stream: bool) void {
     const max: usize = session.remote_max_frame_size;
     var remaining = block;
@@ -138,11 +139,13 @@ pub fn writeHeaderBlock(session: *ClientSession, stream_id: u31, block: []const 
 /// Frame `data` into DATA frames respecting `remote_max_frame_size` and
 /// both flow-control windows. Returns bytes consumed; END_STREAM is set
 /// on the final frame only when `end_stream` and all of `data` fit.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeDataWindowed(session: *ClientSession, stream: *Stream, data: []const u8, end_stream: bool, cap: usize) usize {
     var remaining = data;
     var consumed: usize = 0;
     var __loop_limit: u64 = 0;
     while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const window: usize = @intCast(@max(0, @min(stream.send_window, session.conn_send_window)));
         if (remaining.len > 0 and window == 0) break;
         // Socket-side backpressure: don't keep memcpy'ing into write_buffer
@@ -153,7 +156,9 @@ pub fn writeDataWindowed(session: *ClientSession, stream: *Stream, data: []const
         const last = chunk_len == remaining.len;
         const flags: u8 = if (last and end_stream) @intFromEnum(wire.DataFrameFlags.END_STREAM) else 0;
         session.writeFrame(.HTTP_FRAME_DATA, flags, stream.id, remaining[0..chunk_len]);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         stream.send_window -= @intCast(chunk_len);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         session.conn_send_window -= @intCast(chunk_len);
         consumed += chunk_len;
         remaining = remaining[chunk_len..];
@@ -218,6 +223,7 @@ pub fn drainSendBodies(session: *ClientSession) void {
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn encodeHeader(session: *ClientSession, encoded: *std.ArrayListUnmanaged(u8), name: []const u8, value: []const u8, never_index: bool) !void {
     const required = encoded.items.len + name.len + value.len + 32;
     try encoded.ensureTotalCapacity(bun.default_allocator, required);
@@ -230,14 +236,17 @@ pub fn encodeHeader(session: *ClientSession, encoded: *std.ArrayListUnmanaged(u8
 /// at least 6 bytes of capacity (max for a u32).
 pub fn encodeHpackTableSizeUpdate(encoded: *std.ArrayListUnmanaged(u8), value: u32) void {
     if (value < 31) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         encoded.appendAssumeCapacity(0x20 | @as(u8, @intCast(value)));
         return;
     }
     encoded.appendAssumeCapacity(0x20 | 31);
     var rest = value - 31;
     while (rest >= 128) : (rest >>= 7) {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         encoded.appendAssumeCapacity(@as(u8, @truncate(rest)) | 0x80);
     }
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     encoded.appendAssumeCapacity(@as(u8, @truncate(rest)));
 }
 

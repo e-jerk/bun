@@ -27,7 +27,6 @@ pub const PosixStat = extern struct {
     fn toU64(value: anytype) u64 {
         return switch (@typeInfo(@TypeOf(value)).int.signedness) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
             .signed => @bitCast(@as(i64, value)),
             .unsigned => value,
         };

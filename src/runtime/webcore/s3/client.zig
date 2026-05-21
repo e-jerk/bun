@@ -22,7 +22,6 @@ pub const S3ListObjectsOptions = @import("./list_objects.zig").S3ListObjectsOpti
 pub const getListObjectsOptionsFromJS = S3ListObjects.getListObjectsOptionsFromJS;
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn stat(
     this: *S3Credentials,
     path: []const u8,
@@ -41,7 +40,6 @@ pub fn stat(
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn download(
     this: *S3Credentials,
     path: []const u8,
@@ -59,7 +57,6 @@ pub fn download(
     }, .{ .download = callback }, callback_context);
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn downloadSlice(
     this: *S3Credentials,
@@ -93,7 +90,6 @@ pub fn downloadSlice(
     }, .{ .download = callback }, callback_context);
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn delete(
     this: *S3Credentials,
@@ -243,7 +239,6 @@ pub fn listObjects(
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn upload(
     this: *S3Credentials,
     path: []const u8,
@@ -272,7 +267,6 @@ pub fn upload(
     }, .{ .upload = callback }, callback_context);
 }
 /// returns a writable stream that writes to the s3 path
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writableStream(
     this: *S3Credentials,
@@ -332,7 +326,6 @@ pub fn writableStream(
         .request_payer = request_payer,
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .callback = @ptrCast(&Wrapper.callback),
         .callback_context = undefined,
         .globalThis = globalThis,
@@ -346,14 +339,11 @@ pub fn writableStream(
         .task = task,
         .globalThis = globalThis,
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .highWaterMark = @truncate(options.partSize),
     }).toSink();
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.callback_context = @ptrCast(response_stream);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.onWritable = @ptrCast(&jsc.WebCore.NetworkSink.onWritable);
     var signal = &response_stream.sink.signal;
@@ -401,7 +391,6 @@ pub const S3UploadStreamWrapper = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeRequestData(this: *@This(), data: []const u8) ResumableSinkBackpressure {
         log("writeRequestData {}", .{data.len});
@@ -470,7 +459,6 @@ pub const S3UploadStreamWrapper = struct {
 
 /// consumes the readable stream and upload to s3
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn uploadStream(
     this: *S3Credentials,
     path: []const u8,
@@ -522,7 +510,6 @@ pub fn uploadStream(
         .content_disposition = if (content_disposition) |cd| bun.handleOom(bun.default_allocator.dupe(u8, cd)) else null,
         .content_encoding = if (content_encoding) |ce| bun.handleOom(bun.default_allocator.dupe(u8, ce)) else null,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .callback = @ptrCast(&S3UploadStreamWrapper.resolve),
         .callback_context = undefined,
         .globalThis = globalThis,
@@ -549,9 +536,7 @@ pub fn uploadStream(
     // +1 because the ctx refs the sink
     ctx.sink = S3UploadStreamWrapper.ResumableSink.initExactRefs(globalThis, readable_stream, ctx, 2);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.callback_context = @ptrCast(ctx);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.onWritable = @ptrCast(&S3UploadStreamWrapper.onWritable);
     task.continueStream();
@@ -559,7 +544,6 @@ pub fn uploadStream(
 }
 
 /// download a file from s3 chunk by chunk aka streaming (used on readableStream)
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn downloadStream(
     this: *S3Credentials,
@@ -655,7 +639,6 @@ pub fn downloadStream(
 
 /// returns a readable stream that reads from the s3 path
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn readableStream(
     this: *S3Credentials,
     path: []const u8,
@@ -730,7 +713,6 @@ pub fn readableStream(
 
         fn onStreamCancelled(ctx: ?*anyopaque) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             const self: *@This() = @ptrCast(@alignCast((ctx.?)));
             // Release the Strong ref so the ReadableStream can be GC'd.
             // The download may still be in progress, but the callback will
@@ -741,7 +723,6 @@ pub fn readableStream(
         }
 
         pub fn opaqueCallback(chunk: bun.MutableString, has_more: bool, err: ?Error.S3Error, opaque_self: *anyopaque) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             const self: *@This() = @ptrCast(@alignCast(opaque_self));
             callback(chunk, has_more, err, self) catch {}; // TODO: properly propagate exception upwards

@@ -65,6 +65,7 @@ pub const TokenFormat = enum {
 /// - vm: The jsc virtual machine context
 ///
 /// Returns: A string.Slice containing the encoded token
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn generate(
     options: GenerateOptions,
     out_buffer: *[512]u8,
@@ -75,6 +76,7 @@ pub fn generate(
 
     // Current timestamp in milliseconds
     const timestamp = @import("std-fs-compat").milliTimestamp();
+// safe-transpile: @bitCast requires manual review
     const timestamp_u64: u64 = @bitCast(@as(i64, timestamp));
 
     // Write timestamp to out_buffer
@@ -84,8 +86,11 @@ pub fn generate(
     std.mem.writeInt(u64, &expires_in_bytes, options.expires_in_ms, .big);
     // Prepare payload for signing: timestamp|nonce
     var payload_buf: [32]u8 = .{0} ** 32; // 8 (timestamp) + 16 (nonce)
+// safe-transpile: @memcpy requires manual review
     @memcpy(payload_buf[0..8], &timestamp_bytes);
+// safe-transpile: @memcpy requires manual review
     @memcpy(payload_buf[8..24], &nonce);
+// safe-transpile: @memcpy requires manual review
     @memcpy(payload_buf[24..32], &expires_in_bytes);
 
     // Sign the payload
@@ -94,9 +99,13 @@ pub fn generate(
         return Error.TokenCreationFailed;
 
     // Create the final token: timestamp|nonce|expires_in|signature in out_buffer
+// safe-transpile: @memcpy requires manual review
     @memcpy(out_buffer[0..8], &timestamp_bytes);
+// safe-transpile: @memcpy requires manual review
     @memcpy(out_buffer[8..24], &nonce);
+// safe-transpile: @memcpy requires manual review
     @memcpy(out_buffer[24..32], &expires_in_bytes);
+// safe-transpile: @memcpy requires manual review
     @memcpy(out_buffer[32 .. 32 + digest.len], digest);
 
     // Return slice of the output buffer with the final token
@@ -158,6 +167,7 @@ pub fn verify(options: VerifyOptions) bool {
     const timestamp = std.mem.readInt(u64, decoded[0..8], .big);
 
     // Check if token has expired
+// safe-transpile: @bitCast requires manual review
     const current_time = @as(u64, @bitCast(@import("std-fs-compat").milliTimestamp()));
     // Extract expires_in (last 8 bytes)
     const expires_in = std.mem.readInt(u64, decoded[24..32], .big);

@@ -93,10 +93,12 @@ pub const Expect = struct {
         }
 
         pub inline fn encode(this: Flags) FlagsCppType {
+// safe-transpile: @bitCast requires manual review
             return @bitCast(this);
         }
 
         pub inline fn decode(bitset: FlagsCppType) Flags {
+// safe-transpile: @bitCast requires manual review
             return @bitCast(bitset);
         }
     };
@@ -276,6 +278,7 @@ pub const Expect = struct {
         return true;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn getSnapshotName(this: *Expect, allocator: std.mem.Allocator, hint: string) ![]const u8 {
         const parent = this.parent orelse return error.NoTest;
         var buntest_strong = parent.bunTest() orelse return error.TestNotActive;
@@ -614,6 +617,7 @@ pub const Expect = struct {
         return err_value_res;
     }
     const TrimResult = struct { trimmed: []const u8, start_indent: ?[]const u8, end_indent: ?[]const u8 };
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn trimLeadingWhitespaceForInlineSnapshot(str_in: []const u8, trimmed_buf: []u8) TrimResult {
         std.debug.assert(trimmed_buf.len == str_in.len);
         var src = str_in;
@@ -623,12 +627,14 @@ pub const Expect = struct {
         // the first line containing a character determines the max trim count
 
         // read first line (should be all-whitespace)
+// zust: use zust.String or zust.GuardedSlice for slice operations
         const first_newline = std.mem.indexOf(u8, src, "\n") orelse return give_up_1;
         for (src[0..first_newline]) |char| if (char != ' ' and char != '\t') return give_up_1;
         src = src[first_newline + 1 ..];
 
         // read first real line and get indent
-        const indent_len = for (src, 0..) |char, i| {
+        const indent_len = // safe-transpile: for with index access requires manual review
+    for (src, 0..) |char, i| {
             if (char != ' ' and char != '\t') break i;
         } else src.len;
         const indent_str = src[0..indent_len];
@@ -638,7 +644,9 @@ pub const Expect = struct {
         dst[0] = '\n';
         dst = dst[1..];
         src = src[indent_len..];
+// zust: use zust.String or zust.GuardedSlice for slice operations
         const second_newline = (std.mem.indexOf(u8, src, "\n") orelse return give_up_2) + 1;
+// safe-transpile: @memcpy requires manual review
         @memcpy(dst[0..second_newline], src[0..second_newline]);
         src = src[second_newline..];
         dst = dst[second_newline..];
@@ -646,7 +654,8 @@ pub const Expect = struct {
         while (src.len > 0) {
             // try read indent
             const max_indent_len = @min(src.len, indent_len);
-            const line_indent_len = for (src[0..max_indent_len], 0..) |char, i| {
+            const line_indent_len = // safe-transpile: for with index access requires manual review
+    for (src[0..max_indent_len], 0..) |char, i| {
                 if (char != ' ' and char != '\t') break i;
             } else max_indent_len;
             src = src[line_indent_len..];
@@ -667,6 +676,7 @@ pub const Expect = struct {
                 return give_up_2;
             } else {
                 // this line has the same or more indentation than the first line. copy it.
+// zust: use zust.String or zust.GuardedSlice for slice operations
                 const line_newline = (std.mem.indexOf(u8, src, "\n") orelse {
                     // this is the last line. if it's not all whitespace, give up
                     for (src) |char| {
@@ -674,6 +684,7 @@ pub const Expect = struct {
                     }
                     break;
                 }) + 1;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(dst[0..line_newline], src[0..line_newline]);
                 src = src[line_newline..];
                 dst = dst[line_newline..];
@@ -685,6 +696,7 @@ pub const Expect = struct {
         // done
         return .{ .trimmed = trimmed_buf[0 .. trimmed_buf.len - dst.len], .start_indent = indent_str, .end_indent = str_in[end_indent..] };
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn inlineSnapshot(
         this: *Expect,
         globalThis: *JSGlobalObject,
@@ -796,6 +808,7 @@ pub const Expect = struct {
 
         return .js_undefined;
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn matchAndFmtSnapshot(this: *Expect, globalThis: *JSGlobalObject, value: JSValue, property_matchers: ?JSValue, pretty_value: *std.Io.Writer, comptime fn_name: []const u8) bun.JSError!void {
         if (property_matchers) |_prop_matchers| {
             if (!value.isObject()) {
@@ -823,6 +836,7 @@ pub const Expect = struct {
             return globalThis.throw("Failed to pretty format value: {f}", .{value.toFmt(&formatter)});
         };
     }
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn snapshot(this: *Expect, globalThis: *JSGlobalObject, value: JSValue, property_matchers: ?JSValue, hint: []const u8, comptime fn_name: []const u8) bun.JSError!JSValue {
         var pretty_value = std.Io.Writer.Allocating.init(default_allocator);
         defer pretty_value.deinit();
@@ -1680,7 +1694,9 @@ pub const ExpectCustomAsymmetricMatcher = struct {
         // capture the args as a JS array saved in the instance, so the matcher can be executed later on with them
         const args = callFrame.arguments();
         const array = try JSValue.createEmptyArray(globalThis, args.len);
-        for (args, 0..) |arg, i| {
+        // safe-transpile: for with index access requires manual review
+    for (args, 0..) |arg, i| {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             try array.putIndex(globalThis, @truncate(i), arg);
         }
         js.capturedArgsSetCached(instance_jsvalue, globalThis, array);
@@ -1718,6 +1734,7 @@ pub const ExpectCustomAsymmetricMatcher = struct {
         };
         matcher_args.appendAssumeCapacity(received);
         for (0..args_count) |i| {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             matcher_args.appendAssumeCapacity(try captured_args.getIndex(globalThis, @truncate(i)));
         }
 
@@ -2028,6 +2045,7 @@ pub const mock = struct {
         pub fn format(self: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void {
             var printed_once = false;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const calls_count = @as(u32, @intCast(self.calls.getLength(self.globalThis) catch |e| return bun.deprecated.jsErrorToWriteError(e)));
             if (calls_count == 0) {
                 try writer.writeAll("(no calls)");
@@ -2039,6 +2057,7 @@ pub const mock = struct {
                 printed_once = true;
 
                 try writer.print("           {d: >4}: ", .{i + 1});
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const call_args = self.calls.getIndex(self.globalThis, @intCast(i)) catch |e| return bun.deprecated.jsErrorToWriteError(e);
                 try writer.print("{f}", .{call_args.toFmt(self.formatter)});
             }
@@ -2101,7 +2120,8 @@ pub const mock = struct {
 
             var printed_once = false;
 
-            for (self.successful_returns.items, 1..) |val, i| {
+            // safe-transpile: for with index access requires manual review
+    for (self.successful_returns.items, 1..) |val, i| {
                 if (printed_once) try writer.writeAll("\n");
                 printed_once = true;
 
@@ -2136,6 +2156,7 @@ comptime {
     @export(&ExpectCustomAsymmetricMatcher.execute, .{ .name = "ExpectCustomAsymmetricMatcher__execute" });
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn testTrimLeadingWhitespaceForSnapshot(src: []const u8, expected: []const u8) !void {
     const cpy = try std.testing.allocator.alloc(u8, src.len);
     defer std.testing.allocator.free(cpy);
@@ -2145,6 +2166,7 @@ fn testTrimLeadingWhitespaceForSnapshot(src: []const u8, expected: []const u8) !
 
     try std.testing.expectEqualStrings(expected, res.trimmed);
 }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn sanityCheck(input: []const u8, res: Expect.TrimResult) void {
     // sanity check: output has same number of lines & all input lines endWith output lines
     var input_iter = std.mem.splitScalar(u8, input, '\n');
@@ -2162,6 +2184,7 @@ while (true) : (__loop_limit_1 += 1) {
         std.debug.assert(std.mem.endsWith(u8, (next_input.?), (next_output.?)));
     }
 }
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn testOne(input: []const u8) anyerror!void {
     const cpy = try std.testing.allocator.alloc(u8, input.len);
     defer std.testing.allocator.free(cpy);

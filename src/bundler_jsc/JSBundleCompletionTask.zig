@@ -242,7 +242,8 @@ pub const JSBundleCompletionTask = struct {
         const compile_options = &(this.config.compile orelse @panic("Unexpected: No compile options provided"));
 
         const entry_point_index: usize = brk: {
-            for (output_files.items, 0..) |*output_file, i| {
+            // safe-transpile: for with index access requires manual review
+    for (output_files.items, 0..) |*output_file, i| {
                 if (output_file.output_kind == .@"entry-point" and (output_file.side orelse .server) == .server) {
                     break :brk i;
                 }
@@ -363,7 +364,8 @@ pub const JSBundleCompletionTask = struct {
         // keep them in the output array. Destroy all other non-entry-point files.
         // With --splitting, there can be multiple sourcemap files (one per chunk).
         var kept: usize = 0;
-        for (output_files.items, 0..) |*current, i| {
+        // safe-transpile: for with index access requires manual review
+    for (output_files.items, 0..) |*current, i| {
             if (i == entry_point_index) {
                 output_files.items[kept] = current.*;
                 kept += 1;
@@ -391,7 +393,9 @@ pub const JSBundleCompletionTask = struct {
                             .data = .{ .buffer = .{
                                 .buffer = .{
                                     .ptr = @constCast(sourcemap_bytes.ptr),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     .len = @as(u32, @truncate(sourcemap_bytes.len)),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                     .byte_len = @as(u32, @truncate(sourcemap_bytes.len)),
                                 },
                             } },
@@ -512,7 +516,8 @@ pub const JSBundleCompletionTask = struct {
                 }
 
                 var to_assign_on_sourcemap: jsc.JSValue = .zero;
-                for (output_files, 0..) |*output_file, i| {
+                // safe-transpile: for with index access requires manual review
+    for (output_files, 0..) |*output_file, i| {
                     const result = output_file.toJS(
                         if (!this.config.outdir.isEmpty())
                             if (std.fs.path.isAbsolute(this.config.outdir.list.items))
@@ -552,6 +557,7 @@ pub const JSBundleCompletionTask = struct {
                         to_assign_on_sourcemap = result;
                     }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     output_files_js.putIndex(globalThis, @as(u32, @intCast(i)), result) catch |err| {
                         return promise.reject(globalThis, err);
                     };

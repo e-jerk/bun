@@ -767,6 +767,7 @@ pub fn sleepSync(globalObject: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) b
         return globalObject.throwInvalidArguments("argument to sleepSync must not be negative, got {d}", .{milliseconds});
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     @import("std-fs-compat").sleep(@as(u64, @intCast(milliseconds)) * std.time.ns_per_ms);
     return .js_undefined;
 }
@@ -965,14 +966,17 @@ pub fn indexOfLine(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) b
     var offset: usize = 0;
     if (arguments.len > 1) {
         const offset_value = try arguments[1].coerce(i64, globalThis);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         offset = @intCast(@max(offset_value, 0));
     }
 
     const bytes = buffer.byteSlice();
     var current_offset = offset;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     const end = @as(u32, @truncate(bytes.len));
 
     while (current_offset < end) {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         if (strings.indexOfNewlineOrNonASCII(bytes, @as(u32, @truncate(current_offset)))) |i| {
             const byte = bytes[i];
             if (byte > 0x7F) {
@@ -1235,6 +1239,7 @@ pub fn mmapFile(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.
                 if (size_value < 0) {
                     return globalThis.throwInvalidArguments("size must be a non-negative integer", .{});
                 }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 map_size = @intCast(size_value);
             }
 
@@ -1243,6 +1248,7 @@ pub fn mmapFile(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.
                 if (offset_value < 0) {
                     return globalThis.throwInvalidArguments("offset must be a non-negative integer", .{});
                 }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 offset = @intCast(offset_value);
                 offset = std.mem.alignBackwardAnyAlign(usize, offset, std.heap.pageSize());
             }
@@ -1261,6 +1267,7 @@ pub fn mmapFile(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.
 
     const S = struct {
         pub fn x(ptr: ?*anyopaque, size: ?*anyopaque) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
             _ = bun.sys.munmap(@as([*]align(std.heap.page_size_min) const u8, @ptrCast(@alignCast(ptr)))[0..@intFromPtr(size)]);
         }
     };
@@ -1372,6 +1379,7 @@ pub fn getEmbeddedFiles(globalThis: *jsc.JSGlobalObject, _: *jsc.JSObject) bun.J
         // code here as an easily accessible Blob is even worse for them.
         // So let's omit any source code files from the list.
         if (!unsorted_files[index].appearsInEmbeddedFilesArray()) continue;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         sort_indices.appendAssumeCapacity(@intCast(index));
     }
 
@@ -1520,7 +1528,8 @@ pub const EnvironmentVariables = struct {
         var vm = globalObject.bunVM();
         const keys = vm.transpiler.env.map.map.keys();
         const len = @min(names.len, keys.len);
-        for (keys[0..len], names[0..len]) |key, *name| {
+        // safe-transpile: for with index access requires manual review
+    for (keys[0..len], names[0..len]) |key, *name| {
             name.* = ZigString.initUTF8(key);
         }
         return len;
@@ -1661,6 +1670,7 @@ pub const JSZlib = struct {
                 //  +---+---+---+---+---+---+---+---+
                 //  |     CRC32     |     ISIZE     |
                 //  +---+---+---+---+---+---+---+---+
+// safe-transpile: @bitCast requires manual review
                 const estimated_size: u32 = @bitCast(compressed[compressed.len - 4 ..][0..4].*);
                 // If it's > 256 MB, let's rely on dynamic allocation to minimize the risk of OOM.
                 if (estimated_size > 0 and estimated_size < 256 * 1024 * 1024) {

@@ -174,7 +174,6 @@ pub const TestOptions = struct {
 
     pub inline fn testFilterRegex(self: *const TestOptions) ?*bun.jsc.RegularExpression {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(self.test_filter_regex));
     }
 };

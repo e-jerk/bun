@@ -61,7 +61,6 @@ pub fn takeFoundTestFiles(this: *Scanner) Allocator.Error![]bun.PathString {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn scan(this: *Scanner, path_literal: []const u8) Error!void {
     const parts = &[_][]const u8{ this.fs.top_level_dir, path_literal };
     const path = this.fs.absBuf(parts, &this.scan_dir_buf);
@@ -119,7 +118,6 @@ pub fn scan(this: *Scanner, path_literal: []const u8) Error!void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn readDirWithName(this: *Scanner, name: []const u8, handle: ?@import("std-fs-compat").FsDir) !*FileSystem.RealFS.EntriesOption {
     return try this.fs.fs.readDirectoryWithIterator(name, handle, 0, true, *Scanner, this);
 }
@@ -131,7 +129,6 @@ pub const test_name_suffixes = [_][]const u8{
     "_spec",
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn couldBeTestFile(this: *Scanner, name: []const u8, comptime needs_test_suffix: bool) bool {
     const extname = std.fs.path.extension(name);
@@ -146,7 +143,6 @@ pub fn couldBeTestFile(this: *Scanner, name: []const u8, comptime needs_test_suf
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn doesAbsolutePathMatchFilter(this: *Scanner, name: []const u8) bool {
     if (this.filter_names.len == 0) return true;
 
@@ -157,7 +153,6 @@ pub fn doesAbsolutePathMatchFilter(this: *Scanner, name: []const u8) bool {
     return false;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn doesPathMatchFilter(this: *Scanner, name: []const u8) bool {
     if (this.filter_names.len == 0) return true;
@@ -172,7 +167,6 @@ pub fn doesPathMatchFilter(this: *Scanner, name: []const u8) bool {
 /// Returns true if the given path matches any of the path ignore patterns.
 /// The path is matched as a relative path from the project root.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn matchesPathIgnorePattern(this: *Scanner, abs_path: []const u8) bool {
     if (this.path_ignore_patterns.len == 0) return false;
     const rel_path = bun.path.relative(this.fs.top_level_dir, abs_path);
@@ -184,7 +178,8 @@ pub fn matchesPathIgnorePattern(this: *Scanner, abs_path: []const u8) bool {
         rel_path.len + 1 <= buf.len and
         rel_path[rel_path.len - 1] != '/')
     blk: {
-        safe.SimdUtils.copy(buf[0..rel_path.len], rel_path);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(buf[0..rel_path.len], rel_path);
         buf[rel_path.len] = '/';
         break :blk buf[0 .. rel_path.len + 1];
     } else null;
@@ -203,7 +198,6 @@ pub fn matchesPathIgnorePattern(this: *Scanner, abs_path: []const u8) bool {
     return false;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isTestFile(this: *Scanner, name: []const u8) bool {
     return this.couldBeTestFile(name, false) and this.doesPathMatchFilter(name) and !this.matchesPathIgnorePattern(name);

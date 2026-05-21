@@ -126,7 +126,6 @@ pub const JSObject = opaque {
         return struct {
             pub fn call(this: *anyopaque, obj: *JSObject, global: *JSGlobalObject) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 func(@ptrCast(@alignCast(this)), obj, global) catch |err| bun.jsc.host_fn.voidFromJSError(err, global);
             }
         };

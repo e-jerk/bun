@@ -112,6 +112,7 @@ pub const StdioKind = enum {
 };
 
 pub fn onAbortSignal(subprocess_ctx: ?*anyopaque, _: jsc.JSValue) callconv(.c) void {
+// safe-transpile: @alignCast requires manual review
     var this: *Subprocess = @ptrCast(@alignCast(subprocess_ctx.?));
     this.clearAbortSignal();
     _ = this.tryKill(this.killSignal);
@@ -474,6 +475,7 @@ pub fn getConnected(this: *Subprocess, globalThis: *JSGlobalObject) JSValue {
 }
 
 pub fn pid(this: *const Subprocess) i32 {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(this.process.pid);
 }
 
@@ -522,6 +524,7 @@ pub const Source = union(enum) {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const Source) []const u8 {
         return switch (this.*) {
             .blob => this.blob.slice(),
@@ -614,6 +617,7 @@ pub fn onProcessExit(this: *Subprocess, process: *Process, status: bun.spawn.Sta
             if (existing_value.isCell()) {
                 if (stdin == null) {
                     // TODO: review this cast
+// safe-transpile: @alignCast requires manual review
                     stdin = @ptrCast(@alignCast(jsc.WebCore.FileSink.JSSink.fromJS(existing_value)));
                 }
 

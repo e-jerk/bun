@@ -81,7 +81,6 @@ fn onPipeClose(this: *WindowsNamedPipe) void {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn onReadAlloc(this: *WindowsNamedPipe, suggested_size: usize) []u8 {
     var available = this.incoming.unusedCapacitySlice();
     if (available.len < suggested_size) {
@@ -92,10 +91,8 @@ fn onReadAlloc(this: *WindowsNamedPipe, suggested_size: usize) []u8 {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onRead(this: *WindowsNamedPipe, buffer: []const u8) void {
     log("onRead ({})", .{buffer.len});
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     this.incoming.len += @as(u32, @truncate(buffer.len));
     bun.assert(this.incoming.len <= this.incoming.cap);
@@ -154,7 +151,6 @@ fn onOpen(this: *WindowsNamedPipe) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData(this: *WindowsNamedPipe, decoded_data: []const u8) void {
     log("onData ({})", .{decoded_data.len});
     this.handlers.onData(this.handlers.ctx, decoded_data);
@@ -206,7 +202,6 @@ fn callWriteOrEnd(this: *WindowsNamedPipe, data: ?[]const u8, msg_more: bool) vo
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn internalWrite(this: *WindowsNamedPipe, encoded_data: []const u8) void {
     this.resetTimeout();
 
@@ -246,7 +241,6 @@ pub fn flush(this: *WindowsNamedPipe) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn onInternalReceiveData(this: *WindowsNamedPipe, data: []const u8) void {
     if (this.wrapper) |*wrapper| {
@@ -390,7 +384,6 @@ pub fn open(this: *WindowsNamedPipe, fd: bun.FD, ssl_options: ?jsc.API.ServerCon
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn connect(this: *WindowsNamedPipe, path: []const u8, ssl_options: ?jsc.API.ServerConfig.SSLConfig, owned_ctx: ?*BoringSSL.SSL_CTX) bun.sys.Maybe(void) {
     bun.assert(this.pipe != null);
     this.flags.disconnected = true;
@@ -498,26 +491,21 @@ pub fn loop(this: *WindowsNamedPipe) *bun.Async.Loop {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encodeAndWrite(this: *WindowsNamedPipe, data: []const u8) i32 {
     log("encodeAndWrite (len: {})", .{data.len});
     if (this.wrapper) |*wrapper| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(i32, @intCast(wrapper.writeData(data) catch 0));
     } else {
         this.internalWrite(data);
     }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(data.len);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rawWrite(this: *WindowsNamedPipe, encoded_data: []const u8) i32 {
     this.internalWrite(encoded_data);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(encoded_data.len);
 }
@@ -575,9 +563,7 @@ pub fn sslError(this: *WindowsNamedPipe) us_bun_verify_error_t {
     return .{
         .error_no = this.ssl_error.error_no,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .code = @ptrCast(this.ssl_error.code.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .reason = @ptrCast(this.ssl_error.reason.ptr),
     };

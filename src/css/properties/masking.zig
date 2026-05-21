@@ -117,7 +117,7 @@ pub const Polygon = struct {
     /// The fill rule used to determine the interior of the polygon.
     fill_rule: FillRule,
     /// The points of each vertex of the polygon.
-    points: safe.ArrayList(Point),
+    points: ArrayList(Point),
 };
 
 /// A [`<shape-radius>`](https://www.w3.org/TR/css-shapes-1/#typedef-shape-radius) value

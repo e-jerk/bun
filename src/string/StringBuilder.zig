@@ -16,12 +16,10 @@ pub fn initCapacity(
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn countZ(this: *StringBuilder, slice: []const u8) void {
     this.cap += slice.len + 1;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn count(this: *StringBuilder, slice: []const u8) void {
     this.cap += slice.len;
@@ -70,7 +68,6 @@ pub fn append16(this: *StringBuilder, slice: []const u16, fallback_allocator: st
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendZ(this: *StringBuilder, slice: []const u8) [:0]const u8 {
     if (comptime Environment.allow_assert) {
         assert(this.len + 1 <= this.cap); // didn't count everything
@@ -88,14 +85,12 @@ pub fn appendZ(this: *StringBuilder, slice: []const u8) [:0]const u8 {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn appendStr(this: *StringBuilder, str: bun.String) []const u8 {
     const slice = str.toUTF8(bun.default_allocator);
     defer slice.deinit();
     return this.append(slice.slice());
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn append(this: *StringBuilder, slice: []const u8) []const u8 {
     if (comptime Environment.allow_assert) {
@@ -116,7 +111,8 @@ pub fn addConcat(this: *StringBuilder, slices: []const []const u8) bun.StringPoi
     var remain = this.allocatedSlice()[this.len..];
     var len: usize = 0;
     for (slices) |slice| {
-        safe.SimdUtils.copy(remain[0..slice.len], slice);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(remain[0..slice.len], slice);
         remain = remain[slice.len..];
         len += slice.len;
     }
@@ -135,10 +131,8 @@ pub fn add(this: *StringBuilder, len: usize) bun.StringPointer {
     if (comptime Environment.allow_assert) assert(this.len <= this.cap);
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return bun.StringPointer{ .offset = @as(u32, @truncate(start)), .length = @as(u32, @truncate(len)) };
 }
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendCount(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     if (comptime Environment.allow_assert) {
@@ -155,11 +149,9 @@ pub fn appendCount(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     if (comptime Environment.allow_assert) assert(this.len <= this.cap);
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return bun.StringPointer{ .offset = @as(u32, @truncate(start)), .length = @as(u32, @truncate(slice.len)) };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendCountZ(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     if (comptime Environment.allow_assert) {
@@ -178,11 +170,9 @@ pub fn appendCountZ(this: *StringBuilder, slice: []const u8) bun.StringPointer {
     if (comptime Environment.allow_assert) assert(this.len <= this.cap);
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return bun.StringPointer{ .offset = @as(u32, @truncate(start)), .length = @as(u32, @truncate(slice.len)) };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmt(this: *StringBuilder, comptime str: []const u8, args: anytype) []const u8 {
     if (comptime Environment.allow_assert) {
@@ -200,7 +190,6 @@ pub fn fmt(this: *StringBuilder, comptime str: []const u8, args: anytype) []cons
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtAppendCount(this: *StringBuilder, comptime str: []const u8, args: anytype) bun.StringPointer {
     if (comptime Environment.allow_assert) {
         assert(this.len <= this.cap); // didn't count everything
@@ -216,15 +205,12 @@ pub fn fmtAppendCount(this: *StringBuilder, comptime str: []const u8, args: anyt
 
     return bun.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(off)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(out.len)),
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtAppendCountZ(this: *StringBuilder, comptime str: []const u8, args: anytype) bun.StringPointer {
     if (comptime Environment.allow_assert) {
@@ -242,21 +228,17 @@ pub fn fmtAppendCountZ(this: *StringBuilder, comptime str: []const u8, args: any
 
     return bun.StringPointer{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .offset = @as(u32, @truncate(off)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .length = @as(u32, @truncate(out.len)),
     };
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmtCount(this: *StringBuilder, comptime str: []const u8, args: anytype) void {
     this.cap += std.fmt.count(str, args);
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn allocatedSlice(this: *StringBuilder) []u8 {
     var ptr = this.ptr orelse return &[_]u8{};
@@ -266,7 +248,6 @@ pub fn allocatedSlice(this: *StringBuilder) []u8 {
     return ptr[0..this.cap];
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn writable(this: *StringBuilder) []u8 {
     var ptr = this.ptr orelse return &[_]u8{};

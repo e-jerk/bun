@@ -63,7 +63,6 @@ pub const PollOrFd = union(enum) {
             }
             if (comptime @TypeOf(onCloseFn) != void)
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 onCloseFn(@ptrCast(@alignCast(ctx.?)));
         } else {
             this.* = .{ .closed = {} };

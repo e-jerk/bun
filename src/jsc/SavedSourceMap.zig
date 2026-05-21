@@ -57,18 +57,15 @@ pub const MissingSourceMapNoteInfo = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn putBakeSourceProvider(this: *SavedSourceMap, opaque_source_provider: *BakeSourceProvider, path: []const u8) void {
     bun.handleOom(this.putValue(path, Value.init(opaque_source_provider)));
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn putDevServerSourceProvider(this: *SavedSourceMap, opaque_source_provider: *DevServerSourceProvider, path: []const u8) void {
     this.putValue(path, Value.init(opaque_source_provider)) catch |err| bun.handleOom(err);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn removeDevServerSourceProvider(this: *SavedSourceMap, opaque_source_provider: *anyopaque, path: []const u8) void {
     this.lock();
@@ -92,15 +89,12 @@ pub fn removeDevServerSourceProvider(this: *SavedSourceMap, opaque_source_provid
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn putZigSourceProvider(this: *SavedSourceMap, opaque_source_provider: *anyopaque, path: []const u8) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const source_provider: *SourceProviderMap = @ptrCast(opaque_source_provider);
     bun.handleOom(this.putValue(path, Value.init(source_provider)));
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn removeZigSourceProvider(this: *SavedSourceMap, opaque_source_provider: *anyopaque, path: []const u8) void {
     this.lock();
@@ -145,7 +139,6 @@ pub fn deinit(this: *SavedSourceMap) void {
                 _ = provider; // do nothing, we did not hold a ref to ZigSourceProvider
             } else if (value.get(InternalSourceMap)) |ism| {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 (InternalSourceMap{ .data = @as([*]u8, @ptrCast(ism)) }).deinit();
             }
         }
@@ -177,7 +170,6 @@ pub fn putMappings(this: *SavedSourceMap, source: *const logger.Source, mappings
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn putValue(this: *SavedSourceMap, path: []const u8, value: Value) !void {
     this.lock();
     defer this.unlock();
@@ -193,7 +185,6 @@ pub fn putValue(this: *SavedSourceMap, path: []const u8, value: Value) !void {
         } else if (old_value.get(SourceProviderMap)) |provider| {
             _ = provider; // do nothing, we did not hold a ref to ZigSourceProvider
         } else if (old_value.get(InternalSourceMap)) |ism| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             (InternalSourceMap{ .data = @as([*]u8, @ptrCast(ism)) }).deinit();
         }
@@ -226,7 +217,6 @@ fn getWithContent(
             // of the blob.
             defer this.unlock();
             const ism: InternalSourceMap = .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .data = @as([*]u8, @ptrCast(Value.from(mapping.value_ptr.*).as(InternalSourceMap))),
             };
@@ -267,7 +257,8 @@ fn getWithContent(
 
             // Store path for a user note.
             const storage = MissingSourceMapNoteInfo.storage[0..path.len];
-            safe.SimdUtils.copy(storage, path);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(storage, path);
             MissingSourceMapNoteInfo.path = storage;
             return .{};
         },
@@ -294,7 +285,8 @@ fn getWithContent(
 
             // Store path for a user note.
             const storage = MissingSourceMapNoteInfo.storage[0..path.len];
-            safe.SimdUtils.copy(storage, path);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(storage, path);
             MissingSourceMapNoteInfo.path = storage;
             return .{};
         },
@@ -321,7 +313,8 @@ fn getWithContent(
 
             // Store path for a user note.
             const storage = MissingSourceMapNoteInfo.storage[0..path.len];
-            safe.SimdUtils.copy(storage, path);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(storage, path);
             MissingSourceMapNoteInfo.path = storage;
             return .{};
         },
@@ -347,7 +340,6 @@ pub fn getValueLocked(this: *SavedSourceMap, hash: u64) ?Value {
     return Value.from(raw);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resolveMapping(
     this: *SavedSourceMap,

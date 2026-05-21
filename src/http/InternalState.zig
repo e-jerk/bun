@@ -116,7 +116,6 @@ pub fn isDone(this: *InternalState) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decompressBytes(this: *InternalState, buffer: []const u8, body_out_str: *MutableString, is_final_chunk: bool) !void {
     defer this.compressed_body.reset();
     var gzip_timer: @import("std-fs-compat").Timer = undefined;
@@ -140,7 +139,6 @@ pub fn decompressBytes(this: *InternalState, buffer: []const u8, body_out_str: *
             // pre-allocated buffer, then let's dynamically allocate the exact
             // size.
             if (this.encoding == Encoding.gzip and buffer.len > 16 and buffer.len < 1024 * 1024 * 1024) {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                 const estimated_size: u32 = @bitCast(buffer[buffer.len - 4 ..][0..4].*);
                 // Since this is arbtirary input from the internet, let's set an upper bound of 32 MB for the allocation size.

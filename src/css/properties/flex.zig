@@ -573,7 +573,6 @@ pub const FlexHandler = struct {
     ) bool {
         const maybeFlush = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             fn maybeFlush(
                 self: *FlexHandler,
                 d: *css.DeclarationList,
@@ -593,7 +592,6 @@ pub const FlexHandler = struct {
         }.maybeFlush;
 
         const propertyHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             fn propertyHelper(
                 self: *FlexHandler,
@@ -838,7 +836,6 @@ pub const FlexHandler = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn singleProperty(
         this: *FlexHandler,
         comptime prop: []const u8,
@@ -908,7 +905,6 @@ pub const FlexHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn legacyProperty(this: *FlexHandler, comptime field_name: []const u8, key: anytype, dest: *css.DeclarationList, ctx: *css.PropertyHandlerContext) void {
         _ = this; // autofix

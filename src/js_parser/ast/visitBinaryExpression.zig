@@ -385,9 +385,7 @@ pub fn CreateBinaryExpressionVisitor(
                             if (Expr.extractNumericValues(e_.left.data, e_.right.data)) |vals| {
                                 const left = floatToInt32(vals[0]);
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                                 const right: u8 = @intCast(@as(u32, @bitCast(floatToInt32(vals[1]))) % 32);
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                                 const result: i32 = @bitCast(std.math.shl(i32, left, right));
                                 return p.newExpr(E.Number{
@@ -401,9 +399,7 @@ pub fn CreateBinaryExpressionVisitor(
                             if (Expr.extractNumericValues(e_.left.data, e_.right.data)) |vals| {
                                 const left = floatToInt32(vals[0]);
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                                 const right: u8 = @intCast(@as(u32, @bitCast(floatToInt32(vals[1]))) % 32);
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                                 const result: i32 = @bitCast(std.math.shr(i32, left, right));
                                 return p.newExpr(E.Number{
@@ -416,9 +412,7 @@ pub fn CreateBinaryExpressionVisitor(
                         if (p.should_fold_typescript_constant_expressions) {
                             if (Expr.extractNumericValues(e_.left.data, e_.right.data)) |vals| {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                                 const left: u32 = @bitCast(floatToInt32(vals[0]));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                                 const right: u8 = @intCast(@as(u32, @bitCast(floatToInt32(vals[1]))) % 32);
                                 const result: u32 = std.math.shr(u32, left, right);
@@ -559,7 +553,6 @@ pub fn CreateBinaryExpressionVisitor(
                             // Unlike regular identifiers, there are no unbound private identifiers
                             const kind: Symbol.Kind = p.symbols.items[result.ref.innerIndex()].kind;
                             if (!Symbol.isKindPrivate(kind)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 const r = logger.Range{ .loc = e_.left.loc, .len = @as(i32, @intCast(name.len)) };
                                 p.log.addRangeErrorFmt(p.source, r, p.allocator, "Private name \"{s}\" must be declared in an enclosing class", .{name}) catch unreachable;

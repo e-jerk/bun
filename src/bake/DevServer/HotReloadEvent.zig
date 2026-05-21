@@ -53,12 +53,10 @@ pub fn isEmpty(ev: *const HotReloadEvent) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn appendFile(event: *HotReloadEvent, allocator: Allocator, file_path: []const u8) void {
     _ = bun.handleOom(event.files.getOrPut(allocator, file_path));
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn appendDir(event: *HotReloadEvent, allocator: Allocator, dir_path: []const u8, maybe_sub_path: ?[]const u8) void {
     if (dir_path.len == 0) return;
@@ -72,7 +70,6 @@ pub fn appendDir(event: *HotReloadEvent, allocator: Allocator, dir_path: []const
     const starts_with_sep = platform.isSeparator(sub_path[0]);
     const sep_offset: i32 = if (ends_with_sep and starts_with_sep) -1 else 1;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     bun.handleOom(event.extra_files.ensureUnusedCapacity(allocator, @intCast(@as(i32, @intCast(dir_path.len + sub_path.len)) + sep_offset + 1)));
     event.extra_files.appendSliceAssumeCapacity(if (ends_with_sep) dir_path[0 .. dir_path.len - 1] else dir_path);

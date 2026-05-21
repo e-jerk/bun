@@ -55,7 +55,6 @@ pub const ImportDependency = struct {
     loc: SourceRange,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn new(allocator: Allocator, rule: *const css.css_rules.import.ImportRule, filename: []const u8, local_names: ?*const css.LocalsResultsMap, symbols: *const bun.ast.Symbol.Map) ImportDependency {
         const supports = if (rule.supports) |*supports| brk: {
             const s = css.to_css.string(
@@ -109,7 +108,6 @@ pub const UrlDependency = struct {
     loc: SourceRange,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn new(allocator: Allocator, url: *const Url, filename: []const u8, import_records: *const bun.BabyList(bun.ImportRecord)) UrlDependency {
         const theurl = import_records.at(url.import_record_idx).path.pretty;
         const placeholder = css.css_modules.hash(
@@ -136,7 +134,6 @@ pub const SourceRange = struct {
     end: Location,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn new(filename: []const u8, loc: Location, offset: u32, len: usize) SourceRange {
         return SourceRange{
             .file_path = filename,
@@ -146,7 +143,6 @@ pub const SourceRange = struct {
             },
             .end = Location{
                 .line = loc.line,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .column = loc.column + offset + @as(u32, @intCast(len)) - 1,
             },

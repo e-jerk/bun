@@ -46,6 +46,7 @@ pub const SecurityScanResults = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn doPartialInstallOfSecurityScanner(
     manager: *PackageManager,
     ctx: bun.cli.Command.Context,
@@ -121,6 +122,7 @@ const ScannerFinder = struct {
         const root_deps = pkg_dependencies[root_pkg_id];
 
         for (root_deps.begin()..root_deps.end()) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(_dep_id);
             const dep_pkg_id = this.manager.lockfile.buffers.resolutions.items[dep_id];
 
@@ -149,6 +151,7 @@ const ScannerFinder = struct {
 
             const deps = pkg_deps[pkg_idx];
             for (deps.begin()..deps.end()) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
                 const dep = this.manager.lockfile.buffers.dependencies.items[dep_id];
 
@@ -160,6 +163,7 @@ const ScannerFinder = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn performSecurityScanAfterResolution(manager: *PackageManager, command_ctx: bun.cli.Command.Context, original_cwd: []const u8) !?SecurityScanResults {
     const security_scanner = manager.options.security_scanner orelse return null;
 
@@ -188,6 +192,7 @@ pub fn performSecurityScanAfterResolution(manager: *PackageManager, command_ctx:
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn performSecurityScanForAll(manager: *PackageManager, command_ctx: bun.cli.Command.Context, original_cwd: []const u8) !?SecurityScanResults {
     const security_scanner = manager.options.security_scanner orelse return null;
 
@@ -232,7 +237,8 @@ pub fn printSecurityAdvisories(manager: *PackageManager, results: *const Securit
         if (advisory.pkg_path) |pkg_path| {
             if (pkg_path.len > 1) {
                 Output.pretty("    <d>via ", .{});
-                for (pkg_path[0 .. pkg_path.len - 1], 0..) |ancestor_id, idx| {
+                // safe-transpile: for with index access requires manual review
+    for (pkg_path[0 .. pkg_path.len - 1], 0..) |ancestor_id, idx| {
                     if (idx > 0) Output.pretty(" › ", .{});
                     const ancestor_name = pkg_names[ancestor_id].slice(string_buf);
                     Output.pretty("{s}", .{ancestor_name});
@@ -379,6 +385,7 @@ const PackageCollector = struct {
 
         // collect all npm deps from the root package
         for (root_deps.begin()..root_deps.end()) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(_dep_id);
             const dep_pkg_id = this.manager.lockfile.buffers.resolutions.items[dep_id];
 
@@ -406,11 +413,13 @@ const PackageCollector = struct {
 
         // and collect npm deps from workspace packages
         for (0..pkgs.len) |pkg_idx| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const pkg_id: PackageID = @intCast(pkg_idx);
             if (pkg_resolutions[pkg_id].tag != .workspace) continue;
 
             const workspace_deps = pkg_dependencies[pkg_id];
             for (workspace_deps.begin()..workspace_deps.end()) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
                 const dep_pkg_id = this.manager.lockfile.buffers.resolutions.items[dep_id];
 
@@ -445,6 +454,7 @@ const PackageCollector = struct {
 
         for (this.manager.update_requests) |req| {
             for (0..pkgs.len) |_update_pkg_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const update_pkg_id: PackageID = @intCast(_update_pkg_id);
                 if (update_pkg_id != req.package_id) continue;
                 if (pkg_resolutions[update_pkg_id].tag != .npm) continue;
@@ -453,12 +463,14 @@ const PackageCollector = struct {
                 var parent_pkg_id: PackageID = invalid_package_id;
 
                 for (0..pkgs.len) |_pkg_id| update_dep_id: {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const pkg_id: PackageID = @intCast(_pkg_id);
                     const pkg_res = pkg_resolutions[pkg_id];
                     if (pkg_res.tag != .root and pkg_res.tag != .workspace) continue;
 
                     const pkg_deps = pkg_dependencies[pkg_id];
                     for (pkg_deps.begin()..pkg_deps.end()) |_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const dep_id: DependencyID = @intCast(_dep_id);
                         const dep_pkg_id = this.manager.lockfile.buffers.resolutions.items[dep_id];
                         if (dep_pkg_id == invalid_package_id) continue;
@@ -506,9 +518,11 @@ const PackageCollector = struct {
             _ = mutable_item.dep_id; // Could be useful in the future for dependency-specific processing
 
             const pkg_path_copy = try this.manager.allocator.alloc(PackageID, mutable_item.pkg_path.items.len);
+// safe-transpile: @memcpy requires manual review
             @memcpy(pkg_path_copy, mutable_item.pkg_path.items);
 
             const dep_path_copy = try this.manager.allocator.alloc(DependencyID, mutable_item.dep_path.items.len);
+// safe-transpile: @memcpy requires manual review
             @memcpy(dep_path_copy, mutable_item.dep_path.items);
 
             try this.package_paths.put(pkg_id, .{
@@ -518,6 +532,7 @@ const PackageCollector = struct {
 
             const pkg_deps = pkg_dependencies[pkg_id];
             for (pkg_deps.begin()..pkg_deps.end()) |_next_dep_id| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const next_dep_id: DependencyID = @intCast(_next_dep_id);
                 const next_pkg_id = this.manager.lockfile.buffers.resolutions.items[next_dep_id];
 
@@ -551,6 +566,7 @@ const JSONBuilder = struct {
     manager: *PackageManager,
     collector: *PackageCollector,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn buildPackageJSON(this: JSONBuilder) ![]const u8 {
         var json_buf: std.ArrayList(u8) = .empty;
         var writer = @import("std-io-compat").allocatingWriterFromArrayList(this.manager.allocator, &json_buf);
@@ -619,10 +635,12 @@ const JSONBuilder = struct {
 // scanner-entry.d.ts is NOT included in the build (type definitions only)
 const scanner_entry_source = @embedFile("./scanner-entry.ts");
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn attemptSecurityScan(manager: *PackageManager, security_scanner: []const u8, scan_all: bool, command_ctx: bun.cli.Command.Context, original_cwd: []const u8) !ScanAttemptResult {
     return attemptSecurityScanWithRetry(manager, security_scanner, scan_all, command_ctx, original_cwd, false);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []const u8, scan_all: bool, command_ctx: bun.cli.Command.Context, original_cwd: []const u8, is_retry: bool) !ScanAttemptResult {
     if (manager.options.log_level == .verbose) {
         Output.prettyErrorln("<d>[SecurityProvider]<r> Running at '{s}'", .{security_scanner});
@@ -661,6 +679,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
     var temp_source: []const u8 = scanner_entry_source;
 
     const scanner_placeholder = "__SCANNER_MODULE__";
+// zust: use zust.String or zust.GuardedSlice for slice operations
     if (std.mem.indexOf(u8, temp_source, scanner_placeholder)) |index| {
         try code.appendSlice(manager.allocator, temp_source[0..index]);
         try code.appendSlice(manager.allocator, security_scanner);
@@ -669,6 +688,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
     }
 
     const suppress_placeholder = "__SUPPRESS_ERROR__";
+// zust: use zust.String or zust.GuardedSlice for slice operations
     if (std.mem.indexOf(u8, temp_source, suppress_placeholder)) |index| {
         var new_code: std.ArrayList(u8) = .empty;
         try new_code.appendSlice(manager.allocator, temp_source[0..index]);
@@ -787,6 +807,7 @@ pub const SecurityScanSubprocess = struct {
             .extra_fds = &extra_fds,
         };
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.c.environ))).unwrap();
         defer spawned.extra_pipes.deinit();
 
@@ -846,6 +867,7 @@ pub const SecurityScanSubprocess = struct {
             },
         };
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), @ptrCast(std.c.environ))).unwrap();
         defer spawned.extra_pipes.deinit();
 
@@ -946,10 +968,12 @@ pub const SecurityScanSubprocess = struct {
         this.remaining_fds -= 1;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onStderrChunk(this: *SecurityScanSubprocess, chunk: []const u8) void {
         bun.handleOom(this.stderr_data.appendSlice(this.manager.allocator, chunk));
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn getReadBuffer(this: *SecurityScanSubprocess) []u8 {
         const available = this.ipc_data.unusedCapacitySlice();
         if (available.len < 4096) {
@@ -959,6 +983,7 @@ pub const SecurityScanSubprocess = struct {
         return available;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onReadChunk(this: *SecurityScanSubprocess, chunk: []const u8, hasMore: bun.io.ReadState) bool {
         _ = hasMore;
         bun.handleOom(this.ipc_data.appendSlice(this.manager.allocator, chunk));
@@ -975,6 +1000,7 @@ pub const SecurityScanSubprocess = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleResults(this: *SecurityScanSubprocess, package_paths: *std.array_hash_map.Auto(PackageID, PackagePath), start_time: i64, packages_scanned: usize, security_scanner: []const u8, security_scanner_pkg_id: ?PackageID, command_ctx: bun.cli.Command.Context, original_cwd: []const u8, is_retry: bool) !ScanAttemptResult {
         _ = command_ctx; // Reserved for future use
         _ = original_cwd; // Reserved for future use
@@ -1197,6 +1223,7 @@ fn parseSecurityAdvisoriesFromExpr(manager: *PackageManager, advisories_expr: bu
     }
 
     const array = advisories_expr.data.e_array;
+    // safe-transpile: for with index access requires manual review
     for (array.items.slice(), 0..) |item, i| {
         if (item.data != .e_object) {
             Output.errGeneric("Security advisory at index {d} must be an object, got: {s}", .{ i, @tagName(item.data) });
@@ -1263,8 +1290,10 @@ fn parseSecurityAdvisoriesFromExpr(manager: *PackageManager, advisories_expr: bu
         const pkg_names = pkgs.items(.name);
         const string_buf = manager.lockfile.buffers.string_bytes.items;
 
-        for (pkg_names, 0..) |pkg_name, j| {
+        // safe-transpile: for with index access requires manual review
+    for (pkg_names, 0..) |pkg_name, j| {
             if (std.mem.eql(u8, pkg_name.slice(string_buf), name_str)) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const pkg_id: PackageID = @intCast(j);
                 if (package_paths.get(pkg_id)) |paths| {
                     // Duplicate the path so it outlives the package_paths HashMap

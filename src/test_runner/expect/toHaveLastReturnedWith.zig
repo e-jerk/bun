@@ -17,7 +17,6 @@ pub fn toHaveLastReturnedWith(this: *Expect, globalThis: *JSGlobalObject, callfr
     }
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const calls_count = @as(u32, @intCast(try returns.getLength(globalThis)));
     var pass = false;
     var last_return_value: JSValue = .js_undefined;

@@ -10,6 +10,7 @@ e_string: ?*JSAst.E.String = null,
 
 pub const Array = std.ArrayListUnmanaged(UpdateRequest);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn matches(this: PackageManager.UpdateRequest, dependency: Dependency, string_buf: []const u8) bool {
     return this.name_hash == if (this.name.len == 0)
         String.Builder.stringHash(dependency.version.literal.slice(string_buf))
@@ -82,6 +83,7 @@ pub fn parseWithError(
             const len = std.mem.replace(u8, input, "\\\\", "/", temp);
             const input2 = temp[0 .. input.len - len];
             bun.path.platformToPosixInPlace(u8, input2);
+// safe-transpile: @memcpy requires manual review
             @memcpy(input[0..input2.len], input2);
             input.len = input2.len;
         }
@@ -177,6 +179,7 @@ pub fn parseWithError(
             request.name_hash = String.Builder.stringHash(version.literal.slice(input));
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (update_requests.items) |*prev| {
             if (prev.name_hash == request.name_hash and request.name.len == prev.name.len) continue :outer;
         }

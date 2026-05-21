@@ -3,7 +3,6 @@ const NoticeResponse = @This();
 messages: std.ArrayListUnmanaged(FieldMessage) = .empty,
 pub fn deinit(this: *NoticeResponse) void {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.messages.items) |*message| {
         message.deinit();
     }

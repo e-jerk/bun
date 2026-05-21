@@ -85,6 +85,7 @@ pub fn generate(_: Command.Context, _: Example.Tag, entry_point: string, result:
 }
 
 // Create a file with given contents, returns if file was newly created
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn createFile(filename: []const u8, contents: []const u8) bun.sys.Maybe(bool) {
     // Check if file exists and has same contents
     if (bun.sys.File.readFrom(bun.FD.cwd(), filename, default_allocator).asValue()) |source_contents| {
@@ -114,10 +115,12 @@ fn createFile(filename: []const u8, contents: []const u8) bun.sys.Maybe(bool) {
 }
 
 // Count number of occurrences to calculate buffer size
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn countReplaceAllOccurrences(input: []const u8, needle: []const u8, replacement: []const u8) usize {
     var remaining = input;
     var count: usize = 0;
     while (remaining.len > 0) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
         if (std.mem.indexOf(u8, remaining, needle)) |index| {
             remaining = remaining[index + needle.len ..];
             count += 1;
@@ -130,10 +133,12 @@ fn countReplaceAllOccurrences(input: []const u8, needle: []const u8, replacement
 }
 
 // Replace all occurrences of needle with replacement
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn replaceAllOccurrencesOfString(allocator: std.mem.Allocator, input: []const u8, needle: []const u8, replacement: []const u8) ![]u8 {
     var result = try std.array_list.Managed(u8).initCapacity(allocator, countReplaceAllOccurrences(input, needle, replacement));
     var remaining = input;
     while (remaining.len > 0) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
         if (std.mem.indexOf(u8, remaining, needle)) |index| {
             const new_remaining = remaining[index + needle.len ..];
             try result.appendSlice(remaining[0..index]);
@@ -149,6 +154,7 @@ fn replaceAllOccurrencesOfString(allocator: std.mem.Allocator, input: []const u8
 }
 
 // Replace template placeholders with actual values
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn stringWithReplacements(original_input: []const u8, basename: []const u8, relative_name: []const u8, react_component_export: []const u8, allocator: std.mem.Allocator) ![]const u8 {
     var input = original_input;
 
@@ -213,6 +219,7 @@ fn runInstall(argv: [][]const u8) !void {
 }
 
 // Generate all project files from template
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn generateFiles(allocator: std.mem.Allocator, entry_point: string, dependencies: []const []const u8, dev_dependencies: []const []const u8, template: Template, react_component_export: []const u8) !void {
     var log = template.logger();
     var basename = std.fs.path.basename(entry_point);
@@ -263,7 +270,8 @@ pub fn generateFiles(allocator: std.mem.Allocator, entry_point: string, dependen
                 }
             }
 
-            for (files, filenames, created_files) |*file, filename, created| {
+            // safe-transpile: for with index access requires manual review
+    for (files, filenames, created_files) |*file, filename, created| {
                 if (created) {
                     log.file(file, filename, max_filename_len);
                 }
@@ -438,6 +446,7 @@ fn hasAnyTailwindClassesInSourceFiles(bundler: *BundleV2, reachable_files: []con
                             const class_name = source_code[0..end_quote];
                             // search for tailwind patterns
                             for (common_tailwind_patterns) |pattern| {
+// zust: use safe.String or safe.GuardedSlice for slice operations
                                 if (std.mem.indexOf(u8, class_name, pattern) != null) {
                                     return true;
                                 }
@@ -465,6 +474,7 @@ fn hasAnyTailwindClassesInSourceFiles(bundler: *BundleV2, reachable_files: []con
                         if (j < source_code.len and (source_code[j] == '"' or source_code[j] == '\'')) {
                             // Found a class attribute, now check for Tailwind patterns
                             for (common_tailwind_patterns) |pattern| {
+// zust: use safe.String or safe.GuardedSlice for slice operations
                                 if (std.mem.indexOf(u8, source_code[j..@min(j + 1000, source_code.len)], pattern) != null) {
                                     return true;
                                 }
@@ -491,6 +501,7 @@ fn getShadcnComponents(bundler: *BundleV2, reachable_files: []const js_ast.Index
         switch (loaders[file.get()]) {
             .tsx, .jsx => {
                 const import_records = all[file.get()];
+// safe-transpile: for loop with pointer capture requires manual review
                 for (import_records.slice()) |*import_record| {
                     if (strings.hasPrefixComptime(import_record.path.text, "@/components/ui/")) {
                         try icons.insert(import_record.path.text["@/components/ui/".len..]);
@@ -596,6 +607,7 @@ fn findReactComponentExport(bundler: *BundleV2) ?[]const u8 {
                     // - "my-app" -> "Myapp"
                     // - "My-App" -> "Myapp"
                     if (output_index > 1) {
+// safe-transpile: for loop with pointer capture requires manual review
                         for (duped[1..output_index]) |*c| {
                             switch (c.*) {
                                 'A'...'Z' => {
@@ -818,6 +830,7 @@ pub const Template = union(Tag) {
             return Logger{ .template = self };
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn label(self: Tag) []const u8 {
             return switch (self) {
                 .ReactTailwindSpa => "React + Tailwind",
@@ -835,6 +848,7 @@ pub const Template = union(Tag) {
         has_written_initial_message: bool = false,
         template: Tag,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn file(this: *Logger, template_file: *const TemplateFile, name: []const u8, max_name_len: usize) void {
             this.has_written_initial_message = true;
             Output.pretty(" <green>create<r>  ", .{});

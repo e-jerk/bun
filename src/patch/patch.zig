@@ -28,6 +28,7 @@ pub const PatchFile = struct {
     parts: List(PatchFilePart) = .empty,
 
     pub fn deinit(this: *PatchFile, allocator: Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.parts.items) |*part| part.deinit(allocator);
         this.parts.deinit(allocator);
     }
@@ -54,6 +55,7 @@ pub const PatchFile = struct {
         var arena = bun.ArenaAllocator.init(sfb.get());
         defer arena.deinit();
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.parts.items) |*part| {
             defer _ = arena.reset(.retain_capacity);
             switch (part.*) {
@@ -99,6 +101,7 @@ pub const PatchFile = struct {
                         if (nodefs.mkdirRecursive(.{
                             .path = .{ .string = bun.PathString.init(filedir) },
                             .recursive = true,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             .mode = @intCast(@intFromEnum(mode)),
                         }).asErr()) |e| return e.withoutPath();
                     }
@@ -124,7 +127,8 @@ pub const PatchFile = struct {
 
                     const count = count: {
                         var total: usize = 0;
-                        for (hunk.parts.items[0].lines.items, 0..) |line, i| {
+                        // safe-transpile: for with index access requires manual review
+    for (hunk.parts.items[0].lines.items, 0..) |line, i| {
                             total += line.len;
                             total += @intFromBool(i < last_line);
                         }
@@ -138,7 +142,9 @@ pub const PatchFile = struct {
                     const file_contents = brk: {
                         var contents = bun.handleOom(file_alloc.alloc(u8, count));
                         var i: usize = 0;
-                        for (hunk.parts.items[0].lines.items, 0..) |line, idx| {
+                        // safe-transpile: for with index access requires manual review
+    for (hunk.parts.items[0].lines.items, 0..) |line, idx| {
+// safe-transpile: @memcpy requires manual review
                             @memcpy(contents[i .. i + line.len], line);
                             i += line.len;
                             if (idx < last_line or !no_newline_at_end_of_file) {
@@ -245,8 +251,11 @@ pub const PatchFile = struct {
             file_line_count = count;
 
             // Adjust to account for the changes
+// safe-transpile: for loop with pointer capture requires manual review
             for (patch.hunks.items) |*hunk| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 count = @intCast(@as(i64, @intCast(count)) + @as(i64, @intCast(hunk.header.patched.len)) - @as(i64, @intCast(hunk.header.original.len)));
+// safe-transpile: for loop with pointer capture requires manual review
                 for (hunk.parts.items) |*part_| {
                     const part: *PatchMutationPart = part_;
                     switch (part.type) {
@@ -277,6 +286,7 @@ pub const PatchFile = struct {
             bun.debugAssert(i == file_line_count);
         }
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (patch.hunks.items) |*hunk| {
             var line_cursor = hunk.header.patched.start - 1;
 
@@ -285,6 +295,7 @@ pub const PatchFile = struct {
                 return .{ .err = bun.sys.Error.fromCode(.INVAL, .fstatat).withPath(file_path) };
             }
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (hunk.parts.items) |*part_| {
                 const part: *PatchMutationPart = part_;
                 switch (part.type) {
@@ -296,6 +307,7 @@ pub const PatchFile = struct {
                             return .{ .err = bun.sys.Error.fromCode(.INVAL, .fstatat).withPath(file_path) };
                         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         line_cursor += @intCast(part.lines.items.len);
                     },
                     .insertion => {
@@ -305,7 +317,9 @@ pub const PatchFile = struct {
                         }
 
                         const lines_to_insert = bun.handleOom(lines.addManyAt(bun.default_allocator, line_cursor, part.lines.items.len));
+// safe-transpile: @memcpy requires manual review
                         @memcpy(lines_to_insert, part.lines.items);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         line_cursor += @intCast(part.lines.items.len);
                         if (part.no_newline_at_end_of_file) {
                             _ = lines.pop();
@@ -333,6 +347,7 @@ pub const PatchFile = struct {
             patch_dir,
             file_path,
             bun.O.CREAT | bun.O.WRONLY | bun.O.TRUNC,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(stat.mode),
         )) {
             .err => |e| return .{ .err = e.withPath(file_path) },
@@ -377,6 +392,7 @@ const FileDeets = struct {
     }
 
     fn deinit(this: *FileDeets, allocator: Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.hunks.items) |*hunk| {
             hunk.deinit(allocator);
         }
@@ -432,6 +448,7 @@ pub const Hunk = struct {
     };
 
     pub fn deinit(this: *Hunk, allocator: Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.parts.items) |*part| {
             part.deinit(allocator);
         }
@@ -463,6 +480,7 @@ pub const FileMode = enum(u32) {
     executable = 0o755,
 
     pub fn toBunMode(this: FileMode) bun.Mode {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@intFromEnum(this));
     }
 
@@ -499,6 +517,7 @@ pub const FilePatch = struct {
     after_hash: ?[]const u8,
 
     pub fn deinit(this: *FilePatch, allocator: Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.hunks.items) |*hunk| hunk.deinit(allocator);
         this.hunks.deinit(allocator);
         bun.destroy(this);
@@ -551,6 +570,7 @@ const ParseErr = error{
 };
 
 /// NOTE: the returned `PatchFile` struct will contain pointers to original file text so make sure to not deallocate `file`
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parsePatchFile(file: []const u8) ParseErr!PatchFile {
     var lines_parser = PatchLinesParser{};
     defer lines_parser.deinit(bun.default_allocator, false);
@@ -571,6 +591,7 @@ pub fn parsePatchFile(file: []const u8) ParseErr!PatchFile {
 fn patchFileSecondPass(files: []FileDeets) ParseErr!PatchFile {
     var result: PatchFile = .{};
 
+// safe-transpile: for loop with pointer capture requires manual review
     for (files) |*file| {
         const ty: PatchFilePartKind = if (file.rename_from != null and file.rename_from.?.len > 0)
             .file_rename
@@ -680,6 +701,7 @@ fn patchFileSecondPass(files: []FileDeets) ParseErr!PatchFile {
     return result;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn parseFileMode(mode: []const u8) ?FileMode {
     const parsed_mode = (std.fmt.parseInt(u32, mode, 8) catch return null) & 0o777;
     return FileMode.fromU32(parsed_mode);
@@ -737,6 +759,7 @@ const PatchLinesParser = struct {
         this.current_file_patch.deinit(allocator);
         if (this.current_hunk) |*hunk| hunk.deinit(allocator);
         if (this.current_hunk_mutation_part) |*part| part.deinit(allocator);
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.result.items) |*file_deet| file_deet.deinit(allocator);
         if (comptime clear_result_retaining_capacity) {
             this.result.clearRetainingCapacity();
@@ -753,6 +776,7 @@ const PatchLinesParser = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(
         this: *PatchLinesParser,
         file_: []const u8,
@@ -912,6 +936,7 @@ const PatchLinesParser = struct {
         this.current_file_patch = .{};
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseHunkHeaderLineImpl(text_: []const u8) ParseErr!struct { line_nr: u32, line_count: u32, rest: []const u8 } {
         var text = text_;
         const DIGITS = brk: {
@@ -973,6 +998,7 @@ const PatchLinesParser = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseHunkHeaderLine(line_: []const u8) ParseErr!Hunk {
         //  const match = headerLine.trim()
         //    .match(/^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))? @@.*/)
@@ -1015,6 +1041,7 @@ const PatchLinesParser = struct {
         return ParseErr.bad_header_line;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseDiffHashes(line: []const u8) ?struct { []const u8, []const u8 } {
         // index 2de83dd..842652c 100644
         //       ^
@@ -1024,6 +1051,7 @@ const PatchLinesParser = struct {
         // From @pnpm/patch-package the regex is this:
         // const match = line.match(/(\w+)\.\.(\w+)/)
 
+// zust: use safe.String or safe.GuardedSlice for slice operations
         const delimiter_start = std.mem.indexOf(u8, line, "..") orelse return null;
 
         const VALID_CHARS: bun.bit_set.IntegerBitSet(256) = comptime brk: {
@@ -1055,6 +1083,7 @@ const PatchLinesParser = struct {
         return .{ a_part, b_part };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseDiffLinePaths(line: []const u8) ?struct { []const u8, []const u8 } {
         // From @pnpm/patch-package the regex is this:
         // const match = line.match(/^diff --git a\/(.*?) b\/(.*?)\s*$/)
@@ -1094,6 +1123,7 @@ const PatchLinesParser = struct {
 };
 
 pub const TestingAPIs = @import("../patch_jsc/testing.zig").TestingAPIs;
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn spawnOpts(
     old_folder: []const u8,
     new_folder: []const u8,
@@ -1137,6 +1167,7 @@ pub fn spawnOpts(
             envp_buf[i] = env_arr[i].ptr;
         }
         if (PATH) |p| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             envp_buf[envp_buf.len - 1] = @ptrCast(p.ptr);
         }
         break :brk envp_buf;
@@ -1155,6 +1186,7 @@ pub fn spawnOpts(
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn diffPostProcess(result: *bun.spawn.sync.Result, old_folder: []const u8, new_folder: []const u8) !bun.jsc.Node.Maybe(std.array_list.Managed(u8), std.array_list.Managed(u8)) {
     var stdout = std.array_list.Managed(u8).init(bun.default_allocator);
     var stderr = std.array_list.Managed(u8).init(bun.default_allocator);
@@ -1180,6 +1212,7 @@ pub fn diffPostProcess(result: *bun.spawn.sync.Result, old_folder: []const u8, n
     return .{ .result = stdout };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn gitDiffPreprocessPaths(
     allocator: std.mem.Allocator,
     old_folder_: []const u8,
@@ -1190,6 +1223,7 @@ pub fn gitDiffPreprocessPaths(
     const old_folder = if (comptime bun.Environment.isWindows) brk: {
         // backslash in the path fucks everything up
         const cpy = bun.handleOom(allocator.alloc(u8, old_folder_.len + bump));
+// safe-transpile: @memcpy requires manual review
         @memcpy(cpy[0..old_folder_.len], old_folder_);
         std.mem.replaceScalar(u8, cpy, '\\', '/');
         if (sentinel) {
@@ -1200,6 +1234,7 @@ pub fn gitDiffPreprocessPaths(
     } else old_folder_;
     const new_folder = if (comptime bun.Environment.isWindows) brk: {
         const cpy = bun.handleOom(allocator.alloc(u8, new_folder_.len + bump));
+// safe-transpile: @memcpy requires manual review
         @memcpy(cpy[0..new_folder_.len], new_folder_);
         std.mem.replaceScalar(u8, cpy, '\\', '/');
         if (sentinel) {
@@ -1219,6 +1254,7 @@ pub fn gitDiffPreprocessPaths(
     return .{ old_folder, new_folder };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn gitDiffInternal(
     _allocator: std.mem.Allocator,
     _old_folder: []const u8,
@@ -1256,6 +1292,7 @@ pub fn gitDiffInternal(
 ///   .replace(new RegExp(`(a|b)${escapeStringRegexp(`/${removeTrailingAndLeadingSlash(bFolder)}/`)}`, "g"), "$1/")
 ///   .replace(new RegExp(escapeStringRegexp(`${aFolder}/`), "g"), "")
 ///   .replace(new RegExp(escapeStringRegexp(`${bFolder}/`), "g"), "");
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u8, new_folder: []const u8) !void {
     const old_folder_trimmed = std.mem.trim(u8, old_folder, "/");
     const new_folder_trimmed = std.mem.trim(u8, new_folder, "/");
@@ -1266,11 +1303,13 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
     const @"a/$old_folder/", const @"b/$new_folder/" = brk: {
         old_buf[0] = 'a';
         old_buf[1] = '/';
+// safe-transpile: @memcpy requires manual review
         @memcpy(old_buf[2..][0..old_folder_trimmed.len], old_folder_trimmed);
         old_buf[2 + old_folder_trimmed.len] = '/';
 
         new_buf[0] = 'b';
         new_buf[1] = '/';
+// safe-transpile: @memcpy requires manual review
         @memcpy(new_buf[2..][0..new_folder_trimmed.len], new_folder_trimmed);
         new_buf[2 + new_folder_trimmed.len] = '/';
 
@@ -1290,6 +1329,7 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
     var line_iter = std.mem.splitScalar(u8, stdout.items, '\n');
     while (line_iter.next()) |line| {
         if (!shouldSkipLine(line)) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, line, @"a/$old_folder/")) |idx| {
                 const @"$old_folder/ start" = idx + 2;
                 const line_start = line_iter.index.? - 1 - line.len;
@@ -1298,6 +1338,7 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
                 saw_a_folder = line_idx;
                 continue;
             }
+// zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, line, @"b/$new_folder/")) |idx| {
                 const @"$new_folder/ start" = idx + 2;
                 const line_start = line_iter.index.? - 1 - line.len;
@@ -1307,6 +1348,7 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
                 continue;
             }
             if (saw_a_folder == null or saw_a_folder.? != line_idx) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
                 if (std.mem.indexOf(u8, line, old_folder)) |idx| {
                     if (idx + old_folder.len < line.len and line[idx + old_folder.len] == '/') {
                         const line_start = line_iter.index.? - 1 - line.len;
@@ -1318,6 +1360,7 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
                 }
             }
             if (saw_b_folder == null or saw_b_folder.? != line_idx) {
+// zust: use safe.String or safe.GuardedSlice for slice operations
                 if (std.mem.indexOf(u8, line, new_folder)) |idx| {
                     if (idx + new_folder.len < line.len and line[idx + new_folder.len] == '/') {
                         const line_start = line_iter.index.? - 1 - line.len;
@@ -1360,6 +1403,7 @@ fn gitDiffPostprocess(stdout: *std.array_list.Managed(u8), old_folder: []const u
 ///
 ///  two
 /// ```
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn shouldSkipLine(line: []const u8) bool {
     return line.len == 0 or
         (switch (line[0]) {

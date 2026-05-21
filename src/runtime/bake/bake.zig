@@ -68,7 +68,6 @@ pub const PatternBuffer = struct {
     pub var empty: PatternBuffer = .{};
     pub fn prependPart(_: *PatternBuffer, _: anytype) void {}
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(_: PatternBuffer) []const u8 {
         return "";
     }
@@ -111,9 +110,7 @@ pub const StringRefList = struct {
     pub const empty: StringRefList = .{};
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(_: *StringRefList, _: []const u8) void {}
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn track(_: *StringRefList, str: []const u8) []const u8 {
         return str;

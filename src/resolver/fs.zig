@@ -25,6 +25,7 @@ pub const FileSystem = struct {
 
     threadlocal var tmpdir_handle: ?@import("std-fs-compat").FsDir = null;
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn topLevelDirWithoutTrailingSlash(this: *const FileSystem) []const u8 {
         if (this.top_level_dir.len > 1 and this.top_level_dir[this.top_level_dir.len - 1] == std.fs.path.sep) {
             return this.top_level_dir[0 .. this.top_level_dir.len - 1];
@@ -41,6 +42,7 @@ pub const FileSystem = struct {
         return tmpdir_handle.?;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn getFdPath(this: *const FileSystem, fd: FD) ![]const u8 {
         var buf: bun.PathBuffer = undefined;
         const dir = try bun.getFdPath(fd, &buf);
@@ -48,7 +50,9 @@ pub const FileSystem = struct {
     }
 
     var tmpname_id_number = std.atomic.Value(u32).init(0);
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn tmpname(extname: string, buf: []u8, hash: u64) std.fmt.BufPrintError![:0]u8 {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const hex_value = @as(u64, @truncate(@as(u128, @intCast(hash)) | @as(u128, @intCast(@import("std-fs-compat").nanoTimestamp()))));
 
         return try std.fmt.bufPrintZ(buf, ".{f}-{f}.{s}", .{
@@ -267,7 +271,8 @@ pub const FileSystem = struct {
 
         pub fn getComptimeQuery(entry: *const DirEntry, comptime query_str: anytype) ?Entry.Lookup {
             comptime var query_var: [query_str.len]u8 = undefined;
-            comptime for (query_str, 0..) |c, i| {
+            comptime // safe-transpile: for with index access requires manual review
+    for (query_str, 0..) |c, i| {
                 query_var[i] = std.ascii.toLower(c);
             };
 
@@ -277,10 +282,12 @@ pub const FileSystem = struct {
             const result = entry.data.getAdapted(
                 @as([]const u8, &query),
                 struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
                     pub fn hash(_: @This(), _: []const u8) @TypeOf(query_hashed) {
                         return query_hashed;
                     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                     pub fn eql(_: @This(), _: []const u8, b: []const u8) bool {
                         return strings.eqlComptime(b, query);
                     }
@@ -305,7 +312,8 @@ pub const FileSystem = struct {
 
         pub fn hasComptimeQuery(entry: *const DirEntry, comptime query_str: anytype) bool {
             comptime var query_var: [query_str.len]u8 = undefined;
-            comptime for (query_str, 0..) |c, i| {
+            comptime // safe-transpile: for with index access requires manual review
+    for (query_str, 0..) |c, i| {
                 query_var[i] = std.ascii.toLower(c);
             };
             const query = query_var[0..query_str.len].*;
@@ -315,10 +323,12 @@ pub const FileSystem = struct {
             return entry.data.containsAdapted(
                 @as([]const u8, &query),
                 struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
                     pub fn hash(_: @This(), _: []const u8) @TypeOf(query_hashed) {
                         return query_hashed;
                     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                     pub fn eql(_: @This(), _: []const u8, b: []const u8) bool {
                         return strings.eqlComptime(b, &query);
                     }
@@ -417,6 +427,7 @@ pub const FileSystem = struct {
         return @call(bun.callmod_inline, path_handler.normalizeString, .{ str, true, bun.path.Platform.auto });
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn normalizeBuf(_: *@This(), buf: []u8, str: string) string {
         return @call(bun.callmod_inline, path_handler.normalizeStringBuf, .{ str, buf, false, bun.path.Platform.auto, false });
     }
@@ -429,6 +440,7 @@ pub const FileSystem = struct {
         });
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn joinBuf(_: *@This(), parts: anytype, buf: []u8) string {
         return @call(bun.callmod_inline, path_handler.joinStringBuf, .{
             buf,
@@ -493,6 +505,7 @@ pub const FileSystem = struct {
         );
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn absBuf(f: *@This(), parts: anytype, buf: []u8) string {
         return path_handler.joinAbsStringBuf(f.top_level_dir, buf, parts, .loose);
     }
@@ -500,10 +513,12 @@ pub const FileSystem = struct {
     /// Like `absBuf`, but returns null when the joined path (after `..`/`.`
     /// normalization) would overflow `buf`. Use when `parts` may contain
     /// user-controlled input of arbitrary length.
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn absBufChecked(f: *@This(), parts: []const string, buf: []u8) ?string {
         return path_handler.joinAbsStringBufChecked(f.top_level_dir, buf, parts, .loose);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn absBufZ(f: *@This(), parts: anytype, buf: []u8) stringZ {
         return path_handler.joinAbsStringBufZ(f.top_level_dir, buf, parts, .loose);
     }
@@ -517,7 +532,8 @@ pub const FileSystem = struct {
         const LIMITS = [_]std.posix.rlimit_resource{ std.posix.rlimit_resource.STACK, std.posix.rlimit_resource.NOFILE };
         Output.print("{{\n", .{});
 
-        inline for (LIMITS, 0..) |limit_type, i| {
+        // safe-transpile: for with index access requires manual review
+    inline for (LIMITS, 0..) |limit_type, i| {
             const limit = std.posix.getrlimit(limit_type) catch return;
 
             if (i == 0) {
@@ -538,6 +554,7 @@ pub const FileSystem = struct {
         file_limit: usize = 32,
         file_quota: usize = 32,
 
+// safe-transpile: function returns small constant slice — consider zust.String
         fn _platformTempDir() []const u8 {
             // Try TMPDIR, TMP, and TEMP in that order, matching Node.js.
             // https://github.com/nodejs/node/blob/e172be269890702bf2ad06252f2f152e7604d76c/src/node_credentials.cc#L132
@@ -585,6 +602,7 @@ pub const FileSystem = struct {
         }
 
         var get_platform_tempdir = bun.once(_platformTempDir);
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn platformTempDir() []const u8 {
             return get_platform_tempdir.call(.{});
         }
@@ -594,6 +612,7 @@ pub const FileSystem = struct {
             else => TmpfilePosix,
         };
 
+// safe-transpile: function returns small constant slice — consider zust.String
         pub fn tmpdirPath() []const u8 {
             return bun.env_var.BUN_TMPDIR.getNotEmpty() orelse platformTempDir();
         }
@@ -815,7 +834,9 @@ pub const FileSystem = struct {
                 if (std.posix.setrlimit(resource, raised)) |_| lim.cur = raised.cur else |_| {}
             }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             Limit.handles = @intCast(lim.cur);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return @intCast(lim.cur);
         }
 
@@ -881,6 +902,7 @@ pub const FileSystem = struct {
                 std.mem.writeInt(@TypeOf(this.mtime), hash_bytes_remain[0..@sizeOf(@TypeOf(this.mtime))], this.mtime, .little);
                 hash_bytes_remain = hash_bytes_remain[@sizeOf(@TypeOf(this.mtime))..];
                 bun.assert(hash_bytes_remain.len == 8);
+// safe-transpile: @bitCast requires manual review
                 hash_bytes_remain[0..8].* = @as([8]u8, @bitCast(@as(u64, 0)));
                 return bun.hash(&hash_bytes);
             }
@@ -1281,6 +1303,7 @@ pub const FileSystem = struct {
                 debug("stat({f}) = {d}", .{ file.handle, size });
 
                 var buf = try allocator.alloc(u8, size + 1);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[0..initial_read.len], initial_read);
 
                 if (size == 0) {
@@ -1653,6 +1676,7 @@ pub const PathName = struct {
         // so we extend the original slice's length by one
         return if (this.dir.len == 0) "./" else this.dir.ptr[0 .. this.dir.len + @as(
             usize,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(@intFromBool(
                 !bun.path.isSepAny(this.dir[this.dir.len - 1]) and (@intFromPtr(this.dir.ptr) + this.dir.len + 1) == @intFromPtr(this.base.ptr),
             )),
@@ -1766,6 +1790,7 @@ pub const Path = struct {
     /// range [-MAX_SAFE_INTEGER, MAX_SAFE_INTEGER] or else information is lost
     /// due to floating-point precision.
     pub fn hashForKit(path: Path) u52 {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return @truncate(path.hashKey());
     }
 
@@ -2008,6 +2033,7 @@ pub const Path = struct {
         return strings.hasSuffixComptime(this.name.filename, ".jsx") or strings.hasSuffixComptime(this.name.filename, ".tsx");
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn keyForIncrementalGraph(path: *const Path) []const u8 {
         return if (path.isFile())
             path.text

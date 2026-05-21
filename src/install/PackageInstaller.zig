@@ -246,6 +246,7 @@ pub const PackageInstaller = struct {
         this.runAvailableScripts(log_level);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn linkTreeBins(
         this: *PackageInstaller,
         tree: *TreeContext,
@@ -381,6 +382,7 @@ pub const PackageInstaller = struct {
     pub fn linkRemainingBins(this: *PackageInstaller, log_level: Options.LogLevel) void {
         var depth_buf: Lockfile.Tree.DepthBuf = undefined;
         var node_modules_rel_path_buf: bun.PathBuffer = undefined;
+// safe-transpile: @memcpy requires manual review
         @memcpy(node_modules_rel_path_buf[0.."node_modules".len], "node_modules");
 
         var link_target_buf: bun.PathBuffer = undefined;
@@ -388,12 +390,14 @@ pub const PackageInstaller = struct {
         var link_rel_buf: bun.PathBuffer = undefined;
         const lockfile = this.lockfile;
 
-        for (this.trees, 0..) |*tree, tree_id| {
+        // safe-transpile: for with index access requires manual review
+    for (this.trees, 0..) |*tree, tree_id| {
             if (tree.binaries.count() > 0) {
                 this.seen_bin_links.clearRetainingCapacity();
                 this.node_modules.path.items.len = strings.withoutTrailingSlash(FileSystem.instance.top_level_dir).len + 1;
                 const rel_path, _ = Lockfile.Tree.relativePathAndDepth(
                     lockfile,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @intCast(tree_id),
                     &node_modules_rel_path_buf,
                     &depth_buf,
@@ -402,6 +406,7 @@ pub const PackageInstaller = struct {
 
                 bun.handleOom(this.node_modules.path.appendSlice(rel_path));
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.linkTreeBins(tree, @intCast(tree_id), &link_target_buf, &link_dest_buf, &link_rel_buf, log_level);
             }
         }
@@ -461,7 +466,9 @@ pub const PackageInstaller = struct {
         const lockfile = this.lockfile;
         const resolutions = lockfile.buffers.resolutions.items;
 
-        for (this.trees, 0..) |*tree, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.trees, 0..) |*tree, i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (force or this.canInstallPackageForTree(this.lockfile.buffers.trees.items, @intCast(i))) {
                 defer tree.pending_installs.clearRetainingCapacity();
 
@@ -573,6 +580,7 @@ pub const PackageInstaller = struct {
         const allocator = this.manager.allocator;
         this.pending_lifecycle_scripts.deinit(this.manager.allocator);
         this.completed_trees.deinit(allocator);
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.trees) |*node| {
             node.deinit(allocator);
         }
@@ -649,6 +657,7 @@ pub const PackageInstaller = struct {
                 return;
             }
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (callbacks.items) |*cb| {
                 const context = cb.dependency_install_context;
                 const callback_package_id = this.lockfile.buffers.resolutions.items[context.dependency_id];
@@ -766,6 +775,7 @@ pub const PackageInstaller = struct {
         return count;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn getPatchfileHash(patchfile_path: []const u8) ?u64 {
         _ = patchfile_path; // autofix
     }
@@ -889,6 +899,7 @@ pub const PackageInstaller = struct {
                     if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                         installer.cache_dir_subpath = ".";
                     } else {
+// safe-transpile: @memcpy requires manual review
                         @memcpy(this.folder_path_buf[0..folder.len], folder);
                         this.folder_path_buf[folder.len] = 0;
                         installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
@@ -896,6 +907,7 @@ pub const PackageInstaller = struct {
                     installer.cache_dir = std.fs.cwd();
                 } else {
                     // transitive folder dependencies are relative to their parent. they are not hoisted
+// safe-transpile: @memcpy requires manual review
                     @memcpy(this.folder_path_buf[0..folder.len], folder);
                     this.folder_path_buf[folder.len] = 0;
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
@@ -918,6 +930,7 @@ pub const PackageInstaller = struct {
                 if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                     installer.cache_dir_subpath = ".";
                 } else {
+// safe-transpile: @memcpy requires manual review
                     @memcpy(this.folder_path_buf[0..folder.len], folder);
                     this.folder_path_buf[folder.len] = 0;
                     installer.cache_dir_subpath = this.folder_path_buf[0..folder.len :0];
@@ -940,12 +953,14 @@ pub const PackageInstaller = struct {
                     const global_link_dir = this.manager.globalLinkDirPath();
                     var ptr = &this.folder_path_buf;
                     var remain: []u8 = this.folder_path_buf[0..];
+// safe-transpile: @memcpy requires manual review
                     @memcpy(ptr[0..global_link_dir.len], global_link_dir);
                     remain = remain[global_link_dir.len..];
                     if (global_link_dir[global_link_dir.len - 1] != std.fs.path.sep) {
                         remain[0] = std.fs.path.sep;
                         remain = remain[1..];
                     }
+// safe-transpile: @memcpy requires manual review
                     @memcpy(remain[0..folder.len], folder);
                     remain = remain[folder.len..];
                     remain[0] = 0;
@@ -1162,6 +1177,7 @@ pub const PackageInstaller = struct {
                     }
 
                     const dep = this.lockfile.buffers.dependencies.items[dependency_id];
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     const truncated_dep_name_hash: TruncatedPackageNameHash = @truncate(dep.name_hash);
                     const is_trusted, const is_trusted_through_update_request = brk: {
                         if (this.trusted_dependencies_from_update_requests.contains(truncated_dep_name_hash)) break :brk .{ true, true };
@@ -1351,6 +1367,7 @@ pub const PackageInstaller = struct {
             defer this.incrementTreeInstallCount(this.current_tree_id, !is_pending_package_install, log_level);
 
             const dep = this.lockfile.buffers.dependencies.items[dependency_id];
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const truncated_dep_name_hash: TruncatedPackageNameHash = @truncate(dep.name_hash);
             const is_trusted, const is_trusted_through_update_request, const add_to_lockfile = brk: {
                 // trusted through a --trust dependency. need to enqueue scripts, write to package.json, and add to lockfile

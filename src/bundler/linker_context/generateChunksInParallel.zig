@@ -37,7 +37,6 @@ pub fn generateChunksInParallel(
             const total_count = total_count: {
                 var total_count: usize = 0;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (chunks) |*chunk| {
                     if (chunk.content == .css) total_count += 1;
                 }
@@ -50,7 +49,6 @@ pub fn generateChunksInParallel(
             var batch = ThreadPoolLib.Batch{};
             const tasks = bun.handleOom(c.allocator().alloc(LinkerContext.PrepareCssAstTask, total_count));
             var i: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (chunks) |*chunk| {
                 if (chunk.content == .css) {
@@ -69,7 +67,6 @@ pub fn generateChunksInParallel(
             c.parse_graph.pool.worker_pool.waitForAll();
         } else if (Environment.isDebug) {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
             for (chunks) |*chunk| {
                 bun.assert(chunk.content != .css);
             }
@@ -83,7 +80,6 @@ pub fn generateChunksInParallel(
         {
             var total_count: usize = 0;
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, chunk_contexts) |*chunk, *chunk_ctx| {
                 switch (chunk.content) {
                     .javascript => {
@@ -115,12 +111,10 @@ pub fn generateChunksInParallel(
             var remaining_part_ranges = combined_part_ranges;
             var batch = ThreadPoolLib.Batch{};
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, chunk_contexts) |*chunk, *chunk_ctx| {
                 switch (chunk.content) {
                     .javascript => {
                         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunk.content.javascript.parts_in_chunk_in_order, 0..) |part_range, i| {
                             if (Environment.enable_logs) {
                                 debugPartRanges(
@@ -137,7 +131,6 @@ pub fn generateChunksInParallel(
                             remaining_part_ranges[0] = .{
                                 .part_range = part_range,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 .i = @intCast(i),
                                 .task = .{
                                     .callback = &generateCompileResultForJSChunk,
@@ -153,7 +146,6 @@ pub fn generateChunksInParallel(
                         for (0..chunk.content.css.imports_in_chunk_in_order.len) |i| {
                             remaining_part_ranges[0] = .{
                                 .part_range = .{},
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 .i = @intCast(i),
                                 .task = .{
@@ -238,10 +230,8 @@ pub fn generateChunksInParallel(
         // paths of each chunk. This can technically be done in parallel but it
         // probably doesn't matter so much because we're not hashing that much data.
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, index| {
             var hash: ContentHasher = .{};
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             c.appendIsolatedHashesForImportedChunks(&hash, chunks, @intCast(index), &chunk_visit_map);
             chunk_visit_map.setAll(false);
@@ -260,7 +250,6 @@ pub fn generateChunksInParallel(
 
             // resolve any /./ and /../ occurrences
             // use resolvePosix since we asserted above all seps are '/'
-// zust: use safe.String or safe.GuardedSlice for slice operations
 // zust: use safe.String or safe.GuardedSlice for slice operations
             if (Environment.isWindows and std.mem.indexOf(u8, rel_path, "/./") != null) {
                 var buf: bun.PathBuffer = undefined;
@@ -286,7 +275,6 @@ pub fn generateChunksInParallel(
             const kinds = c.graph.files.items(.entry_point_kind);
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (duplicates_map.keys(), duplicates_map.values()) |key, dup| {
                 try writer.print("  {s}:\n", .{key});
                 for (dup.sources.items) |chunk| {
@@ -338,7 +326,6 @@ pub fn generateChunksInParallel(
         var unique_key_to_path = bun.StringHashMap([]const u8).init(c.allocator());
         defer unique_key_to_path.deinit();
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*ch| {
             if (ch.unique_key.len > 0 and ch.final_rel_path.len > 0) {
                 // Use the per-chunk public_path to match what IntermediateOutput.code()
@@ -356,7 +343,6 @@ pub fn generateChunksInParallel(
 
         // Fix up each chunk's module_info
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*chunk| {
             if (chunk.content != .javascript) continue;
             const mi = chunk.content.javascript.module_info orelse continue;
@@ -368,15 +354,12 @@ pub fn generateChunksInParallel(
 
             var offset: usize = 0;
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (mi.strings_lens.items, 0..) |slen, string_index| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const len: usize = @intCast(slen);
                 const s = mi.strings_buf.items[offset..][0..len];
                 if (unique_key_to_path.get(s)) |resolved_path| {
                     replacements.append(c.allocator(), .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .old_id = @enumFromInt(@as(u32, @intCast(string_index))),
                         .resolved_path = resolved_path,
@@ -403,7 +386,6 @@ pub fn generateChunksInParallel(
 
     // Generate metafile JSON fragments for each chunk (after paths are resolved)
     if (c.options.metafile) {
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*chunk| {
             chunk.metafile_chunk_json = LinkerContext.MetafileBuilder.generateChunkJson(
@@ -450,7 +432,6 @@ pub fn generateChunksInParallel(
         standalone_chunk_contents = scc;
 
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk_item, ci| {
             if (chunk_item.content == .html) continue;
             var ds: usize = 0;
@@ -482,7 +463,6 @@ pub fn generateChunksInParallel(
     } else {
         // In-memory build (also used for standalone mode)
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (chunks, 0..) |*chunk, chunk_index_in_chunks_list| {
             // In standalone mode, non-HTML chunks were already resolved in the first pass.
             // Insert a placeholder output file to keep chunk indices aligned.
@@ -659,7 +639,8 @@ pub fn generateChunksInParallel(
                             const source_provider_url_str = source_provider_url.toSlice(bun.default_allocator);
                             defer source_provider_url_str.deinit();
                             debug("Bytecode cache generated {s}: {f}", .{ source_provider_url_str.slice(), bun.fmt.size(bytecode.len, .{ .space_between_number_and_unit = true }) });
-                            safe.SimdUtils.copy(fdpath[0..chunk.final_rel_path.len], chunk.final_rel_path);
+// safe-transpile: @memcpy requires manual review
+                            @memcpy(fdpath[0..chunk.final_rel_path.len], chunk.final_rel_path);
                             fdpath[chunk.final_rel_path.len..][0..bun.bytecode_extension.len].* = bun.bytecode_extension.*;
 
                             break :brk options.OutputFile.init(.{
@@ -670,9 +651,7 @@ pub fn generateChunksInParallel(
                                 .output_kind = .bytecode,
                                 .loader = .file,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .size = @as(u32, @truncate(bytecode.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .display_size = @as(u32, @truncate(bytecode.len)),
                                 .data = .{
@@ -714,9 +693,7 @@ pub fn generateChunksInParallel(
                                 .output_kind = .module_info,
                                 .loader = .file,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .size = @as(u32, @truncate(module_info_bytes.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 .display_size = @as(u32, @truncate(module_info_bytes.len)),
                                 .data = .{
@@ -765,7 +742,6 @@ pub fn generateChunksInParallel(
                 .loader = chunk.content.loader(),
                 .input_path = input_path,
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .display_size = @as(u32, @truncate(display_size)),
                 .output_kind = output_kind,
                 .input_loader = if (chunk.entry_point.is_entry_point) c.parse_graph.input_files.items(.loader)[chunk.entry_point.source_index] else .js,
@@ -780,7 +756,6 @@ pub fn generateChunksInParallel(
                 else
                     null,
                 .referenced_css_chunks = switch (chunk.content) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     .javascript => |js| @ptrCast(try bun.default_allocator.dupe(u32, js.css_chunks)),
                     .css => &.{},
@@ -815,7 +790,6 @@ pub fn generateChunksInParallel(
         // Deinit dropped items to free their heap allocations (paths, buffers).
         var result = output_files.take();
         var write_idx: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (result.items) |*item| {
             if (item.loader == .html) {

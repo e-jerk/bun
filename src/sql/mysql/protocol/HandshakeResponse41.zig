@@ -52,7 +52,6 @@ pub fn writeInternal(this: *HandshakeResponse41, comptime Context: type, writer:
         try writer.writeLengthEncodedString(auth_data);
     } else if (this.capability_flags.CLIENT_SECURE_CONNECTION) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try writer.int1(@intCast(auth_data.len));
         try writer.write(auth_data);
     } else {

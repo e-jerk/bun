@@ -9,6 +9,7 @@
 // ZSTDLIB_API size_t ZSTD_compress( void* dst, size_t dstCapacity,
 //                             const void* src, size_t srcSize,
 //                                   int compressionLevel);
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn compress(dest: []u8, src: []const u8, level: ?i32) Result {
     const result = c.ZSTD_compress(dest.ptr, dest.len, src.ptr, src.len, level orelse c.ZSTD_defaultCLevel());
     if (c.ZSTD_isError(result) != 0) return .{ .err = bun.sliceTo(c.ZSTD_getErrorName(result), 0) };
@@ -27,6 +28,7 @@ pub fn compressBound(srcSize: usize) usize {
 ///           or an errorCode if it fails (which can be tested using ZSTD_isError()). */
 // ZSTDLIB_API size_t ZSTD_decompress( void* dst, size_t dstCapacity,
 //   const void* src, size_t compressedSize);
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decompress(dest: []u8, src: []const u8) Result {
     const result = c.ZSTD_decompress(dest.ptr, dest.len, src.ptr, src.len);
     if (c.ZSTD_isError(result) != 0) return .{ .err = bun.sliceTo(c.ZSTD_getErrorName(result), 0) };
@@ -37,6 +39,7 @@ pub fn decompress(dest: []u8, src: []const u8) Result {
 /// Returns owned slice that must be freed by the caller.
 /// Handles both frames with known and unknown content sizes.
 /// For safety, if the reported decompressed size exceeds 16MB, streaming decompression is used instead.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn decompressAlloc(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
     const size = getDecompressedSize(src);
 
@@ -75,6 +78,7 @@ pub fn decompressAlloc(allocator: std.mem.Allocator, src: []const u8) ![]u8 {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn getDecompressedSize(src: []const u8) usize {
     return ZSTD_findDecompressedSize(src.ptr, src.len);
 }
@@ -127,6 +131,7 @@ pub const ZstdReaderArrayList = struct {
 
     pub const new = bun.TrivialNew(ZstdReaderArrayList);
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),
@@ -135,14 +140,15 @@ pub const ZstdReaderArrayList = struct {
         return initWithListAllocator(input, list, allocator, allocator);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithListAllocator(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),
         list_allocator: std.mem.Allocator,
         allocator: std.mem.Allocator,
     ) !*ZstdReaderArrayList {
-        var reader = try allocator.create(ZstdReaderArrayList);
-        reader.* = .{
+        var reader = try zust.Box(ZstdReaderArrayList).init(allocator, undefined);
+        reader.ptr.* = .{
             .input = input,
             .list = list.*,
             .list_allocator = list_allocator,
@@ -151,12 +157,12 @@ pub const ZstdReaderArrayList = struct {
             .zstd = undefined,
         };
 
-        reader.zstd = c.ZSTD_createDStream() orelse {
-            allocator.destroy(reader);
+        reader.ptr.zstd = c.ZSTD_createDStream() orelse {
+            _ = reader.deinit();
             return error.ZstdFailedToCreateInstance;
         };
-        _ = c.ZSTD_initDStream(reader.zstd);
-        return reader;
+        _ = c.ZSTD_initDStream(reader.ptr.zstd);
+        return reader.ptr;
     }
 
     pub fn end(this: *ZstdReaderArrayList) void {

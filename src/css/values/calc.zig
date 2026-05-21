@@ -310,6 +310,7 @@ pub fn Calc(comptime V: type) type {
         // use temp allocator or something?
         pub fn parse(input: *css.Parser) Result(This) {
             const Fn = struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn parseWithFn(_: void, _: []const u8) ?This {
                     return null;
                 }
@@ -433,6 +434,7 @@ pub fn Calc(comptime V: type) type {
                             return .{ .result = .{ min, center, max } };
                         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                         pub fn parseIdentWrapper(self: *@This(), ident: []const u8) ?This {
                             return parseIdent(self.ctx, ident);
                         }
@@ -1106,6 +1108,7 @@ pub fn Calc(comptime V: type) type {
                     }
                 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn parseIdentFn(this: *@This(), ident: []const u8) ?Calc(Angle) {
                     const v = parse_ident(this.ctx, ident) orelse return null;
                     if (v == .number) return .{ .number = v.number };
@@ -1121,6 +1124,7 @@ pub fn Calc(comptime V: type) type {
 
         pub fn ParseIdentNone(comptime Ctx: type, comptime Value: type) type {
             return struct {
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn func(_: Ctx, _: []const u8) ?Calc(Value) {
                     return null;
                 }
@@ -1156,6 +1160,7 @@ pub fn Calc(comptime V: type) type {
             const Closure = struct {
                 ctx: @TypeOf(ctx),
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn parseIdentFn(self: *@This(), ident: []const u8) ?Calc(CSSNumber) {
                     const v = parse_ident(self.ctx, ident) orelse return null;
                     if (v == .number) return .{ .number = v.number };
@@ -1221,6 +1226,7 @@ pub fn Calc(comptime V: type) type {
             const Closure = struct {
                 ctx: @TypeOf(ctx),
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn parseIdentFn(self: *@This(), ident: []const u8) ?Calc(CSSNumber) {
                     const v = parse_ident(self.ctx, ident) orelse return null;
                     if (v == .number) return .{ .number = v.number };
@@ -1262,6 +1268,7 @@ pub fn Calc(comptime V: type) type {
             i += 1;
             var errored: bool = false;
             var sum: This = first;
+// safe-transpile: for loop with pointer capture requires manual review
             for (args.items[i..]) |*arg| {
                 const Fn = struct {
                     pub fn applyOpFn(_: void, a: f32, b: f32) f32 {
@@ -1455,10 +1462,12 @@ pub fn Calc(comptime V: type) type {
             // e.g. min(1px, 1em, 2px, 3in) => min(1px, 1em)
             var reduced = ArrayList(This).empty;
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (args.items) |*arg| {
                 var found: ??*This = null;
                 switch (arg.*) {
                     .value => |val| {
+// safe-transpile: for loop with pointer capture requires manual review
                         for (reduced.items) |*b| {
                             switch (b.*) {
                                 .value => |v| {
@@ -1648,6 +1657,7 @@ pub fn MathFunction(comptime V: type) type {
                 .min => |*args| {
                     try dest.writeStr("min(");
                     var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*arg| {
                         if (first) {
                             first = false;
@@ -1661,6 +1671,7 @@ pub fn MathFunction(comptime V: type) type {
                 .max => |*args| {
                     try dest.writeStr("max(");
                     var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*arg| {
                         if (first) {
                             first = false;
@@ -1718,6 +1729,7 @@ pub fn MathFunction(comptime V: type) type {
                 .hypot => |*args| {
                     try dest.writeStr("hypot(");
                     var first = true;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (args.items) |*arg| {
                         if (first) {
                             first = false;
@@ -1736,6 +1748,7 @@ pub fn MathFunction(comptime V: type) type {
             return switch (this.*) {
                 .calc => |*c| F.isCompatible(F.calc_function, browsers) and c.isCompatible(browsers),
                 .min => |*m| F.isCompatible(F.min_function, browsers) and brk: {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (m.items) |*arg| {
                         if (!arg.isCompatible(browsers)) {
                             break :brk false;
@@ -1744,6 +1757,7 @@ pub fn MathFunction(comptime V: type) type {
                     break :brk true;
                 },
                 .max => |*m| F.isCompatible(F.max_function, browsers) and brk: {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (m.items) |*arg| {
                         if (!arg.isCompatible(browsers)) {
                             break :brk false;
@@ -1769,6 +1783,7 @@ pub fn MathFunction(comptime V: type) type {
                 .sign => |*s| F.isCompatible(F.sign_function, browsers) and
                     s.isCompatible(browsers),
                 .hypot => |*h| F.isCompatible(F.hypot_function, browsers) and brk: {
+// safe-transpile: for loop with pointer capture requires manual review
                     for (h.items) |*arg| {
                         if (!arg.isCompatible(browsers)) {
                             break :brk false;
@@ -1793,6 +1808,7 @@ pub const RoundingStrategy = enum {
     /// Round toward zero (truncate).
     @"to-zero",
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -1854,6 +1870,7 @@ pub const Constant = enum {
     /// Not a number.
     nan,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }

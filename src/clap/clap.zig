@@ -16,13 +16,12 @@ pub const Names = struct {
 
     /// Check if the given name matches the primary long name or any alias
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesLong(self: Names, name: []const u8) bool {
         if (self.long) |l| {
-            if (safe.SimdUtils.eql(name, l)) return true;
+            if (mem.eql(u8, name, l)) return true;
         }
         for (self.long_aliases) |alias| {
-            if (safe.SimdUtils.eql(name, alias)) return true;
+            if (mem.eql(u8, name, alias)) return true;
         }
         return false;
     }
@@ -68,7 +67,6 @@ pub fn Param(comptime Id: type) type {
 /// Takes a string and parses it to a Param(Help).
 /// This is the reverse of 'help' but for at single parameter only.
 /// Supports multiple long name variants separated by '/' (e.g., "--test-name-pattern/--grep").
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseParam(line: []const u8) !Param(Help) {
     @setEvalBranchQuota(999999);
@@ -118,7 +116,6 @@ pub fn parseParam(line: []const u8) !Param(Help) {
     return res;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn parseLongNames(comptime param_str: []const u8) Names {
     comptime {
@@ -171,7 +168,6 @@ fn parseLongNames(comptime param_str: []const u8) Names {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn parseParamRest(line: []const u8) Param(Help) {
     if (mem.startsWith(u8, line, "<")) blk: {
@@ -286,7 +282,8 @@ pub const Diagnostic = struct {
             name_buf[0] = '-';
             name_buf[1] = '-';
             const long = l[0..@min(l.len, name_buf.len - 2)];
-            safe.SimdUtils.copy(name_buf[2..][0..long.len], long);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(name_buf[2..][0..long.len], long);
             break :long name_buf[0 .. 2 + long.len];
         } else diag.arg;
 
@@ -309,7 +306,6 @@ pub const Diagnostic = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn testDiag(diag: Diagnostic, err: anyerror, expected: []const u8) void {
     var buf: [1024]u8 = undefined;
     var slice_stream = io.fixedBufferStream(&buf);
@@ -328,18 +324,15 @@ pub fn Args(comptime Id: type, comptime params: []const Param(Id)) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn flag(a: @This(), comptime name: []const u8) bool {
             return a.clap.flag(name);
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn option(a: @This(), comptime name: []const u8) ?[]const u8 {
             return a.clap.option(name);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn options(a: @This(), comptime name: []const u8) []const []const u8 {
             return a.clap.options(name);
@@ -353,7 +346,6 @@ pub fn Args(comptime Id: type, comptime params: []const Param(Id)) type {
             return a.clap.remaining();
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hasFlag(comptime name: []const u8) bool {
             return ComptimeClap(Id, params).hasFlag(name);
@@ -430,7 +422,6 @@ pub fn helpFull(
             try printParam(cs.writer(), Id, param, Error, context, valueText);
             if (res < cs.bytes_written)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 res = @as(usize, @intCast(cs.bytes_written));
         }
 
@@ -447,7 +438,6 @@ pub fn helpFull(
             var cs = io.countingWriter(stream);
             try stream.print("\t", .{});
             try printParam(cs.writer(), Id, param, Error, context, valueText);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try stream.splatByteAll(' ', max_spacing - @as(usize, @intCast(cs.bytes_written)));
             try stream.print("\t{s}\n", .{try helpText(context, param)});
@@ -640,12 +630,10 @@ pub fn help(stream: anytype, params: []const Param(Help)) !void {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 fn getHelpSimple(param: Param(Help)) []const u8 {
     return param.id.msg;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 fn getValueSimple(param: Param(Help)) []const u8 {
     return param.id.value;
@@ -687,7 +675,6 @@ pub fn usageFull(
 
         // Seems the zig compiler is being a little wierd. I doesn't allow me to write
         // @as(*const [1]u8, s)                  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const name = if (param.names.short) |*s| @as([*]const u8, @ptrCast(s))[0..1] else param.names.long orelse {
             positional = param;
@@ -745,7 +732,6 @@ pub fn usage(stream: anytype, params: []const Param(Help)) !void {
     try usageEx(stream, Help, params, getValueSimple);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn testUsage(expected: []const u8, params: []const Param(Help)) !void {
     var buf: [1024]u8 = undefined;

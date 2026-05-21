@@ -291,9 +291,11 @@ pub fn doRotate(this: *Image, global: *jsc.JSGlobalObject, callframe: *jsc.CallF
     // coerceInt for the same NaN/Inf/huge-finite reasons as everywhere else;
     // ±1e15 is plenty of headroom for "any multiple of 90 a user might pass".
     const raw: i64 = coerceInt(i64, args[0].asNumber(), -1e15, 1e15);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const deg: u32 = @intCast(@mod(@mod(raw, 360) + 360, 360));
     if (deg != 0 and deg != 90 and deg != 180 and deg != 270)
         return global.throwInvalidArguments("rotate: only multiples of 90 are supported", .{});
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     this.pipeline.rotate = @intCast(deg);
     return callframe.this();
 }
@@ -540,7 +542,9 @@ pub fn doMetadata(this: *Image, global: *jsc.JSGlobalObject, callframe: *jsc.Cal
                 const t = exif.readJpeg(buf).transform();
                 if (t.rotate == 90 or t.rotate == 270) std.mem.swap(u32, &w, &h);
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.last_width = @intCast(w);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.last_height = @intCast(h);
             const obj = jsc.JSValue.createEmptyObject(global, 3);
             obj.put(global, jsc.ZigString.static("width"), jsc.JSValue.jsNumber(w));
@@ -711,7 +715,9 @@ pub fn encodeForBody(this: *Image, global: *jsc.JSGlobalObject, this_value: jsc.
     task.run();
     return switch (task.result) {
         .encoded => |e| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.last_width = @intCast(e.w);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.last_height = @intCast(e.h);
             return .{ .bytes = e.out, .mime = e.format.mime() };
         },
@@ -847,6 +853,7 @@ pub const PipelineTask = struct {
         /// Our own dupe of a FastTypedArray's bytes — freed in `then()`.
         copied: ?[]u8 = null,
 
+// safe-transpile: function returns small constant slice — consider zust.String
         fn slice(self: @This()) []const u8 {
             return self.copied orelse self.bytes;
         }
@@ -930,10 +937,12 @@ pub const PipelineTask = struct {
                     return;
                 },
             };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (!bun.S.ISREG(@intCast(st.mode))) {
                 this.result = .{ .io_err = .{ .errno = @intFromEnum(bun.sys.E.NODEV), .syscall = .read, .path = p } };
                 return;
             }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (@as(u64, @intCast(@max(st.size, 0))) > max_input_file_bytes) {
                 this.result = .{ .err = error.TooManyPixels };
                 return;
@@ -1059,6 +1068,7 @@ pub const PipelineTask = struct {
     /// `box` (the only filter that's correct for "average everything in a
     /// cell" — Lanczos would ring into the DCT). The hash itself stays on
     /// the worker stack; only the rendered PNG crosses back.
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn makePlaceholder(rgba: []const u8, sw: u32, sh: u32) codecs.Error!Result {
         const max_in: u32 = 100;
         var w = sw;
@@ -1099,7 +1109,9 @@ pub const PipelineTask = struct {
         // so writing `this.image.*` there would race the synchronous getters.
         switch (this.result) {
             inline .encoded, .meta => |r| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.image.last_width = @intCast(r.w);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.image.last_height = @intCast(r.h);
             },
             else => {},
@@ -1135,6 +1147,7 @@ pub const PipelineTask = struct {
                         "";
                     const buf = bun.handleOom(bun.default_allocator.alloc(u8, pre.len + bun.base64.encodeLen(enc.out.bytes)));
                     defer bun.default_allocator.free(buf);
+// safe-transpile: @memcpy requires manual review
                     @memcpy(buf[0..pre.len], pre);
                     const wrote = pre.len + bun.base64.encode(buf[pre.len..], enc.out.bytes);
                     const str = bun.String.createUTF8ForJS(global, buf[0..wrote]) catch
@@ -1231,6 +1244,7 @@ pub const PipelineTask = struct {
         // quotient can exceed u32 for tall-thin sources (1×5M with .resize(1k)
         // → 5e9), so clamp to the same per-side cap doResize uses before the
         // @intCast. The maxPixels guard then rejects the product.
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var h: u32 = if (r.h != 0) r.h else @intCast(@min(@as(u64, 0x3FFFF), @max(1, @as(u64, r.w) * sh / sw)));
         if (r.fit == .inside) {
             // Shrink the box so the source's aspect ratio is preserved and

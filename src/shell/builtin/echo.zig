@@ -63,7 +63,6 @@ pub fn start(this: *Echo) Yield {
 
     // TODO: Should flush buffer after it gets to a certain size
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (args, 0..) |arg, i| {
         if (stop_output) break;
         const thearg = std.mem.span(arg);
@@ -100,7 +99,6 @@ pub fn start(this: *Echo) Yield {
 
 /// Appends `input` to `output`, interpreting backslash escape sequences.
 /// Returns true if a \c escape was encountered (meaning stop all output).
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn appendWithEscapes(output: *std.array_list.Managed(u8), input: []const u8) bool {
     var i: usize = 0;
@@ -224,7 +222,6 @@ pub fn deinit(this: *Echo) void {
 }
 
 pub inline fn bltn(this: *Echo) *Builtin {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("echo", this));
     return @fieldParentPtr("impl", impl);

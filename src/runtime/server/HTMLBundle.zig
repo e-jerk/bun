@@ -17,6 +17,7 @@ global: *JSGlobalObject,
 path: []const u8,
 
 /// Initialize an HTMLBundle given a path.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(global: *JSGlobalObject, path: []const u8) !*HTMLBundle {
     return bun.new(HTMLBundle, .{
         .ref_count = .init(),
@@ -281,8 +282,10 @@ pub const Route = struct {
             bun.assert(define.keys.len == define.values.len);
             try config.define.map.ensureUnusedCapacity(define.keys.len);
             config.define.map.unmanaged.entries.len = define.keys.len;
+// safe-transpile: @memcpy requires manual review
             @memcpy(config.define.map.keys(), define.keys);
-            for (config.define.map.values(), define.values) |*to, from| {
+            // safe-transpile: for with index access requires manual review
+    for (config.define.map.values(), define.values) |*to, from| {
                 to.* = bun.handleOom(config.define.map.allocator.dupe(u8, from));
             }
             try config.define.map.reIndex();
@@ -357,6 +360,7 @@ pub const Route = struct {
 
                     bun.Output.printElapsed(duration_f64);
                     var byte_length: u64 = 0;
+// safe-transpile: for loop with pointer capture requires manual review
                     for (output_files) |*output_file| {
                         byte_length += output_file.size_without_sourcemap;
                     }
@@ -368,6 +372,7 @@ pub const Route = struct {
                 var this_html_route: ?*StaticRoute = null;
 
                 // Create static routes for each output file
+// safe-transpile: for loop with pointer capture requires manual review
                 for (output_files) |*output_file| {
                     const blob = jsc.WebCore.Blob.Any{ .Blob = bun.handleOom(output_file.toBlob(bun.default_allocator, globalThis)) };
                     var headers = bun.http.Headers{ .allocator = bun.default_allocator };

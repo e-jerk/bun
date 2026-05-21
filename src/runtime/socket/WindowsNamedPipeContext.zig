@@ -49,7 +49,6 @@ fn onOpen(this: *WindowsNamedPipeContext) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData(this: *WindowsNamedPipeContext, decoded_data: []const u8) void {
     switch (this.socket) {
         .tls => |tls| {
@@ -192,33 +191,23 @@ pub fn create(globalThis: *jsc.JSGlobalObject, socket: SocketType) *WindowsNamed
     this.named_pipe = uws.WindowsNamedPipe.from(bun.new(uv.Pipe, std.mem.zeroes(uv.Pipe)), .{
         .ctx = this,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .ref_ctx = @ptrCast(&WindowsNamedPipeContext.ref),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .deref_ctx = @ptrCast(&WindowsNamedPipeContext.deref),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onOpen = @ptrCast(&WindowsNamedPipeContext.onOpen),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onData = @ptrCast(&WindowsNamedPipeContext.onData),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onHandshake = @ptrCast(&WindowsNamedPipeContext.onHandshake),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onEnd = @ptrCast(&WindowsNamedPipeContext.onEnd),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onWritable = @ptrCast(&WindowsNamedPipeContext.onWritable),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onError = @ptrCast(&WindowsNamedPipeContext.onError),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onTimeout = @ptrCast(&WindowsNamedPipeContext.onTimeout),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onClose = @ptrCast(&WindowsNamedPipeContext.onClose),
     }, vm);
@@ -257,14 +246,13 @@ pub fn open(globalThis: *jsc.JSGlobalObject, fd: bun.FD, ssl_config: ?jsc.API.Se
             },
             .none => {},
         }
-        this.ptr.deref();
+        this.deref();
     }
-    try this.ptr.named_pipe.open(fd, ssl_config, owned_ctx).unwrap();
-    return &this.ptr.named_pipe;
+    try this.named_pipe.open(fd, ssl_config, owned_ctx).unwrap();
+    return &this.named_pipe;
 }
 
 /// See `open` for `owned_ctx` ownership.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn connect(globalThis: *jsc.JSGlobalObject, path: []const u8, ssl_config: ?jsc.API.ServerConfig.SSLConfig, owned_ctx: ?*BoringSSL.SSL_CTX, socket: SocketType) !*uws.WindowsNamedPipe {
     // TODO: reuse the same context for multiple connections when possibles
@@ -280,24 +268,25 @@ pub fn connect(globalThis: *jsc.JSGlobalObject, path: []const u8, ssl_config: ?j
             },
             .none => {},
         }
-        this.ptr.deref();
+        this.deref();
     }
 
     if (path[path.len - 1] == 0) {
         // is already null terminated
         const slice_z = path[0 .. path.len - 1 :0];
-        try this.ptr.named_pipe.connect(slice_z, ssl_config, owned_ctx).unwrap();
+        try this.named_pipe.connect(slice_z, ssl_config, owned_ctx).unwrap();
     } else {
         var path_buf: bun.PathBuffer = undefined;
         // we need to null terminate the path
         const len = @min(path.len, path_buf.len - 1);
 
-        safe.SimdUtils.copy(path_buf[0..len], path[0..len]);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(path_buf[0..len], path[0..len]);
         path_buf[len] = 0;
         const slice_z = path_buf[0..len :0];
-        try this.ptr.named_pipe.connect(slice_z, ssl_config, owned_ctx).unwrap();
+        try this.named_pipe.connect(slice_z, ssl_config, owned_ctx).unwrap();
     }
-    return &this.ptr.named_pipe;
+    return &this.named_pipe;
 }
 
 pub fn deinit(this: *WindowsNamedPipeContext) void {

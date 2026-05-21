@@ -170,7 +170,6 @@ pub const Repository = extern struct {
         var hash: usize = 0;
         var slash: usize = 0;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (remain, 0..) |c, i| {
             switch (c) {
                 '/' => slash = i,
@@ -193,7 +192,6 @@ pub const Repository = extern struct {
         return result;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn createDependencyNameFromVersionLiteral(
         allocator: std.mem.Allocator,
@@ -236,7 +234,6 @@ pub const Repository = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn order(lhs: *const Repository, rhs: *const Repository, lhs_buf: []const u8, rhs_buf: []const u8) std.math.Order {
         const owner_order = lhs.owner.order(&rhs.owner, lhs_buf, rhs_buf);
         if (owner_order != .eq) return owner_order;
@@ -247,7 +244,6 @@ pub const Repository = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn count(this: *const Repository, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) void {
         builder.count(this.owner.slice(buf));
         builder.count(this.repo.slice(buf));
@@ -256,7 +252,6 @@ pub const Repository = extern struct {
         builder.count(this.package_name.slice(buf));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(this: *const Repository, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) Repository {
         return .{
@@ -269,7 +264,6 @@ pub const Repository = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(lhs: *const Repository, rhs: *const Repository, lhs_buf: []const u8, rhs_buf: []const u8) bool {
         if (!lhs.owner.eql(rhs.owner, lhs_buf, rhs_buf)) return false;
         if (!lhs.repo.eql(rhs.repo, lhs_buf, rhs_buf)) return false;
@@ -277,7 +271,6 @@ pub const Repository = extern struct {
         return lhs.resolved.eql(rhs.resolved, lhs_buf, rhs_buf);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn formatAs(this: *const Repository, label: string, buf: []const u8, writer: *std.Io.Writer) std.Io.Writer.Error!void {
         const formatter = Formatter{ .label = label, .repository = this, .buf = buf };
@@ -325,7 +318,6 @@ pub const Repository = extern struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmt(this: *const Repository, label: string, buf: []const u8) Formatter {
         return .{

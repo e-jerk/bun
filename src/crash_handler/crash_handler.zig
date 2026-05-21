@@ -115,6 +115,7 @@ pub const Action = union(enum) {
         part_range: *const bun.bundle_v2.PartRange,
 
         pub fn linkerContext(data: *const @This()) *const bun.bundle_v2.LinkerContext {
+// safe-transpile: @alignCast requires manual review
             return @ptrCast(@alignCast(data.context));
         }
     } else void,
@@ -169,13 +170,16 @@ fn captureLibcBacktrace(begin_addr: usize, stack_trace: *std.builtin.StackTrace)
     }.backtrace;
 
     const addrs = stack_trace.instruction_addresses;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const count = backtrace(@ptrCast(addrs), @intCast(addrs.len));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     stack_trace.index = @intCast(count);
 
     // Skip frames until we find begin_addr (or close to it)
     // backtrace() captures everything including crash handler frames
     const tolerance: usize = 128;
-    const skip: usize = for (addrs[0..stack_trace.index], 0..) |addr, i| {
+    const skip: usize = // safe-transpile: for with index access requires manual review
+    for (addrs[0..stack_trace.index], 0..) |addr, i| {
         // Check if this address is close to begin_addr (within tolerance)
         const delta = if (addr >= begin_addr)
             addr - begin_addr
@@ -815,6 +819,7 @@ pub fn handleRootError(err: anyerror, error_return_trace: ?*std.builtin.StackTra
     Global.exit(1);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn panicImpl(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, begin_addr: ?usize) noreturn {
     @branchHint(.cold);
     crashHandler(
@@ -827,12 +832,14 @@ pub fn panicImpl(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, 
     );
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn panicBuiltin(msg: []const u8, error_return_trace: ?*std.builtin.StackTrace, begin_addr: ?usize) noreturn {
     std.debug.panicImpl(error_return_trace, begin_addr, msg);
 }
 
 pub const panic = if (enable) panicImpl else panicBuiltin;
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn reportBaseUrl() []const u8 {
     const static = struct {
         var base_url: ?[]const u8 = null;
@@ -1034,7 +1041,8 @@ pub fn printMetadata(writer: anytype) !void {
 
         try writer.print("Args: ", .{});
         var arg_chars_left: usize = if (bun.Environment.isDebug) 4096 else 196;
-        for (bun.argv, 0..) |arg, i| {
+        // safe-transpile: for with index access requires manual review
+    for (bun.argv, 0..) |arg, i| {
             if (i != 0) try writer.writeAll(" ");
             try bun.fmt.quotedWriter(writer, arg[0..@min(arg.len, arg_chars_left)]);
             arg_chars_left -|= arg.len;
@@ -1175,6 +1183,7 @@ const StackLine = struct {
     object: ?[]const u8,
 
     /// `null` implies the trace is not known.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromAddress(addr: usize, name_bytes: []u8) ?StackLine {
         return switch (bun.Environment.os) {
             .windows => {
@@ -1191,6 +1200,7 @@ const StackLine = struct {
 
                 return .{
                     // To remap this, `pdb-addr2line --exe bun.pdb 0x123456`
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .address = @intCast(addr - base_address),
 
                     .object = if (!std.mem.eql(u16, name, image_path)) name: {
@@ -1234,6 +1244,7 @@ const StackLine = struct {
                             const seg_end = seg_start + segment_cmd.vmsize;
                             if (original_address >= seg_start and original_address < seg_end) {
                                 // Subtract ASLR value for stable address
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 const stable_address: usize = @intCast(address - vmaddr_slide);
 
                                 if (i == 0) {
@@ -1248,6 +1259,7 @@ const StackLine = struct {
                                     // fit it within a signed 32-bit integer. The VLQs will be shorter too.
                                     return .{
                                         .object = null,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .address = @intCast(image_relative_address),
                                     };
                                 } else {
@@ -1282,6 +1294,7 @@ const StackLine = struct {
 
                         if (context.address < info.addr) return;
                         const phdrs = info.phdr[0..info.phnum];
+// safe-transpile: for loop with pointer capture requires manual review
                         for (phdrs) |*phdr| {
                             if (phdr.p_type != std.elf.PT_LOAD) continue;
 
@@ -1292,6 +1305,7 @@ const StackLine = struct {
                             if (context.address >= seg_start and context.address < seg_end) {
                                 // const name = bun.sliceTo(info.name, 0) orelse "";
                                 context.result = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     .address = @intCast(context.address - info.addr),
                                     .object = null,
                                 };
@@ -1314,6 +1328,7 @@ const StackLine = struct {
 
         if (known.object) |object| {
             try VLQ.encode(1).writeTo(writer);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try VLQ.encode(@intCast(object.len)).writeTo(writer);
             try writer.writeAll(object);
         }
@@ -1368,6 +1383,7 @@ fn encodeTraceString(opts: TraceString, writer: anytype) !void {
     try writer.writeAll(version_char ++ git_sha);
 
     const packed_features = bun.analytics.packedFeatures();
+// safe-transpile: @bitCast requires manual review
     try writeU64AsTwoVLQs(writer, @bitCast(packed_features));
 
     var name_bytes: [1024]u8 = undefined;
@@ -1386,8 +1402,10 @@ fn encodeTraceString(opts: TraceString, writer: anytype) !void {
 
             var compressed_bytes: [2048]u8 = undefined;
             var len: bun.zlib.uLong = compressed_bytes.len;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const ret: bun.zlib.ReturnCode = @enumFromInt(bun.zlib.compress2(&compressed_bytes, &len, message.ptr, @intCast(message.len), 9));
             const compressed = switch (ret) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .Ok => compressed_bytes[0..@intCast(len)],
                 // Insufficient memory.
                 .MemError => return error.OutOfMemory,
@@ -1445,7 +1463,9 @@ fn encodeTraceString(opts: TraceString, writer: anytype) !void {
 }
 
 pub fn writeU64AsTwoVLQs(writer: anytype, addr: usize) !void {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const first = VLQ.encode(@bitCast(@as(u32, @intCast((addr & 0xFFFFFFFF00000000) >> 32))));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const second = VLQ.encode(@bitCast(@as(u32, @intCast(addr & 0xFFFFFFFF))));
     try first.writeTo(writer);
     try second.writeTo(writer);
@@ -1491,6 +1511,7 @@ fn isReportingEnabled() bool {
 /// These URLs contain no source code or personally-identifiable
 /// information (PII). The stackframes point to Bun's open-source native code
 /// (not user code), and are safe to share publicly and with the Bun team.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn report(url: []const u8) void {
     if (!isReportingEnabled()) return;
 
@@ -1524,6 +1545,7 @@ fn report(url: []const u8) void {
             cmd_line.appendSliceAssumeCapacity(std.unicode.utf8ToUtf16LeStringLiteral("powershell -ExecutionPolicy Bypass -Command \"try{Invoke-RestMethod -Uri '"));
             {
                 const encoded = bun.strings.convertUTF8toUTF16InBuffer(cmd_line.unusedCapacitySlice(), url);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 cmd_line.len += @intCast(encoded.len);
             }
             cmd_line.appendSlice(std.unicode.utf8ToUtf16LeStringLiteral("/ack'|out-null}catch{}\"")) catch return;
@@ -1863,7 +1885,8 @@ pub const StoredTrace = struct {
         var frame = stored.trace();
         @import("std-fs-compat").captureStackTrace(begin orelse @returnAddress(), &frame);
         stored.index = frame.index;
-        for (frame.instruction_addresses[0..frame.index], 0..) |addr, i| {
+        // safe-transpile: for with index access requires manual review
+    for (frame.instruction_addresses[0..frame.index], 0..) |addr, i| {
             if (addr == 0) {
                 stored.index = i;
                 break;
@@ -1877,6 +1900,7 @@ pub const StoredTrace = struct {
             var data: [31]usize = undefined;
             @memset(&data, 0);
             const items = @min(stack.instruction_addresses.len, 31);
+// safe-transpile: @memcpy requires manual review
             @memcpy(data[0..items], stack.instruction_addresses[0..items]);
             return .{
                 .data = data,
@@ -1899,6 +1923,7 @@ const OnBeforeCrash = fn (opaque_ptr: *anyopaque) void;
 pub fn appendPreCrashHandler(comptime T: type, ptr: *T, comptime handler: fn (*T) anyerror!void) !void {
     const wrap = struct {
         fn onCrash(opaque_ptr: *anyopaque) void {
+// safe-transpile: @alignCast requires manual review
             handler(@ptrCast(@alignCast(opaque_ptr))) catch |err| {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
             };
@@ -1913,7 +1938,8 @@ pub fn appendPreCrashHandler(comptime T: type, ptr: *T, comptime handler: fn (*T
 pub fn removePreCrashHandler(ptr: *anyopaque) void {
     before_crash_handlers_mutex.lock();
     defer before_crash_handlers_mutex.unlock();
-    const index = for (before_crash_handlers.items, 0..) |item, i| {
+    const index = // safe-transpile: for with index access requires manual review
+    for (before_crash_handlers.items, 0..) |item, i| {
         if (item.@"0" == ptr) break i;
     } else return;
     _ = before_crash_handlers.orderedRemove(index);
@@ -2030,6 +2056,7 @@ pub fn getSourceAtAddress(debug_info: *debug.SelfInfo, address: usize) !?SourceA
 }
 
 /// Clone of `debug.printLineInfo` as it is private.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn printLineInfo(
     out_stream: *std.Io.Writer,
     source_location: ?SourceLocation,
@@ -2075,6 +2102,7 @@ fn printLineInfo(
             if (printLineFromFileAnyOs(out_stream, tty_config, sl)) {
                 if (sl.column > 0 and tty_config == .no_color) {
                     // The caret already takes one char
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const space_needed = @as(usize, @intCast(sl.column - 1));
                     try out_stream.splatByteAll(' ', space_needed);
                     try out_stream.writeAll("^\n");

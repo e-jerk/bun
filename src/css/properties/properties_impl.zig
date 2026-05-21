@@ -39,6 +39,7 @@ pub const property_id_mixin = struct {
         return .{ .result = fromString(name) };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromString(name_: []const u8) PropertyId {
         const name_ref = name_;
         var prefix: VendorPrefix = undefined;

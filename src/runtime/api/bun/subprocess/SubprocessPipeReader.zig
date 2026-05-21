@@ -120,7 +120,6 @@ pub fn kind(reader: *const PipeReader, process: *const Subprocess) StdioKind {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn toOwnedSlice(this: *PipeReader) []u8 {
     if (this.state == .done) {
         return this.state.done;

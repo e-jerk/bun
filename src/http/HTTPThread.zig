@@ -84,7 +84,6 @@ pub const RequestBodyBuffer = union(enum) {
     }
 
 // safe-transpile: function returns small constant slice — consider zust.String
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn allocatedSlice(this: *@This()) []u8 {
         return switch (this.*) {
             .heap => |heap| &heap.buffer,
@@ -238,7 +237,6 @@ pub fn onStart(opts: InitOpts) void {
     // math at each call site.
     const raw: u64 = @min(bun.env_var.BUN_CONFIG_HTTP_IDLE_TIMEOUT.get(), 239 * 60);
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     bun.http.idle_timeout_seconds = @intCast(if (raw > 240) ((raw + 59) / 60) * 60 else raw);
 
     const loop = bun.jsc.MiniEventLoop.initGlobal(null, null);
@@ -361,7 +359,6 @@ fn evictOldestSslContext() void {
     if (custom_ssl_context_map.count() == 0) return;
     var oldest_idx: usize = 0;
     var oldest_time: u64 = std.math.maxInt(u64);
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (custom_ssl_context_map.values(), 0..) |entry, i| {
         if (entry.last_used_ns < oldest_time) {
@@ -637,7 +634,6 @@ fn processEvents(this: *@This()) noreturn {
         this.drainEvents();
         if (comptime Environment.isDebug and bun.asan.enabled) {
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (bun.http.socket_async_http_abort_tracker.keys(), bun.http.socket_async_http_abort_tracker.values()) |http_id, socket| {
                 if (socket.socket().get()) |usocket| {
                     _ = http_id;
@@ -658,7 +654,6 @@ fn processEvents(this: *@This()) noreturn {
 
         if (comptime Environment.isDebug and bun.asan.enabled) {
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (bun.http.socket_async_http_abort_tracker.keys(), bun.http.socket_async_http_abort_tracker.values()) |http_id, socket| {
                 if (socket.socket().get()) |usocket| {
                     _ = http_id;
@@ -670,7 +665,6 @@ fn processEvents(this: *@This()) noreturn {
         // this.loop.run();
         if (comptime Environment.isDebug) {
             const end = @import("std-fs-compat").nanoTimestamp();
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             threadlog("Waited {d}\n", .{@as(i64, @truncate(end - start_time))});
             Output.flush();

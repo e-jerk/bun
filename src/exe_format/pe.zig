@@ -149,13 +149,17 @@ pub const PEFile = struct {
     const BUN_SECTION_NAME = [_]u8{ '.', 'b', 'u', 'n', 0, 0, 0, 0 };
 
     // Safe access helpers for unaligned views
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn viewAtConst(comptime T: type, buf: []const u8, off: usize) !*align(1) const T {
         if (off + @sizeOf(T) > buf.len) return error.OutOfBounds;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(buf[off .. off + @sizeOf(T)].ptr);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn viewAtMut(comptime T: type, buf: []u8, off: usize) !*align(1) T {
         if (off + @sizeOf(T) > buf.len) return error.OutOfBounds;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(buf[off .. off + @sizeOf(T)].ptr);
     }
 
@@ -208,6 +212,7 @@ pub const PEFile = struct {
         const start = self.section_headers_offset;
         const size = @sizeOf(SectionHeader) * self.num_sections;
         if (start + size > self.data.items.len) return error.OutOfBounds;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const ptr: [*]align(1) const SectionHeader = @ptrCast(self.data.items[start..].ptr);
         return ptr[0..self.num_sections];
     }
@@ -216,17 +221,19 @@ pub const PEFile = struct {
         const start = self.section_headers_offset;
         const size = @sizeOf(SectionHeader) * self.num_sections;
         if (start + size > self.data.items.len) return error.OutOfBounds;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const ptr: [*]align(1) SectionHeader = @ptrCast(self.data.items[start..].ptr);
         return ptr[0..self.num_sections];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: Allocator, pe_data: []const u8) !*PEFile {
         // 1. Reserve capacity as before
         var data = try std.array_list.Managed(u8).initCapacity(allocator, pe_data.len + 64 * 1024);
         try data.appendSlice(pe_data);
 
-        const self = try allocator.create(PEFile);
-        errdefer allocator.destroy(self);
+        const self = try safe.Box(PEFile).init(allocator, undefined);
+        defer _ = self.deinit();
 
         // 2. Validate DOS header
         if (data.items.len < @sizeOf(DOSHeader)) {
@@ -291,11 +298,13 @@ pub const PEFile = struct {
         }
 
         // 7. Precompute first_raw, last_file_end, last_va_end
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var first_raw: u32 = @intCast(data.items.len);
         var last_file_end: u32 = 0;
         var last_va_end: u32 = 0;
 
         if (num_sections > 0) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const sections_ptr: [*]align(1) const SectionHeader = @ptrCast(data.items[section_headers_offset..].ptr);
             const sections = sections_ptr[0..num_sections];
 
@@ -318,7 +327,7 @@ pub const PEFile = struct {
             }
         }
 
-        self.* = .{
+        self.ptr.* = .{
             .data = data,
             .allocator = allocator,
             .dos_header_offset = 0,
@@ -331,7 +340,7 @@ pub const PEFile = struct {
             .last_va_end = last_va_end,
         };
 
-        return self;
+        return self.ptr;
     }
 
     pub fn deinit(self: *PEFile) void {
@@ -426,8 +435,10 @@ pub const PEFile = struct {
         // Final folds + add length
         sum = (sum & 0xffff) + (sum >> 16);
         sum = (sum & 0xffff) + (sum >> 16);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         sum += @as(u64, @intCast(data.len));
         sum = (sum & 0xffff) + (sum >> 16);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const final_sum: u32 = @intCast((sum & 0xffff) + (sum >> 16));
 
         const opt = try self.getOptionalHeaderMut();
@@ -435,6 +446,7 @@ pub const PEFile = struct {
     }
 
     /// Add a new section to the PE file for storing Bun module data
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addBunSection(self: *PEFile, data_to_embed: []const u8, strip: StripMode) !void {
         // 1. Optional strip (before any addition)
         if (strip == .strip_always) {
@@ -466,9 +478,11 @@ pub const PEFile = struct {
 
         // 4. Compute header slack requirement
         const new_headers_end = self.section_headers_offset + @sizeOf(SectionHeader) * (self.num_sections + 1);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const new_size_of_headers = try alignUpU32(@intCast(new_headers_end), opt.file_alignment);
 
         // Determine first_raw (min PointerToRawData among sections with raw data, else data.len)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var first_raw: u32 = @intCast(self.data.items.len);
         for (section_headers) |section| {
             if (section.size_of_raw_data > 0) {
@@ -504,6 +518,7 @@ pub const PEFile = struct {
         if (data_to_embed.len > std.math.maxInt(u32) - 8) {
             return error.Overflow;
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const payload_len = @as(u32, @intCast(data_to_embed.len + 8)); // 8 for LE length prefix
         const raw_size = try alignUpU32(payload_len, opt.file_alignment);
         const new_va = try alignUpU32(last_va_end, opt.section_alignment);
@@ -512,6 +527,7 @@ pub const PEFile = struct {
         // 6. Resize & zero only the new section area
         const new_file_size = @as(usize, new_raw) + @as(usize, raw_size);
         try self.data.resize(new_file_size);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @memset(self.data.items[@intCast(new_raw)..new_file_size], 0);
 
         // 7. Write the new SectionHeader by byte copy
@@ -537,7 +553,9 @@ pub const PEFile = struct {
 
         // 8. Write payload
         // At data[new_raw ..]: write u64 LE length prefix, then data
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         std.mem.writeInt(u64, self.data.items[new_raw..][0..8], @intCast(data_to_embed.len), .little);
+// safe-transpile: @memcpy requires manual review
         @memcpy(self.data.items[new_raw + 8 ..][0..data_to_embed.len], data_to_embed);
 
         // 9. Update headers
@@ -569,6 +587,7 @@ pub const PEFile = struct {
     }
 
     /// Find the .bun section and return its data
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getBunSectionData(self: *const PEFile) ![]const u8 {
         const section_headers = try self.getSectionHeaders();
         for (section_headers) |section| {
@@ -669,7 +688,8 @@ pub const PEFile = struct {
         const section_headers = try self.getSectionHeaders();
         var max_va_end: u32 = 0;
 
-        for (section_headers, 0..) |section, i| {
+        // safe-transpile: for with index access requires manual review
+    for (section_headers, 0..) |section, i| {
             // If size_of_raw_data > 0, validate raw data bounds
             if (section.size_of_raw_data > 0) {
                 if (section.pointer_to_raw_data < optional_header.size_of_headers or
@@ -717,15 +737,18 @@ pub const PEFile = struct {
 
 /// Utilities for PE file detection and validation
 pub const utils = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isPE(data: []const u8) bool {
         if (data.len < @sizeOf(PEFile.DOSHeader)) return false;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const dos: *align(1) const PEFile.DOSHeader = @ptrCast(data.ptr);
         if (dos.e_magic != PEFile.DOS_SIGNATURE) return false;
 
         const off = dos.e_lfanew;
         if (off < @sizeOf(PEFile.DOSHeader) or off > data.len -| @sizeOf(PEFile.PEHeader)) return false;
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const pe: *align(1) const PEFile.PEHeader = @ptrCast(data[off..].ptr);
         return pe.signature == PEFile.PE_SIGNATURE;
     }

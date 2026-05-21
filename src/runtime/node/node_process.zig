@@ -60,6 +60,7 @@ fn createExecArgv(globalObject: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         if (worker.execArgv) |execArgv| {
             const array = try jsc.JSValue.createEmptyArray(globalObject, execArgv.len);
             for (0..execArgv.len) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try array.putIndex(globalObject, @intCast(i), try bun.String.init(execArgv[i]).toJS(globalObject));
             }
             return array;
@@ -72,6 +73,7 @@ fn createExecArgv(globalObject: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         if (graph.compile_exec_argv.len > 0 or bun.bun_options_argc > 0) {
             var args = std.array_list.Managed(bun.String).init(temp_alloc);
             defer args.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
             defer for (args.items) |*arg| arg.deref();
 
             // Process BUN_OPTIONS first using appendOptionsEnv for proper quote handling.
@@ -93,6 +95,7 @@ fn createExecArgv(globalObject: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
 
             const array = try jsc.JSValue.createEmptyArray(globalObject, args.items.len);
             for (0..args.items.len) |idx| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try array.putIndex(globalObject, @intCast(idx), try args.items[idx].toJS(globalObject));
             }
             return array;
@@ -102,6 +105,7 @@ fn createExecArgv(globalObject: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
 
     var args = try std.array_list.Managed(bun.String).initCapacity(temp_alloc, bun.argv.len - 1);
     defer args.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
     defer for (args.items) |*arg| arg.deref();
 
     var seen_run = false;
@@ -143,6 +147,7 @@ fn createExecArgv(globalObject: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
             }
 
             var result: [i]KV = undefined;
+// safe-transpile: @memcpy requires manual review
             @memcpy(&result, entries[0..i]);
             break :brk result;
         });
@@ -275,6 +280,7 @@ fn setCwd_(globalObject: *jsc.JSGlobalObject, to: *jsc.ZigString) bun.JSError!js
                     return globalObject.throwValue(try err.toJS(globalObject));
                 },
             };
+// safe-transpile: @memcpy requires manual review
             @memcpy(fs.top_level_dir_buf[0..into_cwd_buf.len], into_cwd_buf);
             fs.top_level_dir_buf[into_cwd_buf.len] = 0;
             fs.top_level_dir = fs.top_level_dir_buf[0..into_cwd_buf.len :0];
@@ -324,6 +330,7 @@ pub fn Bun__Process__editWindowsEnvVar(k: bun.String, v: bun.String) callconv(.c
     const len1: usize = switch (wtf1.is8Bit()) {
         true => bun.strings.copyLatin1IntoUTF16([]u16, buf1, wtf1.latin1Slice()).written,
         false => b: {
+// safe-transpile: @memcpy requires manual review
             @memcpy(buf1[0..wtf1.length()], wtf1.utf16Slice());
             break :b wtf1.length();
         },
@@ -335,6 +342,7 @@ pub fn Bun__Process__editWindowsEnvVar(k: bun.String, v: bun.String) callconv(.c
         const len2: usize = switch (wtf2.is8Bit()) {
             true => bun.strings.copyLatin1IntoUTF16([]u16, buf2, wtf2.latin1Slice()).written,
             false => b: {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf2[0..wtf2.length()], wtf2.utf16Slice());
                 break :b wtf2.length();
             },

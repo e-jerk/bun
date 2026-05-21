@@ -84,7 +84,6 @@ pub const Method = enum(u8) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn find(str: []const u8) ?Method {
         return Map.get(str);
     }
@@ -165,7 +164,6 @@ pub const Method = enum(u8) {
         .{ "unsubscribe", Method.UNSUBSCRIBE },
     });
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn which(str: []const u8) ?Method {
         return Map.get(str);

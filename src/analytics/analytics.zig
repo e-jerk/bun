@@ -164,7 +164,6 @@ pub const Features = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn validateFeatureName(name: []const u8) void {
     if (name.len > 64) @compileError("Invalid feature name: " ++ name);
     for (name) |char| {
@@ -355,7 +354,6 @@ pub const GenerateHeader = struct {
             }
 
             // Linux DESKTOP-P4LCIEM 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
-// zust: use safe.String or safe.GuardedSlice for slice operations
 // zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, release, "microsoft") != null) {
                 return analytics.Platform{ .os = analytics.OperatingSystem.wsl, .version = release, .arch = platform_arch };

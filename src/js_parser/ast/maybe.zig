@@ -330,7 +330,6 @@ pub fn AstMaybe(
                                     };
                                     if (p.commonjs_named_exports_needs_conversion == std.math.maxInt(u32))
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                         p.commonjs_named_exports_needs_conversion = @as(u32, @truncate(p.commonjs_named_exports.count() - 1));
                                 }
 
@@ -504,7 +503,6 @@ pub fn AstMaybe(
                                             .needs_decl = true,
                                         };
                                         if (p.commonjs_named_exports_needs_conversion == std.math.maxInt(u32))
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                             p.commonjs_named_exports_needs_conversion = @as(u32, @truncate(p.commonjs_named_exports.count() - 1));
                                     }

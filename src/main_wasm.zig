@@ -16,9 +16,7 @@ pub const Uint8Array = extern struct {
     len: usize = 0,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromSlice(slice: []const u8) u64 {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @as(u64, @bitCast([2]u32{
             @intFromPtr(slice.ptr),
@@ -27,9 +25,7 @@ pub const Uint8Array = extern struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn fromJS(data: u64) []u8 {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         const ptrs = @as([2]u32, @bitCast(data));
         return @as([*]u8, @ptrFromInt(ptrs[0]))[0..ptrs[1]];
@@ -161,7 +157,6 @@ var writer: JSPrinter.BufferPrinter = undefined;
 var define: *Define.Define = undefined;
 export fn bun_malloc(size: usize) u64 {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast([2]u32{
         @intFromPtr((default_allocator.alloc(u8, size) catch unreachable).ptr),
         size,
@@ -187,8 +182,8 @@ export fn init(heapsize: u32) void {
         mimalloc.mi_option_set(.limit_os_alloc, 1);
         _ = mimalloc.mi_reserve_os_memory(heapsize, false, true);
 
-        safe.Box(default_allocator).init(JSAst.Stmt.Data.Store, undefined);
-        safe.Box(default_allocator).init(JSAst.Expr.Data.Store, undefined);
+        JSAst.Stmt.Data.Store.create(default_allocator);
+        JSAst.Expr.Data.Store.create(default_allocator);
         buffer_writer = JSPrinter.BufferWriter.init(default_allocator);
         buffer_writer.buffer.growBy(1024) catch unreachable;
         writer = JSPrinter.BufferPrinter.init(buffer_writer);
@@ -472,7 +467,6 @@ export fn getTests(opts_array: u64) u64 {
     parser.options.features.top_level_await = true;
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     parser.analyze(&anaylzer, @ptrCast(&TestAnalyzer.visitParts)) catch |err| {
         bun.handleErrorReturnTrace(err, @errorReturnTrace());
 
@@ -492,7 +486,6 @@ export fn getTests(opts_array: u64) u64 {
     };
 
     response.encode(&encoder) catch return 0;
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast([2]u32{ @intFromPtr(output.items.ptr), output.items.len }));
 }
@@ -565,7 +558,6 @@ export fn transform(opts_array: u64) u64 {
     var encoder = Encoder.init(output_writer);
     transform_response.encode(&encoder) catch {};
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
     return @as(u64, @bitCast([2]u32{ @intFromPtr(output.items.ptr), output.items.len }));
 }
 
@@ -627,7 +619,6 @@ export fn scan(opts_array: u64) u64 {
         var encoder = Encoder.init(output_writer);
         scan_result.encode(&encoder) catch unreachable;
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         return @as(u64, @bitCast([2]u32{ @intFromPtr(output.items.ptr), output.items.len }));
     } else {
         var output = std.array_list.Managed(u8).init(default_allocator);
@@ -640,7 +631,6 @@ export fn scan(opts_array: u64) u64 {
         };
         var encoder = Encoder.init(output_writer);
         scan_result.encode(&encoder) catch unreachable;
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
         return @as(u64, @bitCast([2]u32{ @intFromPtr(output.items.ptr), output.items.len }));
     }

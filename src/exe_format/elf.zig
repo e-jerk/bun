@@ -9,6 +9,7 @@ pub const ElfFile = struct {
     data: std.array_list.Managed(u8),
     allocator: Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: Allocator, elf_data: []const u8) !*ElfFile {
         if (elf_data.len < @sizeOf(Elf64_Ehdr)) return error.InvalidElfFile;
 
@@ -27,15 +28,15 @@ pub const ElfFile = struct {
         errdefer data.deinit();
         try data.appendSlice(elf_data);
 
-        const self = try allocator.create(ElfFile);
-        errdefer allocator.destroy(self);
+        const self = try safe.Box(ElfFile).init(allocator, undefined);
+        defer _ = self.deinit();
 
-        self.* = .{
+        self.ptr.* = .{
             .data = data,
             .allocator = allocator,
         };
 
-        return self;
+        return self.ptr;
     }
 
     pub fn deinit(self: *ElfFile) void {
@@ -69,11 +70,14 @@ pub const ElfFile = struct {
         if (phdr_table_end > self.data.items.len) return;
 
         for (0..ehdr.e_phnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const phdr_offset = @as(usize, @intCast(ehdr.e_phoff)) + i * phdr_size;
             const phdr = std.mem.bytesAsValue(Elf64_Phdr, self.data.items[phdr_offset..][0..phdr_size]).*;
             if (phdr.p_type != elf.PT_INTERP) continue;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const interp_offset: usize = @intCast(phdr.p_offset);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const interp_filesz: usize = @intCast(phdr.p_filesz);
             if (interp_offset + interp_filesz > self.data.items.len) return;
 
@@ -99,6 +103,7 @@ pub const ElfFile = struct {
 
             log("rewriting PT_INTERP {s} -> {s}", .{ current, replacement });
 
+// safe-transpile: @memcpy requires manual review
             @memcpy(interp_region[0..replacement.len], replacement);
             @memset(interp_region[replacement.len..], 0);
 
@@ -126,15 +131,18 @@ pub const ElfFile = struct {
         const strtab_shdr = self.readShdr(ehdr.e_shoff, ehdr.e_shstrndx);
         const strtab_end = strtab_shdr.sh_offset +| strtab_shdr.sh_size;
         if (strtab_end > self.data.items.len) return;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const strtab = self.data.items[@intCast(strtab_shdr.sh_offset)..][0..@intCast(strtab_shdr.sh_size)];
 
         for (0..shnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const shdr = self.readShdr(ehdr.e_shoff, @intCast(i));
             if (shdr.sh_name >= strtab.len) continue;
             const name = std.mem.sliceTo(strtab[shdr.sh_name..], 0);
             if (!bun.strings.eqlComptime(name, ".interp")) continue;
 
             // sh_size @ +32 in Elf64_Shdr
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const shdr_offset = @as(usize, @intCast(ehdr.e_shoff)) + i * shdr_size;
             std.mem.writeInt(u64, self.data.items[shdr_offset + 32 ..][0..8], new_size, .little);
             return;
@@ -166,6 +174,7 @@ pub const ElfFile = struct {
     /// middle of a `PT_LOAD` segment — sections like `.dynamic`, `.got`,
     /// `.got.plt` come after it, and expanding in-place would invalidate their
     /// absolute virtual addresses.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeBunSection(self: *ElfFile, payload: []const u8) !void {
         const ehdr = readEhdr(self.data.items);
         const bun_section = try self.findBunSection(ehdr);
@@ -186,6 +195,7 @@ pub const ElfFile = struct {
         var rw_phdr: Elf64_Phdr = undefined;
         var max_vaddr_end: u64 = 0;
         for (0..ehdr.e_phnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const phdr_offset = @as(usize, @intCast(ehdr.e_phoff)) + i * phdr_size;
             const phdr = std.mem.bytesAsValue(Elf64_Phdr, self.data.items[phdr_offset..][0..phdr_size]).*;
             if (phdr.p_type != elf.PT_LOAD) continue;
@@ -276,7 +286,9 @@ pub const ElfFile = struct {
         @memset(self.data.items[move_src_start..new_file_offset], 0);
 
         // Write the payload at the new location: [u64 LE size][data][zero padding]
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         std.mem.writeInt(u64, self.data.items[new_file_offset..][0..8], @intCast(payload.len), .little);
+// safe-transpile: @memcpy requires manual review
         @memcpy(self.data.items[new_file_offset + header_size ..][0..payload.len], payload);
 
         // Zero the padding between payload end and the relocated tail
@@ -308,6 +320,7 @@ pub const ElfFile = struct {
 
         const shnum = ehdr.e_shnum;
         for (0..shnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const shdr_file_offset: u64 = new_shdr_offset + @as(u64, @intCast(i)) * @sizeOf(Elf64_Shdr);
             const shdr_bytes = self.data.items[shdr_file_offset..][0..@sizeOf(Elf64_Shdr)];
             var shdr = std.mem.bytesAsValue(Elf64_Shdr, shdr_bytes).*;
@@ -323,6 +336,7 @@ pub const ElfFile = struct {
                 shdr.sh_offset += move_dst_start - move_src_start;
             }
 
+// safe-transpile: @memcpy requires manual review
             @memcpy(shdr_bytes, std.mem.asBytes(&shdr));
         }
 
@@ -345,7 +359,9 @@ pub const ElfFile = struct {
                 .p_memsz = new_segment_size,
                 .p_align = rw_phdr.p_align,
             };
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const phdr_offset = @as(usize, @intCast(ehdr.e_phoff)) + rw_index * phdr_size;
+// safe-transpile: @memcpy requires manual review
             @memcpy(self.data.items[phdr_offset..][0..phdr_size], std.mem.asBytes(&extended));
         }
     }
@@ -383,6 +399,7 @@ pub const ElfFile = struct {
 
         // Search for .bun section
         for (0..shnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const shdr = self.readShdr(shdr_table_offset, @intCast(i));
             const name_offset = shdr.sh_name;
 
@@ -391,6 +408,7 @@ pub const ElfFile = struct {
                 if (bun.strings.eqlComptime(name, ".bun")) {
                     return .{
                         .file_offset = shdr.sh_offset,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .section_index = @intCast(i),
                     };
                 }
@@ -418,6 +436,7 @@ pub const ElfFile = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn readEhdr(data: []const u8) Elf64_Ehdr {
     return std.mem.bytesAsValue(Elf64_Ehdr, data[0..@sizeOf(Elf64_Ehdr)]).*;
 }
@@ -495,11 +514,14 @@ fn hostUsesNixStoreInterpreter() bool {
             if (table_end > data.len) return false;
 
             for (0..ehdr.e_phnum) |i| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const off = @as(usize, @intCast(ehdr.e_phoff)) + i * phdr_size;
                 const phdr = std.mem.bytesAsValue(Elf64_Phdr, data[off..][0..phdr_size]).*;
                 if (phdr.p_type != elf.PT_INTERP) continue;
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const interp_off: usize = @intCast(phdr.p_offset);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const interp_sz: usize = @intCast(phdr.p_filesz);
                 if (interp_off + interp_sz > data.len) return false;
 

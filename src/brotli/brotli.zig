@@ -55,12 +55,10 @@ pub const BrotliReaderArrayList = struct {
     pub const new = bun.TrivialNew(BrotliReaderArrayList);
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn newWithOptions(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, options: DecoderOptions) !*BrotliReaderArrayList {
         return BrotliReaderArrayList.new(try initWithOptions(input, list, allocator, options, .process, .finish, .flush));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn initWithOptions(
         input: []const u8,
@@ -127,10 +125,8 @@ pub const BrotliReaderArrayList = struct {
             const result = this.brotli.decompressStream(
                 &in_remaining,
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(&next_in),
                 &out_remaining,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(&unused_capacity.ptr),
                 null,
@@ -218,7 +214,6 @@ pub const BrotliCompressionStream = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeChunk(this: *BrotliCompressionStream, input: []const u8, last: bool) ![]const u8 {
         this.total_in += input.len;
         const result = this.brotli.compressStream(if (last) this.finishFlushOp else this.flushOp, input);
@@ -232,7 +227,6 @@ pub const BrotliCompressionStream = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(this: *BrotliCompressionStream, input: []const u8, last: bool) ![]const u8 {
         if (this.state == .End or this.state == .Error) {
             return "";
@@ -241,7 +235,6 @@ pub const BrotliCompressionStream = struct {
         return this.writeChunk(input, last);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn end(this: *BrotliCompressionStream) ![]const u8 {
         defer this.state = .End;
@@ -269,7 +262,6 @@ pub const BrotliCompressionStream = struct {
                 };
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn write(self: Self, to_compress: []const u8) WriteError!usize {
                 const decompressed = try self.compressor.write(to_compress, false);

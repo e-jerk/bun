@@ -7,6 +7,7 @@ const zust = @import("safe");
 // It does not handle the framework parts of rendering pages.
 // All it does is resolve URL paths to the appropriate entry point and parse URL params/query.
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 const index_route_hash = @as(u32, @truncate(bun.hash("$$/index-route$$-!(@*@#&*%-901823098123")));
 
 pub const Param = struct {
@@ -190,7 +191,8 @@ pub const Routes = struct {
 
     fn matchDynamic(this: *Routes, allocator: std.mem.Allocator, path: string, comptime MatchContext: type, ctx: MatchContext) ?*Route {
         // its cleaned, so now we search the big list of strings
-        for (this.dynamic_names, this.dynamic_match_names, this.dynamic) |case_sensitive_name, name, route| {
+        // safe-transpile: for with index access requires manual review
+    for (this.dynamic_names, this.dynamic_match_names, this.dynamic) |case_sensitive_name, name, route| {
             if (Pattern.match(path, case_sensitive_name[1..], name, allocator, *@TypeOf(ctx.params), &ctx.params, true)) {
                 return route;
             }
@@ -305,6 +307,7 @@ const RouteLoader = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn loadAll(
         allocator: std.mem.Allocator,
         config: Options.RouteConfig,
@@ -318,6 +321,7 @@ const RouteLoader = struct {
 
         const relative_dir = FileSystem.instance.relative(base_dir, config.dir);
         if (!strings.hasPrefixComptime(relative_dir, "..")) {
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             route_dirname_len = @as(u16, @truncate(relative_dir.len + @as(usize, @intFromBool(config.dir[config.dir.len - 1] != std.fs.path.sep))));
         }
 
@@ -347,7 +351,8 @@ const RouteLoader = struct {
         var dynamic_start: ?usize = null;
         var index_id: ?usize = null;
 
-        for (this.all_routes.items, 0..) |route, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.all_routes.items, 0..) |route, i| {
             if (@intFromEnum(route.kind) > @intFromEnum(Pattern.Tag.static) and dynamic_start == null) {
                 dynamic_start = i;
             }
@@ -397,6 +402,7 @@ const RouteLoader = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn load(
         this: *RouteLoader,
         comptime ResolverType: type,
@@ -473,6 +479,7 @@ const RouteLoader = struct {
 
 // This loads routes recursively, in depth-first order.
 // it does not currently handle duplicate exact route matches. that's undefined behavior, for now.
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn loadRoutes(
     this: *Router,
     log: *Logger.Log,
@@ -498,6 +505,7 @@ pub const TinyPtr = packed struct(u32) {
     }
 
     pub inline fn eql(a: TinyPtr, b: TinyPtr) bool {
+// safe-transpile: @bitCast requires manual review
         return @as(u32, @bitCast(a)) == @as(u32, @bitCast(b));
     }
 
@@ -512,6 +520,7 @@ pub const TinyPtr = packed struct(u32) {
 
         const length = @max(end, right) - right;
         const offset = @max(@intFromPtr(in.ptr), @intFromPtr(parent.ptr)) - @intFromPtr(parent.ptr);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return TinyPtr{ .offset = @as(u16, @truncate(offset)), .len = @as(u16, @truncate(length)) };
     }
 };
@@ -567,7 +576,9 @@ pub const Route = struct {
     pub const Sorter = struct {
         const sort_table: [256]u8 = brk: {
             var table: [256]u8 = undefined;
-            for (&table, 0..) |*t, i| t.* = @as(u8, @intCast(i));
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: for with index access requires manual review
+    for (&table, 0..) |*t, i| t.* = @as(u8, @intCast(i));
 
             // move dynamic routes to the bottom
             table['['] = 252;
@@ -581,7 +592,8 @@ pub const Route = struct {
             const math = std.math;
 
             const n = @min(lhs.len, rhs.len);
-            for (lhs[0..n], rhs[0..n]) |lhs_i, rhs_i| {
+            // safe-transpile: for with index access requires manual review
+    for (lhs[0..n], rhs[0..n]) |lhs_i, rhs_i| {
                 switch (math.order(sort_table[lhs_i], sort_table[rhs_i])) {
                     .eq => continue,
                     .lt => return true,
@@ -785,6 +797,7 @@ pub const Route = struct {
             .full_hash = if (is_index)
                 index_route_hash
             else
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 @as(u32, @truncate(bun.hash(name))),
             .param_count = validation_result.param_count,
             .kind = validation_result.kind,
@@ -1190,6 +1203,7 @@ const Pattern = struct {
         var offset: RoutePathInt = 0;
         bun.assert(input.len > 0);
         var kind: u4 = @intFromEnum(Tag.static);
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const end = @as(u32, @truncate(input.len - 1));
         while (offset < end) {
             const pattern: Pattern = Pattern.initUnhashed(input, offset) catch |err| {
@@ -1254,6 +1268,7 @@ const Pattern = struct {
             };
             offset = pattern.len;
             kind = @max(@intFromEnum(@as(Pattern.Tag, pattern.value)), kind);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             count += @as(u16, @intCast(@intFromBool(@intFromEnum(@as(Pattern.Tag, pattern.value)) > @intFromEnum(Pattern.Tag.static))));
         }
 
@@ -1298,12 +1313,14 @@ const Pattern = struct {
 
         if (input.len == 0 or input.len <= @as(usize, offset)) return Pattern{
             .value = .{ .static = HashedString.empty },
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .len = @as(RoutePathInt, @truncate(@min(input.len, @as(usize, offset)))),
         };
 
         var i: RoutePathInt = offset;
 
         var tag = Tag.static;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const end = @as(RoutePathInt, @intCast(input.len - 1));
 
         if (offset == end) return Pattern{ .len = offset, .value = .{ .static = HashedString.empty } };
@@ -1543,7 +1560,8 @@ test "Pattern Match" {
                     }
 
                     if (comptime entries.len > 0) {
-                        for (parameters.items(.name), 0..) |entry_name, i| {
+                        // safe-transpile: for with index access requires manual review
+    for (parameters.items(.name), 0..) |entry_name, i| {
                             if (!strings.eql(entry_name, entries[i].name)) {
                                 failures += 1;
                                 Output.prettyErrorln("{s} -- Expected name <b>\"{s}\"<r> but received <b>\"{s}\"<r> for path {s}", .{ pattern, entries[i].name, parameters.get(i).name, pathname });

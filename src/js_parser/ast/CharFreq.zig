@@ -75,12 +75,9 @@ fn scanSmall(out: *align(1) Buffer, text: string, delta: i32) void {
     for (text) |c| {
         const i: usize = switch (c) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             'a'...'z' => @as(usize, @intCast(c)) - 'a',
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             'A'...'Z' => @as(usize, @intCast(c)) - ('A' - 26),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             '0'...'9' => @as(usize, @intCast(c)) + (53 - '0'),
             '_' => 62,
@@ -104,7 +101,6 @@ pub fn compile(this: *const CharFreq, allocator: std.mem.Allocator) NameMinifier
         var _array: CharAndCount.Array = undefined;
 
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (&_array, NameMinifier.default_tail, this.freqs, 0..) |*dest, char, freq, i| {
             dest.* = CharAndCount{
                 .char = char,

@@ -6,6 +6,7 @@ pub const Reader = struct {
     remain: []u8,
     allocator: std.mem.Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(buf: []u8, allocator: std.mem.Allocator) Reader {
         return Reader{
             .buf = buf,
@@ -14,6 +15,7 @@ pub const Reader = struct {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn read(this: *Self, count: usize) ![]u8 {
         const read_count = @min(count, this.remain.len);
         if (read_count < count) {
@@ -71,6 +73,7 @@ pub const Reader = struct {
             },
             [:0]const u8, []const u8 => {
                 const array = try this.allocator.alloc(T, length);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (array) |*a| a.* = try this.readArray(u8);
                 return array;
             },
@@ -88,18 +91,21 @@ pub const Reader = struct {
                     },
                     .Enum => |type_info| {
                         const enum_values = try this.read(length * @sizeOf(type_info.tag_type));
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         return @as([*]T, @ptrCast(enum_values.ptr))[0..length];
                     },
                     else => {},
                 }
 
                 const array = try this.allocator.alloc(T, length);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (array) |*v| v.* = try this.readValue(T);
                 return array;
             },
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn readByteArray(this: *Self) ![]u8 {
         const length = try this.readInt(u32);
         if (length == 0) {
@@ -147,6 +153,7 @@ pub const Reader = struct {
                             .Packed => {
                                 const sizeof = @sizeOf(T);
                                 var slice = try this.read(sizeof);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                 return @as(*align(1) T, @ptrCast(slice[0..sizeof])).*;
                             },
                             else => {},
@@ -255,6 +262,7 @@ pub fn Writer(comptime WritableStream: type) type {
         }
 
         pub fn writeArray(this: *Self, comptime T: type, slice: anytype) !void {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try this.writeInt(@as(u32, @truncate(slice.len)));
 
             switch (T) {
@@ -864,6 +872,7 @@ pub const api = struct {
             try writer.writeInt(this.length);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn slice(this: @This(), bytes: []const u8) []const u8 {
             return bytes[this.offset .. this.offset + this.length];
         }
@@ -2899,6 +2908,7 @@ pub const api = struct {
             var i: usize = 0;
             inline for (std.meta.fields(NpmRegistry)) |field| {
                 const field_value = @field(this, field.name);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[i .. i + field_value.len], field_value);
                 @field(&out, field.name) = buf[i .. i + field_value.len];
                 i += field_value.len;
@@ -2931,6 +2941,7 @@ pub const api = struct {
             source: *const bun.logger.Source,
             allocator: std.mem.Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
             fn addError(this: *Parser, loc: bun.logger.Loc, comptime text: []const u8) !void {
                 this.log.addError(this.source, loc, text) catch unreachable;
                 return error.ParserError;
@@ -2952,6 +2963,7 @@ pub const api = struct {
                 return try this.parseRegistryURLStringImpl(str.data);
             }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn parseRegistryURLStringImpl(this: *Parser, str: []const u8) OOM!api.NpmRegistry {
                 const url = bun.URL.parse(str);
                 var registry = std.mem.zeroes(api.NpmRegistry);

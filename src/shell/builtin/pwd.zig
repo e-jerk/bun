@@ -77,7 +77,6 @@ pub fn deinit(this: *Pwd) void {
 
 pub inline fn bltn(this: *Pwd) *Builtin {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("pwd", this));
     return @fieldParentPtr("impl", impl);
 }

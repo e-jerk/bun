@@ -60,7 +60,6 @@ pub const LifecycleScriptSubprocess = struct {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn scriptName(this: *const LifecycleScriptSubprocess) []const u8 {
         bun.assert(this.current_script_index < Lockfile.Scripts.names.len);
         return Lockfile.Scripts.names[this.current_script_index];
@@ -230,7 +229,6 @@ pub const LifecycleScriptSubprocess = struct {
         this.remaining_fds = 0;
         this.started_at = bun.timespec.now(.allow_mocked_time).ns();
         this.manager.active_lifecycle_scripts.insert(this);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var spawned = try (try bun.spawn.spawnProcess(&spawn_options, @ptrCast(&argv), this.envp)).unwrap();
 
@@ -412,7 +410,6 @@ pub const LifecycleScriptSubprocess = struct {
                 for (this.current_script_index + 1..Lockfile.Scripts.names.len) |new_script_index| {
                     if (this.scripts.items[new_script_index] != null) {
                         this.resetPolls();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         this.spawnNextScript(@intCast(new_script_index)) catch |err| {
                             Output.errGeneric("Failed to run script <b>{s}<r> due to error <b>{s}<r>", .{

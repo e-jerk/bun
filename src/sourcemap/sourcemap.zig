@@ -55,6 +55,7 @@ pub const ParseUrl = struct {
 /// The mappings are owned by the `alloc` allocator.
 /// Temporary allocations are made to the `arena` allocator, which
 /// should be an arena allocator (caller is assumed to call `deinit`).
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseUrl(
     alloc: std.mem.Allocator,
     arena: std.mem.Allocator,
@@ -97,6 +98,7 @@ pub fn parseUrl(
 /// The mappings are owned by the `alloc` allocator.
 /// Temporary allocations are made to the `arena` allocator, which
 /// should be an arena allocator (caller is assumed to call `deinit`).
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseJSON(
     alloc: std.mem.Allocator,
     arena: std.mem.Allocator,
@@ -192,6 +194,7 @@ pub fn parseJSON(
                     var names_buffer = std.ArrayListUnmanaged(u8).empty;
                     errdefer names_buffer.deinit(alloc);
 
+// safe-transpile: for loop with pointer capture requires manual review
                     for (names.data.e_array.items.slice()) |*item| {
                         if (item.data != .e_string) {
                             return error.InvalidSourceMap;
@@ -259,6 +262,7 @@ pub const ParseResult = union(enum) {
         value: i32 = 0,
         msg: []const u8 = "",
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn toData(this: @This(), path: []const u8) Logger.Data {
             return Logger.Data{
                 .location = Logger.Location{
@@ -311,6 +315,7 @@ fn findSourceMappingURL(comptime T: type, source: []const T, alloc: std.mem.Allo
 }
 
 /// The last two arguments to this specify loading hints
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn getSourceMapImpl(
     comptime SourceProviderKind: type,
     provider: *SourceProviderKind,
@@ -431,7 +436,9 @@ pub fn getSourceMapImpl(
             defer bun.path_buffer_pool.put(load_path_buf);
             if (source_filename.len + 4 > load_path_buf.len)
                 break :try_external;
+// safe-transpile: @memcpy requires manual review
             @memcpy(load_path_buf[0..source_filename.len], source_filename);
+// safe-transpile: @memcpy requires manual review
             @memcpy(load_path_buf[source_filename.len..][0..4], ".map");
 
             const load_path = load_path_buf[0 .. source_filename.len + 4];
@@ -493,6 +500,7 @@ pub const SourceProviderMap = opaque {
     }
 
     /// The last two arguments to this specify loading hints
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getSourceMap(
         provider: *SourceProviderMap,
         source_filename: []const u8,
@@ -528,6 +536,7 @@ pub const DevServerSourceProvider = opaque {
     }
 
     /// The last two arguments to this specify loading hints
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getSourceMap(
         provider: *DevServerSourceProvider,
         source_filename: []const u8,
@@ -555,6 +564,7 @@ pub const LineColumnOffset = struct {
         null: void,
         value: LineColumnOffset,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn advance(this: *Optional, input: []const u8) void {
             switch (this.*) {
                 .null => {},
@@ -579,6 +589,7 @@ pub const LineColumnOffset = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn advance(this_ptr: *LineColumnOffset, input: []const u8) void {
         // Instead of mutating `this_ptr` directly, copy the state to the stack and do
         // all the work here, then move it back to the input pointer. When sourcemaps
@@ -592,6 +603,7 @@ pub const LineColumnOffset = struct {
             assert(i < input.len);
 
             var iter = strings.CodepointIterator.initOffset(input, i);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             var cursor = strings.CodepointIterator.Cursor{ .i = @as(u32, @truncate(iter.i)) };
             _ = iter.next(&cursor);
 
@@ -635,6 +647,7 @@ pub const LineColumnOffset = struct {
             assert(!bun.strings.containsChar(remain, '\r'));
         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.columns = this.columns.addScalar(@intCast(remain.len));
     }
 
@@ -686,6 +699,7 @@ pub const SourceMapPieces = struct {
         return (this.prefix.items.len + this.mappings.items.len + this.suffix.items.len) > 0;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn finalize(this: *SourceMapPieces, allocator: std.mem.Allocator, _shifts: []SourceMapShifts) ![]const u8 {
         var shifts = _shifts;
         var start_of_run: usize = 0;
@@ -779,6 +793,7 @@ pub const SourceMapPieces = struct {
 // After all chunks are computed, they are joined together in a second pass.
 // This rewrites the first mapping in each chunk to be relative to the end
 // state of the previous chunk.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendSourceMapChunk(
     j: *StringJoiner,
     allocator: std.mem.Allocator,
@@ -790,6 +805,7 @@ pub fn appendSourceMapChunk(
     var start_state = start_state_;
     // Handle line breaks in between this mapping and the previous one
     if (start_state.generated_line != 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         j.push(try strings.repeatingAlloc(allocator, @intCast(start_state.generated_line), ';'), allocator);
         prev_end_state.generated_column = 0;
     }
@@ -836,6 +852,7 @@ pub fn appendSourceMapChunk(
     j.pushStatic(source_map);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn appendSourceMappingURLRemote(
     origin: URL,
     source: *const Logger.Source,
@@ -885,6 +902,7 @@ pub fn appendMappingToBuffer(buffer: *MutableString, last_byte: u8, prev_state: 
     }
 
     inline for (&vlqs) |item| {
+// safe-transpile: @memcpy requires manual review
         @memcpy(writable[0..item.len], item.slice());
         writable = writable[item.len..];
     }

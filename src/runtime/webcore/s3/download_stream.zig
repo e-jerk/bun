@@ -29,6 +29,7 @@ pub const S3HttpDownloadStreamingTask = struct {
             .capacity = 0,
         },
     },
+// safe-transpile: @bitCast requires manual review
     state: State.AtomicType = State.AtomicType.init(@bitCast(State{})),
 
     concurrent_task: jsc.ConcurrentTask = .{},
@@ -44,11 +45,13 @@ pub const S3HttpDownloadStreamingTask = struct {
     };
 
     pub fn getState(this: @This()) State {
+// safe-transpile: @bitCast requires manual review
         const state: State = @bitCast(this.state.load(.acquire));
         return state;
     }
 
     pub fn setState(this: *@This(), state: State) void {
+// safe-transpile: @bitCast requires manual review
         this.state.store(@bitCast(state), .monotonic);
     }
 

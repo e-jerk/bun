@@ -94,19 +94,16 @@ pub const Options = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderToHtml(text: []const u8, allocator: std.mem.Allocator) parser.Parser.Error![]u8 {
     return renderToHtmlWithOptions(text, allocator, .{});
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderToHtmlWithOptions(text: []const u8, allocator: std.mem.Allocator, options: Options) parser.Parser.Error![]u8 {
     return parser.renderToHtml(text, allocator, options.toFlags(), options.toRenderOptions());
 }
 
 /// Parse and render using a custom renderer implementation.
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn renderWithRenderer(text: []const u8, allocator: std.mem.Allocator, options: Options, renderer: Renderer) parser.Parser.Error!void {
     return parser.renderWithRenderer(text, allocator, options.toFlags(), options.toRenderOptions(), renderer);

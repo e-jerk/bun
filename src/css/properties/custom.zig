@@ -37,6 +37,7 @@ pub const TokenList = struct {
     const This = @This();
 
     pub fn deinit(this: *TokenList, allocator: Allocator) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.v.items) |*token_or_value| {
             token_or_value.deinit(allocator);
         }
@@ -53,7 +54,8 @@ pub const TokenList = struct {
         }
 
         var has_whitespace = false;
-        for (this.v.items, 0..) |*token_or_value, i| {
+        // safe-transpile: for with index access requires manual review
+    for (this.v.items, 0..) |*token_or_value, i| {
             switch (token_or_value.*) {
                 .color => |color| {
                     try color.toCss(dest);
@@ -115,11 +117,13 @@ pub const TokenList = struct {
                         if (d == '+' or d == '-') {
                             try dest.writeChar(' ');
                             bun.assert(d <= 0x7F);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             try dest.writeChar(@intCast(d));
                             try dest.writeChar(' ');
                         } else {
                             const ws_before = !has_whitespace and (d == '/' or d == '*');
                             bun.assert(d <= 0x7F);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             try dest.delim(@intCast(d), ws_before);
                         }
                         has_whitespace = true;
@@ -150,6 +154,7 @@ pub const TokenList = struct {
     }
 
     pub fn toCssRaw(this: *const TokenList, dest: *Printer) PrintErr!void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.v.items) |*token_or_value| {
             if (token_or_value.* == .token) {
                 try token_or_value.token.toCss(dest);
@@ -596,7 +601,8 @@ pub const TokenList = struct {
         var tokens = TokenList{};
         bun.handleOom(tokens.v.ensureTotalCapacity(allocator, this.v.items.len));
         tokens.v.items.len = this.v.items.len;
-        for (this.v.items, tokens.v.items[0..this.v.items.len]) |*old, *new| {
+        // safe-transpile: for with index access requires manual review
+    for (this.v.items, tokens.v.items[0..this.v.items.len]) |*old, *new| {
             new.* = switch (old.*) {
                 .color => |*color| TokenOrValue{ .color = color.getFallback(allocator, kind) },
                 .function => |*f| TokenOrValue{ .function = f.getFallback(allocator, kind) },
@@ -633,6 +639,7 @@ pub const TokenList = struct {
         }
 
         if (!lowest_fallback.isEmpty()) {
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.v.items) |*token_or_value| {
                 switch (token_or_value.*) {
                     .color => |*color| {
@@ -661,6 +668,7 @@ pub const TokenList = struct {
 
     pub fn getNecessaryFallbacks(this: *const TokenList, targets: css.targets.Targets) ColorFallbackKind {
         var fallbacks = ColorFallbackKind{};
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.v.items) |*token_or_value| {
             switch (token_or_value.*) {
                 .color => |*color| {
@@ -869,6 +877,7 @@ pub const UnresolvedColor = union(enum) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(
         input: *css.Parser,
         f: []const u8,
@@ -1500,11 +1509,13 @@ pub const CustomPropertyName = union(enum) {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromStr(name: []const u8) CustomPropertyName {
         if (bun.strings.startsWith(name, "--")) return .{ .custom = .{ .v = name } };
         return .{ .unknown = .{ .v = name } };
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(self: *const CustomPropertyName) []const u8 {
         switch (self.*) {
             .custom => |custom| return custom.v,
@@ -1521,6 +1532,7 @@ pub const CustomPropertyName = union(enum) {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn tryParseColorToken(f: []const u8, state: *const css.ParserState, input: *css.Parser) ?CssColor {
     // css.todo_stuff.match_ignore_ascii_case
     if (bun.strings.eqlCaseInsensitiveASCIIICheckLength(f, "rgb") or

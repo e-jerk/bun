@@ -1,7 +1,6 @@
 /// returns { peersIndex, patchHashIndex }
 /// https://github.com/pnpm/pnpm/blob/102d5a01ddabda1184b88119adccfbe956d30579/packages/dependency-path/src/index.ts#L9-L31
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn indexOfDepPathSuffix(path: []const u8) struct { ?usize, ?usize } {
     if (path.len < 2) {
         return .{ null, null };
@@ -39,7 +38,6 @@ fn indexOfDepPathSuffix(path: []const u8) struct { ?usize, ?usize } {
 /// version(hash) -> version
 /// https://github.com/pnpm/pnpm/blob/102d5a01ddabda1184b88119adccfbe956d30579/packages/dependency-path/src/index.ts#L52-L61
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn removeSuffix(path: []const u8) []const u8 {
     const peers_idx, const patch_hash_idx = indexOfDepPathSuffix(path);
 
@@ -74,7 +72,6 @@ const MigratePnpmLockfileError = OOM || error{
     PnpmLockfileUnresolvableDependency,
 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn migratePnpmLockfile(
     lockfile: *Lockfile,
@@ -423,7 +420,6 @@ pub fn migratePnpmLockfile(
         // for these dependencies in packages/snapshots
         for (0..workspace_pkgs_end) |_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const pkg_id: PackageID = @intCast(_pkg_id);
 
             const workspace_path = if (pkg_id == 0) "." else workspace_path: {
@@ -437,7 +433,6 @@ pub fn migratePnpmLockfile(
 
             const deps = lockfile.packages.items(.dependencies)[pkg_id];
             next_dep: for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
 
@@ -692,7 +687,6 @@ pub fn migratePnpmLockfile(
         // resolve root dependencies first
         for (pkg_deps[0].begin()..pkg_deps[0].end()) |_dep_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(_dep_id);
             const dep = &lockfile.buffers.dependencies.items[dep_id];
 
@@ -745,7 +739,6 @@ pub fn migratePnpmLockfile(
 
     for (workspace_pkgs_off..workspace_pkgs_end) |_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pkg_id: PackageID = @intCast(_pkg_id);
 
         const workspace_res = pkg_resolutions[pkg_id];
@@ -757,7 +750,6 @@ pub fn migratePnpmLockfile(
 
         const deps = pkg_deps[pkg_id];
         for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(_dep_id);
             const dep = &lockfile.buffers.dependencies.items[dep_id];
@@ -798,12 +790,10 @@ pub fn migratePnpmLockfile(
 
     for (workspace_pkgs_end..lockfile.packages.len) |_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pkg_id: PackageID = @intCast(_pkg_id);
 
         const deps = pkg_deps[pkg_id];
         for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_id: DependencyID = @intCast(_dep_id);
             const dep = &lockfile.buffers.dependencies.items[dep_id];
@@ -1078,7 +1068,6 @@ fn parseAppendPackageDependencies(
     );
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ @intCast(off), @intCast(end - off) };
 }
 
@@ -1239,7 +1228,6 @@ fn parseAppendImporterDependencies(
         Dependency.isLessThan,
     );
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ @intCast(off), @intCast(end - off) };
 }

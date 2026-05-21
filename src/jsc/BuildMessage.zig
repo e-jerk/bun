@@ -17,12 +17,10 @@ pub const BuildMessage = struct {
         const notes = this.msg.notes;
         const array = try jsc.JSValue.createEmptyArray(globalThis, notes.len);
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (notes, 0..) |note, i| {
             const cloned = try note.clone(bun.default_allocator);
             try array.putIndex(
                 globalThis,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(i),
                 try BuildMessage.create(globalThis, bun.default_allocator, logger.Msg{ .data = cloned, .kind = .note }),

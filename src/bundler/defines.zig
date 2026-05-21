@@ -57,6 +57,7 @@ pub const DefineData = struct {
                 .method_call_must_be_replaced_with_undefined = options.method_call_must_be_replaced_with_undefined,
             },
             .original_name_ptr = if (options.original_name) |name| name.ptr else null,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .original_name_len = if (options.original_name) |name| @truncate(name.len) else 0,
         };
     }
@@ -121,6 +122,7 @@ pub const DefineData = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromMergeableInputEntry(user_defines: *UserDefines, key: []const u8, value_str: []const u8, value_is_undefined: bool, method_call_must_be_replaced_with_undefined_: bool, log: *logger.Log, allocator: std.mem.Allocator) !void {
         user_defines.putAssumeCapacity(key, try .parse(
             key,
@@ -132,6 +134,7 @@ pub const DefineData = struct {
         ));
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(
         key: []const u8,
         value_str: []const u8,
@@ -177,6 +180,7 @@ pub const DefineData = struct {
             return .{
                 .value = value,
                 .original_name_ptr = if (value_str.len > 0) value_str.ptr else null,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .original_name_len = @truncate(value_str.len),
                 .flags = .{
                     .can_be_removed_if_unused = true,
@@ -195,6 +199,7 @@ pub const DefineData = struct {
         return .{
             .value = cloned,
             .original_name_ptr = if (value_str.len > 0) value_str.ptr else null,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .original_name_len = @truncate(value_str.len),
             .flags = .{
                 .can_be_removed_if_unused = expr.isPrimitiveLiteral(),
@@ -207,6 +212,7 @@ pub const DefineData = struct {
     pub fn fromInput(defines: RawDefines, drop: []const []const u8, log: *logger.Log, allocator: std.mem.Allocator) !UserDefines {
         var user_defines = UserDefines.init(allocator);
         var iterator = defines.iterator();
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try user_defines.ensureUnusedCapacity(@truncate(defines.count() + drop.len));
         while (iterator.next()) |entry| {
             try fromMergeableInputEntry(&user_defines, entry.key_ptr.*, entry.value_ptr.*, false, false, log, allocator);
@@ -252,6 +258,7 @@ pub const Define = struct {
 
     pub const Data = DefineData;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn forIdentifier(this: *const Define, name: []const u8) ?*const IdentifierDefine {
         if (this.identifiers.getPtr(name)) |data| {
             return data;
@@ -270,6 +277,7 @@ pub const Define = struct {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insert(define: *Define, allocator: std.mem.Allocator, key: []const u8, value: DefineData) !void {
         // If it has a dot, then it's a DotDefine.
         // e.g. process.env.NODE_ENV
@@ -290,6 +298,7 @@ pub const Define = struct {
             const gpe_entry = try define.dots.getOrPut(tail);
 
             if (gpe_entry.found_existing) {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (gpe_entry.value_ptr.*) |*part| {
                     // ["process", "env"] === ["process", "env"] (if that actually worked)
                     if (arePartsEqual(part.parts, parts)) {
@@ -343,15 +352,15 @@ pub const Define = struct {
     }
 
     pub fn init(allocator: std.mem.Allocator, _user_defines: ?UserDefines, string_defines: ?UserDefinesArray, drop_debugger: bool, omit_unused_global_calls: bool) bun.OOM!*@This() {
-        const define = try allocator.create(Define);
-        errdefer allocator.destroy(define);
-        define.* = .{
+        const define = try safe.Box(Define).init(allocator, undefined);
+        defer _ = define.deinit();
+        define.ptr.* = .{
             .allocator = allocator,
             .identifiers = bun.StringHashMap(IdentifierDefine).init(allocator),
             .dots = bun.StringHashMap([]DotDefine).init(allocator),
             .drop_debugger = drop_debugger,
         };
-        try define.dots.ensureTotalCapacity(124);
+        try define.ptr.dots.ensureTotalCapacity(124);
 
         const value_define = &DefineData{
             .value = .{ .e_undefined = .{} },
@@ -362,7 +371,7 @@ pub const Define = struct {
         };
         // Step 1. Load the globals into the hash tables
         for (global_no_side_effect_property_accesses) |global| {
-            try define.insertGlobal(allocator, global, value_define);
+            try define.ptr.insertGlobal(allocator, global, value_define);
         }
 
         const to_string_safe = &DefineData{
@@ -376,11 +385,11 @@ pub const Define = struct {
 
         if (omit_unused_global_calls) {
             for (global_no_side_effect_function_calls_safe_for_to_string) |global| {
-                try define.insertGlobal(allocator, global, to_string_safe);
+                try define.ptr.insertGlobal(allocator, global, to_string_safe);
             }
         } else {
             for (global_no_side_effect_function_calls_safe_for_to_string) |global| {
-                try define.insertGlobal(allocator, global, value_define);
+                try define.ptr.insertGlobal(allocator, global, value_define);
             }
         }
 
@@ -388,17 +397,17 @@ pub const Define = struct {
         // At this stage, user data has already been validated.
         if (_user_defines) |user_defines| {
             var iter = user_defines.iterator();
-            try define.insertFromIterator(allocator, @TypeOf(&iter), &iter);
+            try define.ptr.insertFromIterator(allocator, @TypeOf(&iter), &iter);
         }
 
         // Step 4. Load environment data into hash tables.
         // These are only strings. We do not parse them as JSON.
         if (string_defines) |string_defines_| {
             var iter = string_defines_.iterator();
-            try define.insertFromIterator(allocator, @TypeOf(&iter), &iter);
+            try define.ptr.insertFromIterator(allocator, @TypeOf(&iter), &iter);
         }
 
-        return define;
+        return define.ptr;
     }
 
     pub fn deinit(this: *Define) void {

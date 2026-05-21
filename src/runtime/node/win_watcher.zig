@@ -102,10 +102,8 @@ pub const PathWatcher = struct {
             return;
         }
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         const this: *PathWatcher = @alignCast(@fieldParentPtr("handle", event));
         if (comptime bun.Environment.isDebug) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.assert(event.data == @as(?*anyopaque, @ptrCast(this)));
         }
@@ -131,7 +129,6 @@ pub const PathWatcher = struct {
         this.emit(
             path,
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             @truncate(event.hash(path, events, status)),
             timestamp,
             !event.isDir(),
@@ -143,10 +140,8 @@ pub const PathWatcher = struct {
         this.emit_in_progress = true;
         var debug_count: if (bun.Environment.isDebug) usize else u0 = 0;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.handlers.values(), 0..) |*event, i| {
             if (event.emit(hash, timestamp, event_type)) {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const ctx: *FSWatcher = @ptrCast(@alignCast(this.handlers.keys()[i]));
                 onPathUpdateFn(ctx, event_type.toEvent(switch (ctx.encoding) {
@@ -219,7 +214,6 @@ pub const PathWatcher = struct {
         }
         // we handle this in node_fs_watcher
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         uv.uv_unref(@ptrCast(&this.handle));
 
         watchers_entry.value_ptr.* = this;
@@ -260,12 +254,10 @@ pub const PathWatcher = struct {
             }
         }
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         if (uv.uv_is_closed(@ptrCast(&this.handle))) {
             bun.destroy(this);
         } else {
             _ = uv.uv_fs_event_stop(&this.handle);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             _ = uv.uv_close(@ptrCast(&this.handle), PathWatcher.uvClosedCallback);
         }

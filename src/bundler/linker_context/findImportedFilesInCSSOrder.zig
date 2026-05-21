@@ -88,6 +88,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
 
             // Iterate over the top-level "@import" rules
             var import_record_idx: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (top_level_rules.v.items) |*rule| {
                 if (rule.* == .import) {
                     defer import_record_idx += 1;
@@ -156,6 +157,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
             // Iterate over the "composes" directives. Note that the order doesn't
             // matter for these because the output order is explicitly undfened
             // in the specification.
+// safe-transpile: for loop with pointer capture requires manual review
             for (visitor.all_import_records[source_index.get()].sliceConst()) |*record| {
                 if (record.kind == .composes and record.source_index.isValid()) {
                     visitor.visit(record.source_index, wrapping_conditions, wrapping_import_records);
@@ -206,6 +208,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
     if (visitor.has_external_import) {
         // Pass 1: Pull out leading "@layer" and external "@import" rules
         var is_at_layer_prefix = true;
+// safe-transpile: for loop with pointer capture requires manual review
         for (order.slice()) |*entry| {
             if ((entry.kind == .layers and is_at_layer_prefix) or entry.kind == .external_path) {
                 bun.handleOom(wip_order.append(temp_allocator, entry.*));
@@ -217,6 +220,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
 
         // Pass 2: Append everything that we didn't pull out in pass 1
         is_at_layer_prefix = true;
+// safe-transpile: for loop with pointer capture requires manual review
         for (order.slice()) |*entry| {
             if ((entry.kind != .layers or !is_at_layer_prefix) and entry.kind != .external_path) {
                 bun.handleOom(wip_order.append(temp_allocator, entry.*));
@@ -227,6 +231,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
         }
 
         order.len = wip_order.len;
+// safe-transpile: @memcpy requires manual review
         @memcpy(order.slice(), wip_order.slice());
         wip_order.clearRetainingCapacity();
     }
@@ -297,13 +302,15 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
         };
         var layer_duplicates = bun.BabyList(DuplicateEntry){};
 
+// safe-transpile: for loop with pointer capture requires manual review
         next_forward: for (order.slice()) |*entry| {
             debugCssOrder(this, &wip_order, .WHILE_OPTIMIZING_REDUNDANT_LAYER_RULES);
             switch (entry.kind) {
                 // Simplify the conditions since we know they only wrap "@layer"
                 .layers => |*layers| {
                     // Truncate the conditions at the first anonymous layer
-                    for (entry.conditions.slice(), 0..) |*condition_, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (entry.conditions.slice(), 0..) |*condition_, i| {
                         const conditions: *bun.css.ImportConditions = condition_;
                         // The layer is anonymous if it's a "layer" token without any
                         // children instead of a "layer(...)" token with children:
@@ -321,6 +328,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
                         //   }
                         //
                         if (conditions.hasAnonymousLayer()) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             entry.conditions.len = @intCast(i);
                             layers.replace(temp_allocator, .{});
                             break;
@@ -389,7 +397,8 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
                         break :both_equal false;
                     }
 
-                    for (layers_key, layer_duplicates.at(index).layers) |*a, *b| {
+                    // safe-transpile: for with index access requires manual review
+    for (layers_key, layer_duplicates.at(index).layers) |*a, *b| {
                         if (!a.eql(b)) {
                             break :both_equal false;
                         }
@@ -467,6 +476,7 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
         debugCssOrder(this, &wip_order, .WHILE_OPTIMIZING_REDUNDANT_LAYER_RULES);
 
         order.len = wip_order.len;
+// safe-transpile: @memcpy requires manual review
         @memcpy(order.slice(), wip_order.slice());
         wip_order.clearRetainingCapacity();
     }
@@ -475,12 +485,14 @@ pub fn findImportedFilesInCSSOrder(this: *LinkerContext, temp_allocator: std.mem
     // Finally, merge adjacent "@layer" rules with identical conditions together.
     {
         var did_clone: i32 = -1;
+// safe-transpile: for loop with pointer capture requires manual review
         for (order.slice()) |*entry| {
             if (entry.kind == .layers and wip_order.len > 0) {
                 const prev_index = wip_order.len - 1;
                 const prev = wip_order.at(prev_index);
                 if (prev.kind == .layers and importConditionsAreEqual(prev.conditions.sliceConst(), entry.conditions.sliceConst())) {
                     if (did_clone != prev_index) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         did_clone = @intCast(prev_index);
                     }
                     // need to clone the layers here as they could be references to css ast
@@ -502,6 +514,7 @@ fn importConditionsAreEqual(a: []const bun.css.ImportConditions, b: []const bun.
         return false;
     }
 
+    // safe-transpile: for with index access requires manual review
     for (a, b) |*ai, *bi| {
         if (!ai.layersEql(bi) or !ai.supportsEql(bi) or !ai.media.eql(&bi.media)) return false;
     }
@@ -616,13 +629,15 @@ fn debugCssOrderImpl(this: *LinkerContext, order: *const BabyList(Chunk.CssImpor
         debug("CSS order {s}:\n", .{@tagName(step)});
         var arena = bun.ArenaAllocator.init(bun.default_allocator);
         defer arena.deinit();
-        for (order.slice(), 0..) |entry, i| {
+        // safe-transpile: for with index access requires manual review
+    for (order.slice(), 0..) |entry, i| {
             const conditions_str = if (entry.conditions.len > 0) conditions_str: {
                 var arrlist = std.Io.Writer.Allocating.init(arena.allocator());
                 const writer = &arrlist.writer;
                 writer.writeAll("[") catch unreachable;
                 var symbols = Symbol.Map{};
-                for (entry.conditions.sliceConst(), 0..) |*condition_, j| {
+                // safe-transpile: for with index access requires manual review
+    for (entry.conditions.sliceConst(), 0..) |*condition_, j| {
                     const condition: *const bun.css.ImportConditions = condition_;
                     const scratchbuf = std.array_list.Managed(u8).init(arena.allocator());
                     var printer = bun.css.Printer.new(

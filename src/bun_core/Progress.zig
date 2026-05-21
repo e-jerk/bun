@@ -86,7 +86,6 @@ pub const Node = struct {
     /// Until that is fixed you probably want to call `activate` on the return value.
     /// Passing 0 for `estimated_total_items` means unknown.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn start(self: *Node, name: []const u8, estimated_total_items: usize) Node {
         return Node{
             .context = self.context,
@@ -134,7 +133,6 @@ pub const Node = struct {
 
     /// Thread-safe.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setName(self: *Node, name: []const u8) void {
         const progress = self.context;
         progress.update_mutex.lock();
@@ -150,7 +148,6 @@ pub const Node = struct {
     }
 
     /// Thread-safe.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setUnit(self: *Node, unit: []const u8) void {
         const progress = self.context;
@@ -182,7 +179,6 @@ pub const Node = struct {
 /// TODO solve https://github.com/ziglang/zig/issues/2765 and then change this
 /// API to return Progress rather than accept it as a parameter.
 /// `estimated_total_items` value of 0 means unknown.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn start(self: *Progress, name: []const u8, estimated_total_items: usize) *Node {
     const stderr = bun.sys.File{ .handle = bun.FD.fromNative(std.posix.STDERR_FILENO) };
@@ -260,7 +256,6 @@ fn clearWithHeldLock(p: *Progress, end_ptr: *usize) void {
 
             var cursor_pos = windows.COORD{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .X = info.dwCursorPosition.X - @as(windows.SHORT, @intCast(p.columns_written)),
                 .Y = info.dwCursorPosition.Y,
             };
@@ -268,7 +263,6 @@ fn clearWithHeldLock(p: *Progress, end_ptr: *usize) void {
             if (cursor_pos.X < 0)
                 cursor_pos.X = 0;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const fill_chars = @as(windows.DWORD, @intCast(info.dwSize.X - cursor_pos.X));
 
@@ -371,7 +365,6 @@ fn refreshWithHeldLock(self: *Progress) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn log(self: *Progress, comptime format: []const u8, args: anytype) void {
     const file = self.terminal orelse {
         (std.debug).print(format, args);
@@ -406,7 +399,6 @@ pub fn unlock_stderr(p: *Progress) void {
     p.update_mutex.unlock();
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn bufWrite(self: *Progress, end: *usize, comptime format: []const u8, args: anytype) void {
     if (std.fmt.bufPrint(self.output_buffer[end.*..], format, args)) |written| {

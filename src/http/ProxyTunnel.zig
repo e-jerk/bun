@@ -47,7 +47,8 @@ fn onOpen(this: *HTTPClient) void {
             var hostname_needs_free = false;
             if (!strings.isIPAddress(_hostname)) {
                 if (_hostname.len < bun.http.temp_hostname.len) {
-                    safe.SimdUtils.copy(bun.http.temp_hostname[0.._hostname.len], _hostname);
+// safe-transpile: @memcpy requires manual review
+                    @memcpy(bun.http.temp_hostname[0.._hostname.len], _hostname);
                     bun.http.temp_hostname[_hostname.len] = 0;
                     hostname = bun.http.temp_hostname[0.._hostname.len :0];
                 } else {
@@ -62,7 +63,6 @@ fn onOpen(this: *HTTPClient) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData(this: *HTTPClient, decoded_data: []const u8) void {
     if (decoded_data.len == 0) return;
@@ -209,7 +209,6 @@ fn onHandshake(this: *HTTPClient, handshake_success: bool, ssl_error: uws.us_bun
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn writeEncrypted(this: *HTTPClient, encoded_data: []const u8) void {
     if (this.proxy_tunnel) |proxy| {
         // Preserve TLS record ordering: if any encrypted bytes are buffered,
@@ -223,7 +222,6 @@ pub fn writeEncrypted(this: *HTTPClient, encoded_data: []const u8) void {
             .tcp => |socket| socket.write(encoded_data),
             .none => 0,
         };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pending = encoded_data[@intCast(written)..];
         if (pending.len > 0) {
@@ -287,7 +285,6 @@ fn progressUpdateForProxySocket(this: *HTTPClient, proxy: *ProxyTunnel) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn start(this: *HTTPClient, comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, ssl_options: jsc.API.ServerConfig.SSLConfig, start_payload: []const u8) void {
     const proxy_tunnel = bun.new(ProxyTunnel, .{
@@ -358,12 +355,10 @@ pub fn onWritable(this: *ProxyTunnel, comptime is_ssl: bool, socket: NewHTTPCont
         this.write_buffer.reset();
     } else {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.write_buffer.cursor += @intCast(written);
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn receive(this: *ProxyTunnel, buf: []const u8) void {
     this.ref();
@@ -373,7 +368,6 @@ pub fn receive(this: *ProxyTunnel, buf: []const u8) void {
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(this: *ProxyTunnel, buf: []const u8) !usize {
     if (this.wrapper) |*wrapper| {

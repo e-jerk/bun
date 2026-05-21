@@ -286,6 +286,7 @@ const zust = @import("safe");
 
         return switch (this.*) {
             .pipe => |pipe| {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (pipe.signal.ptr == @as(*anyopaque, @ptrCast(this))) {
                     pipe.signal.clear();
                 }

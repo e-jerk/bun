@@ -399,7 +399,7 @@ pub const SizeProperty = packed struct(u16) {
 
     pub fn tryFromPropertyIdTag(property_id: PropertyIdTag) ?SizeProperty {
         inline for (std.meta.fields(@This())) |field| {
-            if (comptime safe.SimdUtils.eql(field.name, "__unused")) continue;
+            if (comptime std.mem.eql(u8, field.name, "__unused")) continue;
             if (@intFromEnum(@field(PropertyIdTag, field.name)) == @intFromEnum(@as(PropertyIdTag, property_id))) {
                 var ret: SizeProperty = .{};
                 @field(ret, field.name) = true;
@@ -482,7 +482,6 @@ pub const SizeHandler = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn propertyHelper(
         this: *@This(),
         comptime property: []const u8,
@@ -558,7 +557,6 @@ pub const SizeHandler = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn flushPropertyHelper(
         this: *@This(),
         comptime property: PropertyIdTag,
@@ -588,7 +586,6 @@ pub const SizeHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn flushLogicalHelper(
         this: *@This(),

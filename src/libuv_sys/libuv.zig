@@ -437,16 +437,13 @@ fn HandleMixin(comptime Type: type) type {
     return struct {
         pub fn getData(this: *const Type, comptime DataType: type) ?*DataType {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(@alignCast(uv_handle_get_data(@ptrCast(this))));
         }
         pub fn getLoop(this: *const Type) *Loop {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_handle_get_loop(@ptrCast(this));
         }
         pub fn setData(handle: *Type, ptr: ?*anyopaque) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uv_handle_set_data(@ptrCast(handle), ptr);
         }
@@ -454,12 +451,10 @@ fn HandleMixin(comptime Type: type) type {
             if (comptime Env.isDebug)
                 log("{s}.close({f})", .{ bun.meta.typeName(Type), fd(this) });
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uv_close(@ptrCast(this), @ptrCast(cb));
         }
 
         pub fn hasRef(this: *const Type) bool {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_has_ref(@ptrCast(this)) != 0;
         }
@@ -468,7 +463,6 @@ fn HandleMixin(comptime Type: type) type {
             if (comptime Env.isDebug)
                 log("{s}.ref({f})", .{ bun.meta.typeName(Type), bun.fs.printHandle(if (comptime Type != Process) fd(this) else Process.getPid(this)) });
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uv_ref(@ptrCast(this));
         }
 
@@ -476,31 +470,26 @@ fn HandleMixin(comptime Type: type) type {
             if (comptime Env.isDebug)
                 log("{s}.unref({f})", .{ bun.meta.typeName(Type), bun.fs.printHandle(if (comptime Type != Process) fd(this) else Process.getPid(this)) });
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uv_unref(@ptrCast(this));
         }
 
         pub fn isClosing(this: *const Type) bool {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_is_closing(@ptrCast(this)) != 0;
         }
 
         pub fn isClosed(this: *const Type) bool {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_is_closed(@ptrCast(this));
         }
 
         pub fn isActive(this: *const Type) bool {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_is_active(@ptrCast(this)) != 0;
         }
 
         pub fn fd(this: *const Type) bun.FD {
             var fd_: uv_os_fd_t = windows.INVALID_HANDLE_VALUE;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             _ = uv_fileno(@ptrCast(this), &fd_);
             if (fd_ == windows.INVALID_HANDLE_VALUE)
@@ -516,21 +505,17 @@ fn ReqMixin(comptime Type: type) type {
     return struct {
         pub fn getData(this: *const Type, comptime DataType: type) ?*DataType {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(uv_req_get_data(@ptrCast(this)));
         }
         pub fn loop(this: *const Type) *Loop {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_handle_get_loop(@ptrCast(this));
         }
         pub fn setData(handle: *Type, ptr: ?*anyopaque) void {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             uv_req_set_data(@ptrCast(handle), ptr);
         }
         pub fn cancel(this: *Type) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             _ = uv_cancel(@ptrCast(this));
         }
@@ -645,7 +630,6 @@ pub const struct_uv_async_s = extern struct {
     pub fn init(this: *@This(), loop: *Loop, callback: uv_async_cb) void {
         @memset(std.mem.asBytes(this), 0);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         if (uv_async_init(loop, @ptrCast(this), callback) != 0) {
             @panic("internal error: uv_async_init failed");
@@ -790,7 +774,6 @@ pub const Loop = extern struct {
     pub fn unrefCount(this: *Loop, count: i32) void {
         log("unrefCount({d})", .{count});
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.active_handles -|= @as(u32, @intCast(count));
     }
 
@@ -826,15 +809,12 @@ pub const uv_buf_t = extern struct {
     base: [*]u8,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(input: []const u8) uv_buf_t {
         bun.assert(input.len <= @as(usize, std.math.maxInt(ULONG)));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .{ .len = @truncate(input.len), .base = @constCast(input.ptr) };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const @This()) []u8 {
         return this.base[0..this.len];
@@ -1329,12 +1309,10 @@ pub const Timer = extern struct {
 
     pub fn unref(this: *@This()) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         uv_unref(@ptrCast(@alignCast(this)));
     }
 
     pub fn ref(this: *@This()) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         uv_ref(@ptrCast(@alignCast(this)));
     }
@@ -1373,14 +1351,12 @@ pub const struct_uv_write_s = extern struct {
             const Wrapper = struct {
                 pub fn uvWriteCb(handler: *uv_write_t, status: ReturnCode) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                     callback(@ptrCast(@alignCast(handler.data)), status);
                 }
             };
 
             req.data = context;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const rc = uv_write(req, stream, @ptrCast(input), 1, &Wrapper.uvWriteCb);
             bun.sys.syslog("uv_write({d}) = {d}", .{ input.len, rc.int() });
@@ -1392,7 +1368,6 @@ pub const struct_uv_write_s = extern struct {
             return .success;
         }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const rc = uv_write(req, stream, @ptrCast(input), 1, null);
         if (rc.toError(.write)) |err| {
@@ -1480,7 +1455,6 @@ pub const Pipe = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn listenNamedPipe(this: *@This(), named_pipe: []const u8, backlog: i32, context: anytype, comptime onClientConnect: *const (fn (@TypeOf(context), ReturnCode) void)) Maybe(void) {
         if (this.bind(named_pipe, UV_PIPE_NO_TRUNCATE).asErr()) |err| {
             return .{ .err = err };
@@ -1489,9 +1463,7 @@ pub const Pipe = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn bind(this: *@This(), named_pipe: []const u8, flags: i32) Maybe(void) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (uv_pipe_bind2(this, named_pipe.ptr, named_pipe.len, @intCast(flags)).toError(.bind2)) |err| {
             return .{ .err = err };
@@ -1500,19 +1472,15 @@ pub const Pipe = extern struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn connect(this: *@This(), req: *uv_connect_t, name: []const u8, context: anytype, comptime onConnect: *const (fn (@TypeOf(context), ReturnCode) void)) Maybe(void) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         this.data = @ptrCast(context);
         const Wrapper = struct {
             pub fn uvConnectCb(handle: *uv_connect_t, status: ReturnCode) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 onConnect(@ptrCast(@alignCast(handle.data)), status);
             }
         };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         if (uv_pipe_connect2(req, this, @ptrCast(name.ptr), name.len, UV_PIPE_NO_TRUNCATE, &Wrapper.uvConnectCb).toError(.connect2)) |err| {
             return .{ .err = err };
@@ -1525,7 +1493,6 @@ pub const Pipe = extern struct {
     }
 
     pub fn asStream(this: *@This()) *uv_stream_t {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this);
     }
@@ -1757,12 +1724,10 @@ pub const Process = extern struct {
 
     pub fn kill(this: *@This(), signum: c_int) ReturnCode {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         return uv_process_kill(@ptrCast(@alignCast(this)), signum);
     }
 
     pub fn getPid(this: *const @This()) c_int {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return uv_process_get_pid(@ptrCast(@alignCast(this)));
     }
@@ -1817,7 +1782,6 @@ pub const struct_uv_fs_event_s = extern struct {
         return this.dirw != null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(this: *const uv_fs_event_t, filename: []const u8, events: c_int, status: ReturnCode) u64 {
         var hasher = std.hash.Wyhash.init(0);
@@ -2083,7 +2047,6 @@ pub const fs_t = extern struct {
 
     pub inline fn ptrAs(this: *fs_t, comptime T: type) T {
         this.assertInitialized();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(this.ptr);
     }
@@ -2849,7 +2812,6 @@ pub fn uv_is_closed(handle: *const uv_handle_t) bool {
 
 pub fn translateUVErrorToE(code_in: anytype) bun.sys.E {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const code: c_int = @intCast(code_in);
 
     return switch (code) {
@@ -3091,7 +3053,6 @@ pub const ReturnCodeI64 = enum(i64) {
     pub inline fn errno(this: ReturnCodeI64) ?u16 {
         return if (@intFromEnum(this) < 0)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @as(u16, @intCast(-@intFromEnum(this)))
         else
             null;
@@ -3110,7 +3071,6 @@ pub const ReturnCodeI64 = enum(i64) {
 
     pub fn toFD(this: ReturnCodeI64) bun.FD {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .fromUV(@truncate(this.int()));
     }
 };
@@ -3122,22 +3082,18 @@ fn StreamMixin(comptime Type: type) type {
     return struct {
         pub fn getWriteQueueSize(this: *Type) usize {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_stream_get_write_queue_size(@ptrCast(this));
         }
 
         pub fn listen(this: *Type, backlog: i32, context: anytype, comptime onConnect: *const (fn (@TypeOf(context), ReturnCode) void)) Maybe(void) {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             this.data = @ptrCast(context);
             const Wrapper = struct {
                 pub fn uvConnectCb(handle: *uv_stream_t, status: ReturnCode) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                     onConnect(@ptrCast(@alignCast(handle.data)), status);
                 }
             };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             if (uv_listen(@ptrCast(this), backlog, &Wrapper.uvConnectCb).toError(.listen)) |err| {
                 return .{ .err = err };
@@ -3146,7 +3102,6 @@ fn StreamMixin(comptime Type: type) type {
         }
 
         pub fn accept(this: *Type, client: *Type) Maybe(void) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             if (uv_accept(@ptrCast(this), @ptrCast(client)).toError(.accept)) |err| {
                 return .{ .err = err };
@@ -3163,17 +3118,14 @@ fn StreamMixin(comptime Type: type) type {
         ) Maybe(void) {
             const Context = @TypeOf(context);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             this.data = @ptrCast(context);
             const Wrapper = struct {
                 pub fn uvAllocb(req: *uv_stream_t, suggested_size: usize, buffer: *uv_buf_t) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                     const context_data: Context = @ptrCast(@alignCast(req.data));
                     buffer.* = uv_buf_t.init(alloc_cb(context_data, suggested_size));
                 }
                 pub fn uvReadcb(req: *uv_stream_t, nreads: isize, buffer: *uv_buf_t) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                     const context_data: Context = @ptrCast(@alignCast(req.data));
                     if (nreads == 0) return; // EAGAIN or EWOULDBLOCK
@@ -3182,13 +3134,11 @@ fn StreamMixin(comptime Type: type) type {
                         error_cb(context_data, ReturnCodeI64.init(nreads).errEnum() orelse bun.sys.E.CANCELED);
                     } else {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         read_cb(context_data, buffer.base[0..@intCast(nreads)]);
                     }
                 }
             };
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             if (uv_read_start(@ptrCast(this), @ptrCast(&Wrapper.uvAllocb), @ptrCast(&Wrapper.uvReadcb)).toError(.listen)) |err| {
                 return .{ .err = err };
@@ -3198,7 +3148,6 @@ fn StreamMixin(comptime Type: type) type {
 
         pub fn readStop(this: *Type) void {
             // always succeed see https://docs.libuv.org/en/v1.x/stream.html#c.uv_read_stop
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             _ = uv_read_stop(@ptrCast(this));
         }
@@ -3210,7 +3159,6 @@ fn StreamMixin(comptime Type: type) type {
                 const Wrapper = struct {
                     pub fn uvWriteCb(req: *uv_write_t, status: ReturnCode) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                         const context_data: Context = @ptrCast(@alignCast(req.data));
                         bun.sys.syslog("uv_write({d}) = {d}", .{ req.write_buffer.len, status.int() });
                         bun.destroy(req);
@@ -3221,7 +3169,6 @@ fn StreamMixin(comptime Type: type) type {
                 uv_data.data = context;
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (uv_write(uv_data, @ptrCast(this), @ptrCast(input), 1, &Wrapper.uvWriteCb).toError(.write)) |err| {
                     return .{ .err = err };
                 }
@@ -3229,7 +3176,6 @@ fn StreamMixin(comptime Type: type) type {
             }
 
             var req: uv_write_t = std.mem.zeroes(uv_write_t);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             if (uv_write(&req, this, @ptrCast(input), 1, null).toError(.write)) |err| {
                 return .{ .err = err };
@@ -3239,41 +3185,33 @@ fn StreamMixin(comptime Type: type) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn tryWrite(this: *Type, input: []const u8) Maybe(usize) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const rc = uv_try_write(@ptrCast(this), @ptrCast(&uv_buf_t.init(input)), 1);
             if (rc.toError(.try_write)) |err| {
                 return .{ .err = err };
             }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = @intCast(rc.int()) };
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn tryWrite2(this: *Type, input: []const u8, send_handle: *uv_stream_t) ReturnCode {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const rc = uv_try_write2(@ptrCast(this), @ptrCast(&uv_buf_t.init(input)), 1, send_handle);
             if (rc.toError(.try_write2)) |err| {
                 return .{ .err = err };
             }
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = @intCast(rc.int()) };
         }
 
         pub fn isReadable(this: *Type) bool {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_is_readable(@ptrCast(this)) != 0;
         }
 
         pub fn isWritable(this: *@This()) bool {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return uv_is_writable(@ptrCast(this)) != 0;
         }
@@ -3291,18 +3229,15 @@ pub fn StreamWriterMixin(comptime Type: type, comptime pipe_field_name: std.meta
             }
 
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(&@field(this, @tagName(@tagName(pipe_field_name))));
         }
 
         fn uv_on_write_cb(req: *uv_write_t, status: ReturnCode) callconv(.c) void {
             var this: *Type = @fieldParentPtr(@tagName(uv_write_t_field_name), req);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.onWrite(if (status.toError(.send)) |err| .{ .err = err } else .{ .result = @intCast(status.int()) });
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(this: *@This(), input: []const u8) void {
             if (comptime Env.allow_assert) {

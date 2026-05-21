@@ -63,7 +63,6 @@ fn execTask(allocator: std.mem.Allocator, task_: string, cwd: string, _: string,
     }
 
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const npm_args = 2 * @as(usize, @intCast(@intFromBool(npm_client != null)));
     const total = count + npm_args;
     var argv = allocator.alloc(string, total) catch return;
@@ -88,7 +87,6 @@ fn execTask(allocator: std.mem.Allocator, task_: string, cwd: string, _: string,
     }
 
     Output.pretty("\n<r><d>$<b>", .{});
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (argv, 0..) |arg, i| {
         if (i > argv.len - 1) {
@@ -197,7 +195,6 @@ const CreateOptions = struct {
 const BUN_CREATE_DIR = ".bun-create";
 var home_dir_buf: bun.PathBuffer = undefined;
 pub const CreateCommand = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn exec(ctx: Command.Context, example_tag: Example.Tag, template: []const u8) !void {
         @branchHint(.cold);
@@ -350,7 +347,6 @@ pub const CreateCommand = struct {
 
                 var archive_context = Archiver.Context{
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .pluckers = pluckers[0..@as(usize, @intCast(@intFromBool(!create_options.skip_package_json)))],
                     .all_files = undefined,
                     .overwrite_list = bun.StringArrayHashMap(void).init(ctx.allocator),
@@ -477,11 +473,13 @@ pub const CreateCommand = struct {
                             if (comptime Environment.isWindows) {
                                 if (entry.kind != .file and entry.kind != .directory) continue;
 
-                                zust.SimdUtils.copy(dst_buf[dst_base_len..][0..entry.path.len], entry.path);
+// safe-transpile: @memcpy requires manual review
+                                @memcpy(dst_buf[dst_base_len..][0..entry.path.len], entry.path);
                                 dst_buf[dst_base_len + entry.path.len] = 0;
                                 const dst = dst_buf[0 .. dst_base_len + entry.path.len :0];
 
-                                zust.SimdUtils.copy(src_buf[src_base_len..][0..entry.path.len], entry.path);
+// safe-transpile: @memcpy requires manual review
+                                @memcpy(src_buf[src_base_len..][0..entry.path.len], entry.path);
                                 src_buf[src_base_len + entry.path.len] = 0;
                                 const src = src_buf[0 .. src_base_len + entry.path.len :0];
 
@@ -543,7 +541,6 @@ pub const CreateCommand = struct {
                             switch (infile.stat()) {
                                 .err => {},
                                 .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     _ = outfile.chmod(@intCast(stat.mode));
                                 },
@@ -1417,7 +1414,6 @@ pub const CreateCommand = struct {
                     break :process_package_json;
                 };
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 file.truncate(@intCast(written.len)).unwrap() catch |err| {
                     Output.prettyErrorln("package.json failed to write due to error {s}", .{@errorName(err)});
                     package_json_file = null;
@@ -1658,7 +1654,6 @@ pub const CreateCommand = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     fn runOnEntryPoint(ctx: Command.Context, example_tag: Example.Tag, entry_point: []const u8, progress: *Progress, node: *Progress.Node) !void {
         const Analyzer = struct {
             ctx: Command.Context,
@@ -1684,7 +1679,6 @@ pub const CreateCommand = struct {
         var fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
             .ctx = &analyzer,
             .entry_points = &[_]string{analyzer.entry_point},
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
@@ -2003,14 +1997,11 @@ pub const Example = struct {
                         .name = .{
                             .offset = 0,
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast("Authorization".len),
                         },
                         .value = .{
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .offset = @intCast("Authorization".len),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast(headers_buf.len - "Authorization".len),
                         },
@@ -2284,7 +2275,6 @@ pub const Example = struct {
 
                 var list = try ctx.allocator.alloc(Example, count);
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (q.expr.data.e_object.properties.slice(), 0..) |property, i| {
                     const name = property.key.?.data.e_string.data;
                     list[i] = Example{

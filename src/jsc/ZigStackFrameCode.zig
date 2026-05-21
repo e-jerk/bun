@@ -27,7 +27,6 @@ pub const ZigStackFrameCode = enum(u8) {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn ansiColor(this: ZigStackFrameCode) []const u8 {
         return switch (this) {
             .Eval => "\x1b[31m",

@@ -42,18 +42,14 @@ const AnySourceProvider = union(enum) {
     pub fn ptr(this: AnySourceProvider) *anyopaque {
         return switch (this) {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .zig => @ptrCast(this.zig),
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .bake => @ptrCast(this.bake),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .dev_server => @ptrCast(this.dev_server),
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getSourceMap(
         this: AnySourceProvider,
@@ -78,18 +74,15 @@ pub const SourceContentPtr = packed struct(u64) {
 
     pub fn fromProvider(p: *SourceProviderMap) SourceContentPtr {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .load_hint = .none, .data = @intCast(@intFromPtr(p)), .kind = .zig };
     }
 
     pub fn fromBakeProvider(p: *BakeSourceProvider) SourceContentPtr {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .load_hint = .none, .data = @intCast(@intFromPtr(p)), .kind = .bake };
     }
 
     pub fn fromDevServerProvider(p: *DevServerSourceProvider) SourceContentPtr {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .load_hint = .none, .data = @intCast(@intFromPtr(p)), .kind = .dev_server };
     }
@@ -157,7 +150,6 @@ pub fn writeVLQs(map: *const ParsedSourceMap, writer: anytype) !void {
     var last_oc: i32 = 0;
     var current_line: i32 = 0;
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (
         map.mappings.generated(),
         map.mappings.original(),
@@ -167,7 +159,6 @@ pub fn writeVLQs(map: *const ParsedSourceMap, writer: anytype) !void {
         if (current_line != gen.lines.zeroBased()) {
             assert(gen.lines.zeroBased() > current_line);
             const inc = gen.lines.zeroBased() - current_line;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try writer.splatByteAll(';', @intCast(inc));
             current_line = gen.lines.zeroBased();

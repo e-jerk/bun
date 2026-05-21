@@ -26,7 +26,6 @@ pub fn enable(this: *EventLoopDelayMonitor, vm: *VirtualMachine, histogram: jsc.
     // Schedule timer
     const now = bun.timespec.now(.force_real_time);
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.event_loop_timer.next = now.addMs(@intCast(resolution_ms));
     vm.timer.insert(&this.event_loop_timer);
 }
@@ -52,12 +51,10 @@ pub fn onFire(this: *EventLoopDelayMonitor, vm: *VirtualMachine, now: *const bun
     const now_ns = now.ns();
     if (this.last_fire_ns > 0) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const expected_ns = @as(u64, @intCast(this.resolution_ms)) *| 1_000_000;
         const actual_ns = now_ns - this.last_fire_ns;
 
         if (actual_ns > expected_ns) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const delay_ns = @as(i64, @intCast(actual_ns -| expected_ns));
             JSNodePerformanceHooksHistogram_recordDelay(this.js_histogram, delay_ns);
@@ -67,7 +64,6 @@ pub fn onFire(this: *EventLoopDelayMonitor, vm: *VirtualMachine, now: *const bun
     this.last_fire_ns = now_ns;
 
     // Reschedule
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.event_loop_timer.next = now.addMs(@intCast(this.resolution_ms));
     vm.timer.insert(&this.event_loop_timer);

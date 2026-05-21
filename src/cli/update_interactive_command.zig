@@ -4,6 +4,7 @@ const zust = @import("safe");
     text: []const u8,
     enabled: bool,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn new(link: []const u8, text: []const u8, enabled: bool) TerminalHyperlink {
         return TerminalHyperlink{
             .link = link,
@@ -50,6 +51,7 @@ pub const UpdateInteractiveCommand = struct {
 
     // Common utility functions to reduce duplication
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn buildPackageJsonPath(root_dir: []const u8, workspace_path: []const u8, path_buf: *bun.PathBuffer) []const u8 {
         if (workspace_path.len > 0) {
             return bun.path.joinAbsStringBuf(
@@ -69,6 +71,7 @@ pub const UpdateInteractiveCommand = struct {
     }
 
     // Helper to update a catalog entry at a specific path in the package.json AST
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn savePackageJson(
         manager: *PackageManager,
         package_json: anytype, // MapEntry from WorkspacePackageJSONCache
@@ -266,6 +269,7 @@ pub const UpdateInteractiveCommand = struct {
             }
 
             // Parse catalog_key (format: "package_name" or "package_name:catalog_name")
+// zust: use zust.String or zust.GuardedSlice for slice operations
             const colon_index = std.mem.indexOf(u8, catalog_key, ":");
             const package_name = if (colon_index) |idx| catalog_key[0..idx] else catalog_key;
             const catalog_name = if (colon_index) |idx| catalog_key[idx + 1 ..] else null;
@@ -432,7 +436,8 @@ pub const UpdateInteractiveCommand = struct {
         defer package_updates.deinit();
 
         // Process selected packages
-        for (outdated_packages, selected) |pkg, is_selected| {
+        // safe-transpile: for with index access requires manual review
+    for (outdated_packages, selected) |pkg, is_selected| {
             if (!is_selected) continue;
 
             // Use latest version if requested
@@ -547,8 +552,10 @@ pub const UpdateInteractiveCommand = struct {
         const pkg_resolutions = packages.items(.resolution);
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
-        for (pkg_resolutions, 0..) |resolution, pkg_id| {
+        // safe-transpile: for with index access requires manual review
+    for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
 
@@ -568,8 +575,10 @@ pub const UpdateInteractiveCommand = struct {
         const string_buf = lockfile.buffers.string_bytes.items;
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
-        for (pkg_resolutions, 0..) |resolution, pkg_id| {
+        // safe-transpile: for with index access requires manual review
+    for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
 
@@ -577,7 +586,8 @@ pub const UpdateInteractiveCommand = struct {
 
         const converted_filters = converted_filters: {
             const buf = try allocator.alloc(WorkspaceFilter, filters.len);
-            for (filters, buf) |filter, *converted| {
+            // safe-transpile: for with index access requires manual review
+    for (filters, buf) |filter, *converted| {
                 converted.* = try WorkspaceFilter.init(allocator, filter, original_cwd, &path_buf);
             }
             break :converted_filters buf;
@@ -690,7 +700,8 @@ pub const UpdateInteractiveCommand = struct {
                 } else {
                     try workspace_names.appendSlice("catalog (");
                 }
-                for (catalog_packages, 0..) |cat_pkg, i| {
+                // safe-transpile: for with index access requires manual review
+    for (catalog_packages, 0..) |cat_pkg, i| {
                     if (i > 0) try workspace_names.appendSlice(", ");
                     try workspace_names.appendSlice(cat_pkg.workspace_name);
                 }
@@ -825,6 +836,7 @@ pub const UpdateInteractiveCommand = struct {
                     .latest_version = try allocator.dupe(u8, latest_version_buf),
                     .update_version = try allocator.dupe(u8, update_version_buf),
                     .package_id = package_id,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .dep_id = @intCast(dep_id),
                     .workspace_pkg_id = workspace_pkg_id,
                     .dependency_type = dep_type,
@@ -855,6 +867,7 @@ pub const UpdateInteractiveCommand = struct {
                 return strings.order(a.name, b.name) == .lt;
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             fn depTypePriority(dep_type: []const u8) u8 {
                 if (strings.eqlComptime(dep_type, "dependencies")) return 0;
                 if (strings.eqlComptime(dep_type, "devDependencies")) return 1;
@@ -1003,7 +1016,9 @@ pub const UpdateInteractiveCommand = struct {
                 // Reserve space for prompt + scroll indicators + buffer
                 const usable_height = if (height > 6) height - 4 else 20;
                 return .{
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .height = @intCast(usable_height),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .width = @intCast(width),
                 };
             }
@@ -1011,6 +1026,7 @@ pub const UpdateInteractiveCommand = struct {
         return .{ .height = 20, .width = 80 }; // Default fallback
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn truncateWithEllipsis(allocator: std.mem.Allocator, text: []const u8, max_width: usize, only_end: bool) ![]const u8 {
         if (text.len <= max_width) {
             return try allocator.dupe(u8, text);
@@ -1027,8 +1043,11 @@ pub const UpdateInteractiveCommand = struct {
         const end_chars = available_chars - start_chars;
 
         const result = try allocator.alloc(u8, start_chars + ellipsis.len + end_chars);
+// safe-transpile: @memcpy requires manual review
         @memcpy(result[0..start_chars], text[0..start_chars]);
+// safe-transpile: @memcpy requires manual review
         @memcpy(result[start_chars .. start_chars + ellipsis.len], ellipsis);
+// safe-transpile: @memcpy requires manual review
         @memcpy(result[start_chars + ellipsis.len ..], text[text.len - end_chars ..]);
 
         return result;
@@ -1288,7 +1307,8 @@ while (true) : (__loop_limit_1 += 1) {
                     if (needs_header) {
                         // Count selected packages in this dependency type
                         var selected_count: usize = 0;
-                        for (state.packages, state.selected) |p, sel| {
+                        // safe-transpile: for with index access requires manual review
+    for (state.packages, state.selected) |p, sel| {
                             if (strings.eql(p.dependency_type, pkg.dependency_type) and sel) {
                                 selected_count += 1;
                             }
@@ -1668,6 +1688,7 @@ while (true) : (__loop_limit_1 += 1) {
                     @memset(state.selected, true);
                     // For packages where current == update version, auto-set use_latest
                     // so they get updated to the latest version (matching spacebar behavior)
+// safe-transpile: for loop with pointer capture requires manual review
                     for (state.packages) |*pkg| {
                         if (strings.eql(pkg.current_version, pkg.update_version)) {
                             pkg.use_latest = true;
@@ -1681,6 +1702,7 @@ while (true) : (__loop_limit_1 += 1) {
                 },
                 'i', 'I' => {
                     // Invert selection
+// safe-transpile: for loop with pointer capture requires manual review
                     for (state.selected) |*sel| {
                         sel.* = !sel.*;
                     }
@@ -1692,7 +1714,8 @@ while (true) : (__loop_limit_1 += 1) {
                     if (state.toggle_all) {
                         // All packages were selected with 'a', so toggle latest for all selected packages
                         const new_latest_state = !state.packages[state.cursor].use_latest;
-                        for (state.selected, state.packages) |sel, *pkg| {
+                        // safe-transpile: for with index access requires manual review
+    for (state.selected, state.packages) |sel, *pkg| {
                             if (sel) {
                                 pkg.use_latest = new_latest_state;
                             }

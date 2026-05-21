@@ -1284,7 +1284,6 @@ pub const AlignHandler = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn handlePropertyMaybeFlush(this: *AlignHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype, vp: VendorPrefix) void {
         // If two vendor prefixes for the same property have different
         // values, we need to flush what we have immediately to preserve order.
@@ -1295,7 +1294,6 @@ pub const AlignHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn handlePropertyHelper(this: *AlignHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype, vp: VendorPrefix) void {
         this.handlePropertyMaybeFlush(dest, context, prop, val, vp);
@@ -1319,7 +1317,6 @@ pub const AlignHandler = struct {
         return prefix;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn flushStandardPropertyHelper(this: *AlignHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, key: anytype, comptime feature: Feature) void {
         if (key) |v| {
@@ -1399,7 +1396,6 @@ pub const AlignHandler = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn flushPrefixedProperty(this: *AlignHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, key: anytype) void {
         _ = this; // autofix
         if (key) |v| {
@@ -1409,7 +1405,6 @@ pub const AlignHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn flushUnprefixProperty(this: *AlignHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, key: anytype) void {
         _ = this; // autofix

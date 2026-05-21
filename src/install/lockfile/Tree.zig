@@ -25,10 +25,15 @@ pub fn folderName(this: *const Tree, deps: []const Dependency, buf: string) stri
 
 pub fn toExternal(this: Tree) External {
     var out = External{};
+// safe-transpile: @bitCast requires manual review
     out[0..4].* = @as(Id, @bitCast(this.id));
+// safe-transpile: @bitCast requires manual review
     out[4..8].* = @as(Id, @bitCast(this.dependency_id));
+// safe-transpile: @bitCast requires manual review
     out[8..12].* = @as(Id, @bitCast(this.parent));
+// safe-transpile: @bitCast requires manual review
     out[12..16].* = @as(u32, @bitCast(this.dependencies.off));
+// safe-transpile: @bitCast requires manual review
     out[16..20].* = @as(u32, @bitCast(this.dependencies.len));
     if (out.len != 20) @compileError("Tree.External is not 20 bytes");
     return out;
@@ -36,11 +41,16 @@ pub fn toExternal(this: Tree) External {
 
 pub fn toTree(out: External) Tree {
     return .{
+// safe-transpile: @bitCast requires manual review
         .id = @bitCast(out[0..4].*),
+// safe-transpile: @bitCast requires manual review
         .dependency_id = @bitCast(out[4..8].*),
+// safe-transpile: @bitCast requires manual review
         .parent = @bitCast(out[8..12].*),
         .dependencies = .{
+// safe-transpile: @bitCast requires manual review
             .off = @bitCast(out[12..16].*),
+// safe-transpile: @bitCast requires manual review
             .len = @bitCast(out[16..20].*),
         },
     };
@@ -99,6 +109,7 @@ pub fn Iterator(comptime path_style: IteratorPathStyle) type {
                 .lockfile = lockfile,
             };
             if (comptime path_style == .node_modules) {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(iter.path_buf[0.."node_modules".len], "node_modules");
             }
             return iter;
@@ -210,10 +221,12 @@ pub fn relativePathAndDepth(
 
             const id = depth_buf[depth_buf_len];
             const name = trees[id].folderName(dependencies, buf);
+// safe-transpile: @memcpy requires manual review
             @memcpy(path_buf[path_written..][0..name.len], name);
             path_written += name.len;
 
             if (comptime path_style == .node_modules) {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(path_buf[path_written..][0.."/node_modules".len], std.fs.path.sep_str ++ "node_modules");
                 path_written += "/node_modules".len;
             }
@@ -262,6 +275,7 @@ pub fn Builder(comptime method: BuilderMethod) type {
             this.log.addErrorFmt(null, logger.Loc.Empty, this.allocator, fmt, args) catch {};
         }
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn buf(this: *const @This()) []const u8 {
             return this.lockfile.buffers.string_bytes.items;
         }
@@ -293,15 +307,18 @@ pub fn Builder(comptime method: BuilderMethod) type {
             var trees = slice.items(.tree);
             const dependencies = slice.items(.dependencies);
 
+// safe-transpile: for loop with pointer capture requires manual review
             for (trees) |*tree| {
                 total += tree.dependencies.len;
             }
 
             var dep_ids = try DependencyIDList.initCapacity(this.allocator, total);
 
-            for (trees, dependencies) |*tree, *child| {
+            // safe-transpile: for with index access requires manual review
+    for (trees, dependencies) |*tree, *child| {
                 defer child.deinit(this.allocator);
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const off: u32 = @intCast(dep_ids.items.len);
                 for (child.items) |dep_id| {
                     const pkg_id = this.lockfile.buffers.resolutions.items[dep_id];
@@ -312,6 +329,7 @@ pub fn Builder(comptime method: BuilderMethod) type {
 
                     dep_ids.appendAssumeCapacity(dep_id);
                 }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const len: u32 = @intCast(dep_ids.items.len - off);
 
                 tree.dependencies.off = off;
@@ -324,6 +342,7 @@ pub fn Builder(comptime method: BuilderMethod) type {
 
             // take over the `builder.list` pointer for only trees
             if (@intFromPtr(trees.ptr) != @intFromPtr(list_ptr)) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 var new: [*]Tree = @ptrCast(list_ptr);
                 bun.copy(Tree, new[0..trees.len], trees);
                 trees = new[0..trees.len];
@@ -467,6 +486,7 @@ pub fn processSubtree(
     try builder.list.append(builder.allocator, .{
         .tree = .{
             .parent = this.id,
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .id = @as(Id, @truncate(builder.list.len)),
             .dependency_id = dependency_id,
         },
@@ -485,6 +505,7 @@ pub fn processSubtree(
     try builder.sort_buf.ensureUnusedCapacity(builder.allocator, resolution_list.len);
 
     for (resolution_list.begin()..resolution_list.end()) |dep_id| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         builder.sort_buf.appendAssumeCapacity(@intCast(dep_id));
     }
 
@@ -612,6 +633,7 @@ pub fn processSubtree(
                         builder.resolutions[unresolved_dep_id] = pkg_id;
                     }
                 }
+// safe-transpile: for loop with pointer capture requires manual review
                 for (dependency_lists[replace.id].items) |*placed_dep_id| {
                     if (placed_dep_id.* == replace.dep_id) {
                         placed_dep_id.* = dep_id;

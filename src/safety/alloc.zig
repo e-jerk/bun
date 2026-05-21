@@ -54,7 +54,6 @@ pub fn assertEq(alloc1: Allocator, alloc2: Allocator) void {
 
 /// Asserts that two allocators are equal, with a formatted message.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn assertEqFmt(
     alloc1: Allocator,
     alloc2: Allocator,

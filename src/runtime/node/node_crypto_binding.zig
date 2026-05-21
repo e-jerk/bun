@@ -1,4 +1,5 @@
 const zust = @import("safe");
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn ExternCryptoJob(comptime name: []const u8) type {
     return struct {
         vm: *jsc.VirtualMachine,
@@ -316,6 +317,7 @@ const random = struct {
         }
 
         if (size + @as(f64, @floatFromInt(offset)) > @as(f64, @floatFromInt(length))) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return global.throwRangeError(size + @as(f64, @floatFromInt(offset)), .{ .field_name = "size + offset", .max = @intCast(length) });
         }
 
@@ -439,6 +441,7 @@ fn pbkdf2(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFrame) bun.JSErro
 fn pbkdf2Sync(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFrame) bun.JSError!jsc.JSValue {
     var data = try PBKDF2.fromJS(globalThis, callFrame, false);
     defer data.deinit();
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const out_arraybuffer = try jsc.JSValue.createBufferFromLength(globalThis, @intCast(data.length));
 
     const output = out_arraybuffer.asArrayBuffer(globalThis) orelse {
@@ -493,6 +496,7 @@ pub fn setEngine(global: *JSGlobalObject, _: *jsc.CallFrame) JSError!JSValue {
 
 fn forEachHash(_: *const BoringSSL.EVP_MD, maybe_from: ?[*:0]const u8, _: ?[*:0]const u8, ctx: *anyopaque) callconv(.c) void {
     const from = maybe_from orelse return;
+// safe-transpile: @alignCast requires manual review
     const hashes: *bun.CaseInsensitiveASCIIStringArrayHashMap(void) = @ptrCast(@alignCast(ctx));
     bun.handleOom(hashes.put(bun.span(from), {}));
 }
@@ -502,12 +506,15 @@ fn getHashes(global: *JSGlobalObject, _: *jsc.CallFrame) JSError!JSValue {
     defer hashes.deinit();
 
     // TODO(dylan-conway): cache the names
+// safe-transpile: @alignCast requires manual review
     BoringSSL.EVP_MD_do_all_sorted(&forEachHash, @ptrCast(@alignCast(&hashes)));
 
     const array = try JSValue.createEmptyArray(global, hashes.count());
 
+    // safe-transpile: for with index access requires manual review
     for (hashes.keys(), 0..) |hash, i| {
         const str = try String.createUTF8ForJS(global, hash);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try array.putIndex(global, @intCast(i), str);
     }
 
@@ -640,7 +647,9 @@ const Scrypt = struct {
             .N = (N.?),
             .r = (r.?),
             .p = (p.?),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .maxmem = @intCast((maxmem.?)),
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .keylen = @intCast(keylen),
         };
 
@@ -689,6 +698,7 @@ const Scrypt = struct {
         this.buf = .create(buf, global);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn runTask(this: *Scrypt, key: []u8) void {
         const password = this.password.slice();
         const salt = this.salt.slice();

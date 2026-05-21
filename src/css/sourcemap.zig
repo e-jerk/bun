@@ -8,13 +8,13 @@ pub const SourceMap = struct {
 };
 
 pub const SourceMapInner = struct {
-    sources: safe.ArrayList([]const u8),
-    sources_content: safe.ArrayList([]const u8),
-    names: safe.ArrayList([]const u8),
-    mapping_lines: safe.ArrayList(MappingLine),
+    sources: ArrayList([]const u8),
+    sources_content: ArrayList([]const u8),
+    names: ArrayList([]const u8),
+    mapping_lines: ArrayList(MappingLine),
 };
 
-pub const MappingLine = struct { mappings: safe.ArrayList(LineMapping), last_column: u32, is_sorted: bool };
+pub const MappingLine = struct { mappings: ArrayList(LineMapping), last_column: u32, is_sorted: bool };
 
 pub const LineMapping = struct { generated_column: u32, original: ?OriginalLocation };
 

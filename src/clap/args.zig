@@ -36,7 +36,7 @@ test "SliceIterator" {
 
     for (args) |a| {
         const b = try iter.next();
-        debug.assert(zust.SimdUtils.eql(a, b.?));
+        debug.assert(mem.eql(u8, a, b.?));
     }
 }
 
@@ -90,7 +90,6 @@ pub const ShellIterator = struct {
     str: []const u8,
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: mem.Allocator, str: []const u8) ShellIterator {
         return .{
             .arena = bun.ArenaAllocator.init(allocator),
@@ -119,7 +118,6 @@ pub const ShellIterator = struct {
         } = .skip_whitespace;
 
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (iter.str, 0..) |c, i| {
             switch (state) {
                 // The state that skips the initial whitespace.
@@ -270,7 +268,6 @@ pub const ShellIterator = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 fn testShellIteratorOk(str: []const u8, allocations: usize, expect: []const []const u8) void {
     var allocator = testing.FailingAllocator.init(testing.allocator, allocations);
     var it = ShellIterator.init(&allocator.allocator, str);
@@ -289,7 +286,6 @@ fn testShellIteratorOk(str: []const u8, allocations: usize, expect: []const []co
     } else |err| testing.expectEqual(@as(anyerror!void, {}), err);
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn testShellIteratorErr(str: []const u8, expect: anyerror) void {
     var it = ShellIterator.init(testing.allocator, str);

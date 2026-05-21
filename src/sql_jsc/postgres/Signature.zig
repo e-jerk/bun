@@ -37,7 +37,6 @@ pub fn hash(this: *const Signature) u64 {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn generate(globalObject: *jsc.JSGlobalObject, query: []const u8, array_value: JSValue, columns: JSValue, prepared_statement_id: u64, unnamed: bool) !Signature {
     var fields = std.array_list.Managed(int4).init(bun.default_allocator);
     var name = try std.array_list.Managed(u8).initCapacity(bun.default_allocator, query.len);

@@ -17,6 +17,7 @@ inline fn auto_disable() void {
 /// rust panics if the pointer itself is zero, even if the passed length is zero
 /// to work around that, we use a static null-terminated pointer
 /// https://github.com/oven-sh/bun/issues/2323
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn ptrWithoutPanic(buf: []const u8) [*]const u8 {
     const null_terminated_ptr = struct {
         // we must use a static pointer so the lifetime of this pointer is long enough
@@ -34,6 +35,7 @@ pub const HTMLRewriter = opaque {
     extern fn lol_html_rewriter_end(rewriter: *HTMLRewriter) c_int;
     extern fn lol_html_rewriter_free(rewriter: *HTMLRewriter) void;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(rewriter: *HTMLRewriter, chunk: []const u8) Error!void {
         auto_disable();
         const ptr = ptrWithoutPanic(chunk);
@@ -267,6 +269,7 @@ pub const HTMLRewriter = opaque {
                     auto_disable();
 
                     @setRuntimeSafety(false);
+// safe-transpile: @alignCast requires manual review
                     const this = @as(*OutputSinkType, @ptrCast(@alignCast(user_data)));
                     switch (len) {
                         0 => Done(this),
@@ -297,6 +300,7 @@ pub const HTMLSelector = opaque {
     /// builders that accepted it as an argument to `lol_html_rewriter_builder_add_element_content_handlers()`
     /// method. Deallocate all dependant rewriter builders first and then
     /// use `lol_html_selector_free` function to free the selector.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(selector: []const u8) Error!*HTMLSelector {
         auto_disable();
 
@@ -322,6 +326,7 @@ pub const TextChunk = opaque {
         ptr: [*]const u8,
         len: usize,
 
+// safe-transpile: function returns small constant slice — consider safe.String
         pub fn slice(this: Content) []const u8 {
             auto_disable();
             return this.ptr[0..this.len];
@@ -342,6 +347,7 @@ pub const TextChunk = opaque {
     ///
     /// Returns 0 in case of success and -1 otherwise. The actual error message
     /// can be obtained using `lol_html_take_last_error` function.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn before(this: *TextChunk, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         if (this.lol_html_text_chunk_before(ptrWithoutPanic(content), content.len, is_html) < 0)
@@ -353,6 +359,7 @@ pub const TextChunk = opaque {
     ///
     /// Returns 0 in case of success and -1 otherwise. The actual error message
     /// can be obtained using `lol_html_take_last_error` function.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn after(this: *TextChunk, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         if (this.lol_html_text_chunk_after(ptrWithoutPanic(content), content.len, is_html) < 0)
@@ -365,6 +372,7 @@ pub const TextChunk = opaque {
     //
     // Returns 0 in case of success and -1 otherwise. The actual error message
     // can be obtained using `lol_html_take_last_error` function.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn replace(this: *TextChunk, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         if (this.lol_html_text_chunk_replace(ptrWithoutPanic(content), content.len, is_html) < 0)
@@ -385,6 +393,7 @@ pub const TextChunk = opaque {
     }
     pub fn getUserData(this: *const TextChunk, comptime Type: type) ?*Type {
         auto_disable();
+// safe-transpile: @alignCast requires manual review
         return @as(?*Type, @ptrCast(@alignCast(this.lol_html_text_chunk_user_data_get())));
     }
     pub fn getSourceLocationBytes(this: *const TextChunk) SourceLocationBytes {
@@ -414,10 +423,12 @@ pub const Element = opaque {
     extern fn lol_html_element_clear_end_tag_handlers(element: *Element) void;
     extern fn lol_html_element_source_location_bytes(element: *const Element) SourceLocationBytes;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getAttribute(element: *const Element, name: []const u8) HTMLString {
         auto_disable();
         return lol_html_element_get_attribute(element, ptrWithoutPanic(name), name.len);
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasAttribute(element: *const Element, name: []const u8) Error!bool {
         auto_disable();
         return switch (lol_html_element_has_attribute(element, ptrWithoutPanic(name), name.len)) {
@@ -427,6 +438,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setAttribute(element: *Element, name: []const u8, value: []const u8) Error!void {
         auto_disable();
         return switch (lol_html_element_set_attribute(element, ptrWithoutPanic(name), name.len, ptrWithoutPanic(value), value.len)) {
@@ -435,6 +447,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn removeAttribute(element: *Element, name: []const u8) Error!void {
         auto_disable();
         return switch (lol_html_element_remove_attribute(element, ptrWithoutPanic(name), name.len)) {
@@ -443,6 +456,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn before(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_element_before(element, ptrWithoutPanic(content), content.len, is_html)) {
@@ -451,6 +465,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn prepend(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_element_prepend(element, ptrWithoutPanic(content), content.len, is_html)) {
@@ -459,6 +474,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_element_append(element, ptrWithoutPanic(content), content.len, is_html)) {
@@ -467,6 +483,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn after(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_element_after(element, ptrWithoutPanic(content), content.len, is_html)) {
@@ -475,6 +492,7 @@ pub const Element = opaque {
             else => unreachable,
         };
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setInnerContent(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
 
@@ -490,6 +508,7 @@ pub const Element = opaque {
     ///
     /// Returns 0 in case of success and -1 otherwise. The actual error message
     /// can be obtained using `lol_html_take_last_error` function.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn replace(element: *Element, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_element_replace(element, ptrWithoutPanic(content), content.len, is_html)) {
@@ -525,6 +544,7 @@ pub const Element = opaque {
     }
     pub fn getUserData(element: *const Element, comptime Type: type) ?*Type {
         auto_disable();
+// safe-transpile: @alignCast requires manual review
         return @as(?*Element, @ptrCast(@alignCast(lol_html_element_user_data_get(element))));
     }
     pub fn onEndTag(element: *Element, end_tag_handler: lol_html_end_tag_handler_t, user_data: ?*anyopaque) Error!void {
@@ -548,6 +568,7 @@ pub const Element = opaque {
         return lol_html_element_tag_name_get(element);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setTagName(element: *Element, name: []const u8) Error!void {
         return switch (lol_html_element_tag_name_set(element, ptrWithoutPanic(name), name.len)) {
             0 => {},
@@ -589,6 +610,7 @@ pub const HTMLString = extern struct {
         return lol_html_take_last_error();
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: HTMLString) []const u8 {
         auto_disable();
         @setRuntimeSafety(false);
@@ -597,6 +619,7 @@ pub const HTMLString = extern struct {
 
     fn deinit_external(_: [*]u8, ptr: *anyopaque, len: u32) callconv(.c) void {
         auto_disable();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         lol_html_str_free(.{ .ptr = @as([*]const u8, @ptrCast(ptr)), .len = len });
     }
 
@@ -620,6 +643,7 @@ pub const EndTag = opaque {
     extern fn lol_html_end_tag_name_set(end_tag: *EndTag, name: [*]const u8, name_len: usize) c_int;
     extern fn lol_html_end_tag_source_location_bytes(end_tag: *const EndTag) SourceLocationBytes;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn before(end_tag: *EndTag, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_end_tag_before(end_tag, ptrWithoutPanic(content), content.len, is_html)) {
@@ -629,6 +653,7 @@ pub const EndTag = opaque {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn after(end_tag: *EndTag, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_end_tag_after(end_tag, ptrWithoutPanic(content), content.len, is_html)) {
@@ -647,6 +672,7 @@ pub const EndTag = opaque {
         return lol_html_end_tag_name_get(end_tag);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setName(end_tag: *EndTag, name: []const u8) Error!void {
         auto_disable();
         return switch (lol_html_end_tag_name_set(end_tag, ptrWithoutPanic(name), name.len)) {
@@ -707,6 +733,7 @@ pub const Comment = opaque {
         return lol_html_comment_text_get(comment);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setText(comment: *Comment, text: []const u8) Error!void {
         auto_disable();
         return switch (lol_html_comment_text_set(comment, ptrWithoutPanic(text), text.len)) {
@@ -716,6 +743,7 @@ pub const Comment = opaque {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn before(comment: *Comment, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_comment_before(comment, ptrWithoutPanic(content), content.len, is_html)) {
@@ -725,6 +753,7 @@ pub const Comment = opaque {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn replace(comment: *Comment, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_comment_before(comment, ptrWithoutPanic(content), content.len, is_html)) {
@@ -734,6 +763,7 @@ pub const Comment = opaque {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn after(comment: *Comment, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_comment_after(comment, ptrWithoutPanic(content), content.len, is_html)) {
@@ -764,6 +794,7 @@ pub const lol_html_end_tag_handler_t = *const fn (*EndTag, ?*anyopaque) callconv
 pub const DocEnd = opaque {
     extern fn lol_html_doc_end_append(doc_end: ?*DocEnd, content: [*]const u8, content_len: usize, is_html: bool) c_int;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(this: *DocEnd, content: []const u8, is_html: bool) Error!void {
         auto_disable();
         return switch (lol_html_doc_end_append(this, ptrWithoutPanic(content), content.len, is_html)) {
@@ -798,6 +829,7 @@ pub fn DirectiveHandler(comptime Container: type, comptime UserDataType: type, c
                         Callback(
                             @as(
                                 *UserDataType,
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                 @ptrCast(@alignCast(
                                     user_data.?,
                                 )),

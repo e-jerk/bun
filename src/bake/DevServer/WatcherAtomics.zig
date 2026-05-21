@@ -43,7 +43,6 @@ const DbgEventPtr = if (Environment.allow_assert) ?*HotReloadEvent else void;
 pub fn init(dev: *DevServer) Self {
     var self = Self{ .events = undefined };
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (&self.events) |*event| {
         event.* = .initEmpty(dev);
     }
@@ -60,7 +59,6 @@ pub fn watcherAcquireEvent(self: *Self) *HotReloadEvent {
     if (self.pending_event) |i| available[i] = false;
 
     const index = // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (available, 0..) |is_available, i| {
         if (is_available) break i;
     } else unreachable;
@@ -118,7 +116,6 @@ pub fn watcherReleaseAndSubmitEvent(self: *Self, ev: *HotReloadEvent) void {
     // There are files to be processed.
 
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const ev_index: u2 = @intCast(ev - &self.events[0]);
     const old_next = self.next_event.swap(@enumFromInt(ev_index), .acq_rel);
     switch (old_next) {
@@ -154,7 +151,6 @@ pub fn watcherReleaseAndSubmitEvent(self: *Self, ev: *HotReloadEvent) void {
 
         else => {
             // This is an index into the `events` array.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const old_index: u2 = @intCast(@intFromEnum(old_next));
             bun.assertf(

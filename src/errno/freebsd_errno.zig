@@ -198,7 +198,6 @@ pub fn getErrno(rc: anytype) E {
     const info = @typeInfo(T);
     const is_neg1 = if (info == .int and info.int.signedness == .unsigned)
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         @as(std.meta.Int(.signed, info.int.bits), @bitCast(rc)) == -1
     else
         rc == -1;

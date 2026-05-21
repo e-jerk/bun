@@ -70,6 +70,7 @@ pub fn getRandomValuesWithoutTypeChecks(
 ) jsc.JSValue {
     const slice = array.slice();
     randomData(globalThis, slice.ptr, slice.len);
+// safe-transpile: @bitCast requires manual review
     return @as(jsc.JSValue, @enumFromInt(@as(i64, @bitCast(@intFromPtr(array)))));
 }
 
@@ -142,9 +143,11 @@ pub fn Bun__randomUUIDv7_(globalThis: *jsc.JSGlobalObject, callframe: *jsc.CallF
                 const date = timestamp_value.getUnixTimestamp();
                 break :brk @intFromFloat(@max(0, date));
             }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             break :brk @intCast(try globalThis.validateIntegerRange(timestamp_value, i64, 0, .{ .min = 0, .field_name = "timestamp" }));
         }
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         break :brk @intCast(@max(0, @import("std-fs-compat").milliTimestamp()));
     };
 
@@ -270,11 +273,11 @@ pub fn constructor(globalThis: *jsc.JSGlobalObject, _: *jsc.CallFrame) bun.JSErr
 pub export fn CryptoObject__create(globalThis: *jsc.JSGlobalObject) jsc.JSValue {
     jsc.markBinding(@src());
 
-    var ptr = bun.default_allocator.create(Crypto) catch {
+    var ptr = safe.Box(Crypto).init(bun.default_allocator, undefined) catch {
         return globalThis.throwOutOfMemoryValue();
     };
 
-    return ptr.toJS(globalThis);
+    return ptr.ptr.toJS(globalThis);
 }
 
 const std = @import("std");

@@ -133,7 +133,6 @@ pub fn deinit(this: *Which) void {
 
 pub inline fn bltn(this: *Which) *Builtin {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("which", this));
     return @fieldParentPtr("impl", impl);
 }

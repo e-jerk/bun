@@ -83,8 +83,8 @@ const MAX_DECOMPRESSED_SIZE: usize = 128 * 1024 * 1024;
 const DEFLATE_TRAILER = [_]u8{ 0x00, 0x00, 0xff, 0xff };
 
 pub fn init(allocator: std.mem.Allocator, params: Params, rare_data: *jsc.RareData) !*PerMessageDeflate {
-    const self = try allocator.create(PerMessageDeflate);
-    self.* = .{
+    const self = try safe.Box(PerMessageDeflate).init(allocator, undefined);
+    self.ptr.* = .{
         .allocator = allocator,
         .params = params,
         .compress_stream = std.mem.zeroes(zlib.z_stream),
@@ -95,34 +95,34 @@ pub fn init(allocator: std.mem.Allocator, params: Params, rare_data: *jsc.RareDa
     // Initialize compressor (deflate)
     // We use negative window bits for raw DEFLATE, as required by RFC 7692.
     const compress_err = zlib.deflateInit2_(
-        &self.compress_stream,
+        &self.ptr.compress_stream,
         Z_DEFAULT_COMPRESSION, // level
         Z_DEFLATED, // method
-        -@as(c_int, self.params.client_max_window_bits), // windowBits
+        -@as(c_int, self.ptr.params.client_max_window_bits), // windowBits
         Z_DEFAULT_MEM_LEVEL, // memLevel
         Z_DEFAULT_STRATEGY, // strategy
         zlib.zlibVersion(),
         @sizeOf(zlib.z_stream),
     );
     if (compress_err != .Ok) {
-        allocator.destroy(self);
+        _ = self.deinit();
         return error.DeflateInitFailed;
     }
 
     // Initialize decompressor (inflate)
     const decompress_err = zlib.inflateInit2_(
-        &self.decompress_stream,
-        -@as(c_int, self.params.server_max_window_bits), // windowBits
+        &self.ptr.decompress_stream,
+        -@as(c_int, self.ptr.params.server_max_window_bits), // windowBits
         zlib.zlibVersion(),
         @sizeOf(zlib.z_stream),
     );
     if (decompress_err != .Ok) {
-        _ = zlib.deflateEnd(&self.compress_stream);
-        allocator.destroy(self);
+        _ = zlib.deflateEnd(&self.ptr.compress_stream);
+        _ = self.deinit();
         return error.InflateInitFailed;
     }
 
-    return self;
+    return self.ptr;
 }
 
 pub fn deinit(self: *PerMessageDeflate) void {
@@ -139,6 +139,7 @@ fn canUseLibDeflate(len: usize) bool {
     return len < RareData.stack_buffer_size;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decompress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_list.Managed(u8)) error{ InflateFailed, OutOfMemory, TooLarge }!void {
     const initial_len = out.items.len;
 
@@ -160,11 +161,13 @@ pub fn decompress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_
     try in_with_trailer.appendSlice(&DEFLATE_TRAILER);
 
     self.decompress_stream.next_in = in_with_trailer.items.ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.decompress_stream.avail_in = @intCast(in_with_trailer.items.len);
 
     while (true) {
         try out.ensureUnusedCapacity(COMPRESSION_BUFFER_SIZE);
         self.decompress_stream.next_out = out.unusedCapacitySlice().ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.decompress_stream.avail_out = @intCast(out.unusedCapacitySlice().len);
 
         const res = zlib.inflate(&self.decompress_stream, zlib.FlushValue.NoFlush);
@@ -196,13 +199,16 @@ pub fn decompress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn compress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_list.Managed(u8)) error{ DeflateFailed, OutOfMemory }!void {
     self.compress_stream.next_in = in_buf.ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.compress_stream.avail_in = @intCast(in_buf.len);
 
     while (true) {
         try out.ensureUnusedCapacity(COMPRESSION_BUFFER_SIZE);
         self.compress_stream.next_out = out.unusedCapacitySlice().ptr;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.compress_stream.avail_out = @intCast(out.unusedCapacitySlice().len);
 
         const res = zlib.deflate(&self.compress_stream, zlib.FlushValue.SyncFlush);

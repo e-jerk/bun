@@ -196,7 +196,6 @@ pub const Pos = enum(usize) {
 
     pub fn loc(pos: Pos) logger.Loc {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .start = @intCast(@intFromEnum(pos)) };
     }
 
@@ -3302,12 +3301,9 @@ pub fn Parser(comptime enc: Encoding) type {
                 const digit = self.next();
                 const num: u8 = switch (digit) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     '0'...'9' => @intCast(digit - '0'),
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     'a'...'f' => @intCast(digit - 'a' + 10),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     'A'...'F' => @intCast(digit - 'A' + 10),
                     else => return error.UnexpectedCharacter,
@@ -3335,14 +3331,11 @@ pub fn Parser(comptime enc: Encoding) type {
 
                     switch (len) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         1 => try text.append(@intCast(cp)),
                         2 => {
                             const val = cp - 0x10000;
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const high: u16 = 0xd800 + @as(u16, @intCast(val >> 10));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const low: u16 = 0xdc00 + @as(u16, @intCast(val & 0x3ff));
                             try text.appendSlice(&.{ high, low });
@@ -3354,7 +3347,6 @@ pub fn Parser(comptime enc: Encoding) type {
                     if (cp > 0xff) {
                         return error.UnexpectedCharacter;
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try text.append(@intCast(cp));
                 },
@@ -3464,19 +3456,19 @@ pub fn Parser(comptime enc: Encoding) type {
 
                     const tag: NodeTag = tag: {
                         const s = shorthand.slice(self.input);
-                        if (safe.SimdUtils.eql(s, "bool")) {
+                        if (std.mem.eql(enc.unit(), s, "bool")) {
                             break :tag .bool;
                         }
-                        if (safe.SimdUtils.eql(s, "int")) {
+                        if (std.mem.eql(enc.unit(), s, "int")) {
                             break :tag .int;
                         }
-                        if (safe.SimdUtils.eql(s, "float")) {
+                        if (std.mem.eql(enc.unit(), s, "float")) {
                             break :tag .float;
                         }
-                        if (safe.SimdUtils.eql(s, "null")) {
+                        if (std.mem.eql(enc.unit(), s, "null")) {
                             break :tag .null;
                         }
-                        if (safe.SimdUtils.eql(s, "str")) {
+                        if (std.mem.eql(enc.unit(), s, "str")) {
                             break :tag .str;
                         }
 
@@ -3524,19 +3516,19 @@ pub fn Parser(comptime enc: Encoding) type {
 
                     const tag: NodeTag = tag: {
                         const s = handle_or_shorthand.slice(self.input);
-                        if (safe.SimdUtils.eql(s, "bool")) {
+                        if (std.mem.eql(enc.unit(), s, "bool")) {
                             break :tag .bool;
                         }
-                        if (safe.SimdUtils.eql(s, "int")) {
+                        if (std.mem.eql(enc.unit(), s, "int")) {
                             break :tag .int;
                         }
-                        if (safe.SimdUtils.eql(s, "float")) {
+                        if (std.mem.eql(enc.unit(), s, "float")) {
                             break :tag .float;
                         }
-                        if (safe.SimdUtils.eql(s, "null")) {
+                        if (std.mem.eql(enc.unit(), s, "null")) {
                             break :tag .null;
                         }
-                        if (safe.SimdUtils.eql(s, "str")) {
+                        if (std.mem.eql(enc.unit(), s, "str")) {
                             break :tag .str;
                         }
 
@@ -4477,10 +4469,9 @@ pub fn Parser(comptime enc: Encoding) type {
             }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn eql(l: *const @This(), r: []const u8, input: []const enc.unit()) bool {
                 const l_slice = l.slice(input);
-                return safe.SimdUtils.eql(l_slice, r);
+                return std.mem.eql(enc.unit(), l_slice, r);
             }
 
             pub const Builder = struct {
@@ -4592,7 +4583,7 @@ pub fn Parser(comptime enc: Encoding) type {
 
                     if (comptime Environment.ci_assert) {
                         const actual = self.parser.slice(off, end);
-                        bun.assert(safe.SimdUtils.eql(actual, expected));
+                        bun.assert(std.mem.eql(enc.unit(), actual, expected));
                     }
 
                     switch (self.str) {
@@ -5287,7 +5278,6 @@ pub const Encoding = enum {
     //     };
     // }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn literal(comptime encoding: Encoding, comptime str: []const u8) []const encoding.unit() {
         return switch (encoding) {

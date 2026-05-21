@@ -1,8 +1,10 @@
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8) !Escaped(u8) {
     const Scalar = struct {
         pub const lengths: [std.math.maxInt(u8) + 1]u4 = brk: {
             var values: [std.math.maxInt(u8) + 1]u4 = undefined;
-            for (values, 0..) |_, i| {
+            // safe-transpile: for with index access requires manual review
+    for (values, 0..) |_, i| {
                 switch (i) {
                     '"' => {
                         values[i] = "&quot;".len;
@@ -28,6 +30,7 @@ pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8
             break :brk values;
         };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn appendString(buf: [*]u8, comptime str: []const u8) callconv(bun.callconv_inline) usize {
             buf[0..str.len].* = str[0..str.len].*;
             return str.len;
@@ -147,7 +150,8 @@ pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8
             const vec_chars = "\"&'<>";
             const vecs: [vec_chars.len]AsciiVector = comptime brk: {
                 var _vecs: [vec_chars.len]AsciiVector = undefined;
-                for (vec_chars, 0..) |c, i| {
+                // safe-transpile: for with index access requires manual review
+    for (vec_chars, 0..) |c, i| {
                     _vecs[i] = @splat(c);
                 }
                 break :brk _vecs;
@@ -166,10 +170,15 @@ pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8
                 scan_and_allocate_lazily: while (remaining.len >= ascii_vector_size) {
                     if (comptime Environment.allow_assert) assert(!any_needs_escape);
                     const vec: AsciiVector = remaining[0..ascii_vector_size].*;
+// safe-transpile: @bitCast requires manual review
                     if (@reduce(.Max, @as(AsciiVectorU1, @bitCast((vec == vecs[0]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[1]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[2]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[3]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[4])))) == 1)
                     {
                         if (comptime Environment.allow_assert) assert(buf.capacity == 0);
@@ -224,10 +233,15 @@ pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8
                 // so we'll go ahead and copy the buffer into a new buffer
                 while (remaining.len >= ascii_vector_size) {
                     const vec: AsciiVector = remaining[0..ascii_vector_size].*;
+// safe-transpile: @bitCast requires manual review
                     if (@reduce(.Max, @as(AsciiVectorU1, @bitCast((vec == vecs[0]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[1]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[2]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[3]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU1, @bitCast((vec == vecs[4])))) == 1)
                     {
                         buf.ensureUnusedCapacity(ascii_vector_size + 6) catch unreachable;
@@ -288,6 +302,7 @@ pub fn escapeHTMLForLatin1Input(allocator: std.mem.Allocator, latin1: []const u8
                             const copy_len = @intFromPtr(ptr) - @intFromPtr(latin1.ptr);
                             if (comptime Environment.allow_assert) assert(copy_len <= buf.capacity);
                             buf.items.len = copy_len;
+// safe-transpile: @memcpy requires manual review
                             @memcpy(buf.items[0..copy_len], latin1[0..copy_len]);
                             any_needs_escape = true;
                             break :scan_and_allocate_lazily;
@@ -342,7 +357,8 @@ pub fn escapeHTMLForUTF16Input(allocator: std.mem.Allocator, utf16: []const u16)
     const Scalar = struct {
         pub const lengths: [std.math.maxInt(u8) + 1]u4 = brk: {
             var values: [std.math.maxInt(u8) + 1]u4 = undefined;
-            for (values, 0..) |_, i| {
+            // safe-transpile: for with index access requires manual review
+    for (values, 0..) |_, i| {
                 values[i] = switch (i) {
                     '"' => "&quot;".len,
                     '&' => "&amp;".len,
@@ -407,7 +423,8 @@ pub fn escapeHTMLForUTF16Input(allocator: std.mem.Allocator, utf16: []const u16)
                 const vec_chars = "\"&'<>";
                 const vecs: [vec_chars.len]AsciiU16Vector = brk: {
                     var _vecs: [vec_chars.len]AsciiU16Vector = undefined;
-                    for (vec_chars, 0..) |c, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (vec_chars, 0..) |c, i| {
                         _vecs[i] = @splat(@as(u16, c));
                     }
                     break :brk _vecs;
@@ -417,11 +434,17 @@ pub fn escapeHTMLForUTF16Input(allocator: std.mem.Allocator, utf16: []const u16)
                 scan_and_allocate_lazily: while (remaining.len >= ascii_u16_vector_size) {
                     if (comptime Environment.allow_assert) assert(!any_needs_escape);
                     const vec: AsciiU16Vector = remaining[0..ascii_u16_vector_size].*;
+// safe-transpile: @bitCast requires manual review
                     if (@reduce(.Max, @as(AsciiVectorU16U1, @bitCast(vec > @as(AsciiU16Vector, @splat(@as(u16, 127))))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU16U1, @bitCast((vec == vecs[0]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU16U1, @bitCast((vec == vecs[1]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU16U1, @bitCast((vec == vecs[2]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU16U1, @bitCast((vec == vecs[3]))) |
+// safe-transpile: @bitCast requires manual review
                         @as(AsciiVectorU16U1, @bitCast((vec == vecs[4])))) == 1)
                     {
                         var i: u16 = 0;
@@ -496,11 +519,17 @@ pub fn escapeHTMLForUTF16Input(allocator: std.mem.Allocator, utf16: []const u16)
                     // so we'll go ahead and copy the buffer into a new buffer
                     while (remaining.len >= ascii_u16_vector_size) {
                         const vec: AsciiU16Vector = remaining[0..ascii_u16_vector_size].*;
+// safe-transpile: @bitCast requires manual review
                         if (@reduce(.Max, @as(AsciiVectorU16U1, @bitCast(vec > @as(AsciiU16Vector, @splat(@as(u16, 127))))) |
+// safe-transpile: @bitCast requires manual review
                             @as(AsciiVectorU16U1, @bitCast((vec == vecs[0]))) |
+// safe-transpile: @bitCast requires manual review
                             @as(AsciiVectorU16U1, @bitCast((vec == vecs[1]))) |
+// safe-transpile: @bitCast requires manual review
                             @as(AsciiVectorU16U1, @bitCast((vec == vecs[2]))) |
+// safe-transpile: @bitCast requires manual review
                             @as(AsciiVectorU16U1, @bitCast((vec == vecs[3]))) |
+// safe-transpile: @bitCast requires manual review
                             @as(AsciiVectorU16U1, @bitCast((vec == vecs[4])))) == 1)
                         {
                             buf.ensureUnusedCapacity(ascii_u16_vector_size) catch unreachable;

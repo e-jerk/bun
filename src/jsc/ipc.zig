@@ -87,6 +87,7 @@ const advanced = struct {
         version: u32 align(1) = version,
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decodeIPCMessage(data: []const u8, global: *jsc.JSGlobalObject) IPCDecodeError!DecodeIPCMessageResult {
         if (data.len < header_length) {
             log("Not enough bytes to decode IPC message header, have {d} bytes", .{data.len});
@@ -134,12 +135,15 @@ const advanced = struct {
         }
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn getVersionPacket() []const u8 {
         return comptime std.mem.asBytes(&VersionPacket{});
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getAckPacket() []const u8 {
         return "\x02\x24\x00\x00\x00\r\x00\x00\x00\x02\x03\x00\x00\x80cmd\x10\x0f\x00\x00\x80NODE_HANDLE_ACK\xff\xff\xff\xff";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getNackPacket() []const u8 {
         return "\x02\x25\x00\x00\x00\r\x00\x00\x00\x02\x03\x00\x00\x80cmd\x10\x10\x00\x00\x80NODE_HANDLE_NACK\xff\xff\xff\xff";
     }
@@ -153,6 +157,7 @@ const advanced = struct {
         });
         defer serialized.deinit();
 
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const size: u32 = @intCast(serialized.data.len);
 
         const payload_length: usize = @sizeOf(IPCMessageType) + @sizeOf(u32) + size;
@@ -175,12 +180,15 @@ const json = struct {
         context.* = true;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getVersionPacket() []const u8 {
         return &.{};
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getAckPacket() []const u8 {
         return "{\"cmd\":\"NODE_HANDLE_ACK\"}\n";
     }
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getNackPacket() []const u8 {
         return "{\"cmd\":\"NODE_HANDLE_NACK\"}\n";
     }
@@ -190,6 +198,7 @@ const json = struct {
     // 2 is internal
     // ["[{\d\.] is regular
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decodeIPCMessage(data: []const u8, globalThis: *jsc.JSGlobalObject, known_newline: ?u32) IPCDecodeError!DecodeIPCMessageResult {
         // <tag>{ "foo": "bar"} // tag is 1 or 2
         const idx: u32 = known_newline orelse idx: {
@@ -197,6 +206,7 @@ const json = struct {
                 return IPCDecodeError.NotEnoughBytes;
             // Individual IPC messages should not exceed 4GB, and idx+1 must not overflow
             if (found >= std.math.maxInt(u32)) return IPCDecodeError.InvalidFormat;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             break :idx @intCast(found);
         };
 
@@ -249,10 +259,12 @@ const json = struct {
 
         return switch (kind) {
             .regular => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .bytes_consumed = @intCast(idx + 1),
                 .message = .{ .data = deserialized },
             },
             .internal => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .bytes_consumed = @intCast(idx + 1),
                 .message = .{ .internal = deserialized },
             },
@@ -291,6 +303,7 @@ const json = struct {
 
 /// Given potentially unfinished buffer `data`, attempt to decode and process a message from it.
 /// For JSON mode, `known_newline` can be provided to avoid re-scanning for the newline delimiter.
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decodeIPCMessage(mode: Mode, data: []const u8, global: *jsc.JSGlobalObject, known_newline: ?u32) IPCDecodeError!DecodeIPCMessageResult {
     return switch (mode) {
         .advanced => advanced.decodeIPCMessage(data, global),
@@ -299,6 +312,7 @@ pub fn decodeIPCMessage(mode: Mode, data: []const u8, global: *jsc.JSGlobalObjec
 }
 
 /// Returns the initialization packet for the given mode. Can be zero-length.
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getVersionPacket(mode: Mode) []const u8 {
     return switch (mode) {
         inline else => |t| @field(@This(), @tagName(t)).getVersionPacket(),
@@ -314,6 +328,7 @@ pub fn serialize(mode: Mode, writer: *bun.io.StreamBuffer, global: *jsc.JSGlobal
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getAckPacket(mode: Mode) []const u8 {
     return switch (mode) {
         .advanced => advanced.getAckPacket(),
@@ -321,6 +336,7 @@ pub fn getAckPacket(mode: Mode) []const u8 {
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getNackPacket(mode: Mode) []const u8 {
     return switch (mode) {
         .advanced => advanced.getNackPacket(),
@@ -507,6 +523,7 @@ pub const SendQueue = struct {
         // must go first
         self.closeSocket(.failure, .deinit);
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (self.queue.items) |*item| item.deinit();
         self.queue.deinit();
         self.internal_msg_queue.deinit();
@@ -793,9 +810,11 @@ pub const SendQueue = struct {
                 item.complete(globalThis); // call the callback & deinit
             }
             return continueSend(this, globalThis, .on_writable);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         } else if (n > 0 and n < @as(i32, @intCast(first.data.list.items.len))) {
             // the item was partially sent; update the cursor and wait for writable to send the rest
             // (if we tried to send a handle, a partial write means the handle wasn't sent yet.)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             first.data.cursor += @intCast(n);
             return;
         } else if (n == 0) {
@@ -858,6 +877,7 @@ pub const SendQueue = struct {
 
     /// starts a write request. on posix, this always calls _onWriteComplete immediately. on windows, it may
     /// call _onWriteComplete later.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn _write(this: *SendQueue, data: []const u8, fd: ?bun.FD) void {
         log("SendQueue#_write len {d}", .{data.len});
         const socket = this.getSocket() orelse {
@@ -915,6 +935,7 @@ pub const SendQueue = struct {
         if (status.toError(.write)) |_| {
             this._onWriteComplete(-1);
         } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this._onWriteComplete(@intCast(write_len));
         }
 
@@ -1189,6 +1210,7 @@ fn handleIPCMessage(send_queue: *SendQueue, message: DecodedIPCMessage, globalTh
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData2(send_queue: *SendQueue, all_data: []const u8) void {
     var data = all_data;
     // log("onData '{'}'", .{std.zig.fmtString(data)});
@@ -1267,6 +1289,7 @@ fn onData2(send_queue: *SendQueue, all_data: []const u8) void {
                         // copy the remaining bytes to the start of the buffer
                         bun.copy(u8, adv_buf.ptr[0..slice.len], slice);
                         bun.debugAssert(slice.len <= std.math.maxInt(u32));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         adv_buf.len = @intCast(slice.len);
                         log("hit NotEnoughBytes2", .{});
                         return;
@@ -1323,6 +1346,7 @@ pub const IPCHandlers = struct {
             send_queue._socketClosed();
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onData(
             send_queue: *SendQueue,
             _: Socket,
@@ -1400,6 +1424,7 @@ pub const IPCHandlers = struct {
     };
 
     pub const WindowsNamedPipe = struct {
+// safe-transpile: function returns small constant slice — consider safe.String
         fn onReadAlloc(send_queue: *SendQueue, suggested_size: usize) []u8 {
             switch (send_queue.incoming) {
                 .json => |*json_buf| {
@@ -1428,6 +1453,7 @@ pub const IPCHandlers = struct {
             send_queue.closeSocketNextTick(true);
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         fn onRead(send_queue: *SendQueue, buffer: []const u8) void {
             log("NewNamedPipeIPCHandler#onRead {d}", .{buffer.len});
             const globalThis = send_queue.getGlobalThis();
@@ -1466,6 +1492,7 @@ pub const IPCHandlers = struct {
                     }
                 },
                 .advanced => |*adv_buf| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     adv_buf.len +|= @as(u32, @intCast(buffer.len));
                     var slice = adv_buf.slice();
 
@@ -1479,6 +1506,7 @@ pub const IPCHandlers = struct {
                                 bun.copy(u8, adv_buf.ptr[0..slice.len], slice);
                                 // slice.len is guaranteed <= adv_buf.len (u32) since it's derived from adv_buf.slice()
                                 bun.debugAssert(slice.len <= std.math.maxInt(u32));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 adv_buf.len = @intCast(slice.len);
                                 log("hit NotEnoughBytes3", .{});
                                 return;

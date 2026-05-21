@@ -6,20 +6,17 @@ pub const AnyRequest = union(enum) {
     h3: *uws.H3.Request,
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn header(this: AnyRequest, name: []const u8) ?[]const u8 {
         return switch (this) {
             inline else => |r| r.header(name),
         };
     }
 // safe-transpile: function returns small constant slice — consider zust.String
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn method(this: AnyRequest) []const u8 {
         return switch (this) {
             inline else => |r| r.method(),
         };
     }
-// safe-transpile: function returns small constant slice — consider zust.String
 // safe-transpile: function returns small constant slice — consider zust.String
     pub fn url(this: AnyRequest) []const u8 {
         return switch (this) {
@@ -31,7 +28,6 @@ pub const AnyRequest = union(enum) {
             inline else => |r| r.setYield(y),
         }
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn dateForHeader(this: AnyRequest, name: []const u8) bun.JSError!?u64 {
         return switch (this) {
@@ -52,18 +48,15 @@ pub const Request = opaque {
         c.uws_req_set_yield(req, yield);
     }
 // safe-transpile: function returns small constant slice — consider zust.String
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn url(req: *Request) []const u8 {
         var ptr: [*]const u8 = undefined;
         return ptr[0..c.uws_req_get_url(req, &ptr)];
     }
 // safe-transpile: function returns small constant slice — consider zust.String
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn method(req: *Request) []const u8 {
         var ptr: [*]const u8 = undefined;
         return ptr[0..c.uws_req_get_method(req, &ptr)];
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn header(req: *Request, name: []const u8) ?[]const u8 {
         bun.assert(std.ascii.isLower(name[0]));
@@ -73,7 +66,6 @@ pub const Request = opaque {
         if (len == 0) return null;
         return ptr[0..len];
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn dateForHeader(req: *Request, name: []const u8) bun.JSError!?u64 {
         const value = header(req, name);
@@ -87,16 +79,13 @@ pub const Request = opaque {
         return null;
     }
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn query(req: *Request, name: []const u8) []const u8 {
         var ptr: [*]const u8 = undefined;
         return ptr[0..c.uws_req_get_query(req, name.ptr, name.len, &ptr)];
     }
 // safe-transpile: function returns small constant slice — consider zust.String
-// safe-transpile: function returns small constant slice — consider zust.String
     pub fn parameter(req: *Request, index: u16) []const u8 {
         var ptr: [*]const u8 = undefined;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return ptr[0..c.uws_req_get_parameter(req, @as(c_ushort, @intCast(index)), &ptr)];
     }

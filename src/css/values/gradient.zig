@@ -328,16 +328,19 @@ pub const Gradient = union(enum) {
         var fallbacks = css.ColorFallbackKind{};
         switch (this.*) {
             .linear, .repeating_linear => |*linear| {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (linear.items.items) |*item| {
                     bun.bits.insert(css.ColorFallbackKind, &fallbacks, item.getNecessaryFallbacks(targets));
                 }
             },
             .radial, .repeating_radial => |*radial| {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (radial.items.items) |*item| {
                     bun.bits.insert(css.ColorFallbackKind, &fallbacks, item.getNecessaryFallbacks(targets));
                 }
             },
             .conic, .repeating_conic => |*conic| {
+// safe-transpile: for loop with pointer capture requires manual review
                 for (conic.items.items) |*item| {
                     bun.bits.insert(css.ColorFallbackKind, &fallbacks, item.getNecessaryFallbacks(targets));
                 }
@@ -387,6 +390,7 @@ pub const LinearGradient = struct {
         // If we have `to top` or `0deg`, and all of the positions and hints are percentages,
         // we can flip the gradient the other direction and omit the direction.
         else if (angle == 0.0 and dest.minify and brk: {
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.items.items) |*item| {
                 if (item.* == .hint and item.hint != .percentage) break :brk false;
                 if (item.* == .color_stop and item.color_stop.position != null and item.color_stop.position.? != .percentage) break :brk false;
@@ -434,6 +438,7 @@ pub const LinearGradient = struct {
     }
 
     pub fn isCompatible(this: *const @This(), browsers: css.targets.Browsers) bool {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.items.items) |*item| {
             if (!item.isCompatible(browsers)) return false;
         }
@@ -451,7 +456,8 @@ pub const LinearGradient = struct {
     pub fn getFallback(this: *const @This(), allocator: std.mem.Allocator, kind: css.ColorFallbackKind) LinearGradient {
         var fallback_items = bun.handleOom(ArrayList(GradientItem(LengthPercentage)).initCapacity(allocator, this.items.items.len));
         fallback_items.items.len = this.items.items.len;
-        for (fallback_items.items, this.items.items) |*out, *in| {
+        // safe-transpile: for with index access requires manual review
+    for (fallback_items.items, this.items.items) |*out, *in| {
             out.* = in.getFallback(allocator, kind);
         }
 
@@ -530,6 +536,7 @@ pub const RadialGradient = struct {
     }
 
     pub fn isCompatible(this: *const @This(), browsers: css.targets.Browsers) bool {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.items.items) |*item| {
             if (!item.isCompatible(browsers)) return false;
         }
@@ -539,7 +546,8 @@ pub const RadialGradient = struct {
     pub fn getFallback(this: *const RadialGradient, allocator: Allocator, kind: css.ColorFallbackKind) RadialGradient {
         var items = bun.handleOom(ArrayList(GradientItem(LengthPercentage)).initCapacity(allocator, this.items.items.len));
         items.items.len = this.items.items.len;
-        for (items.items, this.items.items) |*out, *in| {
+        // safe-transpile: for with index access requires manual review
+    for (items.items, this.items.items) |*out, *in| {
             out.* = in.getFallback(allocator, kind);
         }
 
@@ -623,6 +631,7 @@ pub const ConicGradient = struct {
     }
 
     pub fn isCompatible(this: *const @This(), browsers: css.targets.Browsers) bool {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.items.items) |*item| {
             if (!item.isCompatible(browsers)) return false;
         }
@@ -632,7 +641,8 @@ pub const ConicGradient = struct {
     pub fn getFallback(this: *const @This(), allocator: Allocator, kind: css.ColorFallbackKind) ConicGradient {
         var items = bun.handleOom(ArrayList(GradientItem(AnglePercentage)).initCapacity(allocator, this.items.items.len));
         items.items.len = this.items.items.len;
-        for (items.items, this.items.items) |*out, *in| {
+        // safe-transpile: for with index access requires manual review
+    for (items.items, this.items.items) |*out, *in| {
             out.* = in.getFallback(allocator, kind);
         }
 
@@ -771,6 +781,7 @@ pub const WebKitGradient = union(enum) {
                 try linear.from.toCss(dest);
                 try dest.delim(',', false);
                 try linear.to.toCss(dest);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (linear.stops.items) |*stop| {
                     try dest.delim(',', false);
                     try stop.toCss(dest);
@@ -786,6 +797,7 @@ pub const WebKitGradient = union(enum) {
                 try radial.to.toCss(dest);
                 try dest.delim(',', false);
                 try CSSNumberFns.toCss(&radial.r1, dest);
+// safe-transpile: for loop with pointer capture requires manual review
                 for (radial.stops.items) |*stop| {
                     try dest.delim(',', false);
                     try stop.toCss(dest);
@@ -800,7 +812,8 @@ pub const WebKitGradient = union(enum) {
             .linear => |linear| {
                 stops = bun.handleOom(ArrayList(WebKitColorStop).initCapacity(allocator, linear.stops.items.len));
                 stops.items.len = linear.stops.items.len;
-                for (stops.items, linear.stops.items) |*out, *in| {
+                // safe-transpile: for with index access requires manual review
+    for (stops.items, linear.stops.items) |*out, *in| {
                     out.* = in.getFallback(allocator, kind);
                 }
                 return WebKitGradient{
@@ -814,7 +827,8 @@ pub const WebKitGradient = union(enum) {
             .radial => |radial| {
                 stops = bun.handleOom(ArrayList(WebKitColorStop).initCapacity(allocator, radial.stops.items.len));
                 stops.items.len = radial.stops.items.len;
-                for (stops.items, radial.stops.items) |*out, *in| {
+                // safe-transpile: for with index access requires manual review
+    for (stops.items, radial.stops.items) |*out, *in| {
                     out.* = in.getFallback(allocator, kind);
                 }
                 return WebKitGradient{
@@ -1446,6 +1460,7 @@ pub const ShapeExtent = enum {
         return this.* == other.*;
     }
 
+// safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -1584,6 +1599,7 @@ pub fn serializeItems(
 ) PrintErr!void {
     var first = true;
     var last: ?*const GradientItem(D) = null;
+// safe-transpile: for loop with pointer capture requires manual review
     for (items.items) |*item| {
         // Skip useless hints
         if (item.* == .hint and item.hint == .percentage and item.hint.percentage.v == 0.5) {
@@ -1617,6 +1633,7 @@ pub fn serializeItems(
 
 pub fn convertStopsToWebkit(allocator: Allocator, items: *const ArrayList(GradientItem(LengthPercentage))) ?ArrayList(WebKitColorStop) {
     var stops: ArrayList(WebKitColorStop) = bun.handleOom(ArrayList(WebKitColorStop).initCapacity(allocator, items.items.len));
+    // safe-transpile: for with index access requires manual review
     for (items.items, 0..) |*item, i| {
         switch (item.*) {
             .color_stop => |*stop| {

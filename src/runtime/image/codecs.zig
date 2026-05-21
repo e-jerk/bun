@@ -71,6 +71,7 @@ pub const Format = enum(u8) {
     /// backend tried first (handles disposal/animation we don't).
     gif,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn sniff(bytes: []const u8) ?Format {
         if (bytes.len >= 3 and bytes[0] == 0xFF and bytes[1] == 0xD8 and bytes[2] == 0xFF)
             return .jpeg;
@@ -112,6 +113,7 @@ pub const Format = enum(u8) {
     /// Best-effort extension → format for `.write(path)`'s default. Only the
     /// final dotted segment is considered; case-insensitive. Returns `null`
     /// when there's no extension or it's not one we recognise.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromExtension(path: []const u8) ?Format {
         const dot = std.mem.lastIndexOfScalar(u8, path, '.') orelse return null;
         var buf: [5]u8 = undefined;
@@ -192,6 +194,7 @@ pub const DecodeHint = struct {
     target_h: u32 = 0,
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn decode(bytes: []const u8, max_pixels: u64, hint: DecodeHint) Error!Decoded {
     const fmt = Format.sniff(bytes) orelse return error.UnknownFormat;
     return switch (fmt) {
@@ -222,6 +225,7 @@ pub fn decode(bytes: []const u8, max_pixels: u64, hint: DecodeHint) Error!Decode
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn decodeViaSystem(bytes: []const u8, max_pixels: u64) (Error || error{BackendUnavailable})!Decoded {
     if (system_backend) |b| if (useSystem()) return b.decode(bytes, max_pixels);
     return error.BackendUnavailable;
@@ -236,6 +240,7 @@ pub inline fn guard(w: u32, h: u32, max_pixels: u64) Error!void {
 /// a 1920×1080 PNG just to read the IHDR is ~70× slower than Sharp; this reads
 /// the few bytes each format needs and stops. Still subject to `max_pixels` so
 /// metadata() and bytes() agree on what's "too big".
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn probe(bytes: []const u8, max_pixels: u64) Error!struct { format: Format, width: u32, height: u32 } {
     const fmt = Format.sniff(bytes) orelse return error.UnknownFormat;
     var w: u32 = 0;
@@ -255,7 +260,9 @@ pub fn probe(bytes: []const u8, max_pixels: u64) Error!struct { format: Format, 
             const rw = jpeg.tj3Get(handle, jpeg.TJPARAM_JPEGWIDTH);
             const rh = jpeg.tj3Get(handle, jpeg.TJPARAM_JPEGHEIGHT);
             if (rw <= 0 or rh <= 0) return error.DecodeFailed;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             w = @intCast(rw);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             h = @intCast(rh);
         },
         .webp => {
@@ -263,7 +270,9 @@ pub fn probe(bytes: []const u8, max_pixels: u64) Error!struct { format: Format, 
             var ch: c_int = 0;
             if (webp.WebPGetInfo(bytes.ptr, bytes.len, &cw, &ch) == 0 or cw <= 0 or ch <= 0)
                 return error.DecodeFailed;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             w = @intCast(cw);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             h = @intCast(ch);
         },
         .bmp => {
@@ -347,11 +356,13 @@ pub const Encoded = struct {
         }.call;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromOwned(bytes: []u8) Encoded {
         return .{ .bytes = bytes, .free = wrap(bun.mimalloc.mi_free) };
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn encode(rgba: []const u8, width: u32, height: u32, opts: EncodeOptions) Error!Encoded {
     return switch (opts.format) {
         .jpeg => jpeg.encode(rgba, width, height, opts.quality, opts.progressive, opts.icc_profile),
@@ -431,10 +442,12 @@ extern fn bun_image_modulate_rgba8(buf: [*]u8, len: usize, brightness: f32, satu
 /// In-place brightness/saturation. brightness multiplies V (so 1.0 is
 /// identity); saturation linearly interpolates each channel toward the pixel's
 /// luma (0 = greyscale, 1 = identity, >1 = boost).
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn modulate(rgba: []u8, brightness: f32, saturation: f32) void {
     bun_image_modulate_rgba8(rgba.ptr, rgba.len, brightness, saturation);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resize(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, f: Filter) Error![]u8 {
     if (system_backend) |b| if (@hasDecl(b, "scale")) if (useSystem()) {
         if (b.scale(src, sw, sh, dw, dh, f)) |out| return out else |e| switch (e) {
@@ -447,9 +460,11 @@ pub fn resize(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, f: Filter) Er
     // C++; mimalloc here is faster than libc, and the over-allocation rounds
     // into the same size class as the row buffer alone.
     const out_sz: usize = @as(usize, dw) * dh * 4;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const scratch_sz = bun_image_resize_scratch_size(@intCast(sw), @intCast(sh), @intCast(dw), @intCast(dh), @intFromEnum(f));
     const block = try bun.default_allocator.alloc(u8, out_sz + scratch_sz);
     errdefer bun.default_allocator.free(block);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (bun_image_resize_rgba8(src.ptr, @intCast(sw), @intCast(sh), block.ptr, @intCast(dw), @intCast(dh), @intFromEnum(f), block.ptr + out_sz) != 0)
         return error.OutOfMemory;
     // Drop the scratch tail; mimalloc's shrink is in-place when the new size
@@ -457,6 +472,7 @@ pub fn resize(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, f: Filter) Er
     return bun.handleOom(bun.default_allocator.realloc(block, out_sz));
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rotate(src: []const u8, w: u32, h: u32, degrees: u32) Error!Decoded {
     const dw: u32, const dh: u32 = if (degrees == 90 or degrees == 270) .{ h, w } else .{ w, h };
     if (system_backend) |b| if (@hasDecl(b, "rotate")) if (useSystem()) {
@@ -468,10 +484,12 @@ pub fn rotate(src: []const u8, w: u32, h: u32, degrees: u32) Error!Decoded {
         }
     };
     const out = try bun.default_allocator.alloc(u8, @as(usize, dw) * dh * 4);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun_image_rotate_rgba8(src.ptr, @intCast(w), @intCast(h), out.ptr, @intCast(degrees));
     return .{ .rgba = out, .width = dw, .height = dh };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn flip(src: []const u8, w: u32, h: u32, horizontal: bool) Error![]u8 {
     if (system_backend) |b| if (@hasDecl(b, "flip")) if (useSystem()) {
         if (b.flip(src, w, h, horizontal)) |out| return out else |e| switch (e) {
@@ -480,6 +498,7 @@ pub fn flip(src: []const u8, w: u32, h: u32, horizontal: bool) Error![]u8 {
         }
     };
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * h * 4);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun_image_flip_rgba8(src.ptr, @intCast(w), @intCast(h), out.ptr, @intFromBool(horizontal));
     return out;
 }

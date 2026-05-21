@@ -78,7 +78,6 @@ pub fn scheduleGCTimer(this: *GarbageCollectionController) void {
 
 pub fn bunVM(this: *GarbageCollectionController) *VirtualMachine {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("gc_controller", this));
 }
 

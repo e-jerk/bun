@@ -11,7 +11,6 @@ pub fn BufferedReader(comptime buffer_size: usize, comptime ReaderType: type) ty
         const Self = @This();
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn read(self: *Self, dest: []u8) Error!usize {
             // First try reading from the already buffered data onto the destination.
             const current = self.buf[self.start..self.end];
@@ -514,7 +513,6 @@ pub const RapidHash = struct {
     const RAPID_SECRET: [3]u64 = .{ 0x2d358dccaa6c78a5, 0x8bb84b93962eacc9, 0x4b33a62ed433d4a3 };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u64, input: []const u8) u64 {
         const sc = RAPID_SECRET;
         const len = input.len;
@@ -527,7 +525,6 @@ pub const RapidHash = struct {
 
         if (len <= 16) {
             if (len >= 4) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const d: u64 = ((len & 24) >> @intCast(len >> 3));
                 const e = len - 4;
@@ -580,7 +577,7 @@ pub const RapidHash = struct {
     }
 
     test "RapidHash.hash" {
-        const bytes: safe.Slice(u8) = "abcdefgh" ** 128;
+        const bytes: []const u8 = "abcdefgh" ** 128;
 
         const sizes: [13]u64 = .{ 0, 1, 2, 3, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
 
@@ -601,7 +598,6 @@ pub const RapidHash = struct {
         };
 
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (sizes, outcomes) |s, e| {
             const r = hash(RAPID_SEED, bytes[0..s]);
 
@@ -612,9 +608,7 @@ pub const RapidHash = struct {
     inline fn mum(a: *u64, b: *u64) void {
         const r = @as(u128, a.*) * b.*;
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         a.* = @truncate(r);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         b.* = @truncate(r >> 64);
     }
@@ -627,12 +621,10 @@ pub const RapidHash = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn r64(p: []const u8) u64 {
         return readInt(u64, p[0..8], .little);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn r32(p: []const u8) u64 {
         return readInt(u32, p[0..4], .little);
@@ -648,7 +640,6 @@ pub fn jsErrorToWriteError(e: bun.JSError) std.Io.Writer.Error {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn autoFormatLabelFallback(comptime ty: type, comptime fallback: []const u8) []const u8 {
     comptime if (std.meta.hasFn(ty, "format")) {
         return "{f}";
@@ -657,7 +648,6 @@ pub fn autoFormatLabelFallback(comptime ty: type, comptime fallback: []const u8)
     };
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn autoFormatLabel(comptime ty: type) []const u8 {
     return autoFormatLabelFallback(ty, "{s}");

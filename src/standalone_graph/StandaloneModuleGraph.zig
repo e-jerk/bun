@@ -45,11 +45,13 @@ pub const StandaloneModuleGraph = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isBunStandaloneFilePathCanonicalized(str: []const u8) bool {
         return bun.strings.hasPrefixComptime(str, base_path) or
             (Environment.isWindows and bun.strings.hasPrefixComptime(str, base_public_path));
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isBunStandaloneFilePath(str: []const u8) bool {
         if (Environment.isWindows) {
             // On Windows, remove NT path prefixes before checking
@@ -64,6 +66,7 @@ pub const StandaloneModuleGraph = struct {
     }
 
     // by normalized file path
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn find(this: *const StandaloneModuleGraph, name: []const u8) ?*File {
         if (!isBunStandaloneFilePath(name)) {
             return null;
@@ -72,11 +75,13 @@ pub const StandaloneModuleGraph = struct {
         return this.findAssumeStandalonePath(name);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn stat(this: *const StandaloneModuleGraph, name: []const u8) ?bun.Stat {
         const file = this.find(name) orelse return null;
         return file.stat();
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn findAssumeStandalonePath(this: *const StandaloneModuleGraph, name: []const u8) ?*File {
         if (Environment.isWindows) {
             var normalized_buf: bun.PathBuffer = undefined;
@@ -133,6 +138,7 @@ pub const StandaloneModuleGraph = struct {
 
                 // BlobHeader has 8 bytes size (u64), so data starts at offset 8.
                 const data_offset = @sizeOf(u64);
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const slice_ptr: [*]const u8 = @ptrCast(length);
                 return slice_ptr[data_offset..][0..length.*];
             }
@@ -192,6 +198,7 @@ pub const StandaloneModuleGraph = struct {
 
         pub fn stat(this: *const File) bun.Stat {
             var result = std.mem.zeroes(bun.Stat);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             result.size = @intCast(this.contents.len);
             result.mode = bun.S.IFREG | 0o644;
             return result;
@@ -256,9 +263,11 @@ pub const StandaloneModuleGraph = struct {
                     const source_files = serialized.sourceFileNames();
                     const slices = bun.handleOom(bun.default_allocator.alloc(?[]u8, source_files.len * 2));
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const file_names: [][]const u8 = @ptrCast(slices[0..source_files.len]);
                     const decompressed_contents_slice = slices[source_files.len..][0..source_files.len];
-                    for (file_names, source_files) |*dest, src| {
+                    // safe-transpile: for with index access requires manual review
+    for (file_names, source_files) |*dest, src| {
                         dest.* = src.slice(serialized.bytes);
                     }
 
@@ -270,6 +279,7 @@ pub const StandaloneModuleGraph = struct {
                     });
 
                     stored.external_source_names = file_names;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     stored.underlying_provider = .{ .data = @truncate(@intFromPtr(data)), .load_hint = .none, .kind = .zig };
                     stored.is_standalone_module_graph = true;
 
@@ -300,6 +310,7 @@ pub const StandaloneModuleGraph = struct {
 
     const trailer = "\n---- Bun! ----\n";
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(allocator: std.mem.Allocator, raw_bytes: []u8, offsets: Offsets) !StandaloneModuleGraph {
         if (raw_bytes.len == 0) return StandaloneModuleGraph{
             .files = bun.StringArrayHashMap(File).init(allocator),
@@ -323,6 +334,7 @@ pub const StandaloneModuleGraph = struct {
                     .contents = sliceToZ(raw_bytes, module.contents),
                     .sourcemap = if (module.sourcemap.length > 0)
                         .{ .serialized = .{
+// safe-transpile: @alignCast requires manual review
                             .bytes = @alignCast(sliceTo(raw_bytes, module.sourcemap)),
                         } }
                     else
@@ -347,18 +359,21 @@ pub const StandaloneModuleGraph = struct {
         };
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn sliceTo(bytes: []const u8, ptr: bun.StringPointer) []const u8 {
         if (ptr.length == 0) return "";
 
         return bytes[ptr.offset..][0..ptr.length];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn sliceToZ(bytes: []const u8, ptr: bun.StringPointer) [:0]const u8 {
         if (ptr.length == 0) return "";
 
         return bytes[ptr.offset..][0..ptr.length :0];
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toBytes(allocator: std.mem.Allocator, prefix: []const u8, output_files: []const bun.options.OutputFile, output_format: bun.options.Format, compile_exec_argv: []const u8, flags: Flags) ![]u8 {
         var serialize_trace = bun.perf.trace("StandaloneModuleGraph.serialize");
         defer serialize_trace.end();
@@ -366,6 +381,7 @@ pub const StandaloneModuleGraph = struct {
         var entry_point_id: ?usize = null;
         var string_builder = bun.StringBuilder{};
         var module_count: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
         for (output_files) |*output_file| {
             string_builder.countZ(output_file.dest_path);
             string_builder.countZ(prefix);
@@ -415,6 +431,7 @@ pub const StandaloneModuleGraph = struct {
         var source_map_arena = bun.ArenaAllocator.init(allocator);
         defer source_map_arena.deinit();
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (output_files) |*output_file| {
             if (!output_file.output_kind.isFileInStandaloneMode()) {
                 continue;
@@ -466,10 +483,12 @@ pub const StandaloneModuleGraph = struct {
                     string_builder.len += padding;
                     const aligned_offset = string_builder.len;
                     const writable_after_padding = string_builder.writable();
+// safe-transpile: @memcpy requires manual review
                     @memcpy(writable_after_padding[0..bytecode.len], bytecode[0..bytecode.len]);
                     const unaligned_space = writable_after_padding[bytecode.len..];
                     const len = bytecode.len + @min(unaligned_space.len, 128);
                     string_builder.len += len;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     break :brk StringPointer{ .offset = @truncate(aligned_offset), .length = @truncate(len) };
                 } else {
                     break :brk .{};
@@ -482,8 +501,10 @@ pub const StandaloneModuleGraph = struct {
                     const mi_bytes = output_files[output_file.module_info_index].value.buffer.bytes;
                     const offset = string_builder.len;
                     const writable = string_builder.writable();
+// safe-transpile: @memcpy requires manual review
                     @memcpy(writable[0..mi_bytes.len], mi_bytes[0..mi_bytes.len]);
                     string_builder.len += mi_bytes.len;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     break :brk StringPointer{ .offset = @truncate(offset), .length = @truncate(mi_bytes.len) };
                 }
                 break :brk .{};
@@ -561,6 +582,7 @@ pub const StandaloneModuleGraph = struct {
         }
 
         const offsets = Offsets{
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .entry_point_id = @as(u32, @truncate(entry_point_id.?)),
             .modules_ptr = string_builder.appendCount(std.mem.sliceAsBytes(modules.items)),
             .compile_exec_argv_ptr = string_builder.appendCountZ(compile_exec_argv),
@@ -575,6 +597,7 @@ pub const StandaloneModuleGraph = struct {
 
         if (comptime Environment.isDebug) {
             // An expensive sanity check:
+// safe-transpile: @alignCast requires manual review
             var graph = try fromBytes(allocator, @alignCast(output_bytes), offsets);
             defer {
                 graph.files.unlockPointers();
@@ -604,6 +627,7 @@ pub const StandaloneModuleGraph = struct {
                 no_entry_point,
                 no_output_files,
 
+// safe-transpile: function returns small constant slice — consider safe.String
                 pub fn message(this: Reason) []const u8 {
                     return switch (this) {
                         .no_entry_point => "No entry point found for compilation",
@@ -612,6 +636,7 @@ pub const StandaloneModuleGraph = struct {
                 }
             };
 
+// safe-transpile: function returns small constant slice — consider safe.String
             pub fn slice(this: *const Error) []const u8 {
                 return switch (this.*) {
                     .message => this.message,
@@ -624,6 +649,7 @@ pub const StandaloneModuleGraph = struct {
             return .{ .err = .{ .reason = reason } };
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn failFmt(comptime fmt: []const u8, args: anytype) CompileResult {
             return .{ .err = .{ .message = bun.handleOom(std.fmt.allocPrint(bun.default_allocator, fmt, args)) } };
         }
@@ -639,8 +665,10 @@ pub const StandaloneModuleGraph = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn inject(bytes: []const u8, self_exe: [:0]const u8, inject_options: InjectOptions, target: *const CompileTarget) bun.FD {
         var buf: bun.PathBuffer = undefined;
+// safe-transpile: @bitCast requires manual review
         var zname: [:0]const u8 = bun.fs.FileSystem.tmpname("bun-build", &buf, @as(u64, @bitCast(@import("std-fs-compat").milliTimestamp()))) catch |err| {
             Output.prettyErrorln("<r><red>error<r><d>:<r> failed to get temporary file name: {s}", .{@errorName(err)});
             return bun.invalid_fd;
@@ -917,6 +945,7 @@ pub const StandaloneModuleGraph = struct {
                     .result => {},
                 }
                 // Truncate the file to the exact size of the modified ELF
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 _ = Syscall.ftruncate(cloned_executable_fd, @intCast(elf_file.data.items.len));
 
                 if (comptime !Environment.isWindows) {
@@ -933,6 +962,7 @@ pub const StandaloneModuleGraph = struct {
                         return bun.invalid_fd;
                     });
                 } else {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const seek_position = @as(u64, @intCast(brk: {
                         const fstat = switch (Syscall.fstat(cloned_executable_fd)) {
                             .result => |res| res,
@@ -1087,6 +1117,7 @@ pub const StandaloneModuleGraph = struct {
         return try allocator.dupeZ(u8, dest_z);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toExecutable(
         target: *const CompileTarget,
         allocator: std.mem.Allocator,
@@ -1352,11 +1383,12 @@ pub const StandaloneModuleGraph = struct {
     }
 
     /// Allocates a StandaloneModuleGraph on the heap, populates it from bytes, sets it globally, and returns the pointer.
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn fromBytesAlloc(allocator: std.mem.Allocator, raw_bytes: []u8, offsets: Offsets) !*StandaloneModuleGraph {
-        const graph_ptr = try allocator.create(StandaloneModuleGraph);
-        graph_ptr.* = try StandaloneModuleGraph.fromBytes(allocator, raw_bytes, offsets);
-        graph_ptr.set();
-        return graph_ptr;
+        const graph_ptr = try safe.Box(StandaloneModuleGraph).init(allocator, undefined);
+        graph_ptr.ptr.* = try StandaloneModuleGraph.fromBytes(allocator, raw_bytes, offsets);
+        graph_ptr.ptr.set();
+        return graph_ptr.ptr;
     }
 
     /// Source map serialization in the bundler is specially designed to be
@@ -1377,6 +1409,7 @@ pub const StandaloneModuleGraph = struct {
         };
 
         pub fn header(map: SerializedSourceMap) *align(1) const Header {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @ptrCast(map.bytes.ptr);
         }
 
@@ -1390,11 +1423,13 @@ pub const StandaloneModuleGraph = struct {
 
         pub fn sourceFileNames(map: SerializedSourceMap) []align(1) const StringPointer {
             const head = map.header();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as([*]align(1) const StringPointer, @ptrCast(map.bytes[@sizeOf(Header)..]))[0..head.source_files_count];
         }
 
         fn compressedSourceFiles(map: SerializedSourceMap) []align(1) const StringPointer {
             const head = map.header();
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as([*]align(1) const StringPointer, @ptrCast(map.bytes[@sizeOf(Header)..]))[head.source_files_count..][0..head.source_files_count];
         }
 
@@ -1413,6 +1448,7 @@ pub const StandaloneModuleGraph = struct {
                 }
 
                 const compressed_codes = this.map.compressedSourceFiles();
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const compressed_file = compressed_codes[@intCast(index)].slice(this.map.bytes);
                 const size = bun.zstd.getDecompressedSize(compressed_file);
 
@@ -1433,6 +1469,7 @@ pub const StandaloneModuleGraph = struct {
         };
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn serializeJsonSourceMapForStandalone(
         header_list: *std.array_list.Managed(u8),
         string_payload: *std.array_list.Managed(u8),
@@ -1476,6 +1513,7 @@ pub const StandaloneModuleGraph = struct {
             return error.InvalidSourceMap;
 
         try out.writeInt(u32, sources_paths.items.len, .little);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try out.writeInt(u32, @intCast(map_blob.len), .little);
 
         const string_payload_start_location = @sizeOf(u32) +
@@ -1493,7 +1531,9 @@ pub const StandaloneModuleGraph = struct {
             try string_payload.appendSlice(decoded);
 
             const slice = bun.StringPointer{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .offset = @intCast(offset + string_payload_start_location),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .length = @intCast(string_payload.items.len - offset),
             };
             try out.writeInt(u32, slice.offset, .little);
@@ -1520,7 +1560,9 @@ pub const StandaloneModuleGraph = struct {
             string_payload.items.len += compressed_result.success;
 
             const slice = bun.StringPointer{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .offset = @intCast(offset + string_payload_start_location),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .length = @intCast(string_payload.items.len - offset),
             };
             try out.writeInt(u32, slice.offset, .little);

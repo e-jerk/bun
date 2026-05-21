@@ -70,6 +70,7 @@ pub const TransformList = struct {
     }
 
     fn toCssBase(this: *const @This(), dest: *Printer) PrintErr!void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.v.items) |*item| {
             try item.toCss(dest);
         }
@@ -1200,6 +1201,7 @@ pub const TransformHandler = struct {
         context: *css.PropertyHandlerContext,
     ) bool {
         const individualProperty = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
             fn individualProperty(self: *TransformHandler, allocator: std.mem.Allocator, comptime field: []const u8, val: anytype) void {
                 if (self.transform) |*transform| {
                     bun.handleOom(transform.*[0].v.append(allocator, val.toTransform(allocator)));

@@ -22,6 +22,7 @@ pub fn UnboundedColorGamut(comptime T: type) type {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn HslHwbColorGamut(comptime T: type, comptime a: []const u8, comptime b: []const u8) type {
     return struct {
         pub fn inGamut(this: *const T) bool {
@@ -639,6 +640,7 @@ pub const CssColor = union(enum) {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parseColorFunction(location: css.SourceLocation, function: []const u8, input: *css.Parser) Result(CssColor) {
     var parser = ComponentParser.new(true);
 
@@ -1608,6 +1610,7 @@ pub const SystemColor = enum {
         };
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -2533,6 +2536,7 @@ const RelativeComponentParser = struct {
                 return .{ .err = i.newCustomError(css.ParserError.invalid_value) };
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn calcParseIdentFn(t: *@This(), ident: []const u8) ?Calc(Angle) {
                 const value = t.parser.getIdent(ident, ChannelType{ .angle = true, .number = true }) orelse return null;
                 t.angle = .{ .deg = value };
@@ -2581,6 +2585,7 @@ const RelativeComponentParser = struct {
                     return .{ .err = i.newCustomError(css.ParserError.invalid_value) };
                 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn calcparseident(self: *@This(), ident: []const u8) ?Calc(Percentage) {
                     const v = self.parser.getIdent(ident, ChannelType{ .percentage = true, .number = true }) orelse return null;
                     self.percentage = .{ .v = v };
@@ -2629,6 +2634,7 @@ const RelativeComponentParser = struct {
                 return .{ .err = i.newCustomError(css.ParserError.invalid_value) };
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn parseIdentFn(closure: *Closure, ident: []const u8) ?Calc(Percentage) {
                 const v = closure.self.getIdent(ident, ChannelType{ .percentage = true }) orelse return null;
                 closure.temp = .{ .v = v };
@@ -2686,6 +2692,7 @@ const RelativeComponentParser = struct {
             p: *const RelativeComponentParser,
             allowed_types: ChannelType,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn parseIdentFn(self: *@This(), ident: []const u8) ?Calc(f32) {
                 const v = self.p.getIdent(ident, self.allowed_types) orelse return null;
                 return .{ .number = v };
@@ -2703,6 +2710,7 @@ const RelativeComponentParser = struct {
         return .{ .err = input.newCustomError(css.ParserError.invalid_value) };
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getIdent(
         this: *const RelativeComponentParser,
         ident: []const u8,
@@ -2806,6 +2814,7 @@ pub fn parsePredefined(input: *css.Parser, parser: *ComponentParser) Result(CssC
     return .{ .result = res };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn parsePredefinedRelative(
     input: *css.Parser,
     parser: *ComponentParser,
@@ -2968,6 +2977,7 @@ pub const ColorFallbackKind = packed struct(u8) {
         return bun.bits.@"and"(
             ColorFallbackKind,
             this,
+// safe-transpile: @bitCast requires manual review
             fromBitsTruncate(bun.wrappingNegation(@as(u8, @bitCast(this)))),
         );
     }
@@ -2976,17 +2986,20 @@ pub const ColorFallbackKind = packed struct(u8) {
         // This finds the highest set bit.
         if (this.isEmpty()) return ColorFallbackKind{};
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const zeroes: u3 = @intCast(@as(u4, 7) - bun.bits.leadingZeros(ColorFallbackKind, this));
         return fromBitsTruncate(@as(u8, 1) << zeroes);
     }
 
     pub fn difference(left: @This(), right: @This()) ColorFallbackKind {
+// safe-transpile: @bitCast requires manual review
         return @bitCast(@as(u8, @bitCast(left)) - @as(u8, @bitCast(right)));
     }
 
     pub fn andBelow(this: @This()) ColorFallbackKind {
         if (this.isEmpty()) return .{};
 
+// safe-transpile: @bitCast requires manual review
         return bun.bits.@"or"(ColorFallbackKind, this, fromBitsTruncate(@as(u8, @bitCast(this)) - 1));
     }
 
@@ -3006,16 +3019,19 @@ pub const ColorFallbackKind = packed struct(u8) {
     }
 
     pub fn isEmpty(cfk: ColorFallbackKind) bool {
+// safe-transpile: @bitCast requires manual review
         return @as(u8, @bitCast(cfk)) == 0;
     }
 
     pub inline fn fromBitsTruncate(b: u8) ColorFallbackKind {
+// safe-transpile: @bitCast requires manual review
         var cfk: ColorFallbackKind = @bitCast(b);
         cfk.__unused = 0;
         return cfk;
     }
 
     pub fn asBits(this: @This()) u8 {
+// safe-transpile: @bitCast requires manual review
         return @bitCast(this);
     }
 };
@@ -3035,6 +3051,7 @@ pub const ColorSpaceName = enum {
     lch,
     oklch,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -3135,6 +3152,7 @@ pub const HueInterpolationMethod = enum {
     /// No fixup is performed. Angles are interpolated in the same way as every other component.
     specified,
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -3340,6 +3358,7 @@ pub fn BoundedColorGamut(comptime T: type) type {
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn DeriveInterpolate(
     comptime T: type,
     comptime a: []const u8,
@@ -3386,6 +3405,7 @@ pub fn DeriveInterpolate(
 //     };
 // }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn RecangularPremultiply(
     comptime T: type,
     comptime a: []const u8,
@@ -3416,6 +3436,7 @@ pub fn RecangularPremultiply(
     };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn PolarPremultiply(
     comptime T: type,
     comptime a: []const u8,
@@ -3530,6 +3551,7 @@ pub fn expandHex(v: u32) u32 {
         (v & 0x000F);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeComponents(
     name: []const u8,
     a: f32,

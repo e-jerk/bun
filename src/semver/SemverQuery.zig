@@ -32,6 +32,7 @@ const Formatter = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn fmt(this: *const Query, buf: []const u8) @This().Formatter {
     return .{ .query = this, .buffer = buf };
 }
@@ -61,6 +62,7 @@ pub const List = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmt(this: *const List, buf: []const u8) @This().Formatter {
         return .{ .list = this, .buffer = buf };
     }
@@ -115,15 +117,15 @@ pub const List = struct {
             return;
         }
 
-        var tail = try allocator.create(Query);
-        tail.* = Query{
+        var tail = try safe.Box(Query).init(allocator, undefined);
+        tail.ptr.* = Query{
             .range = range,
         };
-        tail.range = range;
+        tail.ptr.range = range;
 
         var last_tail = self.tail orelse &self.head;
-        last_tail.next = tail;
-        self.tail = tail;
+        last_tail.next = tail.ptr;
+        self.tail = tail.ptr;
     }
 };
 

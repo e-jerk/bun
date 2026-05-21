@@ -89,6 +89,7 @@ pub const Symlinker = struct {
                             const is_dir = if (comptime Environment.isWindows)
                                 if (sys.getFileAttributes(this.dest.sliceZ())) |a| a.is_directory and !a.is_reparse_point else false
                             else if (sys.lstat(this.dest.sliceZ()).asValue()) |st|
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 std.posix.S.ISDIR(@intCast(st.mode))
                             else
                                 false;

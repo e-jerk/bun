@@ -102,6 +102,7 @@ pub const PropertyHandlerContext = struct {
             this.supports.items.len,
         ) catch |err| bun.handleOom(err);
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.supports.items) |*entry| {
             dest.appendAssumeCapacity(css.CssRule(T){
                 .supports = css.SupportsRule(T){
@@ -199,6 +200,7 @@ pub const PropertyHandlerContext = struct {
 
         return dest;
     }
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getAdditionalRulesHelper(
         this: *const @This(),
         comptime T: type,
@@ -208,6 +210,7 @@ pub const PropertyHandlerContext = struct {
         dest: *ArrayList(css.CssRule(T)),
     ) void {
         var selectors = sty.selectors.deepClone(this.allocator);
+// safe-transpile: for loop with pointer capture requires manual review
         for (selectors.v.slice_mut()) |*selector| {
             selector.append(this.allocator, css.Component{
                 .non_ts_pseudo_class = css.PseudoClass{
@@ -231,21 +234,25 @@ pub const PropertyHandlerContext = struct {
     }
 
     pub fn reset(this: *@This()) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.supports.items) |*supp| {
             supp.deinit(this.allocator);
         }
         this.supports.clearRetainingCapacity();
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.ltr.items) |*ltr| {
             ltr.deinit(this.allocator);
         }
         this.ltr.clearRetainingCapacity();
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.rtl.items) |*rtl| {
             rtl.deinit(this.allocator);
         }
         this.rtl.clearRetainingCapacity();
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.dark.items) |*dark| {
             dark.deinit(this.allocator);
         }
@@ -256,6 +263,7 @@ pub const PropertyHandlerContext = struct {
         if (this.context != DeclarationContext.style_rule) return;
 
         if (brk: {
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.supports.items) |*supp| {
                 if (condition.eql(&supp.condition)) break :brk supp;
             }

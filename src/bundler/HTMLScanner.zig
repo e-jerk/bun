@@ -15,12 +15,14 @@ pub fn init(allocator: std.mem.Allocator, log: *logger.Log, source: *const logge
 }
 
 pub fn deinit(this: *HTMLScanner) void {
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.import_records.slice()) |*record| {
         this.allocator.free(record.path.text);
     }
     this.import_records.deinit(this.allocator);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn createImportRecord(this: *HTMLScanner, input_path: []const u8, kind: ImportKind) !void {
     // In HTML, sometimes people do /src/index.js
     // In that case, we don't want to use the absolute filesystem path, we want to use the path relative to the project root
@@ -49,10 +51,12 @@ fn createImportRecord(this: *HTMLScanner, input_path: []const u8, kind: ImportKi
 
 const debug = bun.Output.scoped(.HTMLScanner, .hidden);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onWriteHTML(_: *HTMLScanner, bytes: []const u8) void {
     _ = bytes; // bytes are not written in scan phase
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onHTMLParseError(this: *HTMLScanner, message: []const u8) void {
     this.log.addError(
         this.source,
@@ -61,6 +65,7 @@ pub fn onHTMLParseError(this: *HTMLScanner, message: []const u8) void {
     ) catch |err| bun.handleOom(err);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn onTag(this: *HTMLScanner, _: *lol.Element, path: []const u8, url_attribute: []const u8, kind: ImportKind) void {
     _ = url_attribute;
     this.createImportRecord(path, kind) catch {};
@@ -68,6 +73,7 @@ pub fn onTag(this: *HTMLScanner, _: *lol.Element, path: []const u8, url_attribut
 
 const processor = HTMLProcessor(HTMLScanner, false);
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn scan(this: *HTMLScanner, input: []const u8) !void {
     try processor.run(this, input);
 }
@@ -218,6 +224,7 @@ pub fn HTMLProcessor(
             return Handler.handle;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn run(this: *T, input: []const u8) !void {
             var builder = lol.HTMLRewriter.Builder.init();
             defer builder.deinit();
@@ -246,7 +253,8 @@ pub fn HTMLProcessor(
             }
 
             if (visit_document_tags) {
-                inline for (.{ "body", "head", "html" }, &.{ T.onBodyTag, T.onHeadTag, T.onHtmlTag }) |tag, cb| {
+                // safe-transpile: for with index access requires manual review
+    inline for (.{ "body", "head", "html" }, &.{ T.onBodyTag, T.onHeadTag, T.onHtmlTag }) |tag, cb| {
                     const head_selector = try lol.HTMLSelector.parse(tag);
                     selectors.appendAssumeCapacity(head_selector);
                     try builder.addElementContentHandlers(

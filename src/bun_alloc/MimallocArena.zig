@@ -55,7 +55,6 @@ pub const Borrowed = struct {
 
     fn fromOpaque(ptr: *anyopaque) Borrowed {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         return .{ ._heap = @ptrCast(@alignCast(ptr)) };
     }
 
@@ -84,7 +83,6 @@ pub const Borrowed = struct {
         }
 
         return if (ptr) |p|
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as([*]u8, @ptrCast(p))
         else
@@ -195,14 +193,12 @@ fn vtable_alloc(ptr: *anyopaque, len: usize, alignment: Alignment, _: usize) ?[*
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn vtable_resize(ptr: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
     const self: Borrowed = .fromOpaque(ptr);
     self.assertThreadLock();
     return mimalloc.mi_expand(buf.ptr, new_len) != null;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn vtable_free(
     _: *anyopaque,
@@ -244,14 +240,12 @@ fn vtable_free(
 /// allocation call stack. If the value is `0` it means no return address
 /// has been provided.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn vtable_remap(ptr: *anyopaque, buf: []u8, alignment: Alignment, new_len: usize, _: usize) ?[*]u8 {
     const self: Borrowed = .fromOpaque(ptr);
     self.assertThreadLock();
     const heap = self.getMimallocHeap();
     const aligned_size = alignment.toByteUnits();
     const value = mimalloc.mi_heap_realloc_aligned(heap, buf.ptr, new_len, aligned_size);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return @ptrCast(value);
 }
@@ -263,20 +257,16 @@ fn global_vtable_alloc(_: *anyopaque, len: usize, alignment: Alignment, _: usize
     else
         mimalloc.mi_malloc(len);
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return if (ptr) |p| @ptrCast(p) else null;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn global_vtable_resize(_: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
     return mimalloc.mi_expand(buf.ptr, new_len) != null;
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn global_vtable_remap(_: *anyopaque, buf: []u8, alignment: Alignment, new_len: usize, _: usize) ?[*]u8 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
 }

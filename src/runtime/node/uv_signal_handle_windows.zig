@@ -18,12 +18,10 @@ fn Bun__UVSignalHandle__init(
     rc = libuv.uv_signal_start(signal, callback, signal_num);
     if (rc.errno()) |_| {
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         libuv.uv_close(@ptrCast(signal), &freeWithDefaultAllocator);
         return null;
     }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     libuv.uv_unref(@ptrCast(signal));
 
@@ -32,13 +30,11 @@ fn Bun__UVSignalHandle__init(
 
 fn freeWithDefaultAllocator(signal: *anyopaque) callconv(.c) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
     bun.destroy(@as(*libuv.uv_signal_t, @ptrCast(@alignCast(signal))));
 }
 
 fn Bun__UVSignalHandle__close(signal: *libuv.uv_signal_t) callconv(.c) void {
     _ = libuv.uv_signal_stop(signal);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     libuv.uv_close(@ptrCast(signal), &freeWithDefaultAllocator);
 }

@@ -26,6 +26,7 @@ pub const MachoFile = struct {
 
             pub fn cast(entry: Entry, comptime Cmd: type) ?Cmd {
                 if (entry.data.len < @sizeOf(Cmd)) return null;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ptr: *align(1) const Cmd = @ptrCast(entry.data.ptr);
                 var cmd = ptr.*;
                 if (builtin.cpu.arch.endian() != .little) std.mem.byteSwapAllFields(Cmd, &cmd);
@@ -34,15 +35,18 @@ pub const MachoFile = struct {
 
             pub fn getSections(entry: Entry) []align(1) const macho.section_64 {
                 const segment_lc = entry.cast(macho.segment_command_64).?;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const sects_ptr: [*]align(1) const macho.section_64 = @ptrCast(entry.data[@sizeOf(macho.segment_command_64)..]);
                 return sects_ptr[0..segment_lc.nsects];
             }
 
+// safe-transpile: function returns small constant slice — consider safe.String
             pub fn getDylibPathName(entry: Entry) []const u8 {
                 const dylib_lc = entry.cast(macho.dylib_command).?;
                 return std.mem.sliceTo(entry.data[dylib_lc.dylib.name..], 0);
             }
 
+// safe-transpile: function returns small constant slice — consider safe.String
             pub fn getRpathPathName(entry: Entry) []const u8 {
                 const rpath_lc = entry.cast(macho.rpath_command).?;
                 return std.mem.sliceTo(entry.data[rpath_lc.path..], 0);
@@ -50,6 +54,7 @@ pub const MachoFile = struct {
 
             pub fn getBuildVersionTools(entry: Entry) []align(1) const macho.build_tool_version {
                 const build_lc = entry.cast(macho.build_version_command).?;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const tools_ptr: [*]align(1) const macho.build_tool_version = @ptrCast(entry.data[@sizeOf(macho.build_version_command)..]);
                 return tools_ptr[0..build_lc.ntools];
             }
@@ -58,6 +63,7 @@ pub const MachoFile = struct {
         pub fn next(it: *LoadCommandIterator) ?Entry {
             if (it.i >= it.ncmds) return null;
             const hdr_bytes = it.buffer[it.offset..][0..@sizeOf(macho.load_command)];
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const hdr: *align(1) const macho.load_command = @ptrCast(hdr_bytes.ptr);
             var cmd = hdr.*;
             if (builtin.cpu.arch.endian() != .little) std.mem.byteSwapAllFields(macho.load_command, &cmd);
@@ -69,16 +75,18 @@ pub const MachoFile = struct {
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: Allocator, obj_file: []const u8, blob_to_embed_length: usize) !*MachoFile {
         var data = try std.array_list.Managed(u8).initCapacity(allocator, obj_file.len + blob_to_embed_length);
         try data.appendSlice(obj_file);
 
+// safe-transpile: @alignCast requires manual review
         const header: *const macho.mach_header_64 = @ptrCast(@alignCast(data.items.ptr));
 
-        const self = try allocator.create(MachoFile);
-        errdefer allocator.destroy(self);
+        const self = try safe.Box(MachoFile).init(allocator, undefined);
+        defer _ = self.deinit();
 
-        self.* = .{
+        self.ptr.* = .{
             .header = header.*,
             .data = data,
             .segment = std.mem.zeroes(macho.segment_command_64),
@@ -86,7 +94,7 @@ pub const MachoFile = struct {
             .allocator = allocator,
         };
 
-        return self;
+        return self.ptr;
     }
 
     pub fn deinit(self: *MachoFile) void {
@@ -94,6 +102,7 @@ pub const MachoFile = struct {
         self.allocator.destroy(self);
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeSection(self: *MachoFile, data: []const u8) !void {
         const blob_alignment = 16 * 1024;
         const PAGE_SIZE: u64 = 1 << 12;
@@ -126,7 +135,9 @@ pub const MachoFile = struct {
                     if (strings.eqlComptime(command.segName(), "__BUN")) {
                         if (command.nsects > 0) {
                             const section_offset = @intFromPtr(entry.data.ptr) - @intFromPtr(self.data.items.ptr);
+// safe-transpile: @alignCast requires manual review
                             const sections = @as([*]macho.section_64, @ptrCast(@alignCast(&self.data.items[section_offset + @sizeOf(macho.segment_command_64)])))[0..command.nsects];
+// safe-transpile: for loop with pointer capture requires manual review
                             for (sections) |*sect| {
                                 if (strings.eqlComptime(sect.sectName(), "__bun")) {
                                     found_bun = true;
@@ -147,7 +158,9 @@ pub const MachoFile = struct {
                                         .sectname = SECTNAME,
                                         .segname = SEGNAME_BUN,
                                         .addr = original_vmaddr,
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .size = @intCast(total_size),
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .offset = @intCast(original_fileoff),
                                         .@"align" = @intFromFloat(@log2(@as(f64, @floatFromInt(blob_alignment)))),
                                         .reloff = 0,
@@ -158,6 +171,7 @@ pub const MachoFile = struct {
                                         .reserved3 = 0,
                                     };
                                     const entry_ptr: [*]u8 = @constCast(entry.data.ptr);
+// safe-transpile: @alignCast requires manual review
                                     const segment_command_ptr: *align(1) macho.segment_command_64 = @ptrCast(@alignCast(entry_ptr));
                                     segment_command_ptr.* = self.segment;
                                     sect.* = self.section;
@@ -180,6 +194,7 @@ pub const MachoFile = struct {
         }
 
         // Calculate how much larger/smaller the section will be compared to its current size
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const size_diff = @as(i64, @intCast(aligned_size)) - @as(i64, @intCast(original_segsize));
 
         // We assume that the section is page-aligned, so we can calculate the number of new pages
@@ -189,15 +204,18 @@ pub const MachoFile = struct {
         // content and one SHA-256 hash per new page. `buildAndSign` may grow further
         // to write the complete signature, but reserving this up front avoids the
         // common reallocation.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try self.data.ensureUnusedCapacity(@intCast(size_diff + num_of_new_pages * HASH_SIZE));
 
         const code_sign_cmd: ?*align(1) macho.linkedit_data_command =
             if (code_sign_cmd_idx) |idx|
+// safe-transpile: @alignCast requires manual review
                 @as(*align(1) macho.linkedit_data_command, @ptrCast(@alignCast(@constCast(&self.data.items[idx]))))
             else
                 null;
         const linkedit_seg: *align(1) macho.segment_command_64 =
             if (linkedit_seg_idx) |idx|
+// safe-transpile: @alignCast requires manual review
                 @as(*align(1) macho.segment_command_64, @ptrCast(@alignCast(@constCast(&self.data.items[idx]))))
             else
                 return error.MissingLinkeditSegment;
@@ -205,19 +223,23 @@ pub const MachoFile = struct {
         var sig_size: usize = 0;
 
         const prev_data_slice = self.data.items[original_fileoff..];
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.data.items.len += @as(usize, @intCast(size_diff));
 
         // Binary is:
         // [header][...data before __BUN][__BUN][...data after __BUN]
         // We need to shift [...data after __BUN] forward by size_diff bytes.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const after_bun_slice = self.data.items[original_data_end + @as(usize, @intCast(size_diff)) ..];
         const prev_after_bun_slice = prev_data_slice[original_segsize..];
         bun.memmove(after_bun_slice, prev_after_bun_slice);
 
         // Now we copy the u64 size header (8 bytes for alignment)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         std.mem.writeInt(u64, self.data.items[original_fileoff..][0..8], @intCast(data.len), .little);
 
         // Now we copy the data itself
+// safe-transpile: @memcpy requires manual review
         @memcpy(self.data.items[original_fileoff + 8 ..][0..data.len], data);
 
         // Lastly, we zero any of the padding that was added
@@ -230,7 +252,9 @@ pub const MachoFile = struct {
 
         if (size_diff != 0) {
             // We move the offsets of the LINKEDIT segment ahead by `size_diff`
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             linkedit_seg.fileoff += @as(usize, @intCast(size_diff));
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             linkedit_seg.vmaddr += @as(usize, @intCast(size_diff));
         }
 
@@ -246,6 +270,7 @@ pub const MachoFile = struct {
                 // with a different page size / identifier / blob set, so its
                 // `cs.datasize` can be smaller than what `sign()` will produce, which
                 // the trailing truncation in `sign()` then chops (issue #29120).
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const new_sig_dataoff: u64 = cs.dataoff + @as(u64, @intCast(size_diff));
                 const new_sig_size = MachoSigner.computeSignatureSize(new_sig_dataoff);
 
@@ -259,12 +284,14 @@ pub const MachoFile = struct {
 
                 // Stamp datasize directly so the `size_diff == 0` path — which skips
                 // `updateLoadCommandOffsets` below — still records the new size.
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 cs.datasize = @intCast(new_sig_size);
                 sig_size = new_sig_size;
             }
         }
 
         if (size_diff != 0) {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try self.updateLoadCommandOffsets(original_fileoff, @intCast(size_diff), linkedit_seg.fileoff, linkedit_seg.filesize, sig_size);
         }
 
@@ -292,6 +319,7 @@ pub const MachoFile = struct {
 
         pub fn shift(this: *const Shifter, value: anytype, comptime fields: []const []const u8) !void {
             inline for (fields) |field| {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @field(value, field) = @intCast(try do(@field(value, field), this.amount, this.start, this.linkedit_fileoff + this.linkedit_filesize));
             }
         }
@@ -326,6 +354,7 @@ pub const MachoFile = struct {
 
             switch (cmd.cmd) {
                 .SYMTAB => {
+// safe-transpile: @alignCast requires manual review
                     const symtab: *align(1) macho.symtab_command = @ptrCast(@alignCast(cmd_ptr));
 
                     try shifter.shift(symtab, &.{
@@ -334,6 +363,7 @@ pub const MachoFile = struct {
                     });
                 },
                 .DYSYMTAB => {
+// safe-transpile: @alignCast requires manual review
                     const dysymtab: *align(1) macho.dysymtab_command = @ptrCast(@alignCast(cmd_ptr));
 
                     try shifter.shift(dysymtab, &.{
@@ -353,6 +383,7 @@ pub const MachoFile = struct {
                 .LINKER_OPTIMIZATION_HINT,
                 .DYLD_EXPORTS_TRIE,
                 => {
+// safe-transpile: @alignCast requires manual review
                     const linkedit_cmd: *align(1) macho.linkedit_data_command = @ptrCast(@alignCast(cmd_ptr));
 
                     try shifter.shift(linkedit_cmd, &.{"dataoff"});
@@ -360,10 +391,12 @@ pub const MachoFile = struct {
                     // Special handling for code signature
                     if (cmd.cmd == .CODE_SIGNATURE) {
                         // Update the size of the code signature to the newer signature size
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         linkedit_cmd.datasize = @intCast(sig_size);
                     }
                 },
                 .DYLD_INFO, .DYLD_INFO_ONLY => {
+// safe-transpile: @alignCast requires manual review
                     const dyld_info: *align(1) macho.dyld_info_command = @ptrCast(@alignCast(cmd_ptr));
 
                     try shifter.shift(dyld_info, &.{
@@ -412,6 +445,7 @@ pub const MachoFile = struct {
             defer data.deinit();
             const ArrayListWriter = struct {
                 list: *std.array_list.Managed(u8),
+// safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn writeAll(self_: @This(), bytes: []const u8) !void {
                     try self_.list.appendSlice(bytes);
                 }
@@ -435,10 +469,12 @@ pub const MachoFile = struct {
         text_seg: macho.segment_command_64,
         allocator: Allocator,
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(allocator: Allocator, obj: []const u8) !*MachoSigner {
-            var self = try allocator.create(MachoSigner);
-            errdefer allocator.destroy(self);
+            var self = try safe.Box(MachoSigner).init(allocator, undefined);
+            defer _ = self.deinit();
 
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const header = @as(*align(1) const macho.mach_header_64, @ptrCast(obj.ptr)).*;
             const header_size = @sizeOf(macho.mach_header_64);
 
@@ -498,7 +534,7 @@ pub const MachoFile = struct {
                 return error.MissingRequiredSegment;
             }
 
-            self.* = .{
+            self.ptr.* = .{
                 .data = try std.array_list.Managed(u8).initCapacity(allocator, obj.len),
                 .sig_off = sig_off,
                 .sig_sz = sig_sz,
@@ -509,8 +545,8 @@ pub const MachoFile = struct {
                 .allocator = allocator,
             };
 
-            try self.data.appendSlice(obj);
-            return self;
+            try self.ptr.data.appendSlice(obj);
+            return self.ptr;
         }
 
         pub fn deinit(self: *MachoSigner) void {
@@ -528,6 +564,7 @@ pub const MachoFile = struct {
         /// the `LC_CODE_SIGNATURE.datasize` so the signer's output fits exactly
         /// inside __LINKEDIT.
         pub fn computeSignatureSize(sig_off: u64) usize {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const total_pages: usize = @intCast((sig_off + SIGNATURE_PAGE_SIZE - 1) / SIGNATURE_PAGE_SIZE);
             const super_blob_header_size = @sizeOf(SuperBlob);
             const blob_index_size = @sizeOf(BlobIndex);
@@ -566,6 +603,7 @@ pub const MachoFile = struct {
             // Setup SuperBlob
             var super_blob = SuperBlob{
                 .magic = @byteSwap(CSMAGIC_EMBEDDED_SIGNATURE),
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .length = @byteSwap(@as(u32, @truncate(sig_structure_size))),
                 .count = @byteSwap(@as(u32, 1)),
             };
@@ -579,13 +617,18 @@ pub const MachoFile = struct {
             // Setup CodeDirectory
             var code_dir = std.mem.zeroes(CodeDirectory);
             code_dir.magic = @byteSwap(CSMAGIC_CODEDIRECTORY);
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             code_dir.length = @byteSwap(@as(u32, @truncate(code_dir_length)));
             code_dir.version = @byteSwap(@as(u32, 0x20400));
             code_dir.flags = @byteSwap(@as(u32, 0x20002));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             code_dir.hashOffset = @byteSwap(@as(u32, @truncate(hash_offset)));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             code_dir.identOffset = @byteSwap(@as(u32, @truncate(id_offset)));
             code_dir.nSpecialSlots = 0;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             code_dir.nCodeSlots = @byteSwap(@as(u32, @truncate(total_pages)));
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             code_dir.codeLimit = @byteSwap(@as(u32, @truncate(self.sig_off)));
             code_dir.hashSize = HASH_SIZE;
             code_dir.hashType = SEC_CODE_SIGNATURE_HASH_SHA256;
@@ -605,9 +648,13 @@ pub const MachoFile = struct {
 
             // Write signature components
             const offset = self.sig_off;
+// safe-transpile: @memcpy requires manual review
             @memcpy(self.data.items[offset..][0..@sizeOf(@TypeOf(super_blob))], mem.asBytes(&super_blob));
+// safe-transpile: @memcpy requires manual review
             @memcpy(self.data.items[offset + @sizeOf(@TypeOf(super_blob))..][0..@sizeOf(@TypeOf(blob_index))], mem.asBytes(&blob_index));
+// safe-transpile: @memcpy requires manual review
             @memcpy(self.data.items[offset + @sizeOf(@TypeOf(super_blob)) + @sizeOf(@TypeOf(blob_index))..][0..@sizeOf(@TypeOf(code_dir))], mem.asBytes(&code_dir));
+// safe-transpile: @memcpy requires manual review
             @memcpy(self.data.items[offset + @sizeOf(@TypeOf(super_blob)) + @sizeOf(@TypeOf(blob_index)) + @sizeOf(@TypeOf(code_dir))..][0..id.len], id);
 
             // Hash and write pages
@@ -617,6 +664,7 @@ pub const MachoFile = struct {
                 const page = remaining[0..PAGE_SIZE];
                 var digest: bun.sha.SHA256.Digest = undefined;
                 bun.sha.SHA256.hash(page, &digest, null);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(self.data.items[write_offset..][0..digest.len], &digest);
                 write_offset += digest.len;
                 remaining = remaining[PAGE_SIZE..];
@@ -624,9 +672,11 @@ pub const MachoFile = struct {
 
             if (remaining.len > 0) {
                 var last_page = [_]u8{0} ** PAGE_SIZE;
+// safe-transpile: @memcpy requires manual review
                 @memcpy(last_page[0..remaining.len], remaining);
                 var digest: bun.sha.SHA256.Digest = undefined;
                 bun.sha.SHA256.hash(&last_page, &digest, null);
+// safe-transpile: @memcpy requires manual review
                 @memcpy(self.data.items[write_offset..][0..digest.len], &digest);
             }
 
@@ -651,11 +701,13 @@ fn alignVmsize(size: u64, page_size: u64) u64 {
 const SEG_LINKEDIT = "__LINKEDIT";
 
 pub const utils = struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isElf(data: []const u8) bool {
         if (data.len < 4) return false;
         return mem.readInt(u32, data[0..4], .big) == 0x7f454c46;
     }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isMacho(data: []const u8) bool {
         if (data.len < 4) return false;
         return mem.readInt(u32, data[0..4], .little) == macho.MH_MAGIC_64;

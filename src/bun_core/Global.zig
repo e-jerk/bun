@@ -126,7 +126,6 @@ pub fn exit(code: u32) noreturn {
 
     switch (Environment.os) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         .mac => std.c.exit(@bitCast(code)),
         .windows => {
             Bun__onExit();
@@ -135,11 +134,9 @@ pub fn exit(code: u32) noreturn {
         else => {
             if (Environment.enable_asan) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                 std.c.exit(@bitCast(code));
                 std.c.abort(); // exit should be noreturn
             }
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             bun.c.quick_exit(@bitCast(code));
             std.c.abort(); // quick_exit should be noreturn
@@ -165,7 +162,6 @@ pub fn raiseIgnoringPanicHandler(sig: bun.SignalCode) noreturn {
     }
 
     // kill self
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     _ = std.c.raise(@intCast(@intFromEnum(sig)));
     std.c.abort();

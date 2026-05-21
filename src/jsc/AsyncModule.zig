@@ -68,7 +68,8 @@ pub const AsyncModule = struct {
             outer: for (modules) |module_| {
                 var module = module_;
                 const root_dependency_ids = module.parse_result.pending_imports.items(.root_dependency_id);
-                for (root_dependency_ids, 0..) |dep, dep_i| {
+                // safe-transpile: for with index access requires manual review
+    for (root_dependency_ids, 0..) |dep, dep_i| {
                     if (dep != root_dependency_id) continue;
                     module.resolveError(
                         this.vm(),
@@ -138,6 +139,7 @@ pub const AsyncModule = struct {
             debug("onResolve", .{});
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onPackageManifestError(
             this: *Queue,
             name: []const u8,
@@ -151,7 +153,8 @@ pub const AsyncModule = struct {
             outer: for (modules) |module_| {
                 var module = module_;
                 const tags = module.parse_result.pending_imports.items(.tag);
-                for (tags, 0..) |tag, tag_i| {
+                // safe-transpile: for with index access requires manual review
+    for (tags, 0..) |tag, tag_i| {
                     if (tag == .resolve) {
                         const esms = module.parse_result.pending_imports.items(.esm);
                         const esm = esms[tag_i];
@@ -181,6 +184,7 @@ pub const AsyncModule = struct {
             this.map.items.len = i;
         }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onPackageDownloadError(
             this: *Queue,
             package_id: Install.PackageID,
@@ -198,7 +202,8 @@ pub const AsyncModule = struct {
                 var module = module_;
                 const record_ids = module.parse_result.pending_imports.items(.import_record_id);
                 const root_dependency_ids = module.parse_result.pending_imports.items(.root_dependency_id);
-                for (root_dependency_ids, 0..) |dependency_id, import_id| {
+                // safe-transpile: for with index access requires manual review
+    for (root_dependency_ids, 0..) |dependency_id, import_id| {
                     if (resolution_ids[dependency_id] != package_id) continue;
                     module.downloadError(
                         this.vm(),
@@ -233,7 +238,8 @@ pub const AsyncModule = struct {
                 // var esms = module.parse_result.pending_imports.items(.esm);
                 // var versions = module.parse_result.pending_imports.items(.dependency);
                 var done_count: usize = 0;
-                for (tags, 0..) |tag, tag_i| {
+                // safe-transpile: for with index access requires manual review
+    for (tags, 0..) |tag, tag_i| {
                     const root_id = root_dependency_ids[tag_i];
                     const resolution_ids = pm.lockfile.buffers.resolutions.items;
                     if (root_id >= resolution_ids.len) continue;
@@ -304,6 +310,7 @@ pub const AsyncModule = struct {
         }
 
         pub fn vm(this: *Queue) *VirtualMachine {
+// safe-transpile: @alignCast requires manual review
             return @alignCast(@fieldParentPtr("modules", this));
         }
 

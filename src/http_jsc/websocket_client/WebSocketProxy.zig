@@ -15,7 +15,6 @@ _tunnel: ?*WebSocketProxyTunnel = null,
 
 /// Initialize a new WebSocketProxy
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(
     target_host: []const u8,
     target_is_https: bool,
@@ -29,7 +28,6 @@ pub fn init(
 }
 
 /// Get the target hostname for SNI during TLS handshake
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn getTargetHost(self: *const WebSocketProxy) []const u8 {
     return self._target_host;
@@ -52,7 +50,6 @@ pub fn setTunnel(self: *WebSocketProxy, new_tunnel: ?*WebSocketProxyTunnel) void
 
 /// Take ownership of the WebSocket request buffer, clearing the internal reference.
 /// The caller is responsible for freeing the returned buffer.
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn takeWebsocketRequestBuf(self: *WebSocketProxy) []u8 {
     const buf = self._websocket_request_buf;

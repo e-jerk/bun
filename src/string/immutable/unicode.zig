@@ -73,7 +73,6 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
                     if (pos > 0) {
                         // Jump the byte index to the start of the potential candidate.
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         cursor.i = next_scan_start_index + @as(u32, @intCast(pos));
                         // Reset width so next() decodes correctly from the jumped position.
                         cursor.width = 0;
@@ -147,7 +146,6 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
         }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
         fn nextCodepointSlice(it: *Iterator) callconv(bun.callconv_inline) []const u8 {
             const bytes = it.bytes;
             const prev = it.i;
@@ -159,7 +157,6 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
             it.i = @min(next_, bytes.len);
 
             const slice = bytes[prev..][0..@min(@as(usize, cp_len), bytes.len - prev)];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             it.width = @as(u3_fast, @intCast(slice.len));
             return slice;
@@ -207,15 +204,11 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
             it.c = switch (slice.len) {
                 0 => zeroValue,
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 1 => @as(CodePointType, @intCast(slice[0])),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 2 => @as(CodePointType, @intCast(std.unicode.utf8Decode2(slice) catch unreachable)),
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 3 => @as(CodePointType, @intCast(std.unicode.utf8Decode3(slice) catch unreachable)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 4 => @as(CodePointType, @intCast(std.unicode.utf8Decode4(slice) catch unreachable)),
                 else => unreachable,
@@ -226,7 +219,6 @@ pub fn NewCodePointIterator(comptime CodePointType_: type, comptime zeroValue: c
 
         /// Look ahead at the next n codepoints without advancing the iterator.
         /// If fewer than n codepoints are available, then return the remainder of the string.
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
         pub fn peek(it: *Iterator, n: usize) []const u8 {
             const original_i = it.i;
@@ -391,7 +383,6 @@ pub fn toUTF8AppendToList(list: *std.array_list.Managed(u8), utf16: []const u16)
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF8FromLatin1(allocator: std.mem.Allocator, latin1: []const u8) !?std.array_list.Managed(u8) {
     if (isAllASCII(latin1))
         return null;
@@ -400,7 +391,6 @@ pub fn toUTF8FromLatin1(allocator: std.mem.Allocator, latin1: []const u8) !?std.
     return try allocateLatin1IntoUTF8WithList(list, 0, latin1);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF8FromLatin1Z(allocator: std.mem.Allocator, latin1: []const u8) !?std.array_list.Managed(u8) {
     if (isAllASCII(latin1))
@@ -425,7 +415,6 @@ pub fn toUTF8ListWithTypeBun(list: *std.array_list.Managed(u8), utf16: []const u
 
         const count: usize = replacement.utf8Width();
         if (comptime Environment.isNative) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try list.ensureTotalCapacityPrecise(i + count + list.items.len + @as(usize, @intFromFloat((@as(f64, @floatFromInt(@as(u52, @truncate(utf16_remaining.len)))) * 1.2))));
         } else {
@@ -471,14 +460,12 @@ pub const EncodeIntoResult = struct {
     written: u32 = 0,
 };
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn allocateLatin1IntoUTF8(allocator: std.mem.Allocator, latin1_: []const u8) ![]u8 {
     const list = try std.array_list.Managed(u8).initCapacity(allocator, latin1_.len);
     var foo = try allocateLatin1IntoUTF8WithList(list, 0, latin1_);
     return try foo.toOwnedSlice();
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_into_list: usize, latin1_: []const u8) OOM!std.array_list.Managed(u8) {
     var latin1 = latin1_;
@@ -503,7 +490,6 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                     if (comptime ascii_vector_size >= 8) {
                         {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                             const bytes = @as(Int, @bitCast(latin1[0..size].*));
                             // https://dotat.at/@/2022-06-27-tolower-swar.html
                             const mask = bytes & 0x8080808080808080;
@@ -512,7 +498,6 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                                 const first_set_byte = @ctz(mask) / 8;
                                 if (comptime Environment.allow_assert) assert(latin1[first_set_byte] >= 127);
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                                 buf[0..size].* = @as([size]u8, @bitCast(bytes));
                                 buf = buf[first_set_byte..];
@@ -521,14 +506,12 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                             }
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                             buf[0..size].* = @as([size]u8, @bitCast(bytes));
                             latin1 = latin1[size..];
                             buf = buf[size..];
                         }
 
                         if (comptime ascii_vector_size >= 16) {
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                             const bytes = @as(Int, @bitCast(latin1[0..size].*));
                             // https://dotat.at/@/2022-06-27-tolower-swar.html
@@ -538,7 +521,6 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                                 const first_set_byte = @ctz(mask) / 8;
                                 if (comptime Environment.allow_assert) assert(latin1[first_set_byte] >= 127);
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                                 buf[0..size].* = @as([size]u8, @bitCast(bytes));
                                 buf = buf[first_set_byte..];
@@ -551,7 +533,6 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                 }
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                 buf[0..ascii_vector_size].* = @as([ascii_vector_size]u8, @bitCast(vec))[0..ascii_vector_size].*;
                 latin1 = latin1[ascii_vector_size..];
                 buf = buf[ascii_vector_size..];
@@ -562,7 +543,6 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                 const size = @sizeOf(Int);
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                 const bytes = @as(Int, @bitCast(latin1[0..size].*));
                 // https://dotat.at/@/2022-06-27-tolower-swar.html
                 const mask = bytes & 0x8080808080808080;
@@ -572,14 +552,12 @@ pub fn allocateLatin1IntoUTF8WithList(list_: std.array_list.Managed(u8), offset_
                     if (comptime Environment.allow_assert) assert(latin1[first_set_byte] >= 127);
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                     buf[0..size].* = @as([size]u8, @bitCast(bytes));
                     latin1 = latin1[first_set_byte..];
                     buf = buf[first_set_byte..];
                     break :inner;
                 }
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                 buf[0..size].* = @as([size]u8, @bitCast(bytes));
                 latin1 = latin1[size..];
@@ -729,7 +707,6 @@ pub fn convertUTF8BytesIntoUTF16WithLength(sequence: *const [4]u8, len: u3_fast,
 // This variation matches WebKit behavior.
 // fn convertUTF8BytesIntoUTF16(sequence: *const [4]u8, remaining_len: usize) UTF16Replacement {
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn convertUTF8BytesIntoUTF16(bytes: []const u8) UTF16Replacement {
     const sequence: [4]u8 = switch (bytes.len) {
         0 => unreachable,
@@ -744,12 +721,10 @@ pub fn convertUTF8BytesIntoUTF16(bytes: []const u8) UTF16Replacement {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyLatin1IntoUTF8(buf_: []u8, latin1_: []const u8) EncodeIntoResult {
     return copyLatin1IntoUTF8StopOnNonASCII(buf_, latin1_, false);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptime stop: bool) EncodeIntoResult {
     var buf = buf_;
@@ -773,12 +748,10 @@ pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptim
 
                         {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                             const bytes = @as(Int, @bitCast(latin1[0..size].*));
                             // https://dotat.at/@/2022-06-27-tolower-swar.html
                             const mask = bytes & 0x8080808080808080;
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                             buf[0..size].* = @as([size]u8, @bitCast(bytes));
 
@@ -797,12 +770,10 @@ pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptim
 
                         if (comptime ascii_vector_size >= 16) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                             const bytes = @as(Int, @bitCast(latin1[0..size].*));
                             // https://dotat.at/@/2022-06-27-tolower-swar.html
                             const mask = bytes & 0x8080808080808080;
 
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                             buf[0..size].* = @as([size]u8, @bitCast(bytes));
 
@@ -819,7 +790,6 @@ pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptim
                 }
 
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                 buf[0..ascii_vector_size].* = @as([ascii_vector_size]u8, @bitCast(vec))[0..ascii_vector_size].*;
                 latin1 = latin1[ascii_vector_size..];
                 buf = buf[ascii_vector_size..];
@@ -830,9 +800,7 @@ pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptim
                 const size = @sizeOf(Int);
                 while (@min(buf.len, latin1.len) >= size) {
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
                     const bytes = @as(Int, @bitCast(latin1[0..size].*));
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
                     buf[0..size].* = @as([size]u8, @bitCast(bytes));
 
@@ -888,15 +856,12 @@ pub fn copyLatin1IntoUTF8StopOnNonASCII(buf_: []u8, latin1_: []const u8, comptim
 
     return .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .written = @as(u32, @truncate(buf_.len - buf.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .read = @as(u32, @truncate(latin1_.len - latin1.len)),
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn replaceLatin1WithUTF8(buf_: []u8) void {
     var latin1 = buf_;
@@ -908,18 +873,15 @@ pub fn replaceLatin1WithUTF8(buf_: []u8) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn elementLengthLatin1IntoUTF8(slice: []const u8) usize {
     return bun.simdutf.length.utf8.from.latin1(slice);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyCP1252IntoUTF16(buf_: []u16, latin1_: []const u8) EncodeIntoResult {
     var buf = buf_;
     var latin1 = latin1_;
     while (buf.len > 0 and latin1.len > 0) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const to_write = strings.firstNonASCII(latin1) orelse @as(u32, @truncate(@min(latin1.len, buf.len)));
         strings.copyU8IntoU16(buf, latin1[0..to_write]);
@@ -935,27 +897,21 @@ pub fn copyCP1252IntoUTF16(buf_: []u16, latin1_: []const u8) EncodeIntoResult {
 
     return .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .read = @as(u32, @truncate(buf_.len - buf.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .written = @as(u32, @truncate(latin1_.len - latin1.len)),
     };
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyLatin1IntoUTF16(comptime Buffer: type, buf_: Buffer, latin1_: []const u8) EncodeIntoResult {
     const len = @min(buf_.len, latin1_.len);
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (buf_[0..len], latin1_[0..len]) |*out, in| out.* = in;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return .{ .read = @as(u32, @truncate(len)), .written = @as(u32, @truncate(len)) };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn elementLengthCP1252IntoUTF16(cp1252_: []const u8) usize {
     // cp1252 is always at most 1 UTF-16 code unit long
@@ -985,17 +941,14 @@ pub fn appendUTF8MachineWordToUTF16MachineWord(output: *[@sizeOf(usize) / 2]u16,
     output[0 .. @sizeOf(usize) / 2].* = @as(
         [4]u16,
 // safe-transpile: @bitCast requires manual review
-// safe-transpile: @bitCast requires manual review
         @bitCast(@as(
             @Vector(4, u16),
-// safe-transpile: @bitCast requires manual review
 // safe-transpile: @bitCast requires manual review
             @as(@Vector(4, u8), @bitCast(input[0 .. @sizeOf(usize) / 2].*)),
         )),
     );
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyU8IntoU16(output_: []u16, input_: []const u8) callconv(bun.callconv_inline) void {
     const output = output_;
@@ -1017,7 +970,6 @@ pub fn copyU8IntoU16(output_: []u16, input_: []const u8) callconv(bun.callconv_i
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn copyU16IntoU8(output: []u8, input: []align(1) const u16) void {
     if (comptime Environment.allow_assert) assert(input.len <= output.len);
     const count = @min(input.len, output.len);
@@ -1026,16 +978,15 @@ pub inline fn copyU16IntoU8(output: []u8, input: []align(1) const u16) void {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyLatin1IntoASCII(dest: []u8, src: []const u8) void {
     var remain = src;
     var to = dest;
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const non_ascii_offset = strings.firstNonASCII(remain) orelse @as(u32, @truncate(remain.len));
     if (non_ascii_offset > 0) {
-        safe.SimdUtils.copy(to[0..non_ascii_offset], remain[0..non_ascii_offset]);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(to[0..non_ascii_offset], remain[0..non_ascii_offset]);
         remain = remain[non_ascii_offset..];
         to = to[non_ascii_offset..];
 
@@ -1071,9 +1022,7 @@ pub fn copyLatin1IntoASCII(dest: []u8, src: []const u8) void {
     }
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (to) |*to_byte| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         to_byte.* = @as(u8, @as(u7, @truncate(remain[0])));
         remain = remain[1..];
@@ -1099,7 +1048,6 @@ pub const BOM = enum {
     pub const utf32_be_bytes = [_]u8{ 0x00, 0x00, 0xfe, 0xff };
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn detect(bytes: []const u8) ?BOM {
         if (bytes.len < 3) return null;
         if (eqlComptimeIgnoreLen(bytes, utf8_bytes)) return .utf8;
@@ -1114,14 +1062,12 @@ pub const BOM = enum {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn detectAndSplit(bytes: []const u8) struct { ?BOM, []const u8 } {
         const bom = detect(bytes);
         if (bom == null) return .{ null, bytes };
         return .{ bom, bytes[(bom.?).length()..] };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn getHeader(bom: BOM) []const u8 {
         return switch (bom) {
@@ -1138,7 +1084,6 @@ pub const BOM = enum {
     /// If an allocation is needed, free the input and the caller will
     /// replace it with the new return
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn removeAndConvertToUTF8AndFree(bom: BOM, allocator: std.mem.Allocator, bytes: []u8) OOM![]u8 {
         switch (bom) {
             .utf8 => {
@@ -1147,7 +1092,6 @@ pub const BOM = enum {
             },
             .utf16_le => {
                 const trimmed_bytes = bytes[utf16_le_bytes.len..];
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
                 const trimmed_bytes_u16: []const u16 = @alignCast(std.mem.bytesAsSlice(u16, trimmed_bytes));
                 const out = try toUTF8Alloc(allocator, trimmed_bytes_u16);
@@ -1168,7 +1112,6 @@ pub const BOM = enum {
     ///
     /// Requires an arraylist in case it must be grown.
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn removeAndConvertToUTF8WithoutDealloc(bom: BOM, allocator: std.mem.Allocator, list: *std.ArrayListUnmanaged(u8)) ![]u8 {
         const bytes = list.items;
         switch (bom) {
@@ -1179,14 +1122,14 @@ pub const BOM = enum {
             .utf16_le => {
                 const trimmed_bytes = bytes[utf16_le_bytes.len..];
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 const trimmed_bytes_u16: []const u16 = @alignCast(std.mem.bytesAsSlice(u16, trimmed_bytes));
                 const out = try toUTF8Alloc(allocator, trimmed_bytes_u16);
                 if (list.capacity < out.len) {
                     try list.ensureTotalCapacity(allocator, out.len);
                 }
                 list.items.len = out.len;
-                safe.SimdUtils.copy(list.items, out);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(list.items, out);
                 return out;
             },
             else => {
@@ -1201,7 +1144,6 @@ pub const BOM = enum {
 
 /// @deprecated. If you are using this, you likely will need to remove other BOMs and handle encoding.
 /// Use the BOM struct's `detect` and conversion functions instead.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn withoutUTF8BOM(bytes: []const u8) []const u8 {
     if (strings.hasPrefixComptime(bytes, BOM.utf8_bytes)) {
@@ -1225,7 +1167,6 @@ pub fn nonASCIISequenceLength(first_byte: u8) u3_fast {
 /// Convert a UTF-8 string to a UTF-16 string IF there are any non-ascii characters
 /// If there are no non-ascii characters, this returns null
 /// This is intended to be used for strings that go to JavaScript
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF16Alloc(allocator: std.mem.Allocator, bytes: []const u8, comptime fail_if_invalid: bool, comptime sentinel: bool) !if (sentinel) ?[:0]u16 else ?[]u16 {
     if (strings.firstNonASCII(bytes)) |i| {
@@ -1281,7 +1222,6 @@ pub fn toUTF16Alloc(allocator: std.mem.Allocator, bytes: []const u8, comptime fa
             switch (replacement.code_point) {
                 0...0xffff => |c| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try output.append(@as(u16, @intCast(c)));
                 },
                 else => |c| {
@@ -1309,7 +1249,6 @@ pub fn toUTF16Alloc(allocator: std.mem.Allocator, bytes: []const u8, comptime fa
             //#define U16_LENGTH(c) ((uint32_t)(c)<=0xffff ? 1 : 2)
             switch (replacement.code_point) {
                 0...0xffff => |c| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try output.append(@as(u16, @intCast(c)));
                 },
@@ -1342,7 +1281,6 @@ pub const TestingAPIs = @import("../../jsc/bun_string_jsc.zig").UnicodeTestingAP
 
 // this one does the thing it's named after
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF16AllocForReal(allocator: std.mem.Allocator, bytes: []const u8, comptime fail_if_invalid: bool, comptime sentinel: bool) !if (sentinel) [:0]u16 else []u16 {
     return (try toUTF16Alloc(allocator, bytes, fail_if_invalid, sentinel)) orelse {
         const output = try allocator.alloc(u16, bytes.len + if (sentinel) 1 else 0);
@@ -1357,7 +1295,6 @@ pub fn toUTF16AllocForReal(allocator: std.mem.Allocator, bytes: []const u8, comp
     };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF16AllocMaybeBuffered(
     allocator: std.mem.Allocator,
@@ -1423,7 +1360,6 @@ pub fn toUTF16AllocMaybeBuffered(
                     3 => .{ remaining[0], remaining[1], remaining[2] },
                 };
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return .{ output.items, buffered, @intCast(remaining.len) };
             }
         }
@@ -1441,7 +1377,6 @@ pub fn toUTF16AllocMaybeBuffered(
 
         // #define U16_LENGTH(c) ((uint32_t)(c)<=0xffff ? 1 : 2)
         switch (converted.code_point) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             0...0xffff => |c| output.appendAssumeCapacity(@intCast(c)),
             else => |c| output.appendSliceAssumeCapacity(&.{ strings.u16Lead(c), strings.u16Trail(c) }),
@@ -1529,12 +1464,10 @@ pub fn utf16Codepoint(input: []const u16) UTF16Replacement {
 pub const w = toUTF16Literal;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn toUTF16Literal(comptime str: []const u8) [:0]const u16 {
     return literal(u16, str);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn literal(comptime T: type, comptime str: []const u8) *const [literalLength(T, str):0]T {
     const Holder = struct {
@@ -1559,7 +1492,6 @@ fn literalLength(comptime T: type, comptime str: string) usize {
 // Copyright (c) 2008-2009 Bjoern Hoehrmann <bjoern@hoehrmann.de>
 // See http://bjoern.hoehrmann.de/utf-8/decoder/dfa/ for details.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isValidUTF8WithoutSIMD(slice: []const u8) bool {
     var state: u8 = 0;
 
@@ -1570,7 +1502,6 @@ pub fn isValidUTF8WithoutSIMD(slice: []const u8) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isValidUTF8(slice: []const u8) bool {
     if (bun.FeatureFlags.use_simdutf)
         return bun.simdutf.validate.utf8(slice);
@@ -1578,7 +1509,6 @@ pub fn isValidUTF8(slice: []const u8) bool {
     return isValidUTF8WithoutSIMD(slice);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isAllASCII(slice: []const u8) bool {
     if (@inComptime()) {
@@ -1629,13 +1559,11 @@ pub fn decodeCheck(state: u8, byte: u8) u8 {
 // #define U16_LEAD(supplementary) (UChar)(((supplementary)>>10)+0xd7c0)
 pub fn u16Lead(supplementary: anytype) callconv(bun.callconv_inline) u16 {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast((supplementary >> 10) + 0xd7c0);
 }
 
 // #define U16_TRAIL(supplementary) (UChar)(((supplementary)&0x3ff)|0xdc00)
 pub fn u16Trail(supplementary: anytype) callconv(bun.callconv_inline) u16 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast((supplementary & 0x3ff) | 0xdc00);
 }
@@ -1643,13 +1571,11 @@ pub fn u16Trail(supplementary: anytype) callconv(bun.callconv_inline) u16 {
 // #define U16_IS_TRAIL(c) (((c)&0xfffffc00)==0xdc00)
 pub fn u16IsTrail(supplementary: u16) callconv(bun.callconv_inline) bool {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return (@as(u32, @intCast(supplementary)) & 0xfffffc00) == 0xdc00;
 }
 
 // #define U16_IS_LEAD(c) (((c)&0xfffffc00)==0xd800)
 pub fn u16IsLead(supplementary: u16) callconv(bun.callconv_inline) bool {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return (@as(u32, @intCast(supplementary)) & 0xfffffc00) == 0xd800;
 }
@@ -1689,7 +1615,6 @@ pub inline fn utf8ByteSequenceLengthUnsafe(first_byte: u8) u3_fast {
 
 /// This will simply ignore invalid UTF-8 and just do it
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn convertUTF8toUTF16InBuffer(
     buf: []u16,
     input: []const u8,
@@ -1708,7 +1633,6 @@ pub fn convertUTF8toUTF16InBuffer(
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn convertUTF8toUTF16InBufferZ(
     buf: []u16,
     input: []const u8,
@@ -1723,7 +1647,6 @@ pub fn convertUTF8toUTF16InBufferZ(
     return buf[0..result :0];
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn convertUTF16toUTF8InBuffer(
     buf: []u8,
@@ -1744,7 +1667,6 @@ pub fn convertUTF16toUTF8InBuffer(
 pub fn cp1252ToCodepointAssumeNotASCII(char: u8, comptime CodePointType: type) CodePointType {
     return @as(
         CodePointType,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(cp1252ToCodepointBytesAssumeNotASCII16(char)),
     );
@@ -1788,13 +1710,11 @@ const cp1252_to_utf16_conversion_table = [256]u16{
 pub fn latin1ToCodepointBytesAssumeNotASCII(char: u32) [2]u8 {
     var bytes = [4]u8{ 0, 0, 0, 0 };
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     _ = encodeWTF8Rune(&bytes, @as(i32, @intCast(char)));
     return bytes[0..2].*;
 }
 
 pub fn cp1252ToCodepointBytesAssumeNotASCII16(char: u32) u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return cp1252_to_utf16_conversion_table[@as(u8, @truncate(char))];
 }
@@ -1803,13 +1723,11 @@ pub fn cp1252ToCodepointBytesAssumeNotASCII16(char: u32) u16 {
 ///
 /// This may not encode everything if `buf` is not big enough.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyUTF16IntoUTF8(buf: []u8, utf16: []const u16) EncodeIntoResult {
     return copyUTF16IntoUTF8Impl(buf, utf16, false);
 }
 
 /// See comment on `copyUTF16IntoUTF8WithBufferImpl` on what `allow_truncated_utf8_sequence` should do
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyUTF16IntoUTF8Impl(buf: []u8, utf16: []const u16, comptime allow_truncated_utf8_sequence: bool) EncodeIntoResult {
     if (bun.FeatureFlags.use_simdutf) {
@@ -1846,7 +1764,6 @@ pub fn copyUTF16IntoUTF8Impl(buf: []u8, utf16: []const u16, comptime allow_trunc
 /// expect(buffer[0]).toBe(0xc8);
 /// ```
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: usize, comptime allow_truncated_utf8_sequence: bool) EncodeIntoResult {
     var remaining = buf;
     var utf16_remaining = utf16;
@@ -1861,9 +1778,7 @@ pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: u
 
                 return EncodeIntoResult{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .read = @as(u32, @truncate(utf16.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .written = @as(u32, @truncate(result.count)),
                 };
@@ -1891,7 +1806,6 @@ pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: u
                     if (remaining.len > 0) {
                         //only first will be written
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         remaining[0] = @as(u8, @truncate(0xC0 | (replacement.code_point >> 6)));
                         remaining = remaining[remaining.len..];
                     }
@@ -1901,15 +1815,12 @@ pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: u
                     switch (remaining.len) {
                         1 => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[0] = @as(u8, @truncate(0xE0 | (replacement.code_point >> 12)));
                             remaining = remaining[remaining.len..];
                         },
                         2 => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[0] = @as(u8, @truncate(0xE0 | (replacement.code_point >> 12)));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[1] = @as(u8, @truncate(0x80 | (replacement.code_point >> 6) & 0x3F));
                             remaining = remaining[remaining.len..];
@@ -1922,27 +1833,21 @@ pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: u
                     switch (remaining.len) {
                         1 => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[0] = @as(u8, @truncate(0xF0 | (replacement.code_point >> 18)));
                             remaining = remaining[remaining.len..];
                         },
                         2 => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[0] = @as(u8, @truncate(0xF0 | (replacement.code_point >> 18)));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[1] = @as(u8, @truncate(0x80 | (replacement.code_point >> 12) & 0x3F));
                             remaining = remaining[remaining.len..];
                         },
                         3 => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[0] = @as(u8, @truncate(0xF0 | (replacement.code_point >> 18)));
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[1] = @as(u8, @truncate(0x80 | (replacement.code_point >> 12) & 0x3F));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             remaining[2] = @as(u8, @truncate(0x80 | (replacement.code_point >> 6) & 0x3F));
                             remaining = remaining[remaining.len..];
@@ -1970,9 +1875,7 @@ pub fn copyUTF16IntoUTF8WithBufferImpl(buf: []u8, utf16: []const u16, out_len: u
 
     return .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .read = @as(u32, @truncate(utf16.len - utf16_remaining.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .written = @as(u32, @truncate(buf.len - remaining.len)),
     };
@@ -2000,7 +1903,6 @@ pub fn elementLengthUTF16IntoUTF8(utf16: []const u16) usize {
     return count + utf16_remaining.len;
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn elementLengthUTF8IntoUTF16(utf8: []const u8) usize {
     var utf8_remaining = utf8;
@@ -2063,7 +1965,6 @@ pub fn utf16EqlString(text: []const u16, str: string) bool {
 }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn encodeUTF8Comptime(comptime cp: u32) []const u8 {
     const HEADER_CONT_BYTE: u8 = 0b10000000;
     const HEADER_2BYTE: u8 = 0b11000000;
@@ -2071,7 +1972,6 @@ pub fn encodeUTF8Comptime(comptime cp: u32) []const u8 {
     const HEADER_4BYTE: u8 = 0b11100000;
 
     return switch (cp) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         0x0...0x7F => return &[_]u8{@intCast(cp)},
         0x80...0x7FF => {
@@ -2103,7 +2003,6 @@ pub fn encodeUTF8Comptime(comptime cp: u32) []const u8 {
 // WTF-8 instead. See https://simonsapin.github.io/wtf-8/ for more info.
 pub fn encodeWTF8Rune(p: *[4]u8, r: i32) u3_fast {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return encodeWTF8RuneT(p, u32, @intCast(r));
 }
 
@@ -2111,42 +2010,32 @@ pub fn encodeWTF8RuneT(p: *[4]u8, comptime R: type, r: R) u3_fast {
     switch (r) {
         0...0x7F => {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             p[0] = @as(u8, @intCast(r));
             return 1;
         },
         (0x7F + 1)...0x7FF => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[0] = @as(u8, @truncate(0xC0 | ((r >> 6))));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[1] = @as(u8, @truncate(0x80 | (r & 0x3F)));
             return 2;
         },
         (0x7FF + 1)...0xFFFF => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[0] = @as(u8, @truncate(0xE0 | ((r >> 12))));
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[1] = @as(u8, @truncate(0x80 | ((r >> 6) & 0x3F)));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[2] = @as(u8, @truncate(0x80 | (r & 0x3F)));
             return 3;
         },
         else => {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[0] = @as(u8, @truncate(0xF0 | ((r >> 18))));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[1] = @as(u8, @truncate(0x80 | ((r >> 12) & 0x3F)));
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[2] = @as(u8, @truncate(0x80 | ((r >> 6) & 0x3F)));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             p[3] = @as(u8, @truncate(0x80 | (r & 0x3F)));
             return 4;
@@ -2158,7 +2047,6 @@ pub fn wtf8Sequence(code_point: u32) [4]u8 {
     return switch (code_point) {
         0...0x7f => .{
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(code_point),
             0,
             0,
@@ -2166,9 +2054,7 @@ pub fn wtf8Sequence(code_point: u32) [4]u8 {
         },
         (0x7f + 1)...0x7ff => .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0xc0 | (code_point >> 6)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | (code_point & 0x3f)),
             0,
@@ -2176,27 +2062,20 @@ pub fn wtf8Sequence(code_point: u32) [4]u8 {
         },
         (0x7ff + 1)...0xffff => .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0xe0 | (code_point >> 12)),
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | ((code_point >> 6) & 0x3f)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | (code_point & 0x3f)),
             0,
         },
         else => .{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0xf0 | (code_point >> 18)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | ((code_point >> 12) & 0x3f)),
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | ((code_point >> 6) & 0x3f)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(0x80 | (code_point & 0x3f)),
         },

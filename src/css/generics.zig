@@ -101,11 +101,13 @@ pub fn implementEql(comptime T: type, this: *const T, other: *const T) bool {
             }
             if (this.len != other.len) return false;
             if (comptime canTransitivelyImplementEql(Child) and @hasDecl(Child, "__generateEql")) {
-                for (this.*, other.*) |*a, *b| {
+                // safe-transpile: for with index access requires manual review
+    for (this.*, other.*) |*a, *b| {
                     if (!implementEql(Child, &a, &b)) return false;
                 }
             } else {
-                for (this.*, other.*) |*a, *b| {
+                // safe-transpile: for with index access requires manual review
+    for (this.*, other.*) |*a, *b| {
                     if (!eql(Child, a, b)) return false;
                 }
             }
@@ -154,6 +156,7 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
             .small_list => this.slice(),
         };
         bun.writeAnyToHasher(hasher, list.len);
+// safe-transpile: for loop with pointer capture requires manual review
         inline for (list) |*item| {
             hash(tyinfo.array.child, item, hasher);
         }
@@ -182,6 +185,7 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
         },
         .array => {
             bun.writeAnyToHasher(hasher, this.len);
+// safe-transpile: for loop with pointer capture requires manual review
             inline for (this.*[0..]) |*item| {
                 hash(tyinfo.array.child, item, hasher);
             }
@@ -204,7 +208,8 @@ pub fn implementHash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash)
         .@"union" => {
             if (tyinfo.@"union".tag_type == null) @compileError("Unions must have a tag type");
             bun.writeAnyToHasher(hasher, @intFromEnum(this.*));
-            inline for (comptime bun.meta.EnumFields(T), comptime std.meta.fields(T)) |enum_field, union_field| {
+            // safe-transpile: for with index access requires manual review
+    inline for (comptime bun.meta.EnumFields(T), comptime std.meta.fields(T)) |enum_field, union_field| {
                 if (enum_field.value == @intFromEnum(this.*)) {
                     const field = union_field;
                     if (comptime hasHash(field.type)) {
@@ -246,6 +251,7 @@ pub fn isCompatible(comptime T: type, val: *const T, browsers: bun.css.targets.B
             .baby_list => val.sliceConst(),
             .small_list => val.sliceConst(),
         };
+// safe-transpile: for loop with pointer capture requires manual review
         for (slc) |*item| {
             if (!isCompatible(result.child, item, browsers)) return false;
         }
@@ -372,6 +378,7 @@ pub inline fn toCss(comptime T: type, this: *const T, dest: *Printer) PrintErr!v
 
 pub fn eqlList(comptime T: type, lhs: *const ArrayList(T), rhs: *const ArrayList(T)) bool {
     if (lhs.items.len != rhs.items.len) return false;
+    // safe-transpile: for with index access requires manual review
     for (lhs.items, rhs.items) |*left, *right| {
         if (!eql(T, left, right)) return false;
     }
@@ -395,7 +402,8 @@ pub inline fn eql(comptime T: type, lhs: *const T, rhs: *const T) bool {
             return eql(TT, lhs.*, rhs.*);
         } else if (comptime tyinfo.pointer.size == .slice) {
             if (lhs.*.len != rhs.*.len) return false;
-            for (lhs.*[0..], rhs.*[0..]) |*a, *b| {
+            // safe-transpile: for with index access requires manual review
+    for (lhs.*[0..], rhs.*[0..]) |*a, *b| {
                 if (!eql(tyinfo.pointer.child, a, b)) return false;
             }
             return true;
@@ -452,9 +460,11 @@ pub inline fn deepClone(comptime T: type, this: *const T, allocator: Allocator) 
         if (comptime tyinfo.pointer.size == .slice) {
             var slc = bun.handleOom(allocator.alloc(tyinfo.pointer.child, this.len));
             if (comptime bun.meta.isSimpleCopyType(tyinfo.pointer.child) or tyinfo.pointer.child == []const u8) {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(slc, this.*);
             } else {
-                for (this.*, 0..) |*e, i| {
+                // safe-transpile: for with index access requires manual review
+    for (this.*, 0..) |*e, i| {
                     slc[i] = deepClone(tyinfo.pointer.child, e, allocator);
                 }
             }
@@ -577,11 +587,13 @@ pub inline fn partialCmpF32(lhs: *const f32, rhs: *const f32) ?std.math.Order {
 pub const HASH_SEED: u64 = 0;
 
 pub fn hashArrayList(comptime V: type, this: *const ArrayList(V), hasher: *std.hash.Wyhash) void {
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.items) |*item| {
         hash(V, item, hasher);
     }
 }
 pub fn hashBabyList(comptime V: type, this: *const bun.BabyList(V), hasher: *std.hash.Wyhash) void {
+// safe-transpile: for loop with pointer capture requires manual review
     for (this.sliceConst()) |*item| {
         hash(V, item, hasher);
     }
@@ -619,6 +631,7 @@ pub fn hash(comptime T: type, this: *const T, hasher: *std.hash.Wyhash) void {
         if (tyinfo.pointer.size == .one) {
             return hash(TT, this.*, hasher);
         } else if (tyinfo.pointer.size == .slice) {
+// safe-transpile: for loop with pointer capture requires manual review
             for (this.*) |*item| {
                 hash(TT, item, hasher);
             }

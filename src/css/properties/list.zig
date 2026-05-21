@@ -27,7 +27,7 @@ pub const CounterStyle = union(enum) {
         /// The counter system.
         system: SymbolsType,
         /// The symbols.
-        symbols: safe.ArrayList(Symbol),
+        symbols: ArrayList(Symbol),
     };
 };
 

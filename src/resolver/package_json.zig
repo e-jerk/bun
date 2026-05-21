@@ -103,10 +103,8 @@ pub const PackageJSON = struct {
     /// Normalize path separators to forward slashes for glob matching
     /// This is needed because glob patterns use forward slashes but Windows uses backslashes
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn normalizePathForGlob(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
         const normalized = try allocator.dupe(u8, path);
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
         for (normalized) |*char| {
             if (char.* == '\\') {
@@ -143,7 +141,6 @@ pub const PackageJSON = struct {
             globs: GlobList,
         };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hasSideEffects(side_effects: SideEffects, path: []const u8) bool {
             return switch (side_effects) {
@@ -749,7 +746,6 @@ pub const PackageJSON = struct {
 
                         // Remap all files in the browser field
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                         for (obj.properties.slice()) |*prop| {
                             const _key_str = (prop.key orelse continue).asString(allocator) orelse continue;
                             const value: js_ast.Expr = prop.value orelse continue;
@@ -1036,7 +1032,6 @@ pub const PackageJSON = struct {
                             if (group_json.data == .e_object) {
                                 var group_obj = group_json.data.e_object;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                                 for (group_obj.properties.slice()) |*prop| {
                                     const name_prop = prop.key orelse continue;
                                     const name_str = name_prop.asString(allocator) orelse continue;
@@ -1094,7 +1089,6 @@ pub const PackageJSON = struct {
         hasher.update(module);
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(u32, @truncate(hasher.final()));
     }
 };
@@ -1143,7 +1137,6 @@ pub const ExportsMap = struct {
                 .e_array => |e_array| {
                     const array = this.allocator.alloc(Entry, e_array.items.len) catch unreachable;
                     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (e_array.items.slice(), array) |item, *dest| {
                         dest.* = this.visit(item);
                     }
@@ -1168,7 +1161,6 @@ pub const ExportsMap = struct {
                     first_token.loc = expr.loc;
                     first_token.len = 1;
                     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (e_obj.properties.slice(), 0..) |prop, i| {
                         const key: string = prop.key.?.data.e_string.slice(this.allocator);
                         const key_range: logger.Range = this.source.rangeOfString(prop.key.?.loc);
@@ -1300,7 +1292,6 @@ pub const ExportsMap = struct {
                     var slice = this.data.map.list.slice();
                     const keys = slice.items(.key);
                     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (keys, 0..) |key, i| {
                         if (strings.eql(key, key_)) {
                             return slice.items(.value)[i];
@@ -1413,7 +1404,6 @@ pub const ESModule = struct {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn toExternal(this: Package, buffer: []const u8) External {
             return .{
                 .name = Semver.String.init(buffer, this.name),
@@ -1438,21 +1428,16 @@ pub const ESModule = struct {
             var slash = strings.indexOfCharNeg(specifier, '/');
             if (!strings.startsWithChar(specifier, '@')) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 slash = if (slash == -1) @as(i32, @intCast(specifier.len)) else slash;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return specifier[0..@as(usize, @intCast(slash))];
             } else {
                 if (slash == -1) return null;
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const slash2 = strings.indexOfChar(specifier[@as(usize, @intCast(slash)) + 1 ..], '/') orelse
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     specifier[@as(u32, @intCast(slash + 1))..].len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return specifier[0 .. @as(usize, @intCast(slash + 1)) + slash2];
             }
@@ -1479,7 +1464,6 @@ pub const ESModule = struct {
             return null;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parse(specifier: string, subpath_buf: []u8) ?Package {
             if (specifier.len == 0) return null;
@@ -1513,7 +1497,6 @@ pub const ESModule = struct {
             return package;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseSubpath(subpath: *[]const u8, specifier: string, subpath_buf: []u8) void {
             if (specifier.len + 1 > subpath_buf.len) {
@@ -1880,7 +1863,6 @@ pub const ESModule = struct {
                 const slice = object.list.slice();
                 const keys = slice.items(.key);
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (keys, 0..) |key, i| {
                     if (r.conditions.contains(key)) {
                         if (r.debug_logs) |log| {
@@ -2049,7 +2031,6 @@ pub const ESModule = struct {
             const keys = slices.items(.key);
             const values = slices.items(.value);
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (keys, 0..) |key, i| {
                 if (r.resolveTargetReverse(query, key, values[i], .exact)) |result| {
                     return result;
@@ -2133,7 +2114,6 @@ pub const ESModule = struct {
                 const slice = map.list.slice();
                 const keys = slice.items(.key);
                 // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (keys, 0..) |map_key, i| {
                     if (r.conditions.contains(map_key)) {
                         if (r.resolveTargetReverse(query, key, slice.items(.value)[i], kind)) |result| {

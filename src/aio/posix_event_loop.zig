@@ -796,8 +796,10 @@ pub const FilePoll = struct {
         }
 
         if (comptime Environment.isKqueue)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             onKQueueEvent(file_poll, loop, &loop.ready_polls[@as(usize, @intCast(loop.current_ready_poll))])
         else if (comptime Environment.isLinux)
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             onEpollEvent(file_poll, loop, &loop.ready_polls[@as(usize, @intCast(loop.current_ready_poll))]);
     }
 
@@ -879,6 +881,7 @@ pub const FilePoll = struct {
 
             changelist[0] = switch (flag) {
                 .readable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.READ,
                     .data = 0,
@@ -888,6 +891,7 @@ pub const FilePoll = struct {
                     .ext = .{ this.generation_number, 0 },
                 },
                 .writable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.WRITE,
                     .data = 0,
@@ -897,6 +901,7 @@ pub const FilePoll = struct {
                     .ext = .{ this.generation_number, 0 },
                 },
                 .process => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.PROC,
                     .data = 0,
@@ -906,6 +911,7 @@ pub const FilePoll = struct {
                     .ext = .{ this.generation_number, 0 },
                 },
                 .machport => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.MACHPORT,
                     .data = 0,
@@ -970,6 +976,7 @@ pub const FilePoll = struct {
 
             changelist[0] = switch (flag) {
                 .readable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.READ,
                     .data = 0,
@@ -978,6 +985,7 @@ pub const FilePoll = struct {
                     .flags = std.c.EV.ADD | one_shot_flag,
                 },
                 .writable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.WRITE,
                     .data = 0,
@@ -986,6 +994,7 @@ pub const FilePoll = struct {
                     .flags = std.c.EV.ADD | one_shot_flag,
                 },
                 .process => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.PROC,
                     .data = 0,
@@ -1038,6 +1047,7 @@ pub const FilePoll = struct {
     const invalid_fd = bun.invalid_fd;
 
     pub inline fn fileDescriptor(this: *FilePoll) bun.FD {
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(this.fd);
     }
 
@@ -1101,6 +1111,7 @@ pub const FilePoll = struct {
 
             changelist[0] = switch (flag) {
                 .readable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.READ,
                     .data = 0,
@@ -1110,6 +1121,7 @@ pub const FilePoll = struct {
                     .ext = .{ 0, 0 },
                 },
                 .machport => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.MACHPORT,
                     .data = 0,
@@ -1119,6 +1131,7 @@ pub const FilePoll = struct {
                     .ext = .{ 0, 0 },
                 },
                 .writable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.WRITE,
                     .data = 0,
@@ -1128,6 +1141,7 @@ pub const FilePoll = struct {
                     .ext = .{ 0, 0 },
                 },
                 .process => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.PROC,
                     .data = 0,
@@ -1143,6 +1157,7 @@ pub const FilePoll = struct {
             if (both_directions) {
                 // kqueue keys on (fd, filter); delete EVFILT_WRITE as a second change.
                 changelist[1] = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.posix.system.EVFILT.WRITE,
                     .data = 0,
@@ -1194,6 +1209,7 @@ pub const FilePoll = struct {
             var changelist = std.mem.zeroes([2]std.c.Kevent);
             changelist[0] = switch (flag) {
                 .readable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.READ,
                     .data = 0,
@@ -1202,6 +1218,7 @@ pub const FilePoll = struct {
                     .flags = std.c.EV.DELETE,
                 },
                 .writable => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.WRITE,
                     .data = 0,
@@ -1210,6 +1227,7 @@ pub const FilePoll = struct {
                     .flags = std.c.EV.DELETE,
                 },
                 .process => .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.PROC,
                     .data = 0,
@@ -1224,6 +1242,7 @@ pub const FilePoll = struct {
             var nchanges: c_int = 1;
             if (both_directions) {
                 changelist[1] = .{
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .ident = @intCast(fd.cast()),
                     .filter = std.c.EVFILT.WRITE,
                     .data = 0,
@@ -1287,6 +1306,7 @@ pub const LinuxWaker = struct {
 
     pub fn wait(this: Waker) void {
         var bytes: usize = 0;
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _ = std.posix.read(this.fd.cast(), @as(*[8]u8, @ptrCast(&bytes))) catch 0;
     }
 
@@ -1294,6 +1314,7 @@ pub const LinuxWaker = struct {
         var bytes: usize = 1;
         _ = std.posix.write(
             this.fd.cast(),
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*[8]u8, @ptrCast(&bytes)),
         ) catch 0;
     }

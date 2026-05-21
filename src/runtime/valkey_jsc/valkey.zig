@@ -131,6 +131,7 @@ pub const Address = union(enum) {
         port: u16,
     },
 
+// safe-transpile: function returns small constant slice — consider zust.String
     pub fn hostname(this: *const Address) []const u8 {
         return switch (this.*) {
             .unix => |unix_addr| unix_addr,
@@ -277,6 +278,7 @@ pub const ValkeyClient = struct {
         const pipelineable_commands: []Command.Entry = brk: {
             var to_process = @constCast(this.queue.readableSlice(0));
             var total: usize = 0;
+// safe-transpile: for loop with pointer capture requires manual review
             for (to_process) |*command| {
                 if (!command.meta.supports_auto_pipelining) {
                     break;
@@ -294,6 +296,7 @@ pub const ValkeyClient = struct {
         };
 
         bun.handleOom(this.write_buffer.byte_list.ensureUnusedCapacity(this.allocator, total_bytelength));
+// safe-transpile: for loop with pointer capture requires manual review
         for (pipelineable_commands) |*command| {
             bun.handleOom(this.write_buffer.write(this.allocator, command.serialized_data));
             // Free the serialized data since we've copied it to the write buffer
@@ -379,6 +382,7 @@ pub const ValkeyClient = struct {
         if (chunk.len == 0) return false;
         const wrote = this.socket.write(chunk);
         if (wrote > 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.write_buffer.consume(@intCast(wrote));
         }
         const has_remaining = this.write_buffer.len() > 0;
@@ -410,6 +414,7 @@ pub const ValkeyClient = struct {
     };
 
     /// Mark the connection as failed with error message
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fail(this: *ValkeyClient, message: []const u8, err: protocol.RedisError) bun.JSTerminated!void {
         debug("failed: {s}: {}", .{ message, err });
         if (this.flags.failed) return;
@@ -535,6 +540,7 @@ pub const ValkeyClient = struct {
     /// Process data received from socket
     ///
     /// Caller refs / derefs.
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onData(this: *ValkeyClient, data: []const u8) bun.JSTerminated!void {
         debug("Low-level onData called with {d} bytes: {s}", .{ data.len, data });
         // Path 1: Buffer already has data, append and process from buffer
@@ -573,6 +579,7 @@ while (true) : (__loop_limit_1 += 1) {
                     return;
                 }
 
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.read_buffer.consume(@truncate(bytes_consumed));
 
                 var value_to_handle = value; // Use temp var for defer
@@ -745,6 +752,7 @@ while (true) : (__loop_limit_1 += 1) {
                 debug("Got HELLO response map with {d} entries", .{map.len});
 
                 // Process the Map response - find the protocol version
+// safe-transpile: for loop with pointer capture requires manual review
                 for (map) |*entry| {
                     switch (entry.key) {
                         .SimpleString => |key| {
@@ -1029,6 +1037,7 @@ while (true) : (__loop_limit_1 += 1) {
             defer this.allocator.free(data);
 
             const wrote = this.socket.write(data);
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const unwritten = data[@intCast(@max(wrote, 0))..];
 
             if (unwritten.len > 0) {
@@ -1166,6 +1175,7 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     /// Write data to the socket buffer
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn write(this: *ValkeyClient, data: []const u8) !usize {
         try this.write_buffer.write(this.allocator, data);
         return data.len;

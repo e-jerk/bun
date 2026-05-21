@@ -184,6 +184,7 @@ pub fn fetchCacheDirectoryPath(env: *DotEnv.Loader, options: ?*const Options) Ca
     return CacheDir{ .is_node_modules = true, .path = Fs.FileSystem.instance.abs(&fallback_parts) };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cachedGitFolderNamePrint(buf: []u8, resolved: string, patch_hash: ?u64) stringZ {
     return std.fmt.bufPrintZ(buf, "@G@{s}{f}", .{ resolved, PatchHashFmt{ .hash = patch_hash } }) catch unreachable;
 }
@@ -213,6 +214,7 @@ pub fn cachedGitFolderNamePrintAuto(this: *const PackageManager, repository: *co
     return "";
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cachedGitHubFolderNamePrint(buf: []u8, resolved: string, patch_hash: ?u64) stringZ {
     return std.fmt.bufPrintZ(buf, "@GH@{s}{f}{f}", .{
         resolved,
@@ -238,6 +240,7 @@ pub fn cachedGitHubFolderNamePrintAuto(this: *const PackageManager, repository: 
 }
 
 // TODO: normalize to alphanumeric
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cachedNPMPackageFolderNamePrint(this: *const PackageManager, buf: []u8, name: string, version: Semver.Version, patch_hash: ?u64) stringZ {
     const scope = this.scopeForPackageName(name);
 
@@ -273,6 +276,7 @@ pub fn cachedNPMPackageFolderNamePrint(this: *const PackageManager, buf: []u8, n
     return result;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn cachedGitHubFolderNamePrintGuess(buf: []u8, string_buf: []const u8, repository: *const Repository, patch_hash: ?u64) stringZ {
     return std.fmt.bufPrintZ(
         buf,
@@ -291,6 +295,7 @@ pub fn cachedNPMPackageFolderName(this: *const PackageManager, name: string, ver
 }
 
 // TODO: normalize to alphanumeric
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cachedNPMPackageFolderPrintBasename(
     buf: []u8,
     name: string,
@@ -354,6 +359,7 @@ pub fn cachedNPMPackageFolderPrintBasename(
     }) catch unreachable;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn cachedTarballFolderNamePrint(buf: []u8, url: string, patch_hash: ?u64) stringZ {
     return std.fmt.bufPrintZ(buf, "@T@{f}{f}{f}", .{
         bun.fmt.hexIntLower(String.Builder.stringHash(url)),
@@ -405,6 +411,7 @@ pub fn globalLinkDir(this: *PackageManager) @import("std-fs-compat").FsDir {
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn globalLinkDirPath(this: *PackageManager) []const u8 {
     _ = this.globalLinkDir();
     return this.global_link_dir_path;
@@ -415,6 +422,7 @@ pub fn globalLinkDirAndPath(this: *PackageManager) struct { @import("std-fs-comp
     return .{ dir, this.global_link_dir_path };
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pathForCachedNPMPath(
     this: *PackageManager,
     buf: *bun.PathBuffer,
@@ -450,6 +458,7 @@ pub fn pathForCachedNPMPath(
     };
 }
 
+// safe-transpile: function returns small constant slice — consider safe.String
 pub fn pathForResolution(
     this: *PackageManager,
     package_id: PackageID,
@@ -507,6 +516,7 @@ pub fn computeCacheDirAndSubpath(
             if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                 cache_dir_subpath = ".";
             } else {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(folder_path_buf[0..folder.len], folder);
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
@@ -527,6 +537,7 @@ pub fn computeCacheDirAndSubpath(
             if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                 cache_dir_subpath = ".";
             } else {
+// safe-transpile: @memcpy requires manual review
                 @memcpy(folder_path_buf[0..folder.len], folder);
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
@@ -545,12 +556,14 @@ pub fn computeCacheDirAndSubpath(
                 const global_link_dir = manager.globalLinkDirPath();
                 var ptr = folder_path_buf;
                 var remain: []u8 = folder_path_buf[0..];
+// safe-transpile: @memcpy requires manual review
                 @memcpy(ptr[0..global_link_dir.len], global_link_dir);
                 remain = remain[global_link_dir.len..];
                 if (global_link_dir[global_link_dir.len - 1] != std.fs.path.sep) {
                     remain[0] = std.fs.path.sep;
                     remain = remain[1..];
                 }
+// safe-transpile: @memcpy requires manual review
                 @memcpy(remain[0..folder.len], folder);
                 remain = remain[folder.len..];
                 remain[0] = 0;
@@ -682,6 +695,7 @@ pub fn updateLockfileIfNeeded(
 ) !void {
     if (load_result == .ok and load_result.ok.serializer_result.packages_need_update) {
         const slice = manager.lockfile.packages.slice();
+// safe-transpile: for loop with pointer capture requires manual review
         for (slice.items(.meta)) |*meta| {
             // these are possibly updated later, but need to make sure non are zero
             meta.setHasInstallScript(false);
@@ -701,6 +715,7 @@ pub fn writeYarnLock(this: *PackageManager) !void {
     tmpname_buf[0..8].* = "tmplock-".*;
     var tmpfile = FileSystem.RealFS.Tmpfile{};
     var secret: [32]u8 = undefined;
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     std.mem.writeInt(u64, secret[0..8], @as(u64, @intCast(@import("std-fs-compat").milliTimestamp())), .little);
     var base64_bytes: [64]u8 = undefined;
     var prng = std.Random.DefaultPrng.init(bun.fastRandom());

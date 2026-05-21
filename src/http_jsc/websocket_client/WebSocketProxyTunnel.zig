@@ -22,7 +22,6 @@ pub const UpgradeClientUnion = union(enum) {
     none: void,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn handleDecryptedData(self: UpgradeClientUnion, data: []const u8) void {
         switch (self) {
             .http => |client| client.handleDecryptedData(data),
@@ -76,7 +75,6 @@ const SocketUnion = union(enum) {
     none: void,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(self: SocketUnion, data: []const u8) c_int {
         return switch (self) {
             .tcp => |s| s.write(data),
@@ -97,7 +95,6 @@ const SocketUnion = union(enum) {
 const SSLWrapperType = SSLWrapper(*WebSocketProxyTunnel);
 
 /// Initialize a new proxy tunnel with all required parameters
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn init(
     comptime ssl: bool,
@@ -130,7 +127,6 @@ fn deinit(this: *WebSocketProxyTunnel) void {
 
 /// Start TLS handshake inside the tunnel
 /// The ssl_options should contain all TLS configuration including CA certificates.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn start(this: *WebSocketProxyTunnel, ssl_options: SSLConfig, initial_data: []const u8) !void {
     // Allow handshake to complete so we can access peer certificate for manual
@@ -176,7 +172,6 @@ fn onOpen(this: *WebSocketProxyTunnel) void {
 }
 
 /// SSLWrapper callback: Called with decrypted data from the network
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn onData(this: *WebSocketProxyTunnel, decrypted_data: []const u8) void {
     this.ref();
@@ -279,7 +274,6 @@ pub fn detachUpgradeClient(this: *WebSocketProxyTunnel) void {
 
 /// SSLWrapper callback: Called with encrypted data to send to network
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeEncrypted(this: *WebSocketProxyTunnel, encrypted_data: []const u8) void {
     log("writeEncrypted: {} bytes", .{encrypted_data.len});
 
@@ -298,7 +292,6 @@ fn writeEncrypted(this: *WebSocketProxyTunnel, encrypted_data: []const u8) void 
     }
 
     // Buffer remaining data
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const written_usize: usize = @intCast(written);
     if (written_usize < encrypted_data.len) {
@@ -323,7 +316,6 @@ pub fn onWritable(this: *WebSocketProxyTunnel) void {
         if (written < 0) return;
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const written_usize: usize = @intCast(written);
         if (written_usize == to_send.len) {
             this._write_buffer.reset();
@@ -341,7 +333,6 @@ pub fn onWritable(this: *WebSocketProxyTunnel) void {
 
 /// Feed encrypted data from the network to the SSL wrapper for decryption
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn receive(this: *WebSocketProxyTunnel, data: []const u8) void {
     this.ref();
     defer this.deref();
@@ -352,7 +343,6 @@ pub fn receive(this: *WebSocketProxyTunnel, data: []const u8) void {
 }
 
 /// Write application data through the tunnel (will be encrypted)
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn write(this: *WebSocketProxyTunnel, data: []const u8) !usize {
     if (this._wrapper) |*wrapper| {

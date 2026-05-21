@@ -3,7 +3,6 @@ pub fn toJS(this: ErrorResponse, globalObject: *jsc.JSGlobalObject) JSValue {
     defer b.deinit(bun.default_allocator);
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.messages.items) |*msg| {
         b.cap += switch (msg.*) {
             inline else => |m| m.utf8ByteLength(),
@@ -29,7 +28,6 @@ pub fn toJS(this: ErrorResponse, globalObject: *jsc.JSGlobalObject) JSValue {
     var line: String = String.dead;
     var routine: String = String.dead;
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (this.messages.items) |*msg| {
         switch (msg.*) {

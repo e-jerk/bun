@@ -44,7 +44,6 @@ pub fn allocator(self: *Self) std.mem.Allocator {
 pub fn from(allocator_: std.mem.Allocator) ?*Self {
     if (allocator_.vtable == AllocatorInterface.VTable) {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(allocator_.ptr));
     }
 
@@ -58,7 +57,6 @@ const AllocatorInterface = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn free(
         ptr: *anyopaque,
         buf: []u8,
@@ -66,10 +64,8 @@ const AllocatorInterface = struct {
         _: usize,
     ) void {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
         var self: *Self = @ptrCast(@alignCast(ptr));
         defer self.deref();
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         bun.sys.munmap(@ptrCast(@alignCast(buf))).unwrap() catch |err| {
             bun.Output.debugWarn("Failed to munmap memfd: {}", .{err});
@@ -105,10 +101,8 @@ pub fn alloc(self: *Self, len: usize, offset: usize, flags: std.posix.MAP) bun.s
             return .{
                 .result = bun.webcore.Blob.Store.Bytes{
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .cap = @truncate(slice.len),
                     .ptr = slice.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .len = @truncate(len),
                     .allocator = self.allocator(),
@@ -121,7 +115,6 @@ pub fn alloc(self: *Self, len: usize, offset: usize, flags: std.posix.MAP) bun.s
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn shouldUse(bytes: []const u8) bool {
     if (comptime !bun.Environment.isLinux) {
@@ -140,7 +133,6 @@ pub fn shouldUse(bytes: []const u8) bool {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn create(bytes: []const u8) bun.sys.Maybe(bun.webcore.Blob.Store.Bytes) {
     if (comptime !bun.Environment.isLinux) {
         unreachable;
@@ -157,7 +149,6 @@ pub fn create(bytes: []const u8) bun.sys.Maybe(bun.webcore.Blob.Store.Bytes) {
 
     if (bytes.len > 0)
         // Hint at the size of the file
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = bun.sys.ftruncate(fd, @intCast(bytes.len));
 
@@ -182,7 +173,6 @@ pub fn create(bytes: []const u8) bun.sys.Maybe(bun.webcore.Blob.Store.Bytes) {
                     fd.close();
                     return .{ .err = bun.sys.Error.fromCode(.NOMEM, .write) };
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 written += @intCast(result);
                 remain = remain[result..];

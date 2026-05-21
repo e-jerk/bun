@@ -53,18 +53,15 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
         added_body_script: bool,
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onWriteHTML(this: *@This(), bytes: []const u8) void {
             bun.handleOom(this.output.appendSlice(bytes));
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onHTMLParseError(_: *@This(), err: []const u8) void {
             Output.panic("Parsing HTML during replacement phase errored, which should never happen since the first pass succeeded: {s}", .{err});
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onTag(this: *@This(), element: *lol.Element, _: []const u8, url_attribute: []const u8, _: ImportKind) void {
             if (this.current_import_record_index >= this.import_records.len) {
@@ -201,12 +198,10 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
 
         fn endHeadTagHandler(end: *lol.EndTag, opaque_this: ?*anyopaque) callconv(.c) lol.Directive {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
             const this: *@This() = @ptrCast(@alignCast(opaque_this.?));
             if (this.linker.dev_server == null) {
                 this.addHeadTags(end) catch return .stop;
             } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.end_tag_indices.head = @intCast(this.output.items.len);
             }
@@ -214,7 +209,6 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
         }
 
         fn endBodyTagHandler(end: *lol.EndTag, opaque_this: ?*anyopaque) callconv(.c) lol.Directive {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             const this: *@This() = @ptrCast(@alignCast(opaque_this.?));
             if (this.linker.dev_server == null) {
@@ -226,14 +220,12 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
                 }
             } else {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.end_tag_indices.body = @intCast(this.output.items.len);
             }
             return .@"continue";
         }
 
         fn endHtmlTagHandler(end: *lol.EndTag, opaque_this: ?*anyopaque) callconv(.c) lol.Directive {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             const this: *@This() = @ptrCast(@alignCast(opaque_this.?));
             if (this.linker.dev_server == null) {
@@ -245,7 +237,6 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
                     this.addHeadTags(end) catch return .stop;
                 }
             } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.end_tag_indices.html = @intCast(this.output.items.len);
             }
@@ -294,13 +285,11 @@ fn generateCompileResultForHTMLChunkImpl(worker: *ThreadPool.Worker, c: *LinkerC
             break :brk head;
         if (bun.strings.indexOf(html_loader.output.items, "</head>")) |head|
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             break :brk @intCast(head);
         if (html_loader.end_tag_indices.body) |body|
             break :brk body;
         if (html_loader.end_tag_indices.html) |html|
             break :brk html;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         break :brk @intCast(html_loader.output.items.len); // inject at end of file.
     } else brk: {

@@ -32,6 +32,7 @@ inline fn toLowerT(comptime T: type, a_c: T) T {
     if (T != u16) {
         return std.ascii.toLower(a_c);
     }
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return if (a_c < 128) @intCast(std.ascii.toLower(@intCast(a_c))) else a_c;
 }
 
@@ -43,6 +44,7 @@ fn MaybeSlice(comptime T: type) type {
     return jsc.Node.Maybe([:0]const T, Syscall.Error);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn validatePathT(comptime T: type, comptime methodName: []const u8) void {
     comptime switch (T) {
         u8, u16 => return,
@@ -162,8 +164,10 @@ pub fn getCwdWindowsU16(buf: []u16) MaybeBuf(u16) {
     return MaybeBuf(u16){ .result = buf[0..len] };
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn getCwdU8(buf: []u8) MaybeBuf(u8) {
     const cached_cwd = withoutTrailingSlash(bun.fs.FileSystem.instance.top_level_dir);
+// safe-transpile: @memcpy requires manual review
     @memcpy(buf[0..cached_cwd.len], cached_cwd);
     return MaybeBuf(u8){ .result = buf[0..cached_cwd.len] };
 }
@@ -210,8 +214,10 @@ pub fn basenamePosixT(comptime T: type, path: []const T, suffix: ?[]const T) []c
         var extIdx: ?usize = _suffixLen - 1;
         // We use an optional value instead of -1, as in Node code, for easier number type use.
         var firstNonSlashEnd: ?usize = null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var i_i64 = @as(i64, @intCast(len - 1));
         while (i_i64 >= start) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const i = @as(usize, @intCast(i_i64));
             const byte = path[i];
             if (byte == CHAR_FORWARD_SLASH) {
@@ -259,8 +265,10 @@ pub fn basenamePosixT(comptime T: type, path: []const T, suffix: ?[]const T) []c
         return path[start..len];
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
     while (i_i64 > -1) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         const byte = path[i];
         if (byte == CHAR_FORWARD_SLASH) {
@@ -320,8 +328,10 @@ pub fn basenameWindowsT(comptime T: type, path: []const T, suffix: ?[]const T) [
         var extIdx: ?usize = _suffixLen - 1;
         // We use an optional value instead of -1, as in Node code, for easier number type use.
         var firstNonSlashEnd: ?usize = null;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var i_i64 = @as(i64, @intCast(len - 1));
         while (i_i64 >= start) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const i = @as(usize, @intCast(i_i64));
             const byte = path[i];
             if (isSepT(T, byte)) {
@@ -369,8 +379,10 @@ pub fn basenameWindowsT(comptime T: type, path: []const T, suffix: ?[]const T) [
         return path[start..len];
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
     while (i_i64 >= start) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         const byte = path[i];
         if (isSepT(T, byte)) {
@@ -562,8 +574,10 @@ pub fn dirnameWindowsT(comptime T: type, path: []const T) []const T {
     var end: ?usize = null;
     var matchedSlash: bool = true;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
     while (i_i64 >= offset) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         if (isSepT(T, path[i])) {
             if (!matchedSlash) {
@@ -640,8 +654,10 @@ pub fn extnamePosixT(comptime T: type, path: []const T) []const T {
     // We use an optional value instead of -1, as in Node code, for easier number type use.
     var preDotState: ?usize = 0;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
     while (i_i64 > -1) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         const byte = path[i];
         if (byte == CHAR_FORWARD_SLASH) {
@@ -729,8 +745,10 @@ pub fn extnameWindowsT(comptime T: type, path: []const T) []const T {
         startPart = start;
     }
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
     while (i_i64 >= start) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         const byte = path[i];
         if (isSepWindowsT(T, byte)) {
@@ -993,6 +1011,7 @@ pub fn isAbsolutePosixZigString(pathZStr: jsc.ZigString) bool {
 
 pub fn isAbsoluteWindowsZigString(pathZStr: jsc.ZigString) bool {
     return if (pathZStr.len > 0 and pathZStr.is16Bit())
+// safe-transpile: @alignCast requires manual review
         isAbsoluteWindowsT(u16, @alignCast(pathZStr.utf16Slice()))
     else
         isAbsoluteWindowsT(u8, pathZStr.slice());
@@ -1221,6 +1240,7 @@ pub fn join(globalObject: *jsc.JSGlobalObject, isWindows: bool, args_ptr: [*]jsc
     var paths = bun.handleOom(allocator.alloc(string, args_len));
     defer allocator.free(paths);
 
+    // safe-transpile: for with index access requires manual review
     for (0..args_len, args_ptr) |i, path_ptr| {
         // Supress exeption in zig. It does globalThis.vm().throwError() in JS land.
         try validateString(globalObject, path_ptr, "paths[{d}]", .{i});
@@ -1664,6 +1684,7 @@ pub fn parsePosixT(comptime T: type, path: []const T) PathParsed(T) {
     // We use an optional value instead of -1, as in Node code, for easier number type use.
     var end: ?usize = null;
     var matchedSlash = true;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
 
     // Track the state of characters (if any) we see before our first dot and
@@ -1674,6 +1695,7 @@ pub fn parsePosixT(comptime T: type, path: []const T) PathParsed(T) {
 
     // Get non-dir info
     while (i_i64 >= start) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         const byte = path[i];
         if (byte == CHAR_FORWARD_SLASH) {
@@ -1849,6 +1871,7 @@ pub fn parseWindowsT(comptime T: type, path: []const T) PathParsed(T) {
     // We use an optional value instead of -1, as in Node code, for easier number type use.
     var end: ?usize = null;
     var matchedSlash = true;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64 = @as(i64, @intCast(len - 1));
 
     // Track the state of characters (if any) we see before our first dot and
@@ -1859,6 +1882,7 @@ pub fn parseWindowsT(comptime T: type, path: []const T) PathParsed(T) {
 
     // Get non-dir info
     while (i_i64 >= rootEnd) : (i_i64 -= 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const i = @as(usize, @intCast(i_i64));
         byte = path[i];
         if (isSepT(T, byte)) {
@@ -2338,10 +2362,12 @@ pub fn resolvePosixT(comptime T: type, paths: []const []const T, buf: []T, buf2:
     var bufOffset: usize = 0;
     var bufSize: usize = 0;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64: i64 = if (paths.len == 0) -1 else @as(i64, @intCast(paths.len - 1));
     while (i_i64 > -2 and !resolvedAbsolute) : (i_i64 -= 1) {
         var path: []const T = &.{};
         if (i_i64 >= 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             path = paths[@as(usize, @intCast(i_i64))];
         } else {
             // cwd is limited to MAX_PATH_BYTES.
@@ -2432,12 +2458,14 @@ pub fn resolveWindowsT(comptime T: type, paths: []const []const T, buf: []T, buf
     var bufSize: usize = 0;
     var envPath: ?[]const T = null;
 
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     var i_i64: i64 = if (paths.len == 0) -1 else @as(i64, @intCast(paths.len - 1));
     while (i_i64 > -2) : (i_i64 -= 1) {
         // Backed by expandable buf2, to not conflict with buf2 backed resolvedTail,
         // because path may be long.
         var path: []const T = &.{};
         if (i_i64 >= 0) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             path = paths[@as(usize, @intCast(i_i64))];
             // validateString of `path` is performed in pub fn resolve.
 
@@ -2847,6 +2875,7 @@ pub fn toNamespacedPathWindowsT(comptime T: type, path: []const T, buf: []T, buf
 
     const len = resolvedPath.len;
     if (len <= 2) {
+// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..path.len], path);
         buf[path.len] = 0;
         return MaybeSlice(T){ .result = buf[0..path.len :0] };

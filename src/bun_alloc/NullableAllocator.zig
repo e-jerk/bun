@@ -27,7 +27,6 @@ pub inline fn get(this: NullableAllocator) ?std.mem.Allocator {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn free(this: *const NullableAllocator, bytes: []const u8) void {
     if (this.get()) |allocator| {
         if (bun.String.isWTFAllocator(allocator)) {

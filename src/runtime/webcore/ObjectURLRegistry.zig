@@ -51,10 +51,12 @@ fn getDupedBlob(this: *ObjectURLRegistry, uuid: *const UUID) ?jsc.WebCore.Blob {
     return entry.blob.dupeWithContentType(true);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn uuidFromPathname(pathname: []const u8) ?UUID {
     return UUID.parse(pathname) catch return null;
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resolveAndDupe(this: *ObjectURLRegistry, pathname: []const u8) ?jsc.WebCore.Blob {
     const uuid = uuidFromPathname(pathname) orelse return null;
     this.lock.lock();
@@ -63,11 +65,13 @@ pub fn resolveAndDupe(this: *ObjectURLRegistry, pathname: []const u8) ?jsc.WebCo
     return entry.blob.dupeWithContentType(true);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn resolveAndDupeToJS(this: *ObjectURLRegistry, pathname: []const u8, globalObject: *jsc.JSGlobalObject) ?jsc.JSValue {
     var blob = jsc.WebCore.Blob.new(this.resolveAndDupe(pathname) orelse return null);
     return blob.toJS(globalObject);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn revoke(this: *ObjectURLRegistry, pathname: []const u8) void {
     const uuid = uuidFromPathname(pathname) orelse return;
     this.lock.lock();
@@ -76,6 +80,7 @@ pub fn revoke(this: *ObjectURLRegistry, pathname: []const u8) void {
     entry.value.deinit();
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn has(this: *ObjectURLRegistry, pathname: []const u8) bool {
     const uuid = uuidFromPathname(pathname) orelse return false;
     this.lock.lock();
@@ -165,6 +170,7 @@ fn jsFunctionResolveObjectURL_(globalObject: *jsc.JSGlobalObject, callframe: *js
 
 pub const specifier_len = "blob:".len + UUID.stringLength;
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn isBlobURL(url: []const u8) bool {
     return url.len >= specifier_len and bun.strings.hasPrefixComptime(url, "blob:");
 }

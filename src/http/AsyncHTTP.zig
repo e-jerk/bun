@@ -150,6 +150,7 @@ pub fn preconnect(
     bun.http.http_thread.schedule(Batch.from(&this.async_http.task));
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn init(
     allocator: std.mem.Allocator,
     method: Method,
@@ -253,6 +254,7 @@ pub fn init(
     return this;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn initSync(
     allocator: std.mem.Allocator,
     method: Method,

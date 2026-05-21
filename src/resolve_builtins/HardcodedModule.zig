@@ -190,7 +190,7 @@ pub const HardcodedModule = enum {
             return .{
                 path,
                 .{
-                    .path = if (path.len > 5 and safe.SimdUtils.eql(path[0..5], "node:")) path else "node:" ++ path,
+                    .path = if (path.len > 5 and std.mem.eql(u8, path[0..5], "node:")) path else "node:" ++ path,
                     .node_builtin = true,
                 },
             };
@@ -199,7 +199,7 @@ pub const HardcodedModule = enum {
             return .{
                 path,
                 .{
-                    .path = if (path.len > 5 and safe.SimdUtils.eql(path[0..5], "node:")) path else "node:" ++ path,
+                    .path = if (path.len > 5 and std.mem.eql(u8, path[0..5], "node:")) path else "node:" ++ path,
                     .node_builtin = true,
                     .node_only_prefix = true,
                 },
@@ -401,12 +401,10 @@ pub const HardcodedModule = enum {
 
         const Cfg = struct { rewrite_jest_for_tests: bool = false };
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn has(name: []const u8, target: options.Target, cfg: Cfg) bool {
             return get(name, target, cfg) != null;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(name: []const u8, target: options.Target, cfg: Cfg) ?Alias {
             if (target.isBun()) {

@@ -4,6 +4,7 @@ pub const wyhash = hashWrap(std.hash.Wyhash);
 pub const adler32 = hashWrap(std.hash.Adler32);
 /// Use hardware-accelerated CRC32 from zlib
 pub const crc32 = hashWrap(struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u32, bytes: []const u8) u32 {
         // zlib takes a 32-bit length, so chunk large inputs to avoid truncation.
         var crc: bun.zlib.uLong = seed;
@@ -11,16 +12,19 @@ pub const crc32 = hashWrap(struct {
         while (offset < bytes.len) {
             const remaining = bytes.len - offset;
             const max_len: usize = std.math.maxInt(u32);
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const chunk_len: u32 = if (remaining > max_len) @intCast(max_len) else @intCast(remaining);
             crc = bun.zlib.crc32(crc, bytes.ptr + offset, chunk_len);
             offset += chunk_len;
         }
+// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(crc);
     }
 });
 pub const cityHash32 = hashWrap(std.hash.CityHash32);
 pub const cityHash64 = hashWrap(std.hash.CityHash64);
 pub const xxHash32 = hashWrap(struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u32, bytes: []const u8) u32 {
         // sidestep .hash taking in anytype breaking ArgTuple
         // downstream by forcing a type signature on the input
@@ -28,6 +32,7 @@ pub const xxHash32 = hashWrap(struct {
     }
 });
 pub const xxHash64 = hashWrap(struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u64, bytes: []const u8) u64 {
         // sidestep .hash taking in anytype breaking ArgTuple
         // downstream by forcing a type signature on the input
@@ -35,6 +40,7 @@ pub const xxHash64 = hashWrap(struct {
     }
 });
 pub const xxHash3 = hashWrap(struct {
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u32, bytes: []const u8) u64 {
         // sidestep .hash taking in anytype breaking ArgTuple
         // downstream by forcing a type signature on the input
@@ -129,16 +135,19 @@ fn hashWrap(comptime Hasher_: anytype) jsc.JSHostFnZig {
                     }
                 }
                 if (comptime bun.trait.isNumber(@TypeOf(function_args[0]))) {
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     function_args[0] = @as(@TypeOf(function_args[0]), @truncate(seed));
                     function_args[1] = input;
                 } else {
                     function_args[0] = input;
+// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     function_args[1] = @as(@TypeOf(function_args[1]), @truncate(seed));
                 }
 
                 const value = @call(.auto, Function, function_args);
 
                 if (@TypeOf(value) == u32) {
+// safe-transpile: @bitCast requires manual review
                     return jsc.JSValue.jsNumber(@as(u32, @bitCast(value)));
                 }
                 return jsc.JSValue.fromUInt64NoTruncate(globalThis, value);

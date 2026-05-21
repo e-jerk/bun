@@ -16,7 +16,6 @@ pub const BlobOrStringOrBuffer = union(enum) {
     }
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const BlobOrStringOrBuffer) []const u8 {
         return switch (this.*) {
             .blob => |*blob| blob.sharedView(),
@@ -203,7 +202,6 @@ pub const StringOrBuffer = union(enum) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const StringOrBuffer) []const u8 {
         return switch (this.*) {
@@ -393,7 +391,6 @@ pub const Encoding = enum(u8) {
 
     /// Caller must verify the value is a string
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn from(slice: []const u8) ?Encoding {
         return strings.inMapCaseInsensitive(slice, map);
     }
@@ -458,7 +455,6 @@ pub const Encoding = enum(u8) {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encodeWithMaxSize(encoding: Encoding, globalObject: *jsc.JSGlobalObject, comptime max_size: usize, input: []const u8) bun.JSError!jsc.JSValue {
         bun.assertf(
             input.len <= max_size,
@@ -470,7 +466,8 @@ pub const Encoding = enum(u8) {
                 var base64_buf: [std.base64.standard.Encoder.calcSize(max_size * 4)]u8 = undefined;
                 const encoded_len = bun.base64.encode(&base64_buf, input);
                 var encoded, const bytes = bun.String.createUninitialized(.latin1, encoded_len);
-                safe.SimdUtils.copy(@constCast(bytes), base64_buf[0..encoded_len]);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(@constCast(bytes), base64_buf[0..encoded_len]);
                 return try encoded.transferToJS(globalObject);
             },
             .base64url => {
@@ -519,7 +516,6 @@ const PathOrBuffer = union(Tag) {
 
     pub const Tag = enum { path, buffer };
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn slice(this: PathOrBuffer) []const u8 {
         return this.path.slice();
@@ -637,7 +633,8 @@ pub const PathLike = union(enum) {
             return buf[0..0 :0];
         }
 
-        safe.SimdUtils.copy(buf[0..sliced.len], sliced);
+// safe-transpile: @memcpy requires manual review
+        @memcpy(buf[0..sliced.len], sliced);
         buf[sliced.len] = 0;
         return buf[0..sliced.len :0];
     }
@@ -667,24 +664,20 @@ pub const PathLike = union(enum) {
             // because the "." in \\.\pipe\name would be incorrectly stripped as a "current directory" component.
             if (s.len >= 4 and bun.path.isSepAny(s[0]) and bun.path.isSepAny(s[1]) and (s[2] == '.' or s[2] == '?') and bun.path.isSepAny(s[3])) {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 return strings.toKernel32Path(@alignCast(std.mem.bytesAsSlice(u16, buf)), s);
             }
             if (s.len > 0 and bun.path.isSepAny(s[0])) {
                 const resolve = path_handler.PosixToWinNormalizer.resolveCWDWithExternalBuf(buf, s) catch @panic("Error while resolving path.");
                 const normal = path_handler.normalizeBuf(resolve, b, .windows);
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 return strings.toKernel32Path(@alignCast(std.mem.bytesAsSlice(u16, buf)), normal);
             }
             // Handle "." specially since normalizeStringBuf strips it to an empty string
             if (s.len == 1 and s[0] == '.') {
 // safe-transpile: @alignCast requires manual review
-// safe-transpile: @alignCast requires manual review
                 return strings.toKernel32Path(@alignCast(std.mem.bytesAsSlice(u16, buf)), ".");
             }
             const normal = path_handler.normalizeStringBuf(s, b, true, .windows, false);
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
             return strings.toKernel32Path(@alignCast(std.mem.bytesAsSlice(u16, buf)), normal);
         }
@@ -841,7 +834,6 @@ pub const Valid = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pathNullBytes(slice: []const u8, global: *jsc.JSGlobalObject) bun.JSError!void {
         if (bun.strings.indexOfChar(slice, 0) != null) {
             return global.ERR(.INVALID_ARG_VALUE, "The argument 'path' must be a string, Uint8Array, or URL without null bytes. Received {f}", .{bun.fmt.quote(slice)}).throw();
@@ -868,7 +860,6 @@ pub const VectorArrayBuffer = struct {
         bun.handleOom(bufferlist.ensureTotalCapacityPrecise(len));
 
         while (i < len) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const element = try val.getIndex(globalObject, @as(u32, @truncate(i)));
 
@@ -919,7 +910,6 @@ pub fn modeFromJS(ctx: *jsc.JSGlobalObject, value: jsc.JSValue) bun.JSError!?Mod
         };
     };
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @truncate(mode_int & 0o777);
 }
@@ -1111,7 +1101,6 @@ pub const FileSystemFlags = enum(c_int) {
                         const chars = if (is_16bit) str.utf16SliceAligned() else str.slice();
 
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         if (std.ascii.isDigit(@as(u8, @truncate(chars[0])))) {
                             // node allows "0o644" as a string :(
                             if (is_16bit) {
@@ -1119,10 +1108,8 @@ pub const FileSystemFlags = enum(c_int) {
                                 defer slice.deinit();
 
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 break :brk @as(i32, @intCast(std.fmt.parseInt(Mode, slice.slice(), 10) catch break :brk null));
                             } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 break :brk @as(i32, @intCast(std.fmt.parseInt(Mode, chars, 10) catch break :brk null));
                             }

@@ -76,13 +76,11 @@ pub const SQLDataCell = extern struct {
         type: JSValue.JSType,
 
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
         pub fn slice(this: *TypedArray) []u8 {
             const ptr = this.ptr orelse return &.{};
             return ptr[0..this.len];
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
         pub fn byteSlice(this: *TypedArray) []u8 {
             const ptr = this.head_ptr orelse return &.{};
@@ -111,7 +109,6 @@ pub const SQLDataCell = extern struct {
             },
             .array => {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.value.array.slice()) |*cell| {
                     cell.deinit();
                 }
@@ -130,7 +127,6 @@ pub const SQLDataCell = extern struct {
             const bytes_slice = bytes.slice();
             return SQLDataCell{
                 .tag = .raw,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .value = .{ .raw = .{ .ptr = @ptrCast(bytes_slice.ptr), .len = bytes_slice.len } },
             };

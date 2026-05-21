@@ -13,7 +13,6 @@ const Entry = struct {
 };
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn writeOutput(this: *Export, comptime io_kind: anytype, comptime fmt: []const u8, args: anytype) Yield {
     if (this.bltn().stdout.needsIO()) |safeguard| {
         var output: *BuiltinIO.Output = &@field(this.bltn(), @tagName(io_kind));
@@ -121,7 +120,6 @@ pub fn deinit(this: *Export) void {
 }
 
 pub inline fn bltn(this: *Export) *Builtin {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("export", this));
     return @fieldParentPtr("impl", impl);

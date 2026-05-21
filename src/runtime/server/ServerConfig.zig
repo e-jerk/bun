@@ -87,7 +87,6 @@ pub fn memoryCost(this: *const ServerConfig) usize {
     // ignore @sizeOf(ServerConfig), assume already included.
     var cost: usize = 0;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.static_routes.items) |*entry| {
         cost += entry.memoryCost();
     }
@@ -170,7 +169,6 @@ fn normalizeStaticRoutesList(this: *ServerConfig) !void {
 
     var static_routes_dedupe_list = std.array_list.Managed(u64).init(bun.default_allocator);
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     try static_routes_dedupe_list.ensureTotalCapacity(@truncate(this.static_routes.items.len));
     defer static_routes_dedupe_list.deinit();
 
@@ -214,7 +212,6 @@ pub fn cloneForReloadingStaticRoutes(this: *ServerConfig) !ServerConfig {
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn appendStaticRoute(this: *ServerConfig, path: []const u8, route: AnyRoute, method: HTTP.Method.Optional) !void {
     try this.static_routes.append(StaticRouteEntry{
         .path = try bun.default_allocator.dupe(u8, path),
@@ -223,7 +220,6 @@ pub fn appendStaticRoute(this: *ServerConfig, path: []const u8, route: AnyRoute,
     });
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn applyStaticRoute(server: AnyServer, comptime ssl: bool, app: *uws.NewApp(ssl), comptime T: type, entry: T, path: []const u8, method: HTTP.Method.Optional) void {
     entry.server = server;
@@ -256,7 +252,6 @@ pub fn applyStaticRoute(server: AnyServer, comptime ssl: bool, app: *uws.NewApp(
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn applyStaticRouteH3(server: AnyServer, app: *uws.H3.App, comptime T: type, entry: T, path: []const u8, method: HTTP.Method.Optional) void {
     entry.server = server;
@@ -296,7 +291,6 @@ pub fn deinit(this: *ServerConfig) void {
     }
     if (this.sni) |*sni| {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
         for (sni.slice()) |*ssl_config| {
             ssl_config.deinit();
         }
@@ -304,7 +298,6 @@ pub fn deinit(this: *ServerConfig) void {
         this.sni = null;
     }
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (this.static_routes.items) |*entry| {
         entry.deinit();
@@ -316,14 +309,12 @@ pub fn deinit(this: *ServerConfig) void {
     }
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.user_routes_to_build.items) |*builder| {
         builder.deinit();
     }
     this.user_routes_to_build.clearAndFree();
 }
 
-// safe-transpile: function returns small constant slice — consider zust.String
 // safe-transpile: function returns small constant slice — consider zust.String
 pub fn computeID(this: *const ServerConfig, allocator: std.mem.Allocator) []const u8 {
     var arraylist = std.array_list.Managed(u8).init(allocator);
@@ -367,7 +358,6 @@ pub fn getUsocketsOptions(this: *const ServerConfig) i32 {
     return out;
 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn validateRouteName(global: *jsc.JSGlobalObject, path: []const u8) !void {
     // Already validated by the caller
@@ -571,7 +561,6 @@ pub fn fromJS(
 
             errdefer {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (args.static_routes.items) |*static_route| {
                     static_route.deinit();
                 }
@@ -772,13 +761,11 @@ pub fn fromJS(
                 args.has_idleTimeout = true;
 
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const idleTimeout: u64 = @intCast(@max(value.toInt64(), 0));
                 if (idleTimeout > 255) {
                     return global.throwInvalidArguments("Bun.serve expects idleTimeout to be 255 or less", .{});
                 }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 args.idleTimeout = @truncate(idleTimeout);
             }
@@ -800,7 +787,6 @@ pub fn fromJS(
         if (try arg.getTruthy(global, "port")) |port_| {
             args.address.tcp.port = @as(
                 u16,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @intCast(@min(
                     @max(0, try port_.coerce(i32, global)),
@@ -904,7 +890,6 @@ pub fn fromJS(
 
         if (try arg.getTruthy(global, "maxRequestBodySize")) |max_request_body_size| {
             if (max_request_body_size.isNumber()) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 args.max_request_body_size = @as(u64, @intCast(@max(0, max_request_body_size.toInt64())));
             }

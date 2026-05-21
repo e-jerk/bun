@@ -25,12 +25,10 @@ pub fn toJS(this: *RefString, global: *jsc.JSGlobalObject) jsc.JSValue {
 pub const Callback = fn (ctx: *anyopaque, str: *RefString) void;
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn computeHash(input: []const u8) u32 {
     return std.hash.XxHash32.hash(0, input);
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn slice(this: *RefString) []const u8 {
     this.ref();
@@ -42,7 +40,6 @@ pub fn ref(this: *RefString) void {
     this.impl.ref();
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn leak(this: RefString) []const u8 {
     @setRuntimeSafety(false);

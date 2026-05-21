@@ -132,7 +132,6 @@ pub fn wcwidthRemaining(it: anytype) usize {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn utf8Wcwidth(s: []const u8) usize {
     var it = uucode.grapheme.utf8Iterator(s);
     return wcwidthRemaining(&it);
@@ -357,7 +356,6 @@ pub fn IteratorNoControl(comptime CodePointIterator: type) type {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn utf8IteratorNoControl(bytes: []const u8) IteratorNoControl(uucode.utf8.Iterator) {
     return IteratorNoControl(uucode.utf8.Iterator).init(.init(bytes));
 }
@@ -393,7 +391,7 @@ test "IteratorNoControl nextCodePoint/peekCodePoint" {
     try std.testing.expect(it.i == 15);
     try std.testing.expect((result.?).code_point == 0x1F680); // 🚀
     try std.testing.expect((result.?).is_break == true);
-    try std.testing.expect(safe.SimdUtils.eql(str[0..it.i], "👩🏽‍🚀"));
+    try std.testing.expect(std.mem.eql(u8, str[0..it.i], "👩🏽‍🚀"));
 
     result = it.nextCodePoint();
     try std.testing.expect((result.?).code_point == 0x1F1E8); // Regional Indicator "C"
@@ -678,7 +676,7 @@ fn testGraphemeBreakNoControl(getActualIsBreak: fn (cp1: u21, cp2: u21, state: *
 
         var parts = std.mem.splitScalar(u8, trimmed, ' ');
         const start = parts.next().?;
-        try std.testing.expect(safe.SimdUtils.eql(start, "÷"));
+        try std.testing.expect(std.mem.eql(u8, start, "÷"));
 
         var state: uucode.grapheme.BreakState = .default;
         var cp1 = try parseCp(parts.next().?);
@@ -702,9 +700,9 @@ fn testGraphemeBreakNoControl(getActualIsBreak: fn (cp1: u21, cp2: u21, state: *
             var loop_limit: usize = 0;
             loop_limit += 1;
             std.debug.assert(loop_limit <= 1_000_000);
-            var expected_is_break = safe.SimdUtils.eql(expected_str, "÷");
+            var expected_is_break = std.mem.eql(u8, expected_str, "÷");
             const actual_is_break = getActualIsBreak(cp1, cp2, &state);
-            try std.testing.expect(expected_is_break or safe.SimdUtils.eql(expected_str, "×"));
+            try std.testing.expect(expected_is_break or std.mem.eql(u8, expected_str, "×"));
             // GraphemeBreakTest.txt has tests for UAX #29 treating emoji
             // modifier as extend, always, but we diverge from that (see
             // comment above `isExtend`).
@@ -741,7 +739,7 @@ fn testGraphemeBreakNoControl(getActualIsBreak: fn (cp1: u21, cp2: u21, state: *
             next_expected_str = parts.next().?;
         }
 
-        try std.testing.expect(safe.SimdUtils.eql(next_expected_str, "÷"));
+        try std.testing.expect(std.mem.eql(u8, next_expected_str, "÷"));
     }
 
     try std.testing.expect(success);

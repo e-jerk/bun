@@ -111,6 +111,7 @@ pub fn callAsFunction(globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JS
 
             var args_list: std.array_list.Managed(Strong) = .init(bunTest.gpa);
             defer args_list.deinit();
+// safe-transpile: for loop with pointer capture requires manual review
             defer for (args_list.items) |*arg| arg.deinit();
 
             if (item.isArray()) {
@@ -145,17 +146,20 @@ pub fn callAsFunction(globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JS
 
 const Measure = struct {
     len: usize,
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEnd(this: *Measure, write: []const u8) void {
         this.len += write.len;
     }
 };
 const Write = struct {
     buf: []u8,
+// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEnd(this: *Write, write: []const u8) void {
         if (this.buf.len < write.len) {
             bun.debugAssert(false);
             return;
         }
+// safe-transpile: @memcpy requires manual review
         @memcpy(this.buf[this.buf.len - write.len ..], write);
         this.buf = this.buf[0 .. this.buf.len - write.len];
     }
@@ -258,6 +262,7 @@ fn enqueueDescribeOrTestCallback(this: *ScopeFunctions, bunTest: *bun_test.BunTe
     }
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn genericIf(this: *ScopeFunctions, globalThis: *JSGlobalObject, callFrame: *CallFrame, conditional_cfg: bun_test.BaseScopeCfg, name: []const u8, invert: bool, fn_name: bun.String) bun.JSError!JSValue {
     groupLog.begin(@src());
     defer groupLog.end();
@@ -271,6 +276,7 @@ fn genericIf(this: *ScopeFunctions, globalThis: *JSGlobalObject, callFrame: *Cal
         return createBound(globalThis, this.mode, this.each, this.cfg, fn_name);
     }
 }
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn genericExtend(this: *ScopeFunctions, globalThis: *JSGlobalObject, cfg: bun_test.BaseScopeCfg, name: []const u8, fn_name: bun.String) bun.JSError!JSValue {
     groupLog.begin(@src());
     defer groupLog.end();
@@ -281,6 +287,7 @@ fn genericExtend(this: *ScopeFunctions, globalThis: *JSGlobalObject, cfg: bun_te
     return createBound(globalThis, this.mode, this.each, extended, fn_name);
 }
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn errorInCI(globalThis: *jsc.JSGlobalObject, signature: []const u8) bun.JSError!void {
     if (bun.ci.isCI()) {
         return globalThis.throwPretty("{s} is disabled in CI environments to prevent accidentally skipping tests. To override, set the environment variable CI=false.", .{signature});

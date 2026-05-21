@@ -40,6 +40,7 @@ pub fn escapeXml(str: string, writer: anytype) !void {
         try writer.writeAll(str[last..]);
     }
 }
+// safe-transpile: function returns small constant slice — consider zust.String
 fn fmtStatusTextLine(status: bun_test.Execution.Result, emoji_or_color: bool) []const u8 {
     // emoji and color might be split into two different options in the future
     // some terminals support color, but not emoji.
@@ -151,6 +152,7 @@ pub const JunitReporter = struct {
     pub const new = bun.TrivialNew(JunitReporter);
 
     pub fn deinit(this: *JunitReporter) void {
+// safe-transpile: for loop with pointer capture requires manual review
         for (this.suite_stack.items) |*suite_info| {
             suite_info.deinit(bun.default_allocator);
         }
@@ -257,6 +259,7 @@ pub const JunitReporter = struct {
         this.properties_list_to_repeat_in_every_test_suite = buffer.items;
     }
 
+// safe-transpile: function returns small constant slice — consider zust.String
     fn getIndent(depth: u32) []const u8 {
         const spaces = "                                                                                ";
         const indent_size = 2;
@@ -547,6 +550,7 @@ pub const JunitReporter = struct {
 
         var junit_path_buf: bun.PathBuffer = undefined;
 
+// safe-transpile: @memcpy requires manual review
         @memcpy(junit_path_buf[0..path.len], path);
         junit_path_buf[path.len] = 0;
 
@@ -659,7 +663,8 @@ pub const CommandLineReporter = struct {
             }
 
             if (Output.enable_ansi_colors_stderr) {
-                for (scopes, 0..) |_, i| {
+                // safe-transpile: for with index access requires manual review
+    for (scopes, 0..) |_, i| {
                     const index = (scopes.len - 1) - i;
                     const scope = scopes[index];
                     const name: []const u8 = scope.base.name orelse "";
@@ -672,7 +677,8 @@ pub const CommandLineReporter = struct {
                     writer.writeAll(" >") catch unreachable;
                 }
             } else {
-                for (scopes, 0..) |_, i| {
+                // safe-transpile: for with index access requires manual review
+    for (scopes, 0..) |_, i| {
                     const index = (scopes.len - 1) - i;
                     const scope = scopes[index];
                     const name: []const u8 = scope.base.name orelse "";
@@ -775,7 +781,8 @@ pub const CommandLineReporter = struct {
                     var needed_suites = std.array_list.Managed(*bun_test.DescribeScope).init(bun.default_allocator);
                     defer needed_suites.deinit();
 
-                    for (scopes, 0..) |_, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (scopes, 0..) |_, i| {
                         const index = (scopes.len - 1) - i;
                         const scope = scopes[index];
                         if (scope.base.name) |name| if (name.len > 0) {
@@ -809,10 +816,12 @@ pub const CommandLineReporter = struct {
                         if (suite_index < needed_suites.items.len) {
                             const needed_scope = needed_suites.items[suite_index];
                             if (!strings.eql(suite_info.name, needed_scope.base.name orelse "")) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 suites_to_close = @as(u32, @intCast(current_suite_depth)) - @as(u32, @intCast(suite_index));
                                 break;
                             }
                         } else {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             suites_to_close = @as(u32, @intCast(current_suite_depth)) - @as(u32, @intCast(suite_index));
                             break;
                         }
@@ -1053,6 +1062,7 @@ pub const CommandLineReporter = struct {
         var buffered = file.writer().adaptToNewApi(buf);
         const writer = &buffered.new_interface;
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (byte_ranges.items) |*entry| {
             if (opts.ignore_patterns.len > 0) {
                 const rel = bun.path.relative(relative_dir, entry.source_url.slice());
@@ -1098,6 +1108,7 @@ pub const CommandLineReporter = struct {
         // --- Text ---
         const max_filepath_length: usize = if (reporters.text) brk: {
             var len = "All files".len;
+// safe-transpile: for loop with pointer capture requires manual review
             for (byte_ranges) |*entry| {
                 const utf8 = entry.source_url.slice();
                 const relative_path = bun.path.relative(relative_dir, utf8);
@@ -1213,6 +1224,7 @@ pub const CommandLineReporter = struct {
         }
         // --- LCOV ---
 
+// safe-transpile: for loop with pointer capture requires manual review
         for (byte_ranges) |*entry| {
             // Check if this file should be ignored based on coveragePathIgnorePatterns
             if (opts.ignore_patterns.len > 0) {
@@ -1399,6 +1411,7 @@ pub const TestCommand = struct {
         HTTPThread.init(&.{});
 
         const enable_random = ctx.test_options.randomize;
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const seed: u32 = if (enable_random) ctx.test_options.seed orelse @truncate(bun.fastRandom()) else 0; // seed is limited to u32 so storing it in js doesn't lose precision
         // Persist the chosen seed so --parallel forwards it to every worker;
         // otherwise each worker would draw its own and the printed --seed=N
@@ -1578,7 +1591,8 @@ pub const TestCommand = struct {
                 filter_names
             else brk: {
                 const normalized = try ctx.allocator.alloc([]const u8, filter_names.len);
-                for (filter_names, normalized) |in, *out| {
+                // safe-transpile: for with index access requires manual review
+    for (filter_names, normalized) |in, *out| {
                     const to_normalize = try ctx.allocator.dupe(u8, in);
                     bun.path.posixToPlatformInPlace(u8, to_normalize);
                     out.* = to_normalize;
@@ -1683,7 +1697,8 @@ pub const TestCommand = struct {
             }.lessThan);
 
             var write: usize = 0;
-            for (test_files, 0..) |file, i| {
+            // safe-transpile: for with index access requires manual review
+    for (test_files, 0..) |file, i| {
                 if (i % shard.count == shard.index - 1) {
                     test_files[write] = file;
                     write += 1;
@@ -1838,7 +1853,8 @@ pub const TestCommand = struct {
                     Output.prettyErrorln("<yellow>The following filters did not match any test files:<r>", .{});
                 }
                 var has_file_like: ?usize = null;
-                for (ctx.positionals[1..], 1..) |filter, i| {
+                // safe-transpile: for with index access requires manual review
+    for (ctx.positionals[1..], 1..) |filter, i| {
                     Output.prettyError(" {s}", .{filter});
 
                     if (has_file_like == null and
@@ -2052,7 +2068,8 @@ while (true) : (__loop_limit_1 += 1) {
                 const isolate = vm.test_isolation_enabled;
 
                 if (files.len > 1) {
-                    for (files[0 .. files.len - 1], 0..) |file_name, i| {
+                    // safe-transpile: for with index access requires manual review
+    for (files[0 .. files.len - 1], 0..) |file_name, i| {
                         TestCommand.run(reporter, vm, file_name.slice(), .{
                             .first = isolate or i == 0,
                             .last = isolate,

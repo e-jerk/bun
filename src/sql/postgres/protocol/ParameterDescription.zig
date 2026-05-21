@@ -8,15 +8,12 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
 
     const count = try reader.short();
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const parameters = try bun.default_allocator.alloc(int4, @intCast(@max(count, 0)));
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var data = try reader.read(@as(usize, @intCast(@max(count, 0))) * @sizeOf((int4)));
     defer data.deinit();
     const input_params: []align(1) const int4 = toInt32Slice(int4, data.slice());
-    // safe-transpile: for with index access requires manual review
     // safe-transpile: for with index access requires manual review
     for (input_params, parameters) |src, *dest| {
         dest.* = @byteSwap(src);
@@ -31,9 +28,7 @@ pub const decode = DecoderWrap(ParameterDescription, decodeInternal).decode;
 
 // workaround for zig compiler TODO
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn toInt32Slice(comptime Int: type, slice: []const u8) []align(1) const Int {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
 // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return @as([*]align(1) const Int, @ptrCast(slice.ptr))[0 .. slice.len / @sizeOf((Int))];
 }

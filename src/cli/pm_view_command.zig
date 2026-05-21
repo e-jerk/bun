@@ -143,7 +143,6 @@ pub fn view(allocator: std.mem.Allocator, manager: *PackageManager, spec_: strin
             };
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
             for (versions) |*prop| {
                 if (prop.key == null) continue;
                 const version_str = prop.key.?.asString(allocator) orelse continue;
@@ -176,7 +175,6 @@ pub fn view(allocator: std.mem.Allocator, manager: *PackageManager, spec_: strin
             if (versions_to_display.len > 0) {
                 Output.prettyErrorln("\nRecent versions:<r>", .{});
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (versions_to_display) |*v| {
                     Output.prettyErrorln("<d>-<r> {f}", .{v.fmt(parsed_manifest.string_buf)});
                 }
@@ -193,7 +191,6 @@ pub fn view(allocator: std.mem.Allocator, manager: *PackageManager, spec_: strin
     if (json.getObject("versions")) |versions_object| {
         const keys = try allocator.alloc(bun.ast.Expr, versions_object.data.e_object.properties.len);
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (versions_object.data.e_object.properties.slice(), keys) |*prop, *key| {
             key.* = prop.key.?;
         }

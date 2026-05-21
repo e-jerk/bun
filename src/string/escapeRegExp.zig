@@ -1,7 +1,6 @@
 const special_characters = "|\\{}()[]^$+*?.-";
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn escapeRegExp(input: []const u8, writer: *std.Io.Writer) std.Io.Writer.Error!void {
     var remain = input;
 
@@ -38,7 +37,6 @@ pub fn escapeRegExp(input: []const u8, writer: *std.Io.Writer) std.Io.Writer.Err
 }
 
 /// '*' becomes '.*' instead of '\\*'
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn escapeRegExpForPackageNameMatching(input: []const u8, writer: *std.Io.Writer) std.Io.Writer.Error!void {
     var remain = input;

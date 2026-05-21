@@ -57,7 +57,6 @@ pub const Id = enum(u64) {
         var hasher = bun.Wyhash11.init(0);
         hasher.update(url);
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @enumFromInt(@as(u64, 4 << 61) | @as(u64, @as(u61, @truncate(hasher.final()))));
     }
 
@@ -66,7 +65,6 @@ pub const Id = enum(u64) {
         hasher.update(url);
         hasher.update("@");
         hasher.update(resolved);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @enumFromInt(@as(u64, 5 << 61) | @as(u64, @as(u61, @truncate(hasher.final()))));
     }

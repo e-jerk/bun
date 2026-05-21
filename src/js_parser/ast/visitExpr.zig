@@ -207,7 +207,6 @@ pub fn VisitExpr(
 
                         const all_props: []G.Property = e_.properties.slice();
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                         for (all_props) |*property| {
                             if (property.kind != .spread) {
                                 property.key = p.visitExpr(property.key.?);
@@ -275,7 +274,6 @@ pub fn VisitExpr(
 
                             const maybe_key_value: ?ExprNodeIndex =
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 if (e_.key_prop_index > -1) props.orderedRemove(@intCast(e_.key_prop_index)).value else null;
 
                             // arguments needs to be like
@@ -290,7 +288,6 @@ pub fn VisitExpr(
                                 for (children) |child| {
                                     e_.children.ptr[last_child] = p.visitExpr(child);
                                     // if tree-shaking removes the element, we must also remove it here.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     last_child += @as(u32, @intCast(@intFromBool(e_.children.ptr[last_child].data != .e_missing)));
                                 }
@@ -437,7 +434,6 @@ pub fn VisitExpr(
                 }
 
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (e_.parts) |*part| {
                     part.value = p.visitExpr(part.value);
                 }
@@ -570,22 +566,18 @@ pub fn VisitExpr(
                         var r: logger.Range = undefined;
                         if (!Symbol.isKindPrivate(kind)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             r = logger.Range{ .loc = e_.index.loc, .len = @as(i32, @intCast(name.len)) };
                             p.log.addRangeErrorFmt(p.source, r, p.allocator, "Private name \"{s}\" must be declared in an enclosing class", .{name}) catch unreachable;
                         } else {
                             if (in.assign_target != .none and (kind == .private_method or kind == .private_static_method)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 r = logger.Range{ .loc = e_.index.loc, .len = @as(i32, @intCast(name.len)) };
                                 p.log.addRangeWarningFmt(p.source, r, p.allocator, "Writing to read-only method \"{s}\" will throw", .{name}) catch unreachable;
                             } else if (in.assign_target != .none and (kind == .private_get or kind == .private_static_get)) {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 r = logger.Range{ .loc = e_.index.loc, .len = @as(i32, @intCast(name.len)) };
                                 p.log.addRangeWarningFmt(p.source, r, p.allocator, "Writing to getter-only property \"{s}\" will throw", .{name}) catch unreachable;
                             } else if (in.assign_target != .replace and (kind == .private_set or kind == .private_static_set)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 r = logger.Range{ .loc = e_.index.loc, .len = @as(i32, @intCast(name.len)) };
                                 p.log.addRangeWarningFmt(p.source, r, p.allocator, "Reading from setter-only property \"{s}\" will throw", .{name}) catch unreachable;
@@ -848,7 +840,6 @@ pub fn VisitExpr(
 
                 if (p.define.dots.get(e_.name)) |parts| {
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                     for (parts) |*define| {
                         if (p.isDotDefineMatch(expr, define.parts)) {
                             if (in.assign_target == .none) {
@@ -1020,7 +1011,6 @@ pub fn VisitExpr(
                 const items = e_.items.slice();
                 var spread_item_count: usize = 0;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
                 for (items) |*item| {
                     switch (item.data) {
                         .e_missing => {},
@@ -1077,7 +1067,6 @@ pub fn VisitExpr(
 
                 var has_spread = false;
                 var has_proto = false;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                 for (e_.properties.slice()) |*property| {
                     if (property.kind != .spread) {
@@ -1322,7 +1311,6 @@ pub fn VisitExpr(
                         }
                     }
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                     for (e_.args.slice()) |*arg| {
                         arg.* = p.visitExpr(arg.*);
@@ -1577,7 +1565,6 @@ pub fn VisitExpr(
                 const e_ = expr.data.e_new;
                 e_.target = p.visitExpr(e_.target);
 
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
                 for (e_.args.slice()) |*arg| {
                     arg.* = p.visitExpr(arg.*);

@@ -169,13 +169,13 @@ pub const ResolveMessage = struct {
         msg: logger.Msg,
         referrer: string,
     ) bun.OOM!jsc.JSValue {
-        var resolve_error = try allocator.create(ResolveMessage);
-        resolve_error.* = ResolveMessage{
+        var resolve_error = try safe.Box(ResolveMessage).init(allocator, undefined);
+        resolve_error.ptr.* = ResolveMessage{
             .msg = try msg.clone(allocator),
             .allocator = allocator,
             .referrer = Fs.Path.init(try allocator.dupe(u8, referrer)),
         };
-        return resolve_error.toJS(globalThis);
+        return resolve_error.ptr.toJS(globalThis);
     }
 
     pub fn getPosition(

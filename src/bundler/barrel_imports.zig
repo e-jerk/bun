@@ -27,7 +27,6 @@ const BarrelExportResolution = struct {
 /// named_exports[alias].ref through named_imports.
 /// Also returns the original alias from the source module for BFS propagation.
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn resolveBarrelExport(alias: []const u8, named_exports: JSAst.NamedExports, named_imports: JSAst.NamedImports) ?BarrelExportResolution {
     const export_entry = named_exports.get(alias) orelse return null;
     const import_entry = named_imports.get(export_entry.ref) orelse return null;
@@ -337,7 +336,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
     //   can destructure or access any export. Must mark as .all. We cannot
     //   safely assume which exports will be used.
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (file_import_records.slice(), 0..) |ir, idx| {
         const target = if (ir.source_index.isValid())
             ir.source_index.get()
@@ -346,7 +344,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
         else
             continue;
         if (ir.flags.is_internal) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (named_ir_indices.contains(@intCast(idx))) continue;
         if (ir.flags.was_originally_bare_import) continue;
@@ -395,7 +392,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
     // Add bare require/dynamic-import targets to BFS as star imports — both
     // always need the full namespace.
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (file_import_records.slice(), 0..) |ir, idx| {
         const target = if (ir.source_index.isValid())
             ir.source_index.get()
@@ -404,7 +400,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
         else
             continue;
         if (ir.flags.is_internal) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (named_ir_indices.contains(@intCast(idx))) continue;
         if (ir.flags.was_originally_bare_import) continue;
@@ -480,10 +475,8 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
 
         if (item.is_star) {
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (barrel_ir.slice(), 0..) |rec, idx| {
                 if (rec.flags.is_unused and !rec.flags.is_internal) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     if (unDeferRecord(barrel_ir, @intCast(idx))) {
                         try barrels_to_resolve.put(barrels_to_resolve_alloc, barrel_idx, {});
@@ -551,7 +544,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
 /// seeding so that exports requested in previous builds are not lost when the
 /// barrel is re-parsed in an incremental build where the requesting file is
 /// not stale.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn persistBarrelExport(dev: *bun.bake.DevServer, barrel_path: []const u8, alias: []const u8) void {
     const alloc = dev.allocator();

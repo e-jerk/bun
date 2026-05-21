@@ -59,7 +59,6 @@ pub fn clone(this: *OverrideMap, pm: *PackageManager, old_lockfile: *Lockfile, n
     try new.map.ensureTotalCapacity(new_lockfile.allocator, this.map.entries.len);
 
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.map.keys(), this.map.values()) |k, v| {
         new.map.putAssumeCapacity(
             k,
@@ -282,7 +281,6 @@ pub fn parseFromResolutions(
     }
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn parseOverrideValue(
     comptime field: []const u8,

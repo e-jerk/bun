@@ -190,6 +190,7 @@ pub const ColorSchemeHandler = struct {
     pub fn finalize(_: *@This(), _: *css.DeclarationList, _: *css.PropertyHandlerContext) void {}
 };
 
+// safe-transpile: function uses raw slice parameter — consider safe.String
 fn defineVar(allocator: Allocator, name: []const u8, value: css.Token) css.Property {
     return css.Property{
         .custom = css.css_properties.custom.CustomProperty{

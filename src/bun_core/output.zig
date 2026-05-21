@@ -157,7 +157,6 @@ pub const Source = struct {
 
             const handles = &.{ &stdin, &stdout, &stderr };
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     inline for (console_mode, handles) |mode, handle| {
                 if (mode) |m| {
                     _ = c.SetConsoleMode(handle.*, m);
@@ -698,13 +697,11 @@ pub fn printElapsedStdoutTrim(elapsed: f64) void {
 
 pub fn printStartEnd(start: i128, end: i128) void {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const elapsed = @divTrunc(@as(i64, @truncate(end - start)), @as(i64, std.time.ns_per_ms));
     printElapsed(@as(f64, @floatFromInt(elapsed)));
 }
 
 pub fn printStartEndStdout(start: i128, end: i128) void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const elapsed = @divTrunc(@as(i64, @truncate(end - start)), @as(i64, std.time.ns_per_ms));
     printElapsedStdout(@as(f64, @floatFromInt(elapsed)));
@@ -743,7 +740,6 @@ noinline fn destWriter(dest: Destination) *std.Io.Writer {
 }
 
 /// Single shared write path for pre-formatted bytes.
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 noinline fn writeBytes(dest: Destination, bytes: []const u8) void {
     destWriter(dest).writeAll(bytes) catch {};
@@ -837,7 +833,6 @@ pub fn Scoped(comptime tag: anytype, comptime visibility: Visibility) type {
         };
         var ascii_slice: [input.len]u8 = undefined;
         // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (input, &ascii_slice) |in, *out| {
             out.* = std.ascii.toLower(in);
         }
@@ -847,7 +842,6 @@ pub fn Scoped(comptime tag: anytype, comptime visibility: Visibility) type {
     return ScopedLogger(&tagname, visibility);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn ScopedLogger(comptime tagname: []const u8, comptime visibility: Visibility) type {
     if (comptime !Environment.enable_logs) {
@@ -1041,7 +1035,7 @@ pub fn prettyFmt(comptime fmt: string, comptime is_enabled: bool) [:0]const u8 {
                 const color_str = color_picker: {
                     if (color_map.get(color_name)) |color_name_literal| {
                         break :color_picker color_name_literal;
-                    } else if (safe.SimdUtils.eql(color_name, "r")) {
+                    } else if (std.mem.eql(u8, color_name, "r")) {
                         is_reset = true;
                         break :color_picker "";
                     } else {
@@ -1189,20 +1183,17 @@ pub const DebugTimer = struct {
 
 /// Print a blue note message to stderr
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn note(comptime fmt: []const u8, args: anytype) void {
     prettyErrorln("<blue>note<r><d>:<r> " ++ fmt, args);
 }
 
 /// Print a yellow warning message to stderr
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn warn(comptime fmt: []const u8, args: anytype) void {
     prettyErrorln("<yellow>warn<r><d>:<r> " ++ fmt, args);
 }
 
 /// Print a yellow warning message, only in debug mode
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn debugWarn(comptime fmt: []const u8, args: anytype) void {
     if (bun.Environment.isDebug) {
@@ -1214,7 +1205,6 @@ pub inline fn debugWarn(comptime fmt: []const u8, args: anytype) void {
 /// Print a red error message. The first argument takes an `error_name` value, which can be either
 /// be a Zig error, or a string or enum. The error name is converted to a string and displayed
 /// in place of "error:", making it useful to print things like "EACCES: Couldn't open package.json"
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn err(error_name: anytype, comptime fmt: []const u8, args: anytype) void {
     const T = @TypeOf(error_name);
@@ -1344,7 +1334,6 @@ fn scopedWriter() File.QuietWriter {
 }
 
 /// Print a red error message with "error: " as the prefix. For custom prefixes see `err()`
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub inline fn errGeneric(comptime fmt: []const u8, args: anytype) void {
     prettyErrorln("<r><red>error<r><d>:<r> " ++ fmt, args);

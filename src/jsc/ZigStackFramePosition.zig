@@ -12,7 +12,7 @@ pub const ZigStackFramePosition = extern struct {
     };
 
     pub fn isInvalid(this: *const ZigStackFramePosition) bool {
-        return safe.SimdUtils.eql(std.mem.asBytes(this), std.mem.asBytes(&invalid));
+        return std.mem.eql(u8, std.mem.asBytes(this), std.mem.asBytes(&invalid));
     }
 
     pub fn decode(reader: anytype) !@This() {

@@ -31,7 +31,6 @@ pub fn memoryCost(this: *const EnvMap) usize {
     size += std.mem.sliceAsBytes(this.map.keys()).len;
     size += std.mem.sliceAsBytes(this.map.values()).len;
     // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (this.map.keys(), this.map.values()) |key, value| {
         size += key.memoryCost();
         size += value.memoryCost();

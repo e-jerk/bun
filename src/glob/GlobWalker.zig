@@ -78,6 +78,7 @@ const CursorState = struct {
         return .{
             .cursor = CodepointIterator.Cursor{
                 .i = this.cursor.i + i,
+// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .c = @truncate(nextCp),
                 .width = 1,
             },
@@ -85,11 +86,13 @@ const CursorState = struct {
     }
 };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn dummyFilterTrue(val: []const u8) bool {
     _ = val;
     return true;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 fn dummyFilterFalse(val: []const u8) bool {
     _ = val;
     return false;
@@ -212,6 +215,7 @@ pub const DirEntryAccessor = struct {
             const NameWrapper = struct {
                 value: []const u8,
 
+// safe-transpile: function returns small constant slice — consider zust.String
                 pub fn slice(this: NameWrapper) []const u8 {
                     return this.value;
                 }
@@ -309,6 +313,7 @@ pub const DirEntryAccessor = struct {
     }
 
     pub fn getcwd(path_buf: *bun.PathBuffer) Maybe([]const u8) {
+// safe-transpile: @memcpy requires manual review
         @memcpy(path_buf, bun.fs.FileSystem.instance.fs.cwd);
     }
 };
@@ -518,9 +523,11 @@ pub fn GlobWalker_(
                 if (root_path.len >= path_buf.len) {
                     return .{ .err = Syscall.Error.fromCode(.NAMETOOLONG, .open).withPath(root_path) };
                 }
+// safe-transpile: @memcpy requires manual review
                 @memcpy(path_buf[0..root_path.len], root_path[0..root_path.len]);
                 path_buf[root_path.len] = 0;
                 const cwd_fd = switch (try Accessor.open(path_buf[0..root_path.len :0])) {
+// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     .err => |err| return .{ .err = this.walker.handleSysErrWithPath(err, @ptrCast(path_buf[0 .. root_path.len + 1])) },
                     .result => |fd| fd,
                 };
@@ -618,6 +625,7 @@ pub fn GlobWalker_(
                         if (work_item.fd) |fd| this.closeDisallowingCwd(fd);
                         return .{ .err = Syscall.Error.fromCode(.NAMETOOLONG, .open).withPath(work_item.path) };
                     }
+// safe-transpile: @memcpy requires manual review
                     @memcpy(this.iter_state.directory.path[0..work_item.path.len], work_item.path);
                     this.iter_state.directory.path[work_item.path.len] = 0;
                     break :dir_path this.iter_state.directory.path[0..work_item.path.len :0];
@@ -629,6 +637,7 @@ pub fn GlobWalker_(
                 // after `**/X` boundaries and are already past any Dots.
                 const active: ComponentSet = set: {
                     if (work_item.active.count() == 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const single: u32 = @intCast(work_item.active.findFirstSet().?);
                         const norm = switch (this.walker.skipSpecialComponents(single, &dir_path, &this.iter_state.directory.path, &had_dot_dot)) {
                             .err => |e| {
@@ -680,6 +689,7 @@ pub fn GlobWalker_(
                 // component and it is a Literal, statat() instead of iterating.
                 // Skip for multi-index masks since each index has different needs.
                 if (active.count() == 1) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const idx: u32 = @intCast(active.findFirstSet().?);
                     if (idx == this.walker.patternComponents.items.len -| 1 and
                         this.walker.patternComponents.items[idx].syntax_hint == .Literal)
@@ -699,6 +709,7 @@ pub fn GlobWalker_(
                             },
                             .result => |stat| stat,
                         };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const matches = (bun.S.ISDIR(@intCast(stat_result.mode)) and !this.walker.only_files) or bun.S.ISREG(@intCast(stat_result.mode)) or !this.walker.only_files;
                         if (matches) {
                             if (try this.walker.prepareMatchedPath(pathz, dir_path)) |path| {
@@ -730,6 +741,7 @@ pub fn GlobWalker_(
                         // so skip it. The filter is purely an optimization;
                         // matchPatternImpl still runs for correctness.
                         const filter: ?[]const u16 = if (active.count() == 1)
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             this.computeNtFilter(@intCast(active.findFirstSet().?))
                         else
                             null;
@@ -798,6 +810,7 @@ pub fn GlobWalker_(
                                     if (work_item.path.len >= scratch_path_buf.len) {
                                         return .{ .err = Syscall.Error.fromCode(.NAMETOOLONG, .open).withPath(work_item.path) };
                                     }
+// safe-transpile: @memcpy requires manual review
                                     @memcpy(scratch_path_buf[0..work_item.path.len], work_item.path);
                                     scratch_path_buf[work_item.path.len] = 0;
                                     var symlink_full_path_z: [:0]u8 = scratch_path_buf[0..work_item.path.len :0];
@@ -805,6 +818,7 @@ pub fn GlobWalker_(
 
                                     var has_dot_dot = false;
                                     const active: ComponentSet = if (work_item.active.count() == 1) blk: {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                         const single: u32 = @intCast(work_item.active.findFirstSet().?);
                                         const norm = switch (this.walker.skipSpecialComponents(single, &symlink_full_path_z, scratch_path_buf, &has_dot_dot)) {
                                             .err => |e| return .{ .err = e },
@@ -820,6 +834,7 @@ pub fn GlobWalker_(
                                     this.iter_state = .get_next;
                                     const maybe_dir_fd: ?Accessor.Handle = switch (try Accessor.openat(this.cwd_fd, symlink_full_path_z)) {
                                         .err => |err| brk: {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                             if (@as(usize, @intCast(err.errno)) == @as(usize, @intFromEnum(bun.sys.E.NOTDIR))) {
                                                 break :brk null;
                                             }
@@ -916,6 +931,7 @@ pub fn GlobWalker_(
                                             dir.dir_path[0..dir.dir_path.len],
                                             entry_name,
                                         };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                         const entry_start: u32 = @intCast(if (dir.dir_path.len == 0) 0 else dir.dir_path.len + 1);
                                         const subdir_entry_name = try this.walker.join(subdir_parts);
 
@@ -942,6 +958,7 @@ pub fn GlobWalker_(
                                     const name_z = bun.handleOom(stfb.get().dupeZ(u8, entry_name));
                                     const stat_result = Accessor.lstatat(dir.fd, name_z);
                                     const real_kind = switch (stat_result) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                         .result => |st| bun.sys.kindFromMode(@intCast(st.mode)),
                                         .err => continue,
                                     };
@@ -978,6 +995,7 @@ pub fn GlobWalker_(
                                                     dir.dir_path[0..dir.dir_path.len],
                                                     entry_name,
                                                 };
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                                 const entry_start: u32 = @intCast(if (dir.dir_path.len == 0) 0 else dir.dir_path.len + 1);
                                                 const subdir_entry_name = try this.walker.join(subdir_parts);
                                                 try this.walker.workbuf.append(
@@ -1017,14 +1035,17 @@ pub fn GlobWalker_(
                 symlink,
             };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             fn new(path: []const u8, active: ComponentSet, kind: Kind) WorkItem {
                 return .{ .path = path, .active = active, .kind = kind };
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             fn newWithFd(path: []const u8, active: ComponentSet, kind: Kind, fd: Accessor.Handle) WorkItem {
                 return .{ .path = path, .active = active, .kind = kind, .fd = fd };
             }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             fn newSymlink(path: []const u8, active: ComponentSet, entry_start: u32) WorkItem {
                 return .{ .path = path, .active = active, .kind = .symlink, .entry_start = entry_start };
             }
@@ -1044,7 +1065,9 @@ pub fn GlobWalker_(
             /// Only used when component is not ascii
             unicode_set: bool = false,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn patternSlice(this: *const Component, pattern: []const u8) []const u8 {
+// safe-transpile: @bitCast requires manual review
                 return pattern[this.start .. this.start + this.len - @as(u1, @bitCast(this.trailing_sep))];
             }
 
@@ -1073,6 +1096,7 @@ pub fn GlobWalker_(
         };
 
         /// The arena parameter is dereferenced and copied if all allocations go well and nothing goes wrong
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(
             this: *GlobWalker,
             arena: *Arena,
@@ -1113,6 +1137,7 @@ pub fn GlobWalker_(
 
         /// `cwd` should be allocated with the arena
         /// The arena parameter is dereferenced and copied if all allocations go well and nothing goes wrong
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn initWithCwd(
             this: *GlobWalker,
             arena: *Arena,
@@ -1301,6 +1326,7 @@ pub fn GlobWalker_(
             return .{ .result = component_idx };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn matchPatternDir(
             this: *GlobWalker,
             pattern: *Component,
@@ -1367,6 +1393,7 @@ pub fn GlobWalker_(
         /// Examples:
         /// a -> `src/foo/index.ts` matches
         /// b -> `src/**/*.ts` (on 2nd pattern) matches
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn matchPatternFile(
             this: *GlobWalker,
             entry_name: []const u8,
@@ -1387,6 +1414,7 @@ pub fn GlobWalker_(
             return this.matchPatternImpl(pattern, entry_name);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn matchPatternImpl(
             this: *GlobWalker,
             pattern_component: *Component,
@@ -1404,6 +1432,7 @@ pub fn GlobWalker_(
             };
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn matchPatternSlow(this: *GlobWalker, pattern_component: *Component, filepath: []const u8) bool {
             return bun.glob.match(
                 pattern_component.patternSlice(this.pattern),
@@ -1428,12 +1457,15 @@ pub fn GlobWalker_(
         /// Evaluate a directory entry against all active component indices.
         /// Returns the child's active set (union of all recursion targets).
         /// Sets `add` if any index says the directory itself is a match.
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn evalDir(this: *GlobWalker, active: ComponentSet, entry_name: []const u8, add: *bool) ComponentSet {
             var child = this.makeSet();
             const comps = this.patternComponents.items;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const len: u32 = @intCast(comps.len);
             var it = active.iterator(.{});
             while (it.next()) |i| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const idx: u32 = @intCast(i);
                 const pattern = &comps[idx];
                 const next_pattern = if (idx + 1 < len) &comps[idx + 1] else null;
@@ -1452,11 +1484,14 @@ pub fn GlobWalker_(
             return child;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn evalFile(this: *GlobWalker, active: ComponentSet, entry_name: []const u8) bool {
             const comps = this.patternComponents.items;
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const len: u32 = @intCast(comps.len);
             var it = active.iterator(.{});
             while (it.next()) |i| {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const idx: u32 = @intCast(i);
                 const pattern = &comps[idx];
                 const next_pattern = if (idx + 1 < len) &comps[idx + 1] else null;
@@ -1466,6 +1501,7 @@ pub fn GlobWalker_(
             return false;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn evalImpl(this: *GlobWalker, active: ComponentSet, entry_name: []const u8) bool {
             var it = active.iterator(.{});
             while (it.next()) |idx| {
@@ -1490,6 +1526,7 @@ pub fn GlobWalker_(
             return BunString.fromBytes(matched_path);
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn prepareMatchedPathSymlink(this: *GlobWalker, symlink_full_path: []const u8) !?MatchedPath {
             const result = try this.matchedPaths.getOrPut(this.arena.allocator(), BunString.fromBytes(symlink_full_path));
             if (result.found_existing) {
@@ -1506,6 +1543,7 @@ pub fn GlobWalker_(
             return slicez;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn prepareMatchedPath(this: *GlobWalker, entry_name: []const u8, dir_name: []const u8) !?MatchedPath {
             const subdir_parts: []const []const u8 = &[_][]const u8{
                 dir_name[0..dir_name.len],
@@ -1524,6 +1562,7 @@ pub fn GlobWalker_(
             return name_matched_path;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn appendMatchedPath(
             this: *GlobWalker,
             entry_name: []const u8,
@@ -1543,6 +1582,7 @@ pub fn GlobWalker_(
             result.key_ptr.* = name;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn appendMatchedPathSymlink(this: *GlobWalker, symlink_full_path: []const u8) !void {
             const name = try this.arena.allocator().dupe(u8, symlink_full_path);
             try this.matchedPaths.put(this.arena.allocator(), BunString.fromBytes(name), {});
@@ -1561,16 +1601,19 @@ pub fn GlobWalker_(
             return out;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         inline fn startsWithDot(filepath: []const u8) bool {
             return filepath.len > 0 and filepath[0] == '.';
         }
 
         const syntax_tokens = "*[{?!";
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn checkSpecialSyntax(pattern: []const u8) bool {
             return bun.strings.indexOfAny(pattern, syntax_tokens) != null;
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn makeComponent(
             pattern: []const u8,
             start_byte: u32,
@@ -1666,6 +1709,7 @@ pub fn GlobWalker_(
 
         /// Build an ad-hoc glob pattern. Useful when you don't need to traverse
         /// a directory.
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn buildPattern(
             arena: *Arena,
             patternComponents: *ArrayList(Component),
@@ -1686,6 +1730,7 @@ pub fn GlobWalker_(
             );
         }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         fn buildPatternComponents(
             arena: *Arena,
             patternComponents: *ArrayList(Component),
@@ -1720,6 +1765,7 @@ pub fn GlobWalker_(
                             )) |component| {
                                 saw_special = saw_special or component.syntax_hint.isSpecialSyntax();
                                 if (!saw_special) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     basename_excluding_special_syntax_component_idx.* = @intCast(patternComponents.items.len);
                                     end_byte_of_basename_excluding_special_syntax.* = i + width;
                                 }
@@ -1750,6 +1796,7 @@ pub fn GlobWalker_(
                         )) |component| {
                             saw_special = saw_special or component.syntax_hint.isSpecialSyntax();
                             if (!saw_special) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 basename_excluding_special_syntax_component_idx.* = @intCast(patternComponents.items.len);
                                 end_byte_of_basename_excluding_special_syntax.* = i + width;
                             }
@@ -1767,16 +1814,19 @@ pub fn GlobWalker_(
             if (makeComponent(
                 pattern,
                 start_byte,
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @intCast(pattern.len),
                 has_relative_patterns,
             )) |component| {
                 saw_special = saw_special or component.syntax_hint.isSpecialSyntax();
                 if (!saw_special) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     basename_excluding_special_syntax_component_idx.* = @intCast(patternComponents.items.len);
                     end_byte_of_basename_excluding_special_syntax.* = i + width;
                 }
                 try patternComponents.append(arena.allocator(), component);
             } else if (!saw_special) {
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 basename_excluding_special_syntax_component_idx.* = @intCast(patternComponents.items.len);
                 end_byte_of_basename_excluding_special_syntax.* = i + width;
             }
@@ -1825,13 +1875,16 @@ inline fn skipGlobstars(glob: []const u32, glob_index: *u32) void {
     glob_index.* -= 2;
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn matchWildcardFilepath(glob: []const u8, path: []const u8) bool {
     const needle = glob[1..];
+// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const needle_len: u32 = @intCast(needle.len);
     if (path.len < needle_len) return false;
     return std.mem.eql(u8, needle, path[path.len - needle_len ..]);
 }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
 pub fn matchWildcardLiteral(literal: []const u8, path: []const u8) bool {
     return std.mem.eql(u8, literal, path);
 }

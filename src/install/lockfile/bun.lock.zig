@@ -51,13 +51,11 @@ pub const Stringifier = struct {
         defer found_trusted_dependencies.deinit(allocator);
         if (lockfile.trusted_dependencies) |trusted_dependencies| {
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             try found_trusted_dependencies.ensureTotalCapacity(allocator, @truncate(trusted_dependencies.count()));
         }
 
         var found_patched_dependencies: std.AutoHashMapUnmanaged(u64, struct { string, String }) = .{};
         defer found_patched_dependencies.deinit(allocator);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try found_patched_dependencies.ensureTotalCapacity(allocator, @truncate(lockfile.patched_dependencies.count()));
 
@@ -129,7 +127,6 @@ pub const Stringifier = struct {
 
                 for (0..pkgs.len) |_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const pkg_id: PackageID = @intCast(_pkg_id);
                     const res = pkg_resolutions[pkg_id];
                     if (res.tag != .workspace) continue;
@@ -161,7 +158,6 @@ pub const Stringifier = struct {
                     try writeWorkspaceDeps(
                         writer,
                         indent,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         @intCast(workspace_pkg_id),
                         res.value.workspace,
@@ -245,7 +241,6 @@ pub const Stringifier = struct {
 
                     // intentionally not checking default trusted dependencies
                     if (lockfile.trusted_dependencies) |trusted_dependencies| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         if (trusted_dependencies.contains(@truncate(dep.name_hash))) {
                             try found_trusted_dependencies.put(allocator, dep.name_hash, dep.name);
@@ -457,7 +452,6 @@ pub const Stringifier = struct {
                     pkg_deps_sort_buf.clearRetainingCapacity();
                     try pkg_deps_sort_buf.ensureUnusedCapacity(allocator, pkg_deps_list.len);
                     for (pkg_deps_list.begin()..pkg_deps_list.end()) |pkg_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         pkg_deps_sort_buf.appendAssumeCapacity(@intCast(pkg_dep_id));
                     }
@@ -697,7 +691,6 @@ pub const Stringifier = struct {
     /// Writes a single line object. Contains dependencies, os, cpu, libc (soon), and bin
     /// { "devDependencies": { "one": "1.1.1", "two": "2.2.2" }, "os": "none" }
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     fn writePackageInfoObject(
         writer: *std.Io.Writer,
         dep_behavior: Dependency.Behavior,
@@ -767,7 +760,6 @@ pub const Stringifier = struct {
             );
 
             // safe-transpile: for with index access requires manual review
-    // safe-transpile: for with index access requires manual review
     for (optional_peers_buf.items, 0..) |optional_peer, i| {
                 try writer.print(
                     \\{s}{f}{s}
@@ -839,7 +831,6 @@ pub const Stringifier = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeWorkspaceDeps(
         writer: anytype,
@@ -915,7 +906,6 @@ pub const Stringifier = struct {
             const group_name, const group_behavior = group;
 
             var first = true;
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
             for (pkg_deps[pkg_id].get(deps_buf)) |*dep| {
                 if (!dep.behavior.includes(group_behavior)) continue;
@@ -1095,17 +1085,18 @@ fn PkgMap(comptime T: type) type {
         }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn findResolution(this: *const @This(), pkg_path: string, dep: *const Dependency, string_buf: string, path_buf: []u8) ResolveError!T {
             const dep_name = dep.name.slice(string_buf);
 
-            safe.SimdUtils.copy(path_buf[0..pkg_path.len], pkg_path);
+// safe-transpile: @memcpy requires manual review
+            @memcpy(path_buf[0..pkg_path.len], pkg_path);
             path_buf[pkg_path.len] = '/';
             var offset = pkg_path.len + 1;
 
             var valid = true;
             while (valid) {
-                safe.SimdUtils.copy(path_buf[offset..][0..dep_name.len], dep_name);
+// safe-transpile: @memcpy requires manual review
+                @memcpy(path_buf[offset..][0..dep_name.len], dep_name);
                 const res_path = path_buf[0 .. offset + dep_name.len];
 
                 if (this.map.get(res_path)) |entry| {
@@ -1220,7 +1211,6 @@ pub fn parseIntoBinaryLockfile(
                 try log.addError(source, dep.loc, "Expected a string");
                 return error.InvalidTrustedDependenciesSet;
             }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
 // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const name_hash: TruncatedPackageNameHash = @truncate((try dep.asStringHash(allocator, String.Builder.stringHash)).?);
             try trusted_dependencies.put(allocator, name_hash, {});
@@ -1783,7 +1773,6 @@ pub fn parseIntoBinaryLockfile(
                     // new entry, a matching workspace MUST exist
                     for (workspace_pkgs_off..workspace_pkgs_off + workspace_pkgs_len) |_workspace_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const workspace_pkg_id: PackageID = @intCast(_workspace_pkg_id);
                         if (res.eql(&pkg_resolutions[workspace_pkg_id], string_buf.bytes.items, string_buf.bytes.items)) {
                             if (comptime Environment.isDebug) {
@@ -1987,7 +1976,6 @@ pub fn parseIntoBinaryLockfile(
 
             for (pkg_deps[0].begin()..pkg_deps[0].end()) |_dep_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
                 const dep = &lockfile.buffers.dependencies.items[dep_id];
 
@@ -2016,7 +2004,6 @@ pub fn parseIntoBinaryLockfile(
             // then workspace dependencies are resolved
             for (workspace_pkgs_off..workspace_pkgs_off + workspace_pkgs_len) |_pkg_id| {
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const pkg_id: PackageID = @intCast(_pkg_id);
                 const workspace_name = pkg_names[pkg_id].slice(lockfile.buffers.string_bytes.items);
 
@@ -2024,7 +2011,6 @@ pub fn parseIntoBinaryLockfile(
 
                 const deps = pkg_deps[pkg_id];
                 for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const dep_id: DependencyID = @intCast(_dep_id);
                     const dep = &lockfile.buffers.dependencies.items[dep_id];
@@ -2073,7 +2059,6 @@ pub fn parseIntoBinaryLockfile(
             // find resolutions. iterate up to root through the pkg path.
             const deps = pkg_deps[pkg_id];
             deps: for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
                 const dep = &lockfile.buffers.dependencies.items[dep_id];
@@ -2230,11 +2215,13 @@ fn parseAppendDependencies(
                 };
 
                 if (comptime check_for_bundled) {
-                    safe.SimdUtils.copy(path_buf[0..pkg_path.len], pkg_path);
+// safe-transpile: @memcpy requires manual review
+                    @memcpy(path_buf[0..pkg_path.len], pkg_path);
                     var remain = path_buf[pkg_path.len..];
                     remain[0] = '/';
                     remain = remain[1..];
-                    safe.SimdUtils.copy(remain[0..name_str.len], name_str);
+// safe-transpile: @memcpy requires manual review
+                    @memcpy(remain[0..name_str.len], name_str);
                     const bundled_location = path_buf[0 .. pkg_path.len + 1 + name_str.len];
                     if (bundled_pkgs.contains(bundled_location)) {
                         dep.behavior.bundled = true;
@@ -2287,7 +2274,6 @@ fn parseAppendDependencies(
         Dependency.isLessThan,
     );
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
 // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return .{ @intCast(off), @intCast(end - off) };
 }

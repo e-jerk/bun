@@ -32,7 +32,6 @@ pub const PluginRunner = struct {
     }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onResolve(
         this: *PluginRunner,
         specifier: []const u8,

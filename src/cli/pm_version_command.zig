@@ -11,6 +11,7 @@ const zust = @import("safe");
         specific,
         from_git,
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromString(str: []const u8) ?VersionType {
             if (strings.eqlComptime(str, "patch")) return .patch;
             if (strings.eqlComptime(str, "minor")) return .minor;
@@ -24,6 +25,7 @@ const zust = @import("safe");
         }
     };
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn exec(ctx: Command.Context, pm: *PackageManager, positionals: []const string, original_cwd: []const u8) !void {
         const package_json_dir = try findPackageDir(ctx.allocator, original_cwd);
 
@@ -185,6 +187,7 @@ const zust = @import("safe");
         Output.flush();
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn findPackageDir(allocator: std.mem.Allocator, start_dir: []const u8) bun.OOM![]const u8 {
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = start_dir;
@@ -207,6 +210,7 @@ while (true) : (__loop_limit_1 += 1) {
         return try allocator.dupe(u8, start_dir);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn verifyGit(cwd: []const u8, pm: *PackageManager) !void {
         if (!pm.options.git_tag_version) return;
 
@@ -223,6 +227,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseVersionArgument(arg: []const u8) struct { VersionType, ?[]const u8 } {
         if (VersionType.fromString(arg)) |vtype| {
             return .{ vtype, null };
@@ -238,6 +243,7 @@ while (true) : (__loop_limit_1 += 1) {
         Global.exit(1);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn getCurrentVersion(ctx: Command.Context, cwd: []const u8) ?[]const u8 {
         var path_buf: bun.PathBuffer = undefined;
         const package_json_path = bun.path.joinAbsStringBufZ(cwd, &path_buf, &.{"package.json"}, .auto);
@@ -263,6 +269,7 @@ while (true) : (__loop_limit_1 += 1) {
         return null;
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn showHelp(ctx: Command.Context, pm: *PackageManager, cwd: []const u8) bun.OOM!void {
         const _current_version = getCurrentVersion(ctx, cwd);
         const current_version = _current_version orelse "1.0.0";
@@ -344,6 +351,7 @@ while (true) : (__loop_limit_1 += 1) {
         Output.flush();
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn calculateNewVersion(allocator: std.mem.Allocator, current_str: []const u8, version_type: VersionType, specific_version: ?[]const u8, preid: []const u8, cwd: []const u8) bun.OOM![]const u8 {
         if (version_type == .specific) {
             return try allocator.dupe(u8, (specific_version.?));
@@ -380,6 +388,7 @@ while (true) : (__loop_limit_1 += 1) {
         return try incrementVersion(allocator, current_str, current, version_type, prerelease_id);
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn incrementVersion(allocator: std.mem.Allocator, current_str: []const u8, current: Semver.Version.ParseResult, version_type: VersionType, preid: []const u8) bun.OOM![]const u8 {
         var new_version = current.version.min();
 
@@ -449,6 +458,7 @@ while (true) : (__loop_limit_1 += 1) {
         return try std.fmt.allocPrint(allocator, "{d}.{d}.{d}", .{ new_version.major, new_version.minor, new_version.patch });
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn isGitClean(cwd: []const u8) bun.OOM!bool {
         var path_buf: bun.PathBuffer = undefined;
         const git_path = bun.which(&path_buf, bun.env_var.PATH.get() orelse "", cwd, "git") orelse {
@@ -482,6 +492,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn getVersionFromGit(allocator: std.mem.Allocator, cwd: []const u8) bun.OOM![]const u8 {
         var path_buf: bun.PathBuffer = undefined;
         const git_path = bun.which(&path_buf, bun.env_var.PATH.get() orelse "", cwd, "git") orelse {
@@ -529,6 +540,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
     }
 
+// safe-transpile: function uses raw slice parameter — consider zust.String
     fn gitCommitAndTag(allocator: std.mem.Allocator, version: []const u8, custom_message: ?[]const u8, cwd: []const u8) bun.OOM!void {
         var path_buf: bun.PathBuffer = undefined;
         const git_path = bun.which(&path_buf, bun.env_var.PATH.get() orelse "", cwd, "git") orelse {

@@ -260,7 +260,6 @@ pub fn cancelChunks(this: *IOWriter, ptr_: anytype) void {
     const slice: []Writer = this.writers.sliceMutable();
     if (idx >= slice.len) return;
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (slice[idx..]) |*w| {
         if (w.ptr.ptr.repr._ptr == actual_ptr) {
             w.setDead();
@@ -302,7 +301,6 @@ pub const Writers = SmolList(Writer, 2);
 /// amount they would have written so the buf is skipped as well
 pub fn skipDead(this: *IOWriter) void {
     const slice = this.writers.slice();
-// safe-transpile: for loop with pointer capture requires manual review
 // safe-transpile: for loop with pointer capture requires manual review
     for (slice[this.writer_idx..]) |*w| {
         if (w.isDead()) {
@@ -437,7 +435,6 @@ pub fn brokenPipeForWriters(this: *IOWriter) void {
     var offset: usize = 0;
     const writers = this.writers.sliceMutable()[this.writer_idx..];
 // safe-transpile: for loop with pointer capture requires manual review
-// safe-transpile: for loop with pointer capture requires manual review
     for (writers) |*w| {
         if (w.isDead()) {
             offset += w.len;
@@ -508,7 +505,6 @@ pub fn onError(this: *IOWriter, err__: bun.sys.Error) void {
 /// Returns the buffer of data that needs to be written
 /// for the *current* writer.
 // safe-transpile: function returns small constant slice — consider safe.String
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn getBuffer(this: *IOWriter) []const u8 {
     const result = this.getBufferImpl();
     if (comptime bun.Environment.isWindows) {
@@ -520,7 +516,6 @@ pub fn getBuffer(this: *IOWriter) []const u8 {
     return result;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 // safe-transpile: function returns small constant slice — consider safe.String
 fn getBufferImpl(this: *IOWriter) []const u8 {
     const writer = brk: {
@@ -641,7 +636,6 @@ pub fn handleBrokenPipe(this: *IOWriter, ptr: ChildPtr) ?Yield {
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn enqueue(this: *IOWriter, ptr: anytype, bytelist: ?*bun.ByteList, buf: []const u8) Yield {
     const childptr = if (@TypeOf(ptr) == ChildPtr) ptr else ChildPtr.init(ptr);
     if (this.handleBrokenPipe(childptr)) |yield| return yield;
@@ -662,7 +656,6 @@ pub fn enqueue(this: *IOWriter, ptr: anytype, bytelist: ?*bun.ByteList, buf: []c
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn enqueueFmtBltn(
     this: *IOWriter,
     ptr: anytype,
@@ -676,7 +669,6 @@ pub fn enqueueFmtBltn(
     return this.enqueueFmt(ptr, bytelist, fmt__, args);
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn enqueueFmt(
     this: *IOWriter,
@@ -812,7 +804,6 @@ pub const ChildPtrRaw = bun.TaggedPointerUnion(.{
 /// TODO: This function and `drainBufferedData` are copy pastes from
 /// `PipeWriter.zig`, it would be nice to not have to do that
 // safe-transpile: function uses raw slice parameter — consider safe.String
-// safe-transpile: function uses raw slice parameter — consider safe.String
 fn tryWriteWithWriteFn(fd: bun.FD, buf: []const u8, comptime write_fn: *const fn (bun.FD, []const u8) bun.sys.Maybe(usize)) bun.io.WriteResult {
     var offset: usize = 0;
 
@@ -839,7 +830,6 @@ fn tryWriteWithWriteFn(fd: bun.FD, buf: []const u8, comptime write_fn: *const fn
     return .{ .wrote = offset };
 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn drainBufferedData(parent: *IOWriter, buf: []const u8, max_write_size: usize, received_hup: bool) bun.io.WriteResult {
     bun.assert(bun.Environment.isPosix);
@@ -906,7 +896,6 @@ pub const AsyncDeinitWriter = struct {
     }
 
     pub fn writer(this: *@This()) *IOWriter {
-// safe-transpile: @alignCast requires manual review
 // safe-transpile: @alignCast requires manual review
         return @alignCast(@fieldParentPtr("async_deinit", this));
     }
