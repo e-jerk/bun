@@ -15,7 +15,7 @@ pub const Names = struct {
     long_aliases: []const []const u8 = &.{},
 
     /// Check if the given name matches the primary long name or any alias
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesLong(self: Names, name: []const u8) bool {
         if (self.long) |l| {
             if (mem.eql(u8, name, l)) return true;
@@ -282,7 +282,7 @@ pub const Diagnostic = struct {
             name_buf[0] = '-';
             name_buf[1] = '-';
             const long = l[0..@min(l.len, name_buf.len - 2)];
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(name_buf[2..][0..long.len], long);
             break :long name_buf[0 .. 2 + long.len];
         } else diag.arg;
@@ -323,17 +323,17 @@ pub fn Args(comptime Id: type, comptime params: []const Param(Id)) type {
             a.arena.deinit();
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn flag(a: @This(), comptime name: []const u8) bool {
             return a.clap.flag(name);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn option(a: @This(), comptime name: []const u8) ?[]const u8 {
             return a.clap.option(name);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn options(a: @This(), comptime name: []const u8) []const []const u8 {
             return a.clap.options(name);
         }
@@ -346,7 +346,7 @@ pub fn Args(comptime Id: type, comptime params: []const Param(Id)) type {
             return a.clap.remaining();
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hasFlag(comptime name: []const u8) bool {
             return ComptimeClap(Id, params).hasFlag(name);
         }
@@ -421,7 +421,7 @@ pub fn helpFull(
             var cs = io.countingWriter(io.null_writer);
             try printParam(cs.writer(), Id, param, Error, context, valueText);
             if (res < cs.bytes_written)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 res = @as(usize, @intCast(cs.bytes_written));
         }
 
@@ -438,7 +438,7 @@ pub fn helpFull(
             var cs = io.countingWriter(stream);
             try stream.print("\t", .{});
             try printParam(cs.writer(), Id, param, Error, context, valueText);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try stream.splatByteAll(' ', max_spacing - @as(usize, @intCast(cs.bytes_written)));
             try stream.print("\t{s}\n", .{try helpText(context, param)});
         }
@@ -675,7 +675,7 @@ pub fn usageFull(
 
         // Seems the zig compiler is being a little wierd. I doesn't allow me to write
         // @as(*const [1]u8, s)                  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const name = if (param.names.short) |*s| @as([*]const u8, @ptrCast(s))[0..1] else param.names.long orelse {
             positional = param;
             continue;

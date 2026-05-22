@@ -147,7 +147,7 @@ pub const OutKind = union(enum) {
         this.close();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn enqueueFmtBltn(
         this: *@This(),
         ptr: anytype,

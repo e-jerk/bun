@@ -52,13 +52,12 @@ const StrDiffList = DiffList([]const u8);
 fn diffListToJS(global: *jsc.JSGlobalObject, diff_list: StrDiffList) bun.JSError!jsc.JSValue {
     // todo: replace with toJS
     var array = try jsc.JSValue.createEmptyArray(global, diff_list.items.len);
-    // safe-transpile: for with index access requires manual review
     for (diff_list.items, 0..) |*line, i| {
         var obj = jsc.JSValue.createEmptyObjectWithNullPrototype(global);
         if (obj == .zero) return global.throwOutOfMemory();
         obj.put(global, bun.String.static("kind"), jsc.JSValue.jsNumber(@as(u32, @intFromEnum(line.kind))));
         obj.put(global, bun.String.static("value"), .fromAny(global, []const u8, line.value));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         array.putIndex(global, @truncate(i), obj);
     }
     return array;

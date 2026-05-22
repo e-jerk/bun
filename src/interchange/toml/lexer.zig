@@ -72,7 +72,7 @@ pub const Lexer = struct {
         return Error.SyntaxError;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addError(self: *Lexer, _loc: usize, comptime format: []const u8, args: anytype) void {
         @branchHint(.cold);
 
@@ -94,7 +94,7 @@ pub const Lexer = struct {
         self.prev_error_loc = __loc;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addDefaultError(self: *Lexer, msg: []const u8) !void {
         @branchHint(.cold);
 
@@ -102,14 +102,14 @@ pub const Lexer = struct {
         return Error.SyntaxError;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addSyntaxError(self: *Lexer, _loc: usize, comptime fmt: []const u8, args: anytype) !void {
         @branchHint(.cold);
         self.addError(_loc, fmt, args);
         return Error.SyntaxError;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addRangeError(self: *Lexer, r: logger.Range, comptime format: []const u8, args: anytype) !void {
         @branchHint(.cold);
 
@@ -144,7 +144,6 @@ pub const Lexer = struct {
         return it.source.contents[original_i..end_ix];
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     inline fn nextCodepointSlice(it: *Lexer) []const u8 {
         if (it.current >= it.source.contents.len) {
             return "";
@@ -164,7 +163,7 @@ pub const Lexer = struct {
         const code_point = switch (slice.len) {
             0 => -1,
             1 => @as(CodePoint, slice[0]),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             else => strings.decodeWTF8RuneTMultibyte(slice.ptr[0..4], @as(u3, @intCast(slice.len)), CodePoint, strings.unicode_replacement),
         };
 
@@ -479,7 +478,7 @@ pub const Lexer = struct {
                 // Parse a 32-bit integer (very fast path);
                 var number: u32 = 0;
                 for (text) |c| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     number = number * 10 + @as(u32, @intCast(c - '0'));
                 }
                 lexer.number = @as(f64, @floatFromInt(number));
@@ -929,11 +928,11 @@ pub const Lexer = struct {
                                 },
                             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             iter.c = @as(i32, @intCast(value));
                             if (is_bad) {
                                 lexer.addRangeError(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     logger.Range{ .loc = .{ .start = @as(i32, @intCast(octal_start)) }, .len = @as(i32, @intCast(iter.i - octal_start)) },
                                     "Invalid legacy octal literal",
                                     .{},
@@ -1045,7 +1044,7 @@ pub const Lexer = struct {
 
                                 if (is_out_of_range) {
                                     try lexer.addRangeError(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .{ .loc = .{ .start = @as(i32, @intCast(start + hex_start)) }, .len = @as(i32, @intCast((iter.i - hex_start))) },
                                         "Unicode escape sequence is out of range",
                                         .{},
@@ -1084,7 +1083,7 @@ pub const Lexer = struct {
                                 }
                             }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             iter.c = @as(CodePoint, @truncate(value));
                         },
                         '\r' => {
@@ -1119,7 +1118,7 @@ pub const Lexer = struct {
             switch (iter.c) {
                 -1 => return try lexer.addDefaultError("Unexpected end of file"),
                 0...127 => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     buf.append(@as(u8, @intCast(iter.c))) catch unreachable;
                 },
                 else => {
@@ -1194,7 +1193,7 @@ pub const Lexer = struct {
         );
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn raw(self: *Lexer) []const u8 {
         return self.source.contents[self.start..self.end];
     }

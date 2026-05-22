@@ -1,7 +1,7 @@
 pub const InstallCompletionsCommand = struct {
     pub fn testPath(_: string) !@import("std-fs-compat").FsDir {}
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn openDirAbsoluteCompat(path: []const u8) !@import("std-fs-compat").FsDir {
         return switch (bun.sys.openA(path, bun.O.RDONLY | bun.O.DIRECTORY, 0)) {
             .result => |fd| .{ .fd = fd.value.as_system },
@@ -18,7 +18,7 @@ pub const InstallCompletionsCommand = struct {
 
     const bunx_name = if (Environment.isDebug) "bunx-debug" else "bunx";
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn installBunxSymlinkPosix(cwd: []const u8) !void {
         var buf: bun.PathBuffer = undefined;
 
@@ -30,12 +30,12 @@ pub const InstallCompletionsCommand = struct {
         const exe = try bun.selfExePath();
         var target_buf: bun.PathBuffer = undefined;
         var target = std.fmt.bufPrint(&target_buf, "{s}/" ++ bunx_name, .{std.fs.path.dirname(exe).?}) catch unreachable;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         if (std.c.symlink(@ptrCast(exe.ptr), @ptrCast(target.ptr)) != 0) {
             outer: {
                 if (bun.env_var.BUN_INSTALL.get()) |install_dir| {
                     target = std.fmt.bufPrint(&target_buf, "{s}/bin/" ++ bunx_name, .{install_dir}) catch unreachable;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                     if (std.c.symlink(@ptrCast(exe.ptr), @ptrCast(target.ptr)) == 0) return;
                     break :outer;
                 }
@@ -45,7 +45,7 @@ pub const InstallCompletionsCommand = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn installBunxSymlinkWindows(_: []const u8) !void {
         // Because symlinks are not always allowed on windows,
         // `bunx.exe` on windows is a hardlink to `bun.exe`
@@ -87,7 +87,7 @@ pub const InstallCompletionsCommand = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn installBunxSymlink(cwd: []const u8) !void {
         if (Environment.isWindows) {
             try installBunxSymlinkWindows(cwd);
@@ -185,8 +185,7 @@ pub const InstallCompletionsCommand = struct {
 
         var completions_dir: string = "";
         var output_dir: @import("std-fs-compat").FsDir = found: {
-            // safe-transpile: for with index access requires manual review
-    for (bun.argv, 0..) |arg, i| {
+            for (bun.argv, 0..) |arg, i| {
                 if (strings.eqlComptime(arg, "completions")) {
                     if (bun.argv.len > i + 1) {
                         const input = bun.argv[i + 1];

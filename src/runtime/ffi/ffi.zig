@@ -52,7 +52,10 @@ const Offsets = extern struct {
     }
     var once_done = false;
     pub fn get() *const Offsets {
-        if (!once_done) { loadOnce(); once_done = true; }
+        if (!once_done) {
+            loadOnce();
+            once_done = true;
+        }
         return &Bun__FFI__offsets;
     }
 };
@@ -263,7 +266,7 @@ pub const FFI = struct {
                     },
                     // ?[*:null]?[*:0]const u8
                     //  [*:null]?[*:0]u8
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     .envp = @ptrCast(std.c.environ),
                 }) catch return;
                 if (process == .result) {
@@ -309,13 +312,19 @@ pub const FFI = struct {
         }
 
         fn getSystemIncludeDir() ?[:0]const u8 {
-            if (!cached_default_system_include_dir_once_done) { getSystemRootDirOnce(); cached_default_system_include_dir_once_done = true; }
+            if (!cached_default_system_include_dir_once_done) {
+                getSystemRootDirOnce();
+                cached_default_system_include_dir_once_done = true;
+            }
             if (cached_default_system_include_dir.len == 0) return null;
             return cached_default_system_include_dir;
         }
 
         fn getSystemLibraryDir() ?[:0]const u8 {
-            if (!cached_default_system_include_dir_once_done) { getSystemRootDirOnce(); cached_default_system_include_dir_once_done = true; }
+            if (!cached_default_system_include_dir_once_done) {
+                getSystemRootDirOnce();
+                cached_default_system_include_dir_once_done = true;
+            }
             if (cached_default_system_library_dir.len == 0) return null;
             return cached_default_system_library_dir;
         }
@@ -324,7 +333,7 @@ pub const FFI = struct {
             const compile_options: [:0]const u8 = if (this.flags.len > 0)
                 this.flags
             else if (bun.env_var.BUN_TCC_OPTIONS.get()) |tcc_options|
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(tcc_options)
             else
                 default_tcc_options;
@@ -454,7 +463,6 @@ pub const FFI = struct {
 
             try this.errorCheck();
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.symbols.map.values()) |*symbol| {
                 if (symbol.needsNapiEnv()) {
                     state.addSymbol("Bun__thisFFIModuleNapiEnv", globalThis.makeNapiEnvForFFI()) catch return error.DeferredErrors;
@@ -508,8 +516,7 @@ pub const FFI = struct {
             // if errors got added, we would have returned in the relocation catch.
             bun.debugAssert(this.deferred_errors.items.len == 0);
 
-            // safe-transpile: for with index access requires manual review
-    for (this.symbols.map.keys(), this.symbols.map.values()) |symbol, *function| {
+            for (this.symbols.map.keys(), this.symbols.map.values()) |symbol, *function| {
                 // FIXME: why are we duping here? can we at least use a stack
                 // fallback allocator?
                 const duped = bun.handleOom(bun.default_allocator.dupeZ(u8, symbol));
@@ -571,7 +578,7 @@ pub const FFI = struct {
                 bun.default_allocator.free(this.items);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromJSArray(globalThis: *jsc.JSGlobalObject, value: jsc.JSValue, comptime property: []const u8) bun.JSError!StringArray {
             var iter = try value.arrayIterator(globalThis);
             var items = std.array_list.Managed([:0]const u8).init(bun.default_allocator);
@@ -592,7 +599,7 @@ pub const FFI = struct {
             return .{ .items = items.items };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromJSString(globalThis: *jsc.JSGlobalObject, value: jsc.JSValue, comptime property: []const u8) bun.JSError!StringArray {
             if (value.isUndefined()) return .{};
             if (!value.isString()) {
@@ -605,7 +612,7 @@ pub const FFI = struct {
             return .{ .items = items.items };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromJS(globalThis: *jsc.JSGlobalObject, value: jsc.JSValue, comptime property: []const u8) bun.JSError!StringArray {
             if (value.isArray()) {
                 return fromJSArray(globalThis, value, property);
@@ -787,7 +794,6 @@ pub const FFI = struct {
         const napi_env = makeNapiEnvIfNeeded(compile_c.symbols.map.values(), globalThis);
 
         var obj = jsc.JSValue.createEmptyObject(globalThis, compile_c.symbols.map.count());
-// safe-transpile: for loop with pointer capture requires manual review
         for (compile_c.symbols.map.values()) |*function| {
             const function_name = function.base_name.?;
 
@@ -814,7 +820,7 @@ pub const FFI = struct {
                     const cb = jsc.host_fn.NewRuntimeFunction(
                         globalThis,
                         &str,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         @as(u32, @intCast(function.arg_types.items.len)),
                         bun.cast(*const jsc.JSHostFn, compiled.ptr),
                         true,
@@ -921,7 +927,6 @@ pub const FFI = struct {
 
         const allocator = VirtualMachine.get().allocator;
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.functions.values()) |*val| {
             val.deinit(globalThis);
         }
@@ -972,7 +977,6 @@ pub const FFI = struct {
             for (symbols.keys()) |key| {
                 allocator.free(@constCast(key));
             }
-// safe-transpile: for loop with pointer capture requires manual review
             for (symbols.values()) |*function_| {
                 function_.arg_types.deinit(allocator);
             }
@@ -987,7 +991,6 @@ pub const FFI = struct {
             }
             strs.deinit();
         }
-// safe-transpile: for loop with pointer capture requires manual review
         for (symbols.values()) |*function| {
             var arraylist = std.array_list.Managed(u8).init(allocator);
             var aw = @import("std-io-compat").allocatingWriterFromArrayList(allocator, &arraylist);
@@ -996,7 +999,6 @@ pub const FFI = struct {
                 for (symbols.keys()) |key| {
                     allocator.free(@constCast(key));
                 }
-// safe-transpile: for loop with pointer capture requires manual review
                 for (symbols.values()) |*function_| {
                     function_.arg_types.deinit(allocator);
                 }
@@ -1012,7 +1014,6 @@ pub const FFI = struct {
         for (symbols.keys()) |key| {
             allocator.free(@constCast(key));
         }
-// safe-transpile: for loop with pointer capture requires manual review
         for (symbols.values()) |*function_| {
             function_.arg_types.deinit(allocator);
         }
@@ -1071,7 +1072,6 @@ pub const FFI = struct {
             for (symbols.keys()) |key| {
                 bun.default_allocator.free(@constCast(key));
             }
-// safe-transpile: for loop with pointer capture requires manual review
             for (symbols.values()) |*function_| {
                 function_.arg_types.deinit(bun.default_allocator);
             }
@@ -1119,7 +1119,6 @@ pub const FFI = struct {
 
         const napi_env = makeNapiEnvIfNeeded(symbols.values(), global);
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (symbols.values()) |*function| {
             const function_name = function.base_name.?;
 
@@ -1127,7 +1126,6 @@ pub const FFI = struct {
             if (function.symbol_from_dynamic_library == null) {
                 const resolved_symbol = dylib.lookup(*anyopaque, function_name) orelse {
                     const ret = global.toInvalidArguments("Symbol \"{s}\" not found in \"{s}\"", .{ bun.asByteSlice(function_name), name });
-// safe-transpile: for loop with pointer capture requires manual review
                     for (symbols.values()) |*value| {
                         bun.default_allocator.free(@constCast(bun.asByteSlice(value.base_name.?)));
                         value.arg_types.clearAndFree(bun.default_allocator);
@@ -1146,7 +1144,6 @@ pub const FFI = struct {
                     bun.asByteSlice(function_name),
                     name,
                 });
-// safe-transpile: for loop with pointer capture requires manual review
                 for (symbols.values()) |*value| {
                     value.deinit(global);
                 }
@@ -1156,7 +1153,6 @@ pub const FFI = struct {
             };
             switch (function.step) {
                 .failed => |err| {
-// safe-transpile: for loop with pointer capture requires manual review
                     defer for (symbols.values()) |*other_function| {
                         other_function.deinit(global);
                     };
@@ -1167,7 +1163,6 @@ pub const FFI = struct {
                     return res;
                 },
                 .pending => {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (symbols.values()) |*other_function| {
                         other_function.deinit(global);
                     }
@@ -1180,7 +1175,7 @@ pub const FFI = struct {
                     const cb = jsc.host_fn.NewRuntimeFunction(
                         global,
                         &str,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         @as(u32, @intCast(function.arg_types.items.len)),
                         bun.cast(*const jsc.JSHostFn, compiled.ptr),
                         true,
@@ -1224,7 +1219,6 @@ pub const FFI = struct {
             for (symbols.keys()) |key| {
                 allocator.free(@constCast(key));
             }
-// safe-transpile: for loop with pointer capture requires manual review
             for (symbols.values()) |*function_| {
                 function_.arg_types.deinit(allocator);
             }
@@ -1241,13 +1235,11 @@ pub const FFI = struct {
 
         const napi_env = makeNapiEnvIfNeeded(symbols.values(), global);
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (symbols.values()) |*function| {
             const function_name = function.base_name.?;
 
             if (function.symbol_from_dynamic_library == null) {
                 const ret = global.toInvalidArguments("Symbol \"{s}\" is missing a \"ptr\" field. When using linkSymbols() or CFunction(), you must provide a \"ptr\" field with the memory address of the native function.", .{bun.asByteSlice(function_name)});
-// safe-transpile: for loop with pointer capture requires manual review
                 for (symbols.values()) |*value| {
                     allocator.free(@constCast(bun.asByteSlice(value.base_name.?)));
                     value.arg_types.clearAndFree(allocator);
@@ -1261,7 +1253,6 @@ pub const FFI = struct {
                     bun.asByteSlice(@errorName(err)),
                     bun.asByteSlice(function_name),
                 });
-// safe-transpile: for loop with pointer capture requires manual review
                 for (symbols.values()) |*value| {
                     value.deinit(global);
                 }
@@ -1270,7 +1261,6 @@ pub const FFI = struct {
             };
             switch (function.step) {
                 .failed => |err| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (symbols.values()) |*value| {
                         allocator.free(@constCast(bun.asByteSlice(value.base_name.?)));
                         value.arg_types.clearAndFree(allocator);
@@ -1282,7 +1272,6 @@ pub const FFI = struct {
                     return res;
                 },
                 .pending => {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (symbols.values()) |*value| {
                         allocator.free(@constCast(bun.asByteSlice(value.base_name.?)));
                         value.arg_types.clearAndFree(allocator);
@@ -1296,7 +1285,7 @@ pub const FFI = struct {
                     const cb = jsc.host_fn.NewRuntimeFunction(
                         global,
                         name,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         @as(u32, @intCast(function.arg_types.items.len)),
                         bun.cast(*jsc.JSHostFn, compiled.ptr),
                         true,
@@ -1537,7 +1526,7 @@ pub const FFI = struct {
             },
         };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn fail(this: *Function, comptime msg: []const u8) void {
             if (this.step != .failed) {
                 @branchHint(.likely);
@@ -1599,7 +1588,7 @@ pub const FFI = struct {
 
             CompilerRT.define(state);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             state.compileString(@ptrCast(source_code.items)) catch {
                 this.fail("Failed to compile source code");
                 return;
@@ -1652,7 +1641,7 @@ pub const FFI = struct {
                         .result => |n| n,
                         .err => break :debug_write,
                     };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     if (bun.sys.ftruncate(fd, @intCast(source_code.items.len)).asErr()) |_| break :debug_write;
                     fd.close();
                 }
@@ -1689,7 +1678,7 @@ pub const FFI = struct {
 
             CompilerRT.define(state);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             state.compileString(@ptrCast(source_code.items)) catch {
                 this.fail("Failed to compile source code");
                 return;
@@ -1769,8 +1758,7 @@ pub const FFI = struct {
             try writer.writeAll(bun.asByteSlice(this.base_name.?));
             try writer.writeAll("(");
             var first = true;
-            // safe-transpile: for with index access requires manual review
-    for (this.arg_types.items, 0..) |arg, i| {
+            for (this.arg_types.items, 0..) |arg, i| {
                 if (!first) {
                     try writer.writeAll(", ");
                 }
@@ -1798,8 +1786,7 @@ pub const FFI = struct {
                     \\  LOAD_ARGUMENTS_FROM_CALL_FRAME;
                     \\
                 );
-                // safe-transpile: for with index access requires manual review
-    for (this.arg_types.items, 0..) |arg, i| {
+                for (this.arg_types.items, 0..) |arg, i| {
                     if (arg == .napi_env) {
                         try writer.print(
                             \\  napi_env arg{d} = (napi_env)&Bun__thisFFIModuleNapiEnv;
@@ -1879,8 +1866,7 @@ pub const FFI = struct {
             try writer.print("{s}(", .{bun.asByteSlice(this.base_name.?)});
             first = true;
             arg_buf[0..3].* = "arg".*;
-            // safe-transpile: for with index access requires manual review
-    for (this.arg_types.items, 0..) |arg, i| {
+            for (this.arg_types.items, 0..) |arg, i| {
                 if (!first) {
                     try writer.writeAll(", ");
                 }
@@ -1969,8 +1955,7 @@ pub const FFI = struct {
 
             try writer.writeAll(" my_callback_function");
             try writer.writeAll("(");
-            // safe-transpile: for with index access requires manual review
-    for (this.arg_types.items, 0..) |arg, i| {
+            for (this.arg_types.items, 0..) |arg, i| {
                 if (!first) {
                     try writer.writeAll(", ");
                 }
@@ -1993,8 +1978,7 @@ pub const FFI = struct {
                 try writer.print(" ZIG_REPR_TYPE arguments[{d}];\n", .{this.arg_types.items.len});
 
                 arg_buf[0.."arg".len].* = "arg".*;
-                // safe-transpile: for with index access requires manual review
-    for (this.arg_types.items, 0..) |arg, i| {
+                for (this.arg_types.items, 0..) |arg, i| {
                     const printed = std.fmt.printInt(arg_buf["arg".len..], i, 10, .lower, .{});
                     const arg_name = arg_buf[0 .. "arg".len + printed];
                     try writer.print("arguments[{d}] = {f}.asZigRepr;\n", .{ i, arg.toJS(arg_name) });
@@ -2153,8 +2137,7 @@ pub const FFI = struct {
         };
         pub const map_to_js_object = brk: {
             var count: usize = 2;
-            // safe-transpile: for with index access requires manual review
-    for (map, 0..) |item, i| {
+            for (map, 0..) |item, i| {
                 const fmt = EnumMapFormatter{ .name = item.@"0", .entry = item.@"1" };
                 count += std.fmt.count("{}", .{fmt});
                 count += @intFromBool(i > 0);
@@ -2164,8 +2147,7 @@ pub const FFI = struct {
             buf[0] = '{';
             buf[buf.len - 1] = '}';
             var end: usize = 1;
-            // safe-transpile: for with index access requires manual review
-    for (map, 0..) |item, i| {
+            for (map, 0..) |item, i| {
                 const fmt = EnumMapFormatter{ .name = item.@"0", .entry = item.@"1" };
                 if (i > 0) {
                     buf[end] = ',';
@@ -2320,7 +2302,7 @@ pub const FFI = struct {
             try writer.writeAll(this.typenameLabel());
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn typenameLabel(this: ABIType) []const u8 {
             return switch (this) {
                 .buffer, .function, .cstring, .ptr => "void*",
@@ -2346,7 +2328,7 @@ pub const FFI = struct {
             try writer.writeAll(this.typenameLabel());
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn paramTypenameLabel(this: ABIType) []const u8 {
             return switch (this) {
                 .function, .cstring, .ptr => "void*",
@@ -2403,7 +2385,10 @@ const CompilerRT = struct {
     var create_compiler_rt_dir_once_done = false;
 
     pub fn dir() ?[:0]const u8 {
-        if (!create_compiler_rt_dir_once_done) { createCompilerRTDir(); create_compiler_rt_dir_once_done = true; }
+        if (!create_compiler_rt_dir_once_done) {
+            createCompilerRTDir();
+            create_compiler_rt_dir_once_done = true;
+        }
         if (compiler_rt_dir.len == 0) return null;
         return compiler_rt_dir;
     }
@@ -2437,7 +2422,6 @@ const CompilerRT = struct {
         noalias source: [*]const u8,
         byte_count: usize,
     ) callconv(.c) void {
-// safe-transpile: @memcpy requires manual review
         @memcpy(dest[0..byte_count], source[0..byte_count]);
     }
 

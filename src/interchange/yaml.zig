@@ -195,7 +195,7 @@ pub const Pos = enum(usize) {
     }
 
     pub fn loc(pos: Pos) logger.Loc {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .start = @intCast(@intFromEnum(pos)) };
     }
 
@@ -3300,11 +3300,11 @@ pub fn Parser(comptime enc: Encoding) type {
                 self.inc(1);
                 const digit = self.next();
                 const num: u8 = switch (digit) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     '0'...'9' => @intCast(digit - '0'),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     'a'...'f' => @intCast(digit - 'a' + 10),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     'A'...'F' => @intCast(digit - 'A' + 10),
                     else => return error.UnexpectedCharacter,
                 };
@@ -3330,13 +3330,13 @@ pub fn Parser(comptime enc: Encoding) type {
                     };
 
                     switch (len) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         1 => try text.append(@intCast(cp)),
                         2 => {
                             const val = cp - 0x10000;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const high: u16 = 0xd800 + @as(u16, @intCast(val >> 10));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const low: u16 = 0xdc00 + @as(u16, @intCast(val & 0x3ff));
                             try text.appendSlice(&.{ high, low });
                         },
@@ -3347,7 +3347,7 @@ pub fn Parser(comptime enc: Encoding) type {
                     if (cp > 0xff) {
                         return error.UnexpectedCharacter;
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     try text.append(@intCast(cp));
                 },
             }
@@ -4468,7 +4468,7 @@ pub fn Parser(comptime enc: Encoding) type {
                 };
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn eql(l: *const @This(), r: []const u8, input: []const enc.unit()) bool {
                 const l_slice = l.slice(input);
                 return std.mem.eql(enc.unit(), l_slice, r);
@@ -5278,7 +5278,7 @@ pub const Encoding = enum {
     //     };
     // }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn literal(comptime encoding: Encoding, comptime str: []const u8) []const encoding.unit() {
         return switch (encoding) {
             .latin1 => str,

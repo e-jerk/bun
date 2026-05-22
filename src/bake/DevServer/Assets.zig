@@ -16,7 +16,6 @@ needs_reindex: bool = false,
 pub const EntryIndex = bun.GenericIndex(u30, Assets);
 
 fn owner(assets: *Assets) *DevServer {
-// safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("assets", assets));
 }
 
@@ -95,7 +94,7 @@ pub fn replacePath(
         var contents_mut = contents.*;
         contents_mut.detach();
     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     gop.value_ptr.* = .init(@intCast(file_index_gop.index));
     return gop.value_ptr.*;
 }
@@ -117,7 +116,7 @@ pub fn putOrIncrementRefCount(assets: *Assets, content_hash: u64, ref_count: u32
 pub fn unrefByHash(assets: *Assets, content_hash: u64, dec_count: u32) void {
     const index = assets.files.getIndex(content_hash) orelse
         Output.panic("Asset double unref: {x}", .{std.mem.asBytes(&content_hash)});
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     assets.unrefByIndex(.init(@intCast(index)), dec_count);
 }
 
@@ -135,10 +134,9 @@ pub fn unrefByIndex(assets: *Assets, index: EntryIndex, dec_count: u32) void {
         // at the new slot, otherwise the next lookup for that path would read
         // past the end of `files`/`refs`, or alias an unrelated asset if a
         // new entry is appended afterwards.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const moved_from: u30 = @intCast(assets.files.count());
         if (moved_from != index.get()) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (assets.path_map.values()) |*entry_index| {
                 if (entry_index.get() == moved_from) entry_index.* = index;
             }

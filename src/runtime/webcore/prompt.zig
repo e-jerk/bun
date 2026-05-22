@@ -160,9 +160,9 @@ pub const prompt = struct {
         delimiter: u8,
         max_size: usize,
     ) !void {
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+        var __loop_limit_2: usize = 0;
+        while (true) : (__loop_limit_2 += 1) {
+            if (__loop_limit_2 > 1_000_000) break;
             if (array_list.items.len == max_size) {
                 return error.StreamTooLong;
             }
@@ -184,9 +184,9 @@ while (true) : (__loop_limit_2 += 1) {
         array_list: *std.array_list.Managed(u8),
         delimiter: u8,
     ) !void {
-var __loop_limit_3: usize = 0;
-while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) break;
+        var __loop_limit_3: usize = 0;
+        while (true) : (__loop_limit_3 += 1) {
+            if (__loop_limit_3 > 1_000_000) break;
             const byte: u8 = try reader.readByte();
 
             if (byte == delimiter) {

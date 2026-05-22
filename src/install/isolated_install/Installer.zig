@@ -104,7 +104,7 @@ pub const Installer = struct {
     /// Without this, the upfront pending-task slot for each waiting entry is
     /// never released and the install loop blocks forever on
     /// `pendingTaskCount() == 0`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onPackageDownloadError(
         this: *Installer,
         task_id: install.Task.Id,
@@ -139,7 +139,7 @@ pub const Installer = struct {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn downloadErrorReason(e: anyerror) []const u8 {
         return switch (e) {
             error.TarballHTTP400 => "400 Bad Request",
@@ -406,7 +406,7 @@ pub const Installer = struct {
         defer parent_dedupe.deinit();
 
         for (0..this.store.entries.len) |id_int| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const entry_id: Store.Entry.Id = .from(@intCast(id_int));
 
             // .monotonic is okay because only the main thread sets this to `.blocked`.
@@ -653,7 +653,7 @@ pub const Installer = struct {
                                         const src_path_len = bun.windows.GetFinalPathNameByHandleW(
                                             folder_dir.cast(),
                                             src_path.buf().ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                             @intCast(src_path.buf().len),
                                             0,
                                         );
@@ -744,7 +744,7 @@ pub const Installer = struct {
                         const is_stale_link = if (comptime Environment.isWindows)
                             if (sys.getFileAttributes(local.sliceZ())) |a| a.is_reparse_point else false
                         else if (sys.lstat(local.sliceZ()).asValue()) |st|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             std.posix.S.ISLNK(@intCast(st.mode))
                         else
                             false;
@@ -1054,7 +1054,7 @@ pub const Installer = struct {
                     // preinstall scripts need to run before binaries can be linked. Block here if any dependencies
                     // of this entry are not finished. Do not count cycles towards blocking.
 
-        var parent_dedupe: @import("array-hash-map-compat").Auto(Store.Entry.Id, void) = .init(bun.default_allocator);
+                    var parent_dedupe: @import("array-hash-map-compat").Auto(Store.Entry.Id, void) = .init(bun.default_allocator);
                     defer parent_dedupe.deinit();
 
                     if (installer.isTaskBlocked(this.entry_id, &parent_dedupe)) {
@@ -1114,7 +1114,7 @@ pub const Installer = struct {
                     const string_buf = installer.lockfile.buffers.string_bytes.items;
 
                     const dep = installer.lockfile.buffers.dependencies.items[dep_id];
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     const truncated_dep_name_hash: TruncatedPackageNameHash = @truncate(dep.name_hash);
 
                     const is_trusted, const is_trusted_through_update_request = brk: {
@@ -1303,10 +1303,9 @@ pub const Installer = struct {
                     };
 
                     if (list.first_index == 0) {
-                        // safe-transpile: for with index access requires manual review
-    for (list.items[1..], 1..) |item, i| {
+                        for (list.items[1..], 1..) |item, i| {
                             if (item != null) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 list.first_index = @intCast(i);
                                 break;
                             }
@@ -1543,11 +1542,10 @@ pub const Installer = struct {
                         target_cpu,
                         target_os,
                     )) |replacement_pkg_id| {
-                        // safe-transpile: for with index access requires manual review
-    for (entry_node_ids, 0..) |new_node_id, new_entry_id| {
+                        for (entry_node_ids, 0..) |new_node_id, new_entry_id| {
                             if (node_pkg_ids[new_node_id.get()] == replacement_pkg_id) {
                                 debug("native bin link {d} -> {d}", .{ pkg_id, replacement_pkg_id });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 return .from(@intCast(new_entry_id));
                             }
                         }
@@ -1826,7 +1824,7 @@ pub const Installer = struct {
                     const is_symlink = if (comptime Environment.isWindows)
                         if (sys.getFileAttributes(dest.sliceZ())) |a| a.is_reparse_point else true
                     else if (sys.lstat(dest.sliceZ()).asValue()) |st|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         std.posix.S.ISLNK(@intCast(st.mode))
                     else
                         true;

@@ -116,7 +116,7 @@ pub fn checkServerIdentity(
                 if (client.signals.get(.cert_errors)) {
                     // clone the relevant data
                     const cert_size = BoringSSL.i2d_X509(x509, null);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const cert = bun.handleOom(bun.default_allocator.alloc(u8, @intCast(cert_size)));
                     var cert_ptr = cert.ptr;
                     const result_size = BoringSSL.i2d_X509(x509, &cert_ptr);
@@ -229,7 +229,7 @@ pub fn onOpen(
         client.state.request_stage = .opened;
 
     if (comptime is_ssl) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var ssl_ptr: *BoringSSL.SSL = @ptrCast(socket.getNativeHandle());
         if (!ssl_ptr.isInitFinished()) {
             const _hostname = getTlsHostname(client, client.http_proxy != null);
@@ -238,7 +238,6 @@ pub fn onOpen(
             var hostname_needs_free = false;
             if (!strings.isIPAddress(_hostname)) {
                 if (_hostname.len < temp_hostname.len) {
-// safe-transpile: @memcpy requires manual review
                     @memcpy(temp_hostname[0.._hostname.len], _hostname);
                     temp_hostname[_hostname.len] = 0;
                     hostname = temp_hostname[0.._hostname.len :0];
@@ -313,7 +312,7 @@ pub fn firstCall(
     }
 
     if (comptime is_ssl) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const ssl_ptr: *BoringSSL.SSL = @ptrCast(socket.getNativeHandle());
         var proto: [*c]const u8 = null;
         var proto_len: c_uint = 0;
@@ -537,8 +536,7 @@ fn writeProxyConnect(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name_ptr, idx| {
+        for (names, 0..) |name_ptr, idx| {
             _ = writer.write(hdrs.asStr(name_ptr)) catch 0;
             _ = writer.write(": ") catch 0;
             _ = writer.write(hdrs.asStr(values[idx])) catch 0;
@@ -588,8 +586,7 @@ fn writeProxyRequest(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name_ptr, idx| {
+        for (names, 0..) |name_ptr, idx| {
             _ = writer.write(hdrs.asStr(name_ptr)) catch 0;
             _ = writer.write(": ") catch 0;
             _ = writer.write(hdrs.asStr(values[idx])) catch 0;
@@ -821,8 +818,7 @@ pub fn proxyAuthHash(this: *const HTTPClient) u64 {
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name_ptr, idx| {
+        for (names, 0..) |name_ptr, idx| {
             const name = hdrs.asStr(name_ptr);
             const value = hdrs.asStr(values[idx]);
             // HTTP header names are case-insensitive (RFC 7230 §3.2) —
@@ -962,7 +958,6 @@ pub fn buildRequest(this: *HTTPClient, body_len: usize) picohttp.Request {
     const max_default_headers = 6;
     const max_user_headers = max_request_headers - max_default_headers;
 
-    // safe-transpile: for with index access requires manual review
     for (header_names, 0..) |head, i| {
         const name = this.headerStr(head);
         // Hash it as lowercase
@@ -1473,7 +1468,7 @@ noinline fn sendInitialRequestPayload(this: *HTTPClient, comptime is_first_call:
         var remain = temporary_send_buffer.items.ptr[temporary_send_buffer.items.len..temporary_send_buffer.capacity];
         const wrote = @min(remain.len, this.state.request_body.len);
         assert(wrote > 0);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(remain[0..wrote], this.state.request_body[0..wrote]);
         temporary_send_buffer.items.len += wrote;
     }
@@ -1514,7 +1509,7 @@ noinline fn sendInitialRequestPayload(this: *HTTPClient, comptime is_first_call:
     return .{
         .has_sent_headers = has_sent_headers,
         .has_sent_body = has_sent_body,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         .try_sending_more_data = amount == @as(c_int, @intCast(to_send.len)) and (!has_sent_body or !has_sent_headers),
     };
 }
@@ -1534,7 +1529,7 @@ fn writeToSocket(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocke
         if (amount < 0) {
             return error.WriteFailed;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const wrote: usize = @intCast(amount);
         total_written += wrote;
         remaining = remaining[wrote..];
@@ -1548,7 +1543,7 @@ fn writeToSocket(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocke
 fn writeToSocketWithBufferFallback(comptime is_ssl: bool, socket: NewHTTPContext(is_ssl).HTTPSocket, buffer: *bun.io.StreamBuffer, data: []const u8) !usize {
     const amount = try writeToSocket(is_ssl, socket, data);
     if (amount < data.len) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(buffer.write(data[@intCast(amount)..]));
     }
     return amount;
@@ -1814,7 +1809,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     var remain = temporary_send_buffer.items.ptr[temporary_send_buffer.items.len..temporary_send_buffer.capacity];
                     const wrote = @min(remain.len, this.state.request_body.len);
                     assert(wrote > 0);
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(remain[0..wrote], this.state.request_body[0..wrote]);
                     temporary_send_buffer.items.len += wrote;
                 }
@@ -1834,7 +1829,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     }
                 }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.state.request_sent_len += @as(usize, @intCast(amount));
                 const has_sent_headers = this.state.request_sent_len >= headers_len;
 
@@ -1858,7 +1853,7 @@ pub fn onWritable(this: *HTTPClient, comptime is_first_call: bool, comptime is_s
                     assert(this.state.request_body.len > 0);
 
                     // we sent everything, but there's some body leftover
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     if (amount == @as(c_int, @intCast(to_send.len))) {
                         this.onWritable(false, is_ssl, socket);
                     }
@@ -1958,7 +1953,7 @@ pub fn handleOnDataHeaders(
         // we save the successful parsed response
         this.state.pending_response = response;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         to_read = to_read[@min(@as(usize, @intCast(response.bytes_read)), to_read.len)..];
 
         if (response.status_code == 101) {
@@ -2553,7 +2548,6 @@ pub const HTTPClientResult = struct {
                 }
 
                 pub fn wrapped_callback(ptr: *anyopaque, async_http: *AsyncHTTP, result: HTTPClientResult) void {
-// safe-transpile: @alignCast requires manual review
                     const casted = @as(Type, @ptrCast(@alignCast(ptr)));
                     @call(bun.callmod_inline, callback, .{ casted, async_http, result });
                 }
@@ -2811,7 +2805,7 @@ fn handleResponseBodyChunkedEncodingFromSinglePacket(
         buffer = @constCast(incoming_data);
     } else {
         buffer = single_packet_small_buffer[0..incoming_data.len];
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buffer[0..incoming_data.len], incoming_data);
     }
 
@@ -2880,7 +2874,6 @@ pub fn handleResponseMetadata(
     var location: string = "";
     var pretend_304 = false;
     var is_server_sent_events = false;
-    // safe-transpile: for with index access requires manual review
     for (response.headers.list, 0..) |header, header_i| {
         switch (hashHeaderName(header.name)) {
             hashHeaderConst("Content-Length") => {
@@ -2901,19 +2894,19 @@ pub fn handleResponseMetadata(
                 if (!this.flags.disable_decompression) {
                     if (strings.eqlComptime(header.value, "gzip")) {
                         this.state.encoding = Encoding.gzip;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "deflate")) {
                         this.state.encoding = Encoding.deflate;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "br")) {
                         this.state.encoding = Encoding.brotli;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     } else if (strings.eqlComptime(header.value, "zstd")) {
                         this.state.encoding = Encoding.zstd;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.state.content_encoding_i = @as(u8, @truncate(header_i));
                     }
                 }
@@ -3248,8 +3241,7 @@ pub fn handleResponseMetadata(
                         inline for (headers_to_remove) |header| {
                             const names = this.header_entries.items(.name);
 
-                            // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name_ptr, i| {
+                            for (names, 0..) |name_ptr, i| {
                                 const name = this.headerStr(name_ptr);
                                 if (name.len == header.name.len) {
                                     const hash = hashHeaderName(name);

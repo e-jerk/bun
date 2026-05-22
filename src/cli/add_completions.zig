@@ -9,7 +9,7 @@
 // Compressing the completions list saves about 100 KB of binary size.
 
 pub const FirstLetter = enum(u8) {
-const zust = @import("safe");
+    const zust = @import("safe");
     a = 'a',
     b = 'b',
     c = 'c',

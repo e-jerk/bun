@@ -30,7 +30,6 @@ pub const JSValue = enum(i64) {
     }
 
     pub inline fn cast(ptr: anytype) JSValue {
-// safe-transpile: @bitCast requires manual review
         return @as(JSValue, @enumFromInt(@as(i64, @bitCast(@intFromPtr(ptr)))));
     }
 
@@ -172,14 +171,14 @@ pub const JSValue = enum(i64) {
             std.c.AI,
             => {
                 if (this.isInt32()) {
-// safe-transpile: @bitCast requires manual review
+                    // safe-transpile: @bitCast requires manual review
                     return @bitCast(this.asInt32());
                 }
                 if (this.getNumber()) |num| {
-// safe-transpile: @bitCast requires manual review
+                    // safe-transpile: @bitCast requires manual review
                     return @bitCast(coerceJSValueDoubleTruncatingT(i32, num));
                 }
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 return @bitCast(try this.coerceToInt32(globalThis));
             },
             else => @compileError("Unsupported coercion type"),
@@ -196,23 +195,23 @@ pub const JSValue = enum(i64) {
         return switch (comptime T) {
             u32 => toU32(this),
             u16 => toU16(this),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             c_uint => @as(c_uint, @intCast(toU32(this))),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             c_int => @as(c_int, @intCast(toInt32(this))),
             ?AnyPromise => asAnyPromise(this),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             u52 => @as(u52, @truncate(@as(u64, @intCast(@max(this.toInt64(), 0))))),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             i52 => @as(i52, @truncate(@as(i52, @intCast(this.toInt64())))),
             u64 => toUInt64NoTruncate(this),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             u8 => @as(u8, @truncate(toU32(this))),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             i16 => @as(i16, @truncate(toInt32(this))),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             i8 => @as(i8, @truncate(toInt32(this))),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             i32 => @as(i32, @truncate(toInt32(this))),
             i64 => this.toInt64(),
             bool => this.toBoolean(),
@@ -229,7 +228,7 @@ pub const JSValue = enum(i64) {
 
             const port = this.to(i64);
             if (0 <= port and port <= 65535) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @as(u16, @truncate(@max(0, port)));
             } else {
                 return jsc.Error.SOCKET_BAD_PORT.throw(global, "Port number out of range: {d}", .{port});
@@ -419,25 +418,23 @@ pub const JSValue = enum(i64) {
     }
 
     extern fn JSC__JSValue__toISOString(*jsc.JSGlobalObject, jsc.JSValue, *[28]u8) c_int;
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn toISOString(this: JSValue, globalObject: *jsc.JSGlobalObject, buf: *[28]u8) []const u8 {
         const count = JSC__JSValue__toISOString(globalObject, this, buf);
         if (count < 0) {
             return "";
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return buf[0..@as(usize, @intCast(count))];
     }
     extern fn JSC__JSValue__DateNowISOString(*JSGlobalObject, f64) JSValue;
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn getDateNowISOString(globalObject: *jsc.JSGlobalObject, buf: *[28]u8) []const u8 {
         const count = JSC__JSValue__DateNowISOString(globalObject, buf);
         if (count < 0) {
             return "";
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return buf[0..@as(usize, @intCast(count))];
     }
 
@@ -573,7 +570,7 @@ pub const JSValue = enum(i64) {
 
     pub fn createBufferFromLength(globalObject: *JSGlobalObject, len: usize) bun.JSError!JSValue {
         jsc.markBinding(@src());
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return bun.jsc.fromJSHostCall(globalObject, @src(), JSBuffer__bufferFromLength, .{ globalObject, @intCast(len) });
     }
 
@@ -588,7 +585,7 @@ pub const JSValue = enum(i64) {
         try JestPrettyFormat.format(
             .Debug,
             globalObject,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*]const JSValue, @ptrCast(&this)),
             1,
             out,
@@ -601,7 +598,7 @@ pub const JSValue = enum(i64) {
     extern fn JSBuffer__bufferFromLength(*JSGlobalObject, i64) JSValue;
 
     /// Must come from globally-allocated memory if allocator is not null
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createBuffer(globalObject: *JSGlobalObject, slice: []u8) JSValue {
         jsc.markBinding(@src());
         @setRuntimeSafety(false);
@@ -621,7 +618,7 @@ pub const JSValue = enum(i64) {
         return bun.jsc.fromJSHostCall(globalObject, @src(), JSC__JSValue__createUninitializedUint8Array, .{ globalObject, len });
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createBufferWithCtx(globalObject: *JSGlobalObject, slice: []u8, ptr: ?*anyopaque, func: jsc.C.JSTypedArrayBytesDeallocator) JSValue {
         jsc.markBinding(@src());
         @setRuntimeSafety(false);
@@ -643,16 +640,16 @@ pub const JSValue = enum(i64) {
                 }
                 return jsDoubleNumber(number);
             },
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             u31, c_ushort, u8, i16, i32, c_int, i8, u16 => jsNumberFromInt32(@as(i32, @intCast(number))),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             c_long, u32, u52, c_uint, i64, isize => jsNumberFromInt64(@as(i64, @intCast(number))),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             usize, u64 => jsNumberFromUint64(@as(u64, @intCast(number))),
             comptime_int => switch (number) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 0...std.math.maxInt(i32) => jsNumberFromInt32(@as(i32, @intCast(number))),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 else => jsNumberFromInt64(@as(i64, @intCast(number))),
             },
             else => {
@@ -754,7 +751,7 @@ pub const JSValue = enum(i64) {
     }
 
     /// Create a JSValue string from a zig format-print (fmt + args)
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn printString(globalThis: *JSGlobalObject, comptime stack_buffer_size: usize, comptime fmt: []const u8, args: anytype) !JSValue {
         var stack_fallback = std.heap.stackFallback(stack_buffer_size, globalThis.allocator());
 
@@ -767,7 +764,7 @@ pub const JSValue = enum(i64) {
     }
 
     /// Create a JSValue string from a zig format-print (fmt + args), with pretty format
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn printStringPretty(globalThis: *JSGlobalObject, comptime stack_buffer_size: usize, comptime fmt: []const u8, args: anytype) !JSValue {
         var stack_fallback = std.heap.stackFallback(stack_buffer_size, globalThis.allocator());
 
@@ -841,7 +838,7 @@ pub const JSValue = enum(i64) {
 
     pub fn jsNumberFromInt64(i: i64) JSValue {
         if (i <= std.math.maxInt(i32) and i >= std.math.minInt(i32)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return jsNumberFromInt32(@as(i32, @intCast(i)));
         }
 
@@ -850,7 +847,7 @@ pub const JSValue = enum(i64) {
 
     pub fn jsNumberFromUint64(i: u64) JSValue {
         if (i <= std.math.maxInt(i32)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return jsNumberFromInt32(@as(i32, @intCast(i)));
         }
 
@@ -1174,7 +1171,6 @@ pub const JSValue = enum(i64) {
     pub inline fn isCell(this: JSValue) bool {
         return switch (this) {
             .zero, .js_undefined, .null, .true, .false => false,
-// safe-transpile: @bitCast requires manual review
             else => (@as(u64, @bitCast(@intFromEnum(this))) & FFI.NotCellMask) == 0,
         };
     }
@@ -1423,12 +1419,12 @@ pub const JSValue = enum(i64) {
         signal,
         cmd,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn has(property: []const u8) bool {
             return bun.ComptimeEnumMap(BuiltinName).has(property);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(property: []const u8) ?BuiltinName {
             return bun.ComptimeEnumMap(BuiltinName).get(property);
         }
@@ -1563,7 +1559,7 @@ pub const JSValue = enum(i64) {
     ///
     /// Cannot handle property names that are numeric indexes. (For this use `getPropertyValue` instead.)
     ///
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn get(target: JSValue, global: *JSGlobalObject, property_slice: []const u8) JSError!?JSValue {
         bun.debugAssert(target.isObject());
 
@@ -1596,11 +1592,11 @@ pub const JSValue = enum(i64) {
     ///
     /// If you know that the property name is not an integer index, use `get` instead.
     ///
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getPropertyValue(target: JSValue, global: *JSGlobalObject, property_name: []const u8) bun.JSError!?JSValue {
         if (bun.Environment.isDebug) bun.assert(target.isObject());
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return switch (try bun.jsc.fromJSHostCall(global, @src(), JSC__JSValue__getPropertyValue, .{ target, global, property_name.ptr, @intCast(property_name.len) })) {
             .property_does_not_exist_on_object => null,
             .js_undefined => null,
@@ -1650,7 +1646,7 @@ pub const JSValue = enum(i64) {
     }
 
     // TODO: replace calls to this function with `getOptional`
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnTruthyComptime(this: JSValue, global: *JSGlobalObject, comptime property: []const u8) ?JSValue {
         if (comptime bun.ComptimeEnumMap(BuiltinName).has(property)) {
             return fastGetOwn(this, global, @field(BuiltinName, property));
@@ -1683,7 +1679,7 @@ pub const JSValue = enum(i64) {
     }
 
     // TODO: replace calls to this function with `getOptional`
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getTruthyComptime(this: JSValue, global: *JSGlobalObject, comptime property: []const u8) bun.JSError!?JSValue {
         if (comptime BuiltinName.has(property)) {
             return truthyPropertyValue(try fastGet(this, global, @field(BuiltinName, property)) orelse return null);
@@ -1694,7 +1690,7 @@ pub const JSValue = enum(i64) {
 
     // TODO: replace calls to this function with `getOptional`
     /// This Cannot handle numeric index property names safely. Please use `getTruthyPropertyValue` instead.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getTruthy(this: JSValue, global: *JSGlobalObject, property: []const u8) bun.JSError!?JSValue {
         if (try get(this, global, property)) |prop| {
             return truthyPropertyValue(prop);
@@ -1704,7 +1700,7 @@ pub const JSValue = enum(i64) {
     }
 
     /// Get a property value handling numeric index property names safely.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getTruthyPropertyValue(this: JSValue, global: *JSGlobalObject, property: []const u8) bun.JSError!?JSValue {
         if (try getPropertyValue(this, global, property)) |prop| {
             return truthyPropertyValue(prop);
@@ -1719,7 +1715,7 @@ pub const JSValue = enum(i64) {
     /// - .false
     /// - .js_undefined
     /// - an empty string
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getStringish(this: JSValue, global: *JSGlobalObject, property: []const u8) bun.JSError!?bun.String {
         var scope: TopExceptionScope = undefined;
         scope.init(global, @src());
@@ -1741,7 +1737,7 @@ pub const JSValue = enum(i64) {
             str;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toEnumFromMap(
         this: JSValue,
         globalThis: *JSGlobalObject,
@@ -1758,8 +1754,7 @@ pub const JSValue = enum(i64) {
                 pub const list = brk: {
                     var str: []const u8 = "'";
                     const field_names = bun.meta.enumFieldNames(Enum);
-                    // safe-transpile: for with index access requires manual review
-    for (field_names, 0..) |entry, i| {
+                    for (field_names, 0..) |entry, i| {
                         str = str ++ entry ++ "'";
                         if (i < field_names.len - 2) {
                             str = str ++ ", '";
@@ -1777,12 +1772,12 @@ pub const JSValue = enum(i64) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toEnum(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime Enum: type) JSError!Enum {
         return toEnumFromMap(this, globalThis, property_name, Enum, Enum.Map);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toOptionalEnum(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime Enum: type) JSError!?Enum {
         if (this.isEmptyOrUndefinedOrNull())
             return null;
@@ -1790,7 +1785,7 @@ pub const JSValue = enum(i64) {
         return toEnum(this, globalThis, property_name, Enum);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOptionalEnum(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime Enum: type) JSError!?Enum {
         if (comptime BuiltinName.has(property_name)) {
             if (try fastGet(this, globalThis, @field(BuiltinName, property_name))) |prop| {
@@ -1809,7 +1804,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnOptionalEnum(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime Enum: type) JSError!?Enum {
         if (comptime BuiltinName.has(property_name)) {
             if (fastGetOwn(this, globalThis, @field(BuiltinName, property_name))) |prop| {
@@ -1828,7 +1823,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn coerceToArray(prop: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?JSValue {
         if (!prop.jsTypeLoose().isArray()) {
             return globalThis.throwInvalidArguments(property_name ++ " must be an array", .{});
@@ -1841,7 +1836,7 @@ pub const JSValue = enum(i64) {
         return prop;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getArray(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?JSValue {
         if (try this.getOptional(globalThis, property_name, JSValue)) |prop| {
             return coerceToArray(prop, globalThis, property_name);
@@ -1850,7 +1845,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnArray(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?JSValue {
         if (try getOwnTruthy(this, globalThis, property_name)) |prop| {
             return coerceToArray(prop, globalThis, property_name);
@@ -1859,7 +1854,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnObject(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?*jsc.JSObject {
         if (try getOwnTruthy(this, globalThis, property_name)) |prop| {
             const obj = prop.getObject() orelse {
@@ -1872,7 +1867,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getFunction(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?JSValue {
         if (try this.getOptional(globalThis, property_name, JSValue)) |prop| {
             if (!prop.isCell() or !prop.isCallable()) {
@@ -1885,7 +1880,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnFunction(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8) JSError!?JSValue {
         if (getOwnTruthy(this, globalThis, property_name)) |prop| {
             if (!prop.isCell() or !prop.isCallable()) {
@@ -1898,7 +1893,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn coerceOptional(prop: JSValue, global: *JSGlobalObject, comptime property_name: []const u8, comptime T: type) JSError!T {
         switch (comptime T) {
             JSValue => return prop,
@@ -1917,7 +1912,7 @@ pub const JSValue = enum(i64) {
 
     /// Many Bun API are loose and simply want to check if a value is truthy
     /// Missing value and undefined return zig `null`. JS null returns `false`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn getBooleanLoose(this: JSValue, global: *JSGlobalObject, comptime property_name: []const u8) JSError!?bool {
         const prop = try this.get(global, property_name) orelse return null;
         return prop.toBoolean();
@@ -1925,7 +1920,7 @@ pub const JSValue = enum(i64) {
 
     /// Many Node.js APIs use `validateBoolean`
     /// Missing value and undefined return `null`
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn getBooleanStrict(this: JSValue, global: *JSGlobalObject, comptime property_name: []const u8) JSError!?bool {
         const prop = try this.get(global, property_name) orelse return null;
 
@@ -1938,7 +1933,7 @@ pub const JSValue = enum(i64) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn getOptional(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime T: type) JSError!?T {
         const prop = try this.get(globalThis, property_name) orelse return null;
         bun.assert(prop != .zero);
@@ -1950,7 +1945,7 @@ pub const JSValue = enum(i64) {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOptionalInt(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime Type: type) JSError!?Type {
         const value = try this.get(globalThis, property_name) orelse return null;
         const info = @typeInfo(Type);
@@ -1964,7 +1959,7 @@ pub const JSValue = enum(i64) {
         return try globalThis.validateIntegerRange(value, Type, 0, .{ .min = min, .max = max, .field_name = property_name });
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOwnOptional(this: JSValue, globalThis: *JSGlobalObject, comptime property_name: []const u8, comptime T: type) JSError!?T {
         const prop = (if (comptime BuiltinName.has(property_name))
             fastGetOwn(this, globalThis, @field(BuiltinName, property_name))
@@ -2213,12 +2208,12 @@ pub const JSValue = enum(i64) {
     }
 
     pub inline fn toU16(this: JSValue) u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(u16, @truncate(@max(this.toInt32(), 0)));
     }
 
     pub inline fn toU32(this: JSValue) u32 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(u32, @intCast(@min(@max(this.toInt64(), 0), std.math.maxInt(u32))));
     }
 
@@ -2273,7 +2268,7 @@ pub const JSValue = enum(i64) {
         ctx: anytype,
         callback: *const fn (vm: *VM, globalObject: *JSGlobalObject, ctx: @TypeOf(ctx), nextValue: JSValue) callconv(.c) void,
     ) bun.JSError!void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const func = @as(*const fn (vm: *VM, globalObject: *JSGlobalObject, ctx: ?*anyopaque, nextValue: JSValue) callconv(.c) void, @ptrCast(callback));
         return bun.jsc.fromJSHostCallGeneric(globalObject, @src(), JSC__JSValue__forEach, .{ this, globalObject, ctx, func });
     }
@@ -2290,25 +2285,23 @@ pub const JSValue = enum(i64) {
 
     // TODO: remove this (no replacement)
     pub inline fn asRef(this: JSValue) C_API.JSValueRef {
-// safe-transpile: @bitCast requires manual review
         return @as(C_API.JSValueRef, @ptrFromInt(@as(usize, @bitCast(@intFromEnum(this)))));
     }
 
     // TODO: remove this (no replacement)
     pub inline fn c(this: C_API.JSValueRef) JSValue {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @as(JSValue, @enumFromInt(@as(backing_int, @bitCast(@intFromPtr(this)))));
     }
 
     // TODO: remove this (no replacement)
     pub inline fn fromRef(this: C_API.JSValueRef) JSValue {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @as(JSValue, @enumFromInt(@as(backing_int, @bitCast(@intFromPtr(this)))));
     }
 
     // TODO: remove this (no replacement)
     pub inline fn asObjectRef(this: JSValue) C_API.JSObjectRef {
-// safe-transpile: @bitCast requires manual review
         return @ptrFromInt(@as(usize, @bitCast(@intFromEnum(this))));
     }
 
@@ -2320,7 +2313,6 @@ pub const JSValue = enum(i64) {
     }
 
     pub fn uncheckedPtrCast(value: JSValue, comptime T: type) *T {
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(value.asEncoded().asPtr));
     }
 
@@ -2343,7 +2335,7 @@ pub const JSValue = enum(i64) {
     extern "c" fn Bun__JSValue__deserialize(global: *JSGlobalObject, data: [*]const u8, len: usize) JSValue;
 
     /// Deserializes a JSValue from a serialized buffer. Zig version of `import('bun:jsc').deserialize`
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn deserialize(bytes: []const u8, global: *JSGlobalObject) bun.JSError!JSValue {
         return bun.jsc.fromJSHostCall(global, @src(), Bun__JSValue__deserialize, .{ global, bytes.ptr, bytes.len });
     }
@@ -2456,11 +2448,10 @@ pub const JSValue = enum(i64) {
 
             inline []const u16, []const u32, []const i16, []const i8, []const i32, []const f32 => {
                 var array = try jsc.JSValue.createEmptyArray(globalObject, value.len);
-                // safe-transpile: for with index access requires manual review
-    for (value, 0..) |item, i| {
+                for (value, 0..) |item, i| {
                     try array.putIndex(
                         globalObject,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         @truncate(i),
                         .jsNumber(item),
                     );
@@ -2475,13 +2466,12 @@ pub const JSValue = enum(i64) {
                     const Child = comptime std.meta.Child(Type);
 
                     var array = try jsc.JSValue.createEmptyArray(globalObject, value.len);
-                    // safe-transpile: for with index access requires manual review
-    for (value, 0..) |*item, i| {
+                    for (value, 0..) |*item, i| {
                         const res = try fromAny(globalObject, *Child, item);
                         if (res == .zero) return .zero;
                         try array.putIndex(
                             globalObject,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             @truncate(i),
                             res,
                         );

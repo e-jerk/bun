@@ -15,7 +15,6 @@ pub fn init(this: *DeferredBatchTask) void {
 }
 
 pub fn getBundleV2(this: *DeferredBatchTask) *bun.BundleV2 {
-// safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("drain_defer_task", this));
 }
 

@@ -270,7 +270,6 @@ pub fn migrateNPMLockfile(
     try id_map.ensureTotalCapacity(allocator, packages_properties.len);
     var num_extern_strings: u32 = 0;
     var package_idx: u32 = 0;
-    // safe-transpile: for with index access requires manual review
     for (packages_properties.slice(), 0..) |entry, i| {
         const pkg_path = entry.key.?.asString(allocator).?;
         if (entry.value.?.data != .e_object)
@@ -282,7 +281,7 @@ pub fn migrateNPMLockfile(
             id_map.putAssumeCapacity(
                 pkg_path,
                 IdMapValue{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .old_json_index = @truncate(i),
                     .new_package_id = package_id_is_link,
                 },
@@ -293,7 +292,7 @@ pub fn migrateNPMLockfile(
             id_map.putAssumeCapacity(
                 pkg_path,
                 IdMapValue{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .old_json_index = @truncate(i),
                     .new_package_id = package_id_is_bundled,
                 },
@@ -307,7 +306,7 @@ pub fn migrateNPMLockfile(
         id_map.putAssumeCapacity(
             pkg_path,
             IdMapValue{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .old_json_index = @truncate(i),
                 .new_package_id = package_idx,
             },
@@ -329,7 +328,7 @@ pub fn migrateNPMLockfile(
                 0 => return error.InvalidNPMLockfile,
                 1 => {},
                 else => {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     num_extern_strings += @truncate(bin.data.e_object.properties.len * 2);
                 },
             }
@@ -356,27 +355,26 @@ pub fn migrateNPMLockfile(
 
                 const resolved_url = allocator.alloc(u8, count) catch unreachable;
                 var remain = resolved_url;
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(remain[0..registry.url.href.len], registry.url.href);
                 remain = remain[registry.url.href.len..];
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(remain[0..pkg_name.len], pkg_name);
                 remain = remain[pkg_name.len..];
                 remain[0.."/-/".len].* = "/-/".*;
                 remain = remain["/-/".len..];
                 if (pkg_name[0] == '@') {
                     const slash_index = strings.indexOfChar(pkg_name, '/') orelse unreachable;
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(remain[0..pkg_name[slash_index + 1 ..].len], pkg_name[slash_index + 1 ..]);
                     remain = remain[pkg_name[slash_index + 1 ..].len..];
                 } else {
-// safe-transpile: @memcpy requires manual review
                     @memcpy(remain[0..pkg_name.len], pkg_name);
                     remain = remain[pkg_name.len..];
                 }
                 remain[0] = '-';
                 remain = remain[1..];
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(remain[0..version_str.len], version_str);
                 remain = remain[version_str.len..];
                 remain[0..".tgz".len].* = ".tgz".*;
@@ -406,8 +404,7 @@ pub fn migrateNPMLockfile(
         try this.workspace_paths.ensureTotalCapacity(allocator, wksp.map.unmanaged.entries.len);
         try this.workspace_versions.ensureTotalCapacity(allocator, wksp.map.unmanaged.entries.len);
 
-        // safe-transpile: for with index access requires manual review
-    for (wksp.map.keys(), wksp.map.values()) |k, v| {
+        for (wksp.map.keys(), wksp.map.values()) |k, v| {
             const name_hash = stringHash(v.name);
 
             if (comptime Environment.allow_assert) {
@@ -485,7 +482,7 @@ pub fn migrateNPMLockfile(
 
         const name_hash = stringHash(pkg_name);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const package_id: Install.PackageID = @intCast(this.packages.len);
         if (Environment.allow_assert) {
             // If this is false, then it means we wrote wrong resolved ids
@@ -594,9 +591,9 @@ pub fn migrateNPMLockfile(
                 }
 
                 const view: Install.ExternalStringList = .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .off = @truncate(this.buffers.extern_strings.items.len),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .len = @intCast(bin.data.e_object.properties.len * 2),
                 };
 
@@ -687,19 +684,19 @@ pub fn migrateNPMLockfile(
                 resolution_list[package_idx] = .{ .len = 0 };
             } else {
                 // Calculate the offset + length by pointer arithmetic
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 const len: u32 = @truncate((@intFromPtr(resolutions_buf.ptr) - @intFromPtr(resolutions_start)) / @sizeOf(Install.PackageID));
                 if (Environment.allow_assert) {
                     bun.assert(len > 0);
                     bun.assert(len == ((@intFromPtr(dependencies_buf.ptr) - @intFromPtr(dependencies_start)) / @sizeOf(Dependency)));
                 }
                 dependencies_list[package_idx] = .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .off = @truncate((@intFromPtr(dependencies_start) - @intFromPtr(this.buffers.dependencies.items.ptr)) / @sizeOf(Dependency)),
                     .len = len,
                 };
                 resolution_list[package_idx] = .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .off = @truncate((@intFromPtr(resolutions_start) - @intFromPtr(this.buffers.resolutions.items.ptr)) / @sizeOf(Install.PackageID)),
                     .len = len,
                 };
@@ -727,8 +724,7 @@ pub fn migrateNPMLockfile(
         if (is_first) {
             is_first = false;
             if (workspace_map) |wksp| {
-                // safe-transpile: for with index access requires manual review
-    for (wksp.keys(), wksp.values()) |key, value| {
+                for (wksp.keys(), wksp.values()) |key, value| {
                     const entry1 = id_map.get(key) orelse return error.InvalidNPMLockfile;
                     const name_hash = stringHash(value.name);
                     const wksp_name = try string_buf.append(value.name);
@@ -800,7 +796,7 @@ pub fn migrateNPMLockfile(
                     const str_node_modules = if (pkg_path.len == 0) "node_modules/" else "/node_modules/";
                     const suffix_len = str_node_modules.len + name_bytes.len;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     var buf_len: u32 = @as(u32, @intCast(pkg_path.len + suffix_len));
                     if (buf_len > name_checking_buf.len) {
                         return error.PathTooLong;
@@ -993,13 +989,13 @@ pub fn migrateNPMLockfile(
                         // step down each `node_modules/` of the source
                         if (strings.lastIndexOf(name_checking_buf[0..buf_len -| ("node_modules/".len + name_bytes.len)], "node_modules/")) |idx| {
                             debug("found 'node_modules/' at {d}", .{idx});
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             buf_len = @intCast(idx + "node_modules/".len + name_bytes.len);
                             bun.copy(u8, name_checking_buf[idx + "node_modules/".len .. idx + "node_modules/".len + name_bytes.len], name_bytes);
                         } else if (!strings.hasPrefixComptime(name_checking_buf[0..buf_len], "node_modules/")) {
                             // this is hit if you are at something like `packages/etc`, from `packages/etc/node_modules/xyz`
                             // we need to hit the root `node_modules/{name}`
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             buf_len = @intCast("node_modules/".len + name_bytes.len);
                             bun.copy(u8, name_checking_buf[0..buf_len], "node_modules/");
                             bun.copy(u8, name_checking_buf[buf_len - name_bytes.len .. buf_len], name_bytes);
@@ -1053,16 +1049,14 @@ pub fn migrateNPMLockfile(
         bun.assert(this.buffers.dependencies.items.len == (@intFromPtr(dependencies_buf.ptr) - @intFromPtr(this.buffers.dependencies.items.ptr)) / @sizeOf(Dependency));
         bun.assert(this.buffers.dependencies.items.len <= num_deps);
         var crash = false;
-        // safe-transpile: for with index access requires manual review
-    for (this.buffers.dependencies.items, 0..) |r, i| {
+        for (this.buffers.dependencies.items, 0..) |r, i| {
             // 'if behavior is uninitialized'
             if (r.behavior.eq(.{})) {
                 debug("dependency index '{d}' was not set", .{i});
                 crash = true;
             }
         }
-        // safe-transpile: for with index access requires manual review
-    for (this.buffers.resolutions.items, 0..) |r, i| {
+        for (this.buffers.resolutions.items, 0..) |r, i| {
             if (r == unset_package_id) {
                 debug("resolution index '{d}' was not set", .{i});
                 crash = true;
@@ -1076,7 +1070,6 @@ pub fn migrateNPMLockfile(
     // A package not having a resolution, however, is not our fault.
     // This can be triggered by a bad lockfile with extra packages. NPM should trim packages out automatically.
     var is_missing_resolutions = false;
-    // safe-transpile: for with index access requires manual review
     for (resolutions, 0..) |r, i| {
         if (r.tag == .uninitialized) {
             Output.warn("Could not resolve package '{s}' in lockfile during migration", .{this.packages.items(.name)[i].slice(this.buffers.string_bytes.items)});

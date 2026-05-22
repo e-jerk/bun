@@ -10,7 +10,7 @@ pub fn BufferedReader(comptime buffer_size: usize, comptime ReaderType: type) ty
 
         const Self = @This();
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn read(self: *Self, dest: []u8) Error!usize {
             // First try reading from the already buffered data onto the destination.
             const current = self.buf[self.start..self.end];
@@ -93,7 +93,7 @@ pub fn SinglyLinkedList(comptime T: type) type {
             pub fn findLast(node: *Node) *Node {
                 var it = node;
                 while (true) {
-var loop_limit: usize = 0;
+                    var loop_limit: usize = 0;
                     loop_limit += 1;
                     std.debug.assert(loop_limit <= 1_000_000);
                     it = it.next orelse return it;
@@ -512,7 +512,7 @@ pub const RapidHash = struct {
     const RAPID_SEED: u64 = 0xbdd89aa982704029;
     const RAPID_SECRET: [3]u64 = .{ 0x2d358dccaa6c78a5, 0x8bb84b93962eacc9, 0x4b33a62ed433d4a3 };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(seed: u64, input: []const u8) u64 {
         const sc = RAPID_SECRET;
         const len = input.len;
@@ -525,7 +525,7 @@ pub const RapidHash = struct {
 
         if (len <= 16) {
             if (len >= 4) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const d: u64 = ((len & 24) >> @intCast(len >> 3));
                 const e = len - 4;
                 a = (r32(k) << 32) | r32(k[e..]);
@@ -597,8 +597,7 @@ pub const RapidHash = struct {
             0x4b575f5bf25600d6,
         };
 
-        // safe-transpile: for with index access requires manual review
-    for (sizes, outcomes) |s, e| {
+        for (sizes, outcomes) |s, e| {
             const r = hash(RAPID_SEED, bytes[0..s]);
 
             try expectEqual(e, r);
@@ -607,9 +606,9 @@ pub const RapidHash = struct {
 
     inline fn mum(a: *u64, b: *u64) void {
         const r = @as(u128, a.*) * b.*;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         a.* = @truncate(r);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         b.* = @truncate(r >> 64);
     }
 
@@ -620,12 +619,12 @@ pub const RapidHash = struct {
         return copy_a ^ copy_b;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn r64(p: []const u8) u64 {
         return readInt(u64, p[0..8], .little);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn r32(p: []const u8) u64 {
         return readInt(u32, p[0..4], .little);
     }

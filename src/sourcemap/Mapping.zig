@@ -58,11 +58,11 @@ pub const List = struct {
         var old_slices = without_names.slice();
         var new_slices = with_names.slice();
 
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(new_slices.items(.generated), old_slices.items(.generated));
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(new_slices.items(.original), old_slices.items(.original));
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(new_slices.items(.source_index), old_slices.items(.source_index));
         @memset(new_slices.items(.name_index), -1);
 
@@ -193,7 +193,7 @@ pub const List = struct {
 
     pub fn getName(this: *List, index: i32) ?[]const u8 {
         if (index < 0) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const i: usize = @intCast(index);
 
         if (i >= this.names.len) return null;
@@ -230,7 +230,7 @@ pub const Lookup = struct {
     ///
     /// - `bun build --sourcemap`, it is another file on disk
     /// - `bun build --compile --sourcemap`, it is an embedded file.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn displaySourceURLIfNeeded(lookup: Lookup, base_filename: []const u8) ?bun.String {
         const source_map = lookup.source_map orelse return null;
         // See doc comment on `external_source_names`
@@ -239,7 +239,7 @@ pub const Lookup = struct {
         if (lookup.mapping.source_index >= source_map.external_source_names.len)
             return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const name = source_map.external_source_names[@intCast(lookup.mapping.source_index)];
 
         if (source_map.is_standalone_module_graph) {
@@ -259,7 +259,7 @@ pub const Lookup = struct {
     ///
     /// This data is freed after printed on the assumption that printing
     /// errors to the console are rare (this isnt used for error.stack)
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getSourceCode(lookup: Lookup, base_filename: []const u8) ?bun.jsc.ZigString.Slice {
         const bytes = bytes: {
             if (lookup.prefetched_source_code) |code| {
@@ -281,7 +281,7 @@ pub const Lookup = struct {
                 if (index >= source_map.external_source_names.len)
                     return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const code = serialized.sourceFileContents(@intCast(index));
 
                 return bun.jsc.ZigString.Slice.fromUTF8NeverFree(code orelse return null);
@@ -290,7 +290,7 @@ pub const Lookup = struct {
             if (provider.getSourceMap(
                 base_filename,
                 source_map.underlying_provider.load_hint,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .{ .source_only = @intCast(index) },
             )) |parsed|
                 if (parsed.source_contents) |contents|
@@ -299,7 +299,7 @@ pub const Lookup = struct {
             if (index >= source_map.external_source_names.len)
                 return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const name = source_map.external_source_names[@intCast(index)];
 
             var buf: bun.PathBuffer = undefined;
@@ -414,7 +414,7 @@ pub fn parse(
                     .msg = "Missing generated column value",
                     .err = error.MissingGeneratedColumnValue,
                     .value = generated.columns.zeroBased(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -429,7 +429,7 @@ pub fn parse(
                     .msg = "Invalid generated column value",
                     .err = error.InvalidGeneratedColumnValue,
                     .value = generated.columns.zeroBased(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -462,7 +462,7 @@ pub fn parse(
                 .fail = .{
                     .msg = "Invalid source index delta",
                     .err = error.InvalidSourceIndexDelta,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -475,7 +475,7 @@ pub fn parse(
                     .msg = "Invalid source index value",
                     .err = error.InvalidSourceIndexValue,
                     .value = source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -489,7 +489,7 @@ pub fn parse(
                 .fail = .{
                     .msg = "Missing original line",
                     .err = error.MissingOriginalLine,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -502,7 +502,7 @@ pub fn parse(
                     .msg = "Invalid original line value",
                     .err = error.InvalidOriginalLineValue,
                     .value = original.lines.zeroBased(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -517,7 +517,7 @@ pub fn parse(
                     .msg = "Missing original column value",
                     .err = error.MissingOriginalColumnValue,
                     .value = original.columns.zeroBased(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -530,7 +530,7 @@ pub fn parse(
                     .msg = "Invalid original column value",
                     .err = error.InvalidOriginalColumnValue,
                     .value = original.columns.zeroBased(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                 },
             };
@@ -555,9 +555,9 @@ pub fn parse(
                             .fail = .{
                                 .msg = "Invalid name index delta",
                                 .err = error.InvalidNameIndexDelta,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 .value = @intCast(c),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                             },
                         };
@@ -572,7 +572,7 @@ pub fn parse(
                                     .fail = .{
                                         .msg = "Out of memory",
                                         .err = error.OutOfMemory,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         .loc = .{ .start = @as(i32, @intCast(bytes.len - remain.len)) },
                                     },
                                 };

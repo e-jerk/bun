@@ -57,7 +57,7 @@ pub const DefineData = struct {
                 .method_call_must_be_replaced_with_undefined = options.method_call_must_be_replaced_with_undefined,
             },
             .original_name_ptr = if (options.original_name) |name| name.ptr else null,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .original_name_len = if (options.original_name) |name| @truncate(name.len) else 0,
         };
     }
@@ -122,7 +122,7 @@ pub const DefineData = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromMergeableInputEntry(user_defines: *UserDefines, key: []const u8, value_str: []const u8, value_is_undefined: bool, method_call_must_be_replaced_with_undefined_: bool, log: *logger.Log, allocator: std.mem.Allocator) !void {
         user_defines.putAssumeCapacity(key, try .parse(
             key,
@@ -134,7 +134,7 @@ pub const DefineData = struct {
         ));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(
         key: []const u8,
         value_str: []const u8,
@@ -180,7 +180,7 @@ pub const DefineData = struct {
             return .{
                 .value = value,
                 .original_name_ptr = if (value_str.len > 0) value_str.ptr else null,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .original_name_len = @truncate(value_str.len),
                 .flags = .{
                     .can_be_removed_if_unused = true,
@@ -199,7 +199,7 @@ pub const DefineData = struct {
         return .{
             .value = cloned,
             .original_name_ptr = if (value_str.len > 0) value_str.ptr else null,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .original_name_len = @truncate(value_str.len),
             .flags = .{
                 .can_be_removed_if_unused = expr.isPrimitiveLiteral(),
@@ -212,7 +212,7 @@ pub const DefineData = struct {
     pub fn fromInput(defines: RawDefines, drop: []const []const u8, log: *logger.Log, allocator: std.mem.Allocator) !UserDefines {
         var user_defines = UserDefines.init(allocator);
         var iterator = defines.iterator();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try user_defines.ensureUnusedCapacity(@truncate(defines.count() + drop.len));
         while (iterator.next()) |entry| {
             try fromMergeableInputEntry(&user_defines, entry.key_ptr.*, entry.value_ptr.*, false, false, log, allocator);
@@ -258,7 +258,7 @@ pub const Define = struct {
 
     pub const Data = DefineData;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn forIdentifier(this: *const Define, name: []const u8) ?*const IdentifierDefine {
         if (this.identifiers.getPtr(name)) |data| {
             return data;
@@ -277,7 +277,7 @@ pub const Define = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insert(define: *Define, allocator: std.mem.Allocator, key: []const u8, value: DefineData) !void {
         // If it has a dot, then it's a DotDefine.
         // e.g. process.env.NODE_ENV
@@ -298,7 +298,6 @@ pub const Define = struct {
             const gpe_entry = try define.dots.getOrPut(tail);
 
             if (gpe_entry.found_existing) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (gpe_entry.value_ptr.*) |*part| {
                     // ["process", "env"] === ["process", "env"] (if that actually worked)
                     if (arePartsEqual(part.parts, parts)) {

@@ -335,7 +335,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
     // - `import("x")`: returns the full module namespace at runtime — consumer
     //   can destructure or access any export. Must mark as .all. We cannot
     //   safely assume which exports will be used.
-    // safe-transpile: for with index access requires manual review
     for (file_import_records.slice(), 0..) |ir, idx| {
         const target = if (ir.source_index.isValid())
             ir.source_index.get()
@@ -344,7 +343,7 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
         else
             continue;
         if (ir.flags.is_internal) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (named_ir_indices.contains(@intCast(idx))) continue;
         if (ir.flags.was_originally_bare_import) continue;
         if (ir.kind == .require) {
@@ -391,7 +390,6 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
 
     // Add bare require/dynamic-import targets to BFS as star imports — both
     // always need the full namespace.
-    // safe-transpile: for with index access requires manual review
     for (file_import_records.slice(), 0..) |ir, idx| {
         const target = if (ir.source_index.isValid())
             ir.source_index.get()
@@ -400,7 +398,7 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
         else
             continue;
         if (ir.flags.is_internal) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (named_ir_indices.contains(@intCast(idx))) continue;
         if (ir.flags.was_originally_bare_import) continue;
         const should_add = ir.kind == .require or ir.kind == .dynamic;
@@ -474,10 +472,9 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
         var barrel_ir = &this.graph.ast.slice().items(.import_records)[barrel_idx];
 
         if (item.is_star) {
-            // safe-transpile: for with index access requires manual review
-    for (barrel_ir.slice(), 0..) |rec, idx| {
+            for (barrel_ir.slice(), 0..) |rec, idx| {
                 if (rec.flags.is_unused and !rec.flags.is_internal) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     if (unDeferRecord(barrel_ir, @intCast(idx))) {
                         try barrels_to_resolve.put(barrels_to_resolve_alloc, barrel_idx, {});
                     }

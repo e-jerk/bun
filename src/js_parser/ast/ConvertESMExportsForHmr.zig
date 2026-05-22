@@ -30,7 +30,6 @@ pub fn convertStmt(ctx: *ConvertESMExportsForHmr, p: anytype, stmt: Stmt) !void 
             st.is_export = false;
 
             var new_len: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (st.decls.slice()) |*decl_ptr| {
                 const decl = decl_ptr.*; // explicit copy to avoid aliasinng
                 const value = decl.value orelse {
@@ -70,7 +69,7 @@ pub fn convertStmt(ctx: *ConvertESMExportsForHmr, p: anytype, stmt: Stmt) !void 
             if (new_len == 0) {
                 return;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             st.decls.len = @intCast(new_len);
 
             break :stmt stmt;
@@ -211,7 +210,6 @@ pub fn convertStmt(ctx: *ConvertESMExportsForHmr, p: anytype, stmt: Stmt) !void 
                 null,
                 stmt.loc,
             );
-// safe-transpile: for loop with pointer capture requires manual review
             for (st.items) |*item| {
                 const ref = item.name.ref.?;
                 const symbol = &p.symbols.items[ref.innerIndex()];
@@ -358,7 +356,7 @@ fn deduplicatedImport(
         .star_name_loc = star_name_loc,
     }, loc));
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     gop.value_ptr.* = .{ .stmt_index = @intCast(ctx.stmts.items.len - 1) };
     return .{ .namespace_ref = namespace_ref, .import_record_index = import_record_index };
 }
@@ -452,7 +450,7 @@ pub fn finalize(ctx: *ConvertESMExportsForHmr, p: anytype, all_parts: []js_ast.P
             const len = ctx.export_props.items.len;
             ctx.export_props.items.len += export_star_len;
             bun.copy(G.Property, ctx.export_props.items[export_star_len..], ctx.export_props.items[0..len]);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(ctx.export_props.items[0..export_star_len], ctx.export_star_props.items);
         }
     }
@@ -493,15 +491,13 @@ pub fn finalize(ctx: *ConvertESMExportsForHmr, p: anytype, all_parts: []js_ast.P
     }
 
     // Merge all part metadata into the first part.
-// safe-transpile: for loop with pointer capture requires manual review
     for (all_parts[0 .. all_parts.len - 1]) |*part| {
         try ctx.last_part.declared_symbols.appendList(p.allocator, part.declared_symbols);
         try ctx.last_part.import_record_indices.appendSlice(
             p.allocator,
             part.import_record_indices.slice(),
         );
-        // safe-transpile: for with index access requires manual review
-    for (part.symbol_uses.keys(), part.symbol_uses.values()) |k, v| {
+        for (part.symbol_uses.keys(), part.symbol_uses.values()) |k, v| {
             const gop = try ctx.last_part.symbol_uses.getOrPut(p.allocator, k);
             if (!gop.found_existing) {
                 gop.value_ptr.* = v;
@@ -514,7 +510,7 @@ pub fn finalize(ctx: *ConvertESMExportsForHmr, p: anytype, all_parts: []js_ast.P
         part.tag = .dead_due_to_inlining;
         part.dependencies.clearRetainingCapacity();
         try part.dependencies.append(p.allocator, .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .part_index = @intCast(all_parts.len - 1),
             .source_index = p.source.index,
         });

@@ -4,9 +4,8 @@ const mixed_decoder = brk: {
         std.ascii.control_code.ff,
     });
 
-    // safe-transpile: for with index access requires manual review
     for (zig_base64.url_safe_alphabet_chars[62..], 62..) |c, i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         decoder.decoder.char_to_index[c] = @as(u8, @intCast(i));
     }
 
@@ -57,9 +56,9 @@ pub fn encodeAlloc(allocator: std.mem.Allocator, source: []const u8) !bun.ByteLi
     const encoded_len = encode(destination, source);
     return .{
         .ptr = destination.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .len = @truncate(encoded_len),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .cap = @truncate(len),
     };
 }
@@ -136,7 +135,7 @@ const zig_base64 = struct {
     };
 
     pub const standard_alphabet_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".*;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn standardBase64DecoderWithIgnore(ignore: []const u8) Base64DecoderWithIgnore {
         return Base64DecoderWithIgnore.init(standard_alphabet_chars, '=', ignore);
     }
@@ -160,7 +159,7 @@ const zig_base64 = struct {
     };
 
     pub const url_safe_alphabet_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".*;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn urlSafeBase64DecoderWithIgnore(ignore: []const u8) Base64DecoderWithIgnore {
         return Base64DecoderWithIgnore.init(url_safe_alphabet_chars, '=', ignore);
     }
@@ -218,14 +217,13 @@ const zig_base64 = struct {
         }
 
         /// dest.len must at least be what you get from ::calcSize.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn encode(encoder: *const Base64Encoder, dest: []u8, source: []const u8) []const u8 {
             const out_len = encoder.calcSize(source.len);
             assert(dest.len >= out_len);
 
             const out_idx = encoder.encodeWithoutSizeCheck(dest, source);
             if (encoder.pad_char) |pad_char| {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (dest[out_idx..out_len]) |*pad| {
                     pad.* = pad_char;
                 }
@@ -233,7 +231,7 @@ const zig_base64 = struct {
             return dest[0..out_len];
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn encodeWithoutSizeCheck(encoder: *const Base64Encoder, dest: []u8, source: []const u8) usize {
             var acc: u12 = 0;
             var acc_len: u4 = 0;
@@ -243,13 +241,13 @@ const zig_base64 = struct {
                 acc_len += 8;
                 while (acc_len >= 6) {
                     acc_len -= 6;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     dest[out_idx] = encoder.alphabet_chars[@as(u6, @truncate((acc >> acc_len)))];
                     out_idx += 1;
                 }
             }
             if (acc_len > 0) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 dest[out_idx] = encoder.alphabet_chars[@as(u6, @truncate((acc << 6 - acc_len)))];
                 out_idx += 1;
             }
@@ -272,12 +270,11 @@ const zig_base64 = struct {
             };
 
             var char_in_alphabet = [_]bool{false} ** 256;
-            // safe-transpile: for with index access requires manual review
-    for (alphabet_chars, 0..) |c, i| {
+            for (alphabet_chars, 0..) |c, i| {
                 assert(!char_in_alphabet[c]);
                 assert(pad_char == null or c != pad_char.?);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 result.char_to_index[c] = @as(u8, @intCast(i));
                 char_in_alphabet[c] = true;
             }
@@ -300,7 +297,7 @@ const zig_base64 = struct {
 
         /// Return the exact decoded size for a slice.
         /// `InvalidPadding` is returned if the input length is not valid.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn calcSizeForSlice(decoder: *const Base64Decoder, source: []const u8) Error!usize {
             const source_len = source.len;
             var result = try decoder.calcSizeUpperBound(source_len);
@@ -314,15 +311,14 @@ const zig_base64 = struct {
         /// dest.len must be what you get from ::calcSize.
         /// invalid characters result in error.InvalidCharacter.
         /// invalid padding results in error.InvalidPadding.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn decode(decoder: *const Base64Decoder, dest: []u8, source: []const u8) Error!void {
             if (decoder.pad_char != null and source.len % 4 != 0) return error.InvalidPadding;
             var acc: u12 = 0;
             var acc_len: u4 = 0;
             var dest_idx: usize = 0;
             var leftover_idx: ?usize = null;
-            // safe-transpile: for with index access requires manual review
-    for (source, 0..) |c, src_idx| {
+            for (source, 0..) |c, src_idx| {
                 const d = decoder.char_to_index[c];
                 if (d == invalid_char) {
                     if (decoder.pad_char == null or c != decoder.pad_char.?) return error.InvalidCharacter;
@@ -333,7 +329,7 @@ const zig_base64 = struct {
                 acc_len += 6;
                 if (acc_len >= 8) {
                     acc_len -= 8;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     dest[dest_idx] = @as(u8, @truncate(acc >> acc_len));
                     dest_idx += 1;
                 }
@@ -361,7 +357,7 @@ const zig_base64 = struct {
         decoder: Base64Decoder,
         char_is_ignored: [256]bool,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(alphabet_chars: [64]u8, pad_char: ?u8, ignore_chars: []const u8) Base64DecoderWithIgnore {
             var result = Base64DecoderWithIgnore{
                 .decoder = Base64Decoder.init(alphabet_chars, pad_char),
@@ -391,7 +387,7 @@ const zig_base64 = struct {
         /// Invalid padding results in error.InvalidPadding.
         /// Decoding more data than can fit in dest results in error.NoSpaceLeft. See also ::calcSizeUpperBound.
         /// Returns the number of bytes written to dest.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn decode(decoder_with_ignore: *const Base64DecoderWithIgnore, dest: []u8, source: []const u8, wrote: *usize) Error!void {
             const decoder = &decoder_with_ignore.decoder;
             var acc: u12 = 0;
@@ -403,8 +399,7 @@ const zig_base64 = struct {
                 wrote.* = dest_idx;
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (source, 0..) |c, src_idx| {
+            for (source, 0..) |c, src_idx| {
                 if (decoder_with_ignore.char_is_ignored[c]) continue;
                 const d = decoder.char_to_index[c];
                 if (d == Base64Decoder.invalid_char) {
@@ -422,7 +417,7 @@ const zig_base64 = struct {
                 if (acc_len >= 8) {
                     if (dest_idx == dest.len) return error.NoSpaceLeft;
                     acc_len -= 8;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     dest[dest_idx] = @as(u8, @truncate(acc >> acc_len));
                     dest_idx += 1;
                 }
@@ -521,7 +516,7 @@ const zig_base64 = struct {
         try testNoSpaceLeftError(codecs, "AAAAAA");
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn testAllApis(codecs: Codecs, expected_decoded: []const u8, expected_encoded: []const u8) !void {
         // Base64Encoder
         {
@@ -549,7 +544,7 @@ const zig_base64 = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn testDecodeIgnoreSpace(codecs: Codecs, expected_decoded: []const u8, encoded: []const u8) !void {
         const decoder_ignore_space = codecs.decoderWithIgnore(" ");
         var buffer: [0x100]u8 = undefined;
@@ -558,7 +553,7 @@ const zig_base64 = struct {
         try testing.expectEqualSlices(u8, expected_decoded, decoded[0..written]);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn testError(codecs: Codecs, encoded: []const u8, expected_err: anyerror) !void {
         const decoder_ignore_space = codecs.decoderWithIgnore(" ");
         var buffer: [0x100]u8 = undefined;
@@ -574,7 +569,7 @@ const zig_base64 = struct {
         } else |err| if (err != expected_err) return err;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn testNoSpaceLeftError(codecs: Codecs, encoded: []const u8) !void {
         const decoder_ignore_space = codecs.decoderWithIgnore(" ");
         var buffer: [0x100]u8 = undefined;

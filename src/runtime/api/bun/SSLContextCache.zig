@@ -150,7 +150,6 @@ export fn bun_ssl_ctx_cache_on_free(
     _ = index;
     _ = argl;
     _ = argp;
-// safe-transpile: @alignCast requires manual review
     const entry: *Entry = @ptrCast(@alignCast(ptr orelse return));
     entry.owner.mutex.lock();
     defer entry.owner.mutex.unlock();

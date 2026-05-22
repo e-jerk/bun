@@ -63,7 +63,7 @@ const ScanOpts = struct {
         return cwd_str;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn fromJS(globalThis: *JSGlobalObject, arguments: *ArgumentsSlice, comptime fnName: []const u8, arena: *Arena) bun.JSError!?ScanOpts {
         const optsObj: JSValue = arguments.nextEat() orelse return null;
         var out: ScanOpts = .{

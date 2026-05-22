@@ -58,13 +58,11 @@ fn hasTransitiveUseClientImpl(
     const import_records = all_import_records[source_index.get()];
 
     const result = result: {
-// safe-transpile: for loop with pointer capture requires manual review
         for (import_records.sliceConst()) |*import_record| {
             if (!import_record.source_index.isValid()) continue;
 
             // check if this import is a client boundary
-            // safe-transpile: for with index access requires manual review
-    for (referenced_source_indices, use_directives) |referenced_source_index, use_directive| {
+            for (referenced_source_indices, use_directives) |referenced_source_index, use_directive| {
                 if (use_directive != .client) continue;
                 // it's a client boundary
                 if (referenced_source_index == import_record.source_index.get()) break :result true;

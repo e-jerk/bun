@@ -50,7 +50,7 @@ pub const AstBuilder = struct {
             .allocator = allocator,
             .current_scope = scope.ptr,
             .source = source,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .source_index = @intCast(source.index.get()),
             .stmts = .empty,
             .scopes = .empty,
@@ -91,9 +91,9 @@ pub const AstBuilder = struct {
         p.current_scope = p.scopes.pop();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn newSymbol(p: *AstBuilder, kind: Symbol.Kind, identifier: []const u8) !Ref {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const inner_index: Ref.Int = @intCast(p.symbols.items.len);
         try p.symbols.append(p.allocator, .{
             .kind = kind,
@@ -117,7 +117,7 @@ pub const AstBuilder = struct {
         return &p.symbols.items[ref.inner_index];
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addImportRecord(p: *AstBuilder, path: []const u8, kind: ImportKind) !u32 {
         const index = p.import_records.items.len;
         try p.import_records.append(p.allocator, .{
@@ -125,11 +125,11 @@ pub const AstBuilder = struct {
             .kind = kind,
             .range = .{},
         });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(index);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn addImportStmt(
         p: *AstBuilder,
         path: []const u8,
@@ -145,8 +145,7 @@ pub const AstBuilder = struct {
 
         const clauses = try p.allocator.alloc(js_ast.ClauseItem, identifiers_to_import.len);
 
-        // safe-transpile: for with index access requires manual review
-    inline for (identifiers_to_import, &out, clauses) |import_id_untyped, *out_ref, *clause| {
+        inline for (identifiers_to_import, &out, clauses) |import_id_untyped, *out_ref, *clause| {
             const import_id: []const u8 = import_id_untyped; // must be given '[N][]const u8'
             const ref = try p.newSymbol(.import, import_id);
             if (p.hot_reloading) {
@@ -189,7 +188,7 @@ pub const AstBuilder = struct {
         return Expr.init(@TypeOf(data), data, Logger.Loc.Empty);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn newExternalSymbol(p: *AstBuilder, name: []const u8) !Ref {
         const ref = try p.newSymbol(.other, name);
         const sym = p.getSymbol(ref);
@@ -217,7 +216,7 @@ pub const AstBuilder = struct {
                     map.putAssumeCapacity(Ref{
                         .tag = .symbol,
                         .source_index = p.source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .inner_index = @intCast(i),
                     }, .{ .count_estimate = 1 });
                 }
@@ -231,8 +230,7 @@ pub const AstBuilder = struct {
         try top_level_symbols_to_parts.entries.setCapacity(p.allocator, module_scope.generated.len);
         top_level_symbols_to_parts.entries.len = module_scope.generated.len;
         const slice = top_level_symbols_to_parts.entries.slice();
-        // safe-transpile: for with index access requires manual review
-    for (
+        for (
             slice.items(.key),
             slice.items(.value),
             module_scope.generated.slice(),
@@ -261,7 +259,7 @@ pub const AstBuilder = struct {
             try hmr_transform_ctx.finalize(p, parts.slice());
             const new_parts = parts.slice();
             // preserve original capacity
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             parts.len = @intCast(new_parts.len);
             bun.assert(new_parts.ptr == parts.ptr);
         } else {
@@ -304,7 +302,7 @@ pub const AstBuilder = struct {
         return bun.handleOom(ab.newSymbol(.other, name orelse "temp"));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn recordExport(p: *AstBuilder, _: Logger.Loc, alias: []const u8, ref: Ref) !void {
         if (p.named_exports.get(alias)) |_| {
             // Duplicate exports are an error
@@ -341,7 +339,7 @@ pub const AstBuilder = struct {
         _ = ref;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn panic(p: *AstBuilder, comptime fmt: []const u8, args: anytype) noreturn {
         _ = p;
         Output.panic(fmt, args);

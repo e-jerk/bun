@@ -27,7 +27,7 @@ pub const WhyCommand = struct {
         optional_peer,
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn getSpecifierSpecificity(spec: []const u8) u8 {
         if (spec.len == 0) return 9;
         if (spec[0] == '*') return 1;
@@ -85,7 +85,7 @@ pub const WhyCommand = struct {
         version_pattern: []const u8 = "",
         version_query: ?Semver.Query.Group = null,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn init(pattern: []const u8) GlobPattern {
             if (std.mem.indexOfScalar(u8, pattern, '@')) |at_pos| {
                 if (at_pos > 0 and at_pos < pattern.len - 1) {
@@ -105,7 +105,7 @@ pub const WhyCommand = struct {
             return initForName(pattern);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn initForName(pattern: []const u8) GlobPattern {
             if (std.mem.indexOfScalar(u8, pattern, '*') == null) {
                 return .{ .pattern_type = .exact };
@@ -150,20 +150,20 @@ pub const WhyCommand = struct {
             return .{ .pattern_type = .exact };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn matchesName(self: GlobPattern, name: []const u8, pattern: []const u8) bool {
             return switch (self.pattern_type) {
                 .exact => strings.eql(name, pattern),
                 .prefix => std.mem.startsWith(u8, name, self.prefix),
                 .suffix => std.mem.endsWith(u8, name, self.suffix),
                 .middle => std.mem.startsWith(u8, name, self.prefix) and std.mem.endsWith(u8, name, self.suffix),
-// zust: use safe.String or safe.GuardedSlice for slice operations
+                // zust: use safe.String or safe.GuardedSlice for slice operations
                 .contains => std.mem.indexOf(u8, name, self.substring) != null,
                 else => false,
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn matchesVersion(self: GlobPattern, version: []const u8) bool {
             if (self.version_pattern.len == 0 or strings.eqlComptime(self.version_pattern, "latest")) {
                 return true;
@@ -186,7 +186,7 @@ pub const WhyCommand = struct {
             return std.mem.startsWith(u8, version, self.version_pattern);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn matches(self: GlobPattern, name: []const u8, version: []const u8, pattern: []const u8) bool {
             if (!self.matchesName(name, pattern)) return false;
             if (self.version_pattern.len > 0 and !self.matchesVersion(version)) return false;
@@ -289,8 +289,7 @@ pub const WhyCommand = struct {
             const dependencies = pkg.dependencies.get(dependencies_items);
             const resolutions = pkg.resolutions.get(resolutions_items);
 
-            // safe-transpile: for with index access requires manual review
-    for (dependencies, 0..) |dependency, dep_idx| {
+            for (dependencies, 0..) |dependency, dep_idx| {
                 const target_id = resolutions[dep_idx];
                 if (target_id >= packages.len) continue;
 
@@ -322,7 +321,7 @@ pub const WhyCommand = struct {
                     .version = dep_pkg_version,
                     .spec = spec,
                     .dep_type = dep_type,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .pkg_id = @as(PackageID, @intCast(pkg_idx)),
                     .workspace = strings.hasPrefixComptime(dep_pkg_version, "workspace:") or dep_pkg_version.len == 0,
                 });
@@ -339,7 +338,7 @@ pub const WhyCommand = struct {
 
             try target_versions.append(.{
                 .version = version,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .pkg_id = @as(PackageID, @intCast(pkg_idx)),
             });
         }
@@ -365,8 +364,7 @@ pub const WhyCommand = struct {
 
                     std.sort.insertion(DependentInfo, dependents.items, {}, compareDependents);
 
-                    // safe-transpile: for with index access requires manual review
-    for (dependents.items, 0..) |dep, dep_idx| {
+                    for (dependents.items, 0..) |dep, dep_idx| {
                         const is_last = dep_idx == dependents.items.len - 1;
                         const prefix = if (is_last) PREFIX_LAST else PREFIX_MIDDLE;
 
@@ -422,7 +420,7 @@ pub const WhyCommand = struct {
         all_dependents: *const std.AutoHashMap(PackageID, std.array_list.Managed(DependentInfo)),
         path_tracker: std.AutoHashMap(PackageID, usize),
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn init(allocator: std.mem.Allocator, string_bytes: []const u8, top_only: bool, all_dependents: *const std.AutoHashMap(PackageID, std.array_list.Managed(DependentInfo))) TreeContext {
             return .{
                 .allocator = allocator,
@@ -460,8 +458,7 @@ pub const WhyCommand = struct {
 
             std.sort.insertion(DependentInfo, sorted_dependents, {}, compareDependents);
 
-            // safe-transpile: for with index access requires manual review
-    for (sorted_dependents, 0..) |dep, dep_idx| {
+            for (sorted_dependents, 0..) |dep, dep_idx| {
                 if (parent_is_workspace and dep.version.len == 0) {
                     continue;
                 }

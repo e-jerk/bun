@@ -72,9 +72,8 @@ pub const PathWatcherManager = struct {
     }
 
     /// Build the dedup key into `buf`. Not null-terminated; only used as a hashmap key.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn makeKey(buf: []u8, resolved_path: []const u8, recursive: bool) []const u8 {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..resolved_path.len], resolved_path);
         buf[resolved_path.len] = if (recursive) 'R' else 'N';
         return buf[0 .. resolved_path.len + 1];
@@ -152,12 +151,11 @@ pub const PathWatcher = struct {
 
     /// Called from the platform reader thread with `manager.mutex` held.
     /// `rel_path` is borrowed — `onPathUpdatePosix` dupes it before enqueuing.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn emit(this: *PathWatcher, event_type: EventType, rel_path: []const u8, is_file: bool) void {
         const timestamp = @import("std-fs-compat").milliTimestamp();
         const hash = bun.hash(rel_path);
-        // safe-transpile: for with index access requires manual review
-    for (this.handlers.keys(), this.handlers.values()) |ctx, *last| {
+        for (this.handlers.keys(), this.handlers.values()) |ctx, *last| {
             if (last.shouldEmit(hash, timestamp, event_type)) {
                 onPathUpdateFn(ctx, event_type.toEvent(rel_path), is_file);
             }
@@ -460,7 +458,7 @@ const Linux = struct {
     fn init(manager: *PathWatcherManager) bun.sys.Maybe(void) {
         const rc = bun.sys.syscall.inotify_init1(IN.CLOEXEC);
         if (bun.sys.Maybe(void).errnoSys(rc, .watch)) |err| return err;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         manager.platform.fd = .fromNative(@intCast(rc));
         // The manager is process-global and never torn down, so the reader thread is
         // a daemon — detach it instead of stashing a handle we'd never join.
@@ -485,7 +483,7 @@ const Linux = struct {
     }
 
     /// Add a single inotify watch and record ownership. Caller holds `manager.mutex`.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn addOne(
         manager: *PathWatcherManager,
         watcher: *PathWatcher,
@@ -500,7 +498,7 @@ const Linux = struct {
             if (subpath.len > 0) return .success;
             return err;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const wd: i32 = @intCast(rc);
         const gop = bun.handleOom(plat.wd_map.getOrPut(bun.default_allocator, wd));
         if (!gop.found_existing) gop.value_ptr.* = .{};
@@ -511,7 +509,6 @@ const Linux = struct {
         //     is now stale. Overwrite so later events under the moved dir report the
         //     new name. `walkAndAdd` never follows symlinks (`entry.kind == .directory`,
         //     not `.sym_link`), so this can't pick a longer alias via a cycle.
-// safe-transpile: for loop with pointer capture requires manual review
         for (gop.value_ptr.items) |*o| {
             if (o.watcher == watcher) {
                 if (!bun.strings.eql(o.subpath, subpath)) {
@@ -533,11 +530,11 @@ const Linux = struct {
 
     /// Best-effort recursive directory walk. inotify watches are per-directory (events
     /// for files arrive on their parent's wd), so only descend into subdirectories.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn walkAndAdd(manager: *PathWatcherManager, watcher: *PathWatcher, abs_dir: [:0]const u8, rel_dir: []const u8) void {
         const Ctx = struct { m: *PathWatcherManager, w: *PathWatcher };
         walkSubtree(abs_dir, rel_dir, true, Ctx{ .m = manager, .w = watcher }, struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             fn f(ctx: Ctx, abs: [:0]const u8, rel: []const u8, _: bool) void {
                 _ = addOne(ctx.m, ctx.w, abs, rel);
             }
@@ -585,7 +582,7 @@ const Linux = struct {
                 else => |errno| {
                     // Fatal: surface to every watcher, then exit the thread.
                     const err: bun.sys.Error = .{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         .errno = @truncate(@intFromEnum(errno)),
                         .syscall = .read,
                     };
@@ -598,7 +595,7 @@ const Linux = struct {
                     return;
                 },
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const n: usize = @intCast(rc);
             if (n == 0) continue;
 
@@ -609,7 +606,7 @@ const Linux = struct {
 
             var i: usize = 0;
             while (i < n) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const ev: *align(1) const InotifyEvent = @ptrCast(buf[i..].ptr);
                 i += @sizeOf(InotifyEvent) + ev.name_len;
                 const wd = ev.watch_descriptor;
@@ -632,7 +629,7 @@ const Linux = struct {
                 if (plat.wd_map.getPtr(wd) == null) continue;
 
                 const name: []const u8 = if (ev.name_len > 0) blk: {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const name_ptr: [*:0]const u8 = @ptrCast(buf[i - ev.name_len ..].ptr);
                     break :blk bun.sliceTo(name_ptr, 0);
                 } else "";
@@ -727,7 +724,7 @@ const Darwin = struct {
             watcher.recursive,
             onFSEvent,
             onFSEventFlush,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @ptrCast(watcher),
         ) catch |e| return .{ .err = .{
             .errno = @intFromEnum(switch (e) {
@@ -761,7 +758,6 @@ const Darwin = struct {
     /// `watcher.manager == null` check catches the window where detach has already
     /// unlinked us but hasn't yet called `fse.deinit()`.
     fn onFSEvent(ctx: ?*anyopaque, event: Event, is_file: bool) void {
-// safe-transpile: @alignCast requires manual review
         const watcher: *PathWatcher = @ptrCast(@alignCast((ctx.?)));
         const manager = default_manager orelse return;
         manager.mutex.lock();
@@ -777,7 +773,6 @@ const Darwin = struct {
     }
 
     fn onFSEventFlush(ctx: ?*anyopaque) void {
-// safe-transpile: @alignCast requires manual review
         const watcher: *PathWatcher = @ptrCast(@alignCast((ctx.?)));
         const manager = default_manager orelse return;
         manager.mutex.lock();
@@ -841,7 +836,7 @@ const Kqueue = struct {
             // kqueue needs an open fd per *file* as well as per directory.
             const Ctx = struct { m: *PathWatcherManager, w: *PathWatcher };
             walkSubtree(watcher.path, "", false, Ctx{ .m = manager, .w = watcher }, struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                // safe-transpile: function uses raw slice parameter — consider zust.String
                 fn f(ctx: Ctx, abs: [:0]const u8, rel: []const u8, is_file: bool) void {
                     _ = addOne(ctx.m, ctx.w, abs, rel, is_file);
                 }
@@ -850,7 +845,7 @@ const Kqueue = struct {
         return .success;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn addOne(
         manager: *PathWatcherManager,
         watcher: *PathWatcher,
@@ -873,7 +868,7 @@ const Kqueue = struct {
         plat.next_gen +%= 1;
 
         var kev = std.mem.zeroes(std.c.Kevent);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         kev.ident = @intCast(fd.native());
         kev.filter = std.c.EVFILT.VNODE;
         kev.flags = std.c.EV.ADD | std.c.EV.CLEAR | std.c.EV.ENABLE;
@@ -888,11 +883,11 @@ const Kqueue = struct {
             const errno = bun.sys.getErrno(krc);
             fd.close();
             if (subpath.len > 0) return .success; // best-effort on children
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return .{ .err = .{ .errno = @truncate(@intFromEnum(errno)), .syscall = .kevent } };
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(plat.entries.put(bun.default_allocator, @intCast(fd.native()), .{
             .watcher = watcher,
             .fd = fd,
@@ -900,7 +895,7 @@ const Kqueue = struct {
             .gen = gen,
             .is_file = is_file,
         }));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(watcher.platform.fds.append(bun.default_allocator, @intCast(fd.native())));
         return .success;
     }
@@ -930,7 +925,7 @@ const Kqueue = struct {
             var touched: std.AutoArrayHashMapUnmanaged(*PathWatcher, void) = .{};
             defer touched.deinit(bun.default_allocator);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             for (events[0..@intCast(count)]) |kev| {
                 // Validate via the map — the entry may have been freed by a racing
                 // removeWatch between kevent() returning and us taking the lock. POSIX
@@ -939,7 +934,7 @@ const Kqueue = struct {
                 // set to a monotonic generation at registration and survives in the
                 // already-delivered event, so compare it to the current entry's gen
                 // to reject stale fd-reuse hits.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const entry = plat.entries.getPtr(@intCast(kev.ident)) orelse continue;
                 if (entry.gen != kev.udata) continue;
                 const watcher = entry.watcher;

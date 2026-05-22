@@ -34,11 +34,11 @@ pub fn NewReaderWrap(
         }
 
         pub fn skip(this: @This(), count: anytype) void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             skipFn(this.wrapped, @as(isize, @intCast(count)));
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+        // safe-transpile: function returns small constant slice — consider safe.String
         pub fn peek(this: @This()) []const u8 {
             return peekFn(this.wrapped);
         }
@@ -65,14 +65,14 @@ pub fn NewReaderWrap(
                 return @as(Int, data.slice()[0]);
             }
             const size = @divExact(@typeInfo(Int).int.bits, 8);
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             return @as(Int, @bitCast(data.slice()[0..size].*));
         }
 
         pub fn encodeLenString(this: @This()) AnyMySQLError.Error!Data {
             if (decodeLengthInt(this.peek())) |result| {
                 this.skip(result.bytes_read);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return try this.read(@intCast(result.value));
             }
             return AnyMySQLError.Error.InvalidEncodedLength;

@@ -213,7 +213,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
             if (tgz_bytes.len > 16) {
                 // If the file claims to be larger than 16 bytes and smaller than 64 MB, we'll preallocate the buffer.
                 // If it's larger than that, we'll do it incrementally. We want to avoid OOMing.
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 const last_4_bytes: u32 = @bitCast(tgz_bytes[tgz_bytes.len - 4 ..][0..4].*);
                 if (last_4_bytes > 16 and last_4_bytes < 64 * 1024 * 1024) {
                     // It's okay if this fails. We will just allocate as we go and that will error if we run out of memory.
@@ -268,7 +268,7 @@ fn extract(this: *const ExtractTarball, log: *logger.Log, tgz_bytes: []const u8)
                 const DirnameReader = struct {
                     needs_first_dirname: bool = true,
                     outdirname: *[]const u8,
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                    // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub fn onFirstDirectoryName(dirname_reader: *@This(), first_dirname: []const u8) void {
                         bun.assert(dirname_reader.needs_first_dirname);
                         dirname_reader.needs_first_dirname = false;
@@ -404,7 +404,7 @@ pub fn moveToCacheDirectory(
                                 // and then delete that temp dir
                                 // The goal is to make it more difficult for an application to reach this folder
                                 var tempdest_buf: bun.PathBuffer = undefined;
-// safe-transpile: @memcpy requires manual review
+
                                 @memcpy(tempdest_buf[0..tmpname.len], tmpname);
                                 tempdest_buf[tmpname.len..][0..4].* = .{ 't', 'm', 'p', 0 };
                                 const tempdest = tempdest_buf[0 .. tmpname.len + 3 :0];
@@ -512,7 +512,7 @@ pub fn moveToCacheDirectory(
         // TODO remove extracted files not matching any globs under "files"
         .github, .local_tarball, .remote_tarball => true,
         else => this.package_manager.lockfile.trusted_dependencies != null and
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.package_manager.lockfile.trusted_dependencies.?.contains(@truncate(Semver.String.Builder.stringHash(name))),
     }) {
         const json_file, json_buf = bun.sys.File.readFileFrom(

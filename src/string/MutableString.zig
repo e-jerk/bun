@@ -193,7 +193,7 @@ pub inline fn appendSliceExact(self: *MutableString, items: []const u8) Allocato
     try self.list.ensureTotalCapacityPrecise(self.allocator, self.list.items.len + items.len);
     var end = self.list.items.ptr + self.list.items.len;
     self.list.items.len += items.len;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(end[0..items.len], items);
 }
 
@@ -244,7 +244,7 @@ pub inline fn appendAssumeCapacity(self: *MutableString, char: []const u8) void 
     );
 }
 pub inline fn lenI(self: *MutableString) i32 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(i32, @intCast(self.list.items.len));
 }
 
@@ -305,7 +305,7 @@ pub fn lastIndexOf(self: *const MutableString, str: u8) ?usize {
 }
 
 pub fn indexOf(self: *const MutableString, str: u8) ?usize {
-// zust: use safe.String or safe.GuardedSlice for slice operations
+    // zust: use safe.String or safe.GuardedSlice for slice operations
     return std.mem.indexOf(u8, self.list.items, str);
 }
 
@@ -315,7 +315,6 @@ pub fn eql(self: *MutableString, other: anytype) bool {
 
 pub fn toSocketBuffers(self: *MutableString, comptime count: usize, ranges: anytype) [count]std.posix.iovec_const {
     var buffers: [count]std.posix.iovec_const = undefined;
-    // safe-transpile: for with index access requires manual review
     inline for (&buffers, ranges) |*b, r| {
         b.* = .{
             .iov_base = self.list.items[r[0]..r[1]].ptr,
@@ -334,7 +333,7 @@ pub const BufferedWriter = struct {
 
     pub const Writer = @import("std-io-compat").MakeGenericWriter(*BufferedWriter, Allocator.Error, BufferedWriter.writeAll);
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     inline fn remain(this: *BufferedWriter) []u8 {
         return this.buffer[this.pos..];
     }
@@ -344,7 +343,7 @@ pub const BufferedWriter = struct {
         this.pos = 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeAll(this: *BufferedWriter, bytes: []const u8) Allocator.Error!usize {
         const pending = bytes;
 
@@ -358,7 +357,7 @@ pub const BufferedWriter = struct {
             if (pending.len + this.pos > max) {
                 try this.flush();
             }
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.remain()[0..pending.len], pending);
             this.pos += pending.len;
         }
@@ -421,7 +420,7 @@ pub const BufferedWriter = struct {
         try this.writeHTMLAttributeValue16(str.slice16());
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeHTMLAttributeValue(this: *BufferedWriter, bytes: []const u8) Allocator.Error!void {
         var items = bytes;
         while (items.len > 0) {

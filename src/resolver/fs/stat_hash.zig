@@ -18,25 +18,25 @@ pub fn hash(this: *@This(), stat: bun.Stat, path: []const u8) void {
     const prev = this.value;
     this.value = stat_hasher.final();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (prev != this.value and bun.S.ISREG(@intCast(stat.mode))) {
         const mtime_timespec = stat.mtime();
         // Clamp negative values to 0 to avoid timestamp overflow issues on Windows
         const mtime = bun.timespec{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .nsec = @intCast(@max(mtime_timespec.nsec, 0)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .sec = @intCast(@max(mtime_timespec.sec, 0)),
         };
         if (mtime.ms() > 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.last_modified_buffer_len = @intCast(bun.jsc.wtf.writeHTTPDate(&this.last_modified_buffer, mtime.msUnsigned()).len);
             this.last_modified_u64 = mtime.msUnsigned();
         } else {
             this.last_modified_buffer_len = 0;
             this.last_modified_u64 = 0;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     } else if (!bun.S.ISREG(@intCast(stat.mode))) {
         this.last_modified_buffer_len = 0;
         this.last_modified_u64 = 0;

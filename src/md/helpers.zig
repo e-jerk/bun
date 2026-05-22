@@ -44,7 +44,7 @@ pub inline fn isHexDigit(c: u8) bool {
 /// Check if a Unicode codepoint is whitespace per CommonMark spec.
 /// This includes ASCII whitespace + Unicode Zs category.
 pub fn isUnicodeWhitespace(codepoint: u21) bool {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (codepoint < 128) return isWhitespace(@intCast(codepoint));
     return switch (codepoint) {
         0x00A0, // NO-BREAK SPACE
@@ -60,7 +60,7 @@ pub fn isUnicodeWhitespace(codepoint: u21) bool {
 
 /// Check if a Unicode codepoint is punctuation per CommonMark spec.
 pub fn isUnicodePunctuation(codepoint: u21) bool {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     if (codepoint < 128) return isAsciiPunctuation(@intCast(codepoint));
     // Unicode categories Pc, Pd, Pe, Pf, Pi, Po, Ps, Sc, Sk, Sm, So
     return isUnicodePunctuationExtended(codepoint);
@@ -131,13 +131,13 @@ pub fn decodeUtf8(text: []const u8, off: usize) Utf8DecodeResult {
     if (remaining < seq_len) return .{ .codepoint = 0xFFFD, .len = 1 };
 
     var buf: [4]u8 = .{ 0, 0, 0, 0 };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const n: usize = @intCast(seq_len);
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(buf[0..n], text[off..][0..n]);
 
     const cp = bun.strings.decodeWTF8RuneT(&buf, seq_len, u21, 0xFFFD);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return .{ .codepoint = cp, .len = @intCast(seq_len) };
 }
 
@@ -160,7 +160,7 @@ pub fn decodeUtf8Backward(text: []const u8, off: usize) Utf8DecodeResult {
 
 /// Encode a Unicode codepoint as UTF-8.
 pub fn encodeUtf8(codepoint: u21, buf: *[4]u8) u3 {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(bun.strings.encodeWTF8RuneT(buf, u21, codepoint));
 }
 
@@ -336,7 +336,7 @@ pub fn parseEntityCodepoint(entity_text: []const u8) ?u21 {
         }
     }
     if (cp == 0 or cp > 0x10FFFF or (cp >= 0xD800 and cp <= 0xDFFF)) cp = 0xFFFD;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(cp);
 }
 
@@ -353,7 +353,7 @@ pub fn decodeEntityToUtf8(entity_text: []const u8, out: *[8]u8) ?[]const u8 {
         if (codepoints[1] != 0) {
             var tmp: [4]u8 = undefined;
             const len2 = encodeUtf8(codepoints[1], &tmp);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(out[len1..][0..len2], tmp[0..len2]);
             return out[0 .. len1 + len2];
         }
@@ -426,7 +426,7 @@ pub fn generateSlug(
     var i: usize = dec_buf.len;
     while (v > 0) {
         i -= 1;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         dec_buf[i] = @intCast('0' + v % 10);
         v /= 10;
     }
@@ -463,7 +463,7 @@ pub const HeadingIdTracker = struct {
 
     /// Call from text callback to accumulate text for slug.
     /// No-op if not inside a heading or disabled.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn trackText(self: *HeadingIdTracker, text_type: TextType, content: []const u8, allocator: Allocator) void {
         if (!self.in_heading) return;
         switch (text_type) {

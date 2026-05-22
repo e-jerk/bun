@@ -216,8 +216,7 @@ pub fn processNamesArray(
     if (workspace_globs.items.len > 0) {
         var arena = std.heap.ArenaAllocator.init(allocator);
         defer arena.deinit();
-        // safe-transpile: for with index access requires manual review
-    for (workspace_globs.items, 0..) |user_pattern, i| {
+        for (workspace_globs.items, 0..) |user_pattern, i| {
             defer _ = arena.reset(.retain_capacity);
 
             const glob_pattern = if (user_pattern.len == 0) "package.json" else brk: {
@@ -385,7 +384,7 @@ pub fn processNamesArray(
         .values = workspace_names.values(),
     });
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     return @truncate(workspace_names.count());
 }
 

@@ -336,11 +336,11 @@ pub export fn napi_create_array_with_length(env_: napi_env, length: usize, resul
 
     // https://github.com/nodejs/node/blob/14c68e3b536798e25f810ed7ae180a5cde9e47d3/deps/v8/src/api/api.cc#L8163-L8174
     // size_t immediately cast to int as argument to Array::New, then min 0
-// safe-transpile: @bitCast requires manual review
+    // safe-transpile: @bitCast requires manual review
     const len_i64: i64 = @bitCast(length);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const len_i32: i32 = @truncate(len_i64);
-// safe-transpile: @bitCast requires manual review
+    // safe-transpile: @bitCast requires manual review
     const len: u32 = if (len_i32 > 0) @bitCast(len_i32) else 0;
 
     const array = jsc.JSValue.createEmptyArray(env.toJS(), len) catch return env.setLastError(.pending_exception);
@@ -396,7 +396,7 @@ pub export fn napi_create_string_latin1(env_: napi_env, str: ?[*]const u8, lengt
     const slice: []const u8 = brk: {
         if (str) |ptr| {
             if (NAPI_AUTO_LENGTH == length) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 break :brk bun.sliceTo(@as([*:0]const u8, @ptrCast(ptr)), 0);
             } else if (length > std.math.maxInt(i32)) {
                 return env.invalidArg();
@@ -422,7 +422,7 @@ pub export fn napi_create_string_latin1(env_: napi_env, str: ?[*]const u8, lengt
     var string, const bytes = bun.String.createUninitialized(.latin1, slice.len);
     defer string.deref();
 
-// safe-transpile: @memcpy requires manual review
+    // safe-transpile: @memcpy requires manual review
     @memcpy(bytes, slice);
 
     result.set(env, string.toJS(env.toJS()) catch return env.setLastError(.generic_failure));
@@ -439,7 +439,7 @@ pub export fn napi_create_string_utf8(env_: napi_env, str: ?[*]const u8, length:
     const slice: []const u8 = brk: {
         if (str) |ptr| {
             if (NAPI_AUTO_LENGTH == length) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 break :brk bun.sliceTo(@as([*:0]const u8, @ptrCast(ptr)), 0);
             } else if (length > std.math.maxInt(i32)) {
                 return env.invalidArg();
@@ -473,7 +473,7 @@ pub export fn napi_create_string_utf16(env_: napi_env, str: ?[*]const char16_t, 
     const slice: []const u16 = brk: {
         if (str) |ptr| {
             if (NAPI_AUTO_LENGTH == length) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 break :brk bun.sliceTo(@as([*:0]const u16, @ptrCast(ptr)), 0);
             } else if (length > std.math.maxInt(i32)) {
                 return env.invalidArg();
@@ -498,7 +498,7 @@ pub export fn napi_create_string_utf16(env_: napi_env, str: ?[*]const char16_t, 
     }
 
     var string, const chars = bun.String.createUninitialized(.utf16, slice.len);
-// safe-transpile: @memcpy requires manual review
+    // safe-transpile: @memcpy requires manual review
     @memcpy(chars, slice);
 
     result.set(env, string.transferToJS(env.toJS()) catch return env.setLastError(.generic_failure));
@@ -591,7 +591,7 @@ pub export fn napi_get_array_length(env_: napi_env, value_: napi_value, result_:
         return env.setLastError(.array_expected);
     }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     result.* = @truncate(value.getLength(env.toJS()) catch return env.setLastError(.pending_exception));
     return env.ok();
 }
@@ -697,7 +697,7 @@ pub export fn napi_make_callback(env_: napi_env, _: *anyopaque, recv_: napi_valu
         else
             .js_undefined,
         if (arg_count > 0 and args != null)
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as([*]const jsc.JSValue, @ptrCast(args.?))[0..arg_count]
         else
             &.{},
@@ -1216,7 +1216,6 @@ pub export fn napi_create_buffer_copy(env_: napi_env, length: usize, data: [*]u8
     var buffer = jsc.JSValue.createBufferFromLength(env.toJS(), length) catch return env.setLastError(.pending_exception);
     if (buffer.asArrayBuffer(env.toJS())) |array_buf| {
         if (length > 0) {
-// safe-transpile: @memcpy requires manual review
             @memcpy(array_buf.slice()[0..length], data[0..length]);
         }
         if (result_data) |ptr| {
@@ -1361,7 +1360,7 @@ pub export fn napi_internal_register_cleanup_zig(env_: napi_env) void {
     const env = env_.?;
     env.toJS().bunVM().rareData().pushCleanupHook(env.toJS(), env, struct {
         fn callback(data: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             napi_internal_cleanup_env_cpp(@ptrCast(data));
         }
     }.callback);
@@ -1788,7 +1787,7 @@ pub export fn napi_create_threadsafe_function(
         },
         .ctx = context,
         .queue = ThreadSafeFunction.Queue.init(max_queue_size, bun.default_allocator),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .thread_count = .{ .raw = @intCast(initial_thread_count) },
         .poll_ref = Async.KeepAlive.init(),
         .tracker = jsc.Debugger.AsyncTaskTracker.init(vm),
@@ -2552,7 +2551,6 @@ pub const NapiFinalizerTask = struct {
     }
 
     fn runAsCleanupHook(opaque_this: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
         const this: *NapiFinalizerTask = @ptrCast(@alignCast(opaque_this.?));
         this.runOnJSThread();
     }

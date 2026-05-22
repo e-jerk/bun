@@ -325,7 +325,6 @@ pub fn writableStream(
         .storage_class = storage_class,
         .request_payer = request_payer,
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .callback = @ptrCast(&Wrapper.callback),
         .callback_context = undefined,
         .globalThis = globalThis,
@@ -338,13 +337,13 @@ pub fn writableStream(
     var response_stream = jsc.WebCore.NetworkSink.new(.{
         .task = task,
         .globalThis = globalThis,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         .highWaterMark = @truncate(options.partSize),
     }).toSink();
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.callback_context = @ptrCast(response_stream);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
     task.onWritable = @ptrCast(&jsc.WebCore.NetworkSink.onWritable);
     var signal = &response_stream.sink.signal;
 
@@ -391,7 +390,7 @@ pub const S3UploadStreamWrapper = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeRequestData(this: *@This(), data: []const u8) ResumableSinkBackpressure {
         log("writeRequestData {}", .{data.len});
         return bun.handleOom(this.task.writeBytes(data, false));
@@ -509,7 +508,7 @@ pub fn uploadStream(
         .content_type = if (content_type) |ct| bun.handleOom(bun.default_allocator.dupe(u8, ct)) else null,
         .content_disposition = if (content_disposition) |cd| bun.handleOom(bun.default_allocator.dupe(u8, cd)) else null,
         .content_encoding = if (content_encoding) |ce| bun.handleOom(bun.default_allocator.dupe(u8, ce)) else null,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .callback = @ptrCast(&S3UploadStreamWrapper.resolve),
         .callback_context = undefined,
         .globalThis = globalThis,
@@ -535,9 +534,9 @@ pub fn uploadStream(
     });
     // +1 because the ctx refs the sink
     ctx.sink = S3UploadStreamWrapper.ResumableSink.initExactRefs(globalThis, readable_stream, ctx, 2);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     task.callback_context = @ptrCast(ctx);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
     task.onWritable = @ptrCast(&S3UploadStreamWrapper.onWritable);
     task.continueStream();
     return ctx.endPromise.value();
@@ -712,7 +711,6 @@ pub fn readableStream(
         }
 
         fn onStreamCancelled(ctx: ?*anyopaque) void {
-// safe-transpile: @alignCast requires manual review
             const self: *@This() = @ptrCast(@alignCast((ctx.?)));
             // Release the Strong ref so the ReadableStream can be GC'd.
             // The download may still be in progress, but the callback will
@@ -723,7 +721,6 @@ pub fn readableStream(
         }
 
         pub fn opaqueCallback(chunk: bun.MutableString, has_more: bool, err: ?Error.S3Error, opaque_self: *anyopaque) void {
-// safe-transpile: @alignCast requires manual review
             const self: *@This() = @ptrCast(@alignCast(opaque_self));
             callback(chunk, has_more, err, self) catch {}; // TODO: properly propagate exception upwards
         }

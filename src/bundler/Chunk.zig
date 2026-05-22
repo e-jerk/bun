@@ -57,7 +57,7 @@ pub const Chunk = struct {
 
     /// Returns the HTML closing tag that must be escaped when this chunk's content
     /// is inlined into a standalone HTML file (e.g. "</script" for JS, "</style" for CSS).
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn closingTagForContent(this: *const Chunk) []const u8 {
         return switch (this.content) {
             .javascript => "</script",
@@ -68,7 +68,6 @@ pub const Chunk = struct {
 
     pub fn getJSChunkForHTML(this: *const Chunk, chunks: []Chunk) ?*Chunk {
         const entry_point_id = this.entry_point.entry_point_id;
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*other| {
             if (other.content == .javascript) {
                 if (other.entry_point.entry_point_id == entry_point_id) {
@@ -91,7 +90,6 @@ pub const Chunk = struct {
         }
         // Fallback: match by entry_point_id for cases without a JS chunk.
         const entry_point_id = this.entry_point.entry_point_id;
-// safe-transpile: for loop with pointer capture requires manual review
         for (chunks) |*other| {
             if (other.content == .css) {
                 if (other.entry_point.entry_point_id == entry_point_id) {
@@ -152,7 +150,7 @@ pub const Chunk = struct {
 
         /// Count occurrences of a closing HTML tag (e.g. `</script`, `</style`) in content.
         /// Used to calculate the extra bytes needed when escaping `</` → `<\/`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn countClosingTags(content: []const u8, close_tag: []const u8) usize {
             const tag_suffix = close_tag[2..];
             var count: usize = 0;
@@ -172,13 +170,12 @@ pub const Chunk = struct {
         /// Copy `content` into `dest`, escaping occurrences of `close_tag` by
         /// replacing `</` with `<\/`. Returns the number of bytes written.
         /// Caller must ensure `dest` has room for `content.len + countClosingTags(...)` bytes.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn memcpyEscapingClosingTags(dest: []u8, content: []const u8, close_tag: []const u8) usize {
             const tag_suffix = close_tag[2..];
             var remaining = content;
             var dst: usize = 0;
             while (strings.indexOf(remaining, "</")) |idx| {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(dest[dst..][0..idx], remaining[0..idx]);
                 dst += idx;
                 remaining = remaining[idx + 2 ..];
@@ -196,7 +193,7 @@ pub const Chunk = struct {
                     dst += 2;
                 }
             }
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(dest[dst..][0..remaining.len], remaining);
             dst += remaining.len;
             return dst;
@@ -221,7 +218,7 @@ pub const Chunk = struct {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn code(
             this: *IntermediateOutput,
             allocator_to_use: ?std.mem.Allocator,
@@ -254,7 +251,7 @@ pub const Chunk = struct {
         /// When `standalone_chunk_contents` is provided, chunk piece references are
         /// resolved to inline code content instead of file paths. Asset references
         /// are resolved to data: URIs from url_for_css.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn codeStandalone(
             this: *IntermediateOutput,
             allocator_to_use: ?std.mem.Allocator,
@@ -284,7 +281,7 @@ pub const Chunk = struct {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn codeWithSourceMapShifts(
             this: *IntermediateOutput,
             allocator_to_use: ?std.mem.Allocator,
@@ -414,7 +411,6 @@ pub const Chunk = struct {
                         }
 
                         if (data.len > 0)
-// safe-transpile: @memcpy requires manual review
                             @memcpy(remain[0..data.len], data);
 
                         remain = remain[data.len..];
@@ -446,7 +442,6 @@ pub const Chunk = struct {
                                             const written = memcpyEscapingClosingTags(remain, content, chunks[index].closingTagForContent());
                                             remain = remain[written..];
                                         } else {
-// safe-transpile: @memcpy requires manual review
                                             @memcpy(remain[0..content.len], content);
                                             remain = remain[content.len..];
                                         }
@@ -512,7 +507,6 @@ pub const Chunk = struct {
                                 );
 
                                 if (cheap_normalizer[0].len > 0) {
-// safe-transpile: @memcpy requires manual review
                                     @memcpy(remain[0..cheap_normalizer[0].len], cheap_normalizer[0]);
                                     remain = remain[cheap_normalizer[0].len..];
                                     if (enable_source_map_shifts)
@@ -520,7 +514,6 @@ pub const Chunk = struct {
                                 }
 
                                 if (cheap_normalizer[1].len > 0) {
-// safe-transpile: @memcpy requires manual review
                                     @memcpy(remain[0..cheap_normalizer[1].len], cheap_normalizer[1]);
                                     remain = remain[cheap_normalizer[1].len..];
                                     if (enable_source_map_shifts)
@@ -613,7 +606,7 @@ pub const Chunk = struct {
         data_len: u32,
         query: Query,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+        // safe-transpile: function returns small constant slice — consider safe.String
         pub fn data(this: OutputPiece) []const u8 {
             return this.data_ptr[0..this.data_len];
         }
@@ -638,11 +631,11 @@ pub const Chunk = struct {
             pub const none: Query = .{ .index = 0, .kind = .none };
         };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(data_slice: []const u8, query: Query) OutputPiece {
             return .{
                 .data_ptr = data_slice.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .data_len = @intCast(data_slice.len),
                 .query = query,
             };
@@ -738,8 +731,7 @@ pub const Chunk = struct {
             switch (this.kind) {
                 .layers => |layers| {
                     for (layers.inner().sliceConst()) |layer| {
-                        // safe-transpile: for with index access requires manual review
-    for (layer.v.slice(), 0..) |layer_name, i| {
+                        for (layer.v.slice(), 0..) |layer_name, i| {
                             const is_last = i == layers.inner().len - 1;
                             if (is_last) {
                                 hasher.update(layer_name);
@@ -773,8 +765,7 @@ pub const Chunk = struct {
                     .layers => |layers| {
                         try writer.print("[", .{});
                         const l = layers.inner();
-                        // safe-transpile: for with index access requires manual review
-    for (l.sliceConst(), 0..) |*layer, i| {
+                        for (l.sliceConst(), 0..) |*layer, i| {
                             if (i > 0) try writer.print(", ", .{});
                             try writer.print("\"{f}\"", .{layer});
                         }

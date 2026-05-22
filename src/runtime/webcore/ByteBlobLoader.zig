@@ -87,13 +87,13 @@ pub fn onPull(this: *ByteBlobLoader, buffer: []u8, array: JSValue) streams.Resul
         return .{ .done = {} };
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const copied = @as(Blob.SizeType, @intCast(temporary.len));
 
     this.remain -|= copied;
     this.offset +|= copied;
     bun.assert(buffer.ptr != temporary.ptr);
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(buffer[0..temporary.len], temporary);
     if (this.remain == 0) {
         return .{ .into_array_and_done = .{ .value = array, .len = copied } };

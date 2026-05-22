@@ -21,10 +21,10 @@ pub fn NewReadFileHandler(comptime Function: anytype) type {
                 .result => |result| {
                     const bytes = result.buf;
                     if (blob.size > 0)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         blob.size = @min(@as(SizeType, @truncate(bytes.len)), blob.size);
                     const WrappedFn = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                        // safe-transpile: function uses raw slice parameter — consider zust.String
                         pub fn wrapped(b: *Blob, g: *JSGlobalObject, by: []u8) jsc.JSValue {
                             return jsc.toJSHostCall(g, @src(), Function, .{ b, g, by, .temporary });
                         }
@@ -123,7 +123,7 @@ pub const ReadFile = struct {
             }
         };
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return try ReadFile.createWithCtx(allocator, store, @as(*anyopaque, @ptrCast(context)), Handler.run, off, max_len);
     }
 
@@ -166,11 +166,9 @@ pub const ReadFile = struct {
     pub fn onRequestReadable(request: *io.Request) io.Action {
         bloblog("ReadFile.onRequestReadable", .{});
         request.scheduled = false;
-// safe-transpile: @alignCast requires manual review
         var this: *ReadFile = @alignCast(@fieldParentPtr("io_request", request));
         return io.Action{
             .readable = .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .onError = @ptrCast(&onIOError),
                 .ctx = this,
                 .fd = this.opened_fd,
@@ -188,14 +186,14 @@ pub const ReadFile = struct {
             io.Loop.get().schedule(&this.io_request);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn remainingBuffer(this: *const ReadFile, stack_buffer: []u8) []u8 {
         var remaining = if (this.buffer.items.ptr[this.buffer.items.len..this.buffer.capacity].len < stack_buffer.len) stack_buffer else this.buffer.items.ptr[this.buffer.items.len..this.buffer.capacity];
         remaining = remaining[0..@min(remaining.len, this.max_length -| this.read_off)];
         return remaining;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn doRead(this: *ReadFile, buffer: []u8, read_len: *usize, retry: *bool) bool {
         const result: bun.sys.Maybe(usize) = brk: {
             if (std.posix.S.ISSOCK(this.file_store.mode)) {
@@ -205,12 +203,12 @@ pub const ReadFile = struct {
             break :brk bun.sys.read(this.opened_fd, buffer);
         };
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             switch (result) {
                 .result => |res| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     read_len.* = @truncate(res);
                     this.read_eof = res == 0;
                 },
@@ -305,7 +303,7 @@ while (true) : (__loop_limit_1 += 1) {
 
     fn onFinish(this: *ReadFile) void {
         const close_after_io = this.close_after_io;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         this.size = @truncate(this.buffer.items.len);
 
         {
@@ -340,7 +338,7 @@ while (true) : (__loop_limit_1 += 1) {
             }
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (bun.S.ISDIR(@intCast(stat.mode))) {
             this.errno = error.EISDIR;
             this.system_error = jsc.SystemError{
@@ -356,7 +354,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
 
         this.could_block = !bun.isRegularFile(stat.mode);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.total_size = @intCast(@min(@max(stat.size, 0), Blob.max_size));
 
         if (stat.size > 0 and !this.could_block) {
@@ -428,7 +426,6 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     fn doReadLoopTask(task: *jsc.WorkPoolTask) void {
-// safe-transpile: @alignCast requires manual review
         var this: *ReadFile = @alignCast(@fieldParentPtr("task", task));
 
         this.update();
@@ -570,7 +567,7 @@ pub const ReadFileUV = struct {
             .offset = off,
             .max_length = max_len,
             .on_complete_data = handler,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             .on_complete_fn = @ptrCast(&Handler.run),
         });
         store.ref();
@@ -646,7 +643,6 @@ pub const ReadFileUV = struct {
 
     fn onFileInitialStat(req: *libuv.fs_t) callconv(.c) void {
         log("ReadFileUV.onFileInitialStat", .{});
-// safe-transpile: @alignCast requires manual review
         var this: *ReadFileUV = @ptrCast(@alignCast(req.data));
 
         if (req.result.errEnum()) |errno| {
@@ -663,7 +659,7 @@ pub const ReadFileUV = struct {
             this.store.data.file.last_modified = jsc.toJSTime(stat.mtime().sec, stat.mtime().nsec);
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (bun.S.ISDIR(@intCast(stat.mode))) {
             this.errno = error.EISDIR;
             this.system_error = jsc.SystemError{
@@ -678,7 +674,7 @@ pub const ReadFileUV = struct {
             this.onFinish();
             return;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.total_size = @intCast(@min(@max(stat.size, 0), Blob.max_size));
         this.is_regular_file = bun.isRegularFile(stat.mode);
 
@@ -729,7 +725,7 @@ pub const ReadFileUV = struct {
         this.queueRead();
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn remainingBuffer(this: *const ReadFileUV) []u8 {
         var remaining = this.buffer.unusedCapacitySlice();
         return remaining[0..@min(remaining.len, this.max_length -| this.read_off)];
@@ -764,7 +760,7 @@ pub const ReadFileUV = struct {
                 this.opened_fd.uv(),
                 &bufs,
                 bufs.len,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @as(i64, @intCast(this.offset + this.read_off)),
                 &onRead,
             );
@@ -792,7 +788,6 @@ pub const ReadFileUV = struct {
     }
 
     pub fn onRead(req: *libuv.fs_t) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
         var this: *ReadFileUV = @ptrCast(@alignCast(req.data));
 
         const result = req.result;
@@ -819,9 +814,9 @@ pub const ReadFileUV = struct {
             return;
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.read_off += @intCast(result.int());
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.buffer.items.len += @intCast(result.int());
 
         this.req.deinit();

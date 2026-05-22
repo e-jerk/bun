@@ -123,7 +123,7 @@ fn embedIccp(ctx: *spng_ctx, icc_profile: ?[]const u8) void {
         .profile = @constCast(p.ptr),
     };
     const name = "ICC Profile";
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(iccp.profile_name[0..name.len], name);
     _ = spng_set_iccp(ctx, &iccp);
 }

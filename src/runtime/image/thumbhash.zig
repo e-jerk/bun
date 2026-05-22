@@ -30,7 +30,6 @@ pub fn encode(out: *[max_len]u8, w: u32, h: u32, rgba: []const u8) []u8 {
         avg[2] += a / 255.0 * @as(f32, @floatFromInt(rgba[i + 2]));
         avg[3] += a;
     }
-// safe-transpile: for loop with pointer capture requires manual review
     if (avg[3] > 0) for (avg[0..3]) |*c| {
         c.* /= avg[3];
     };
@@ -74,20 +73,20 @@ pub fn encode(out: *[max_len]u8, w: u32, h: u32, rgba: []const u8) []u8 {
         (@as(u32, @intFromFloat(@round(31.5 + 31.5 * qc.dc))) << 12) |
         (@as(u32, @intFromFloat(@round(31 * lc.scale))) << 18) |
         (@as(u32, @intFromBool(has_alpha)) << 23);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const h16: u16 = @as(u16, @intCast(if (land) ly else lx)) |
         (@as(u16, @intFromFloat(@round(63 * pc.scale))) << 3) |
         (@as(u16, @intFromFloat(@round(63 * qc.scale))) << 9) |
         (@as(u16, @intFromBool(land)) << 15);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[0] = @truncate(h24);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[1] = @truncate(h24 >> 8);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[2] = @truncate(h24 >> 16);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[3] = @truncate(h16);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     out[4] = @truncate(h16 >> 8);
     var n: usize = 5;
     if (has_alpha) {
@@ -141,7 +140,6 @@ fn dct(chan: []const f32, w: u32, h: u32, nx: u32, ny: u32) Channel {
             }
         }
     }
-// safe-transpile: for loop with pointer capture requires manual review
     if (c.scale > 0) for (c.ac[0..c.n]) |*f| {
         f.* = 0.5 + 0.5 / c.scale * f.*;
     };

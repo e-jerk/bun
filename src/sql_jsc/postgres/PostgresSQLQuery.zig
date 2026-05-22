@@ -352,7 +352,7 @@ pub fn doRun(this: *PostgresSQLQuery, globalObject: *jsc.JSGlobalObject, callfra
             connection_entry_value = entry.value_ptr;
             if (entry.found_existing) {
                 const stmt = connection_entry_value.?.*;
-        this.statement = stmt;
+                this.statement = stmt;
                 stmt.ref();
                 signature.deinit();
 

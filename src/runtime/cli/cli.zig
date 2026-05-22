@@ -73,7 +73,7 @@ pub const PackCommand = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmtTarballFilename(package_name: []const u8, package_version: []const u8, style: TarballNameFormatter.Style) TarballNameFormatter {
         return .{ .name = package_name, .version = package_version, .style = style };
     }
@@ -91,7 +91,7 @@ pub const PackCommand = struct {
 };
 
 pub const InitCommand = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn prompt(alloc: std.mem.Allocator, comptime label: []const u8, default: []const u8) ![:0]const u8 {
         _ = alloc;
         _ = default;

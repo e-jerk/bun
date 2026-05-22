@@ -69,8 +69,7 @@ pub fn toExpr(binding: *const Binding, wrapper: anytype) Expr {
             const properties = wrapper
                 .allocator
                 .alloc(G.Property, b.properties.len) catch unreachable;
-            // safe-transpile: for with index access requires manual review
-    for (properties, b.properties) |*property, item| {
+            for (properties, b.properties) |*property, item| {
                 property.* = .{
                     .flags = item.flags,
                     .key = item.key,

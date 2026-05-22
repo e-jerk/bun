@@ -4,7 +4,7 @@ pub const AuthMethod = enum {
     caching_sha2_password,
     sha256_password,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn scramble(this: AuthMethod, password: []const u8, auth_data: []const u8, buf: *[32]u8) ![]u8 {
         if (password.len == 0) {
             return &.{};
@@ -13,11 +13,10 @@ pub const AuthMethod = enum {
         const len = scrambleLength(this);
 
         switch (this) {
-// safe-transpile: @memcpy requires manual review
             .mysql_native_password => @memcpy(buf[0..len], &try Auth.mysql_native_password.scramble(password, auth_data)),
-// safe-transpile: @memcpy requires manual review
+
             .caching_sha2_password => @memcpy(buf[0..len], &try Auth.caching_sha2_password.scramble(password, auth_data)),
-// safe-transpile: @memcpy requires manual review
+
             .sha256_password => @memcpy(buf[0..len], &try Auth.caching_sha2_password.scramble(password, auth_data)),
         }
 

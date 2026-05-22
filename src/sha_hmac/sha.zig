@@ -18,13 +18,13 @@ fn NewHasher(comptime digest_size: comptime_int, comptime ContextType: type, com
             return this;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn hash(bytes: []const u8, out: *Digest) void {
             @setRuntimeSafety(false);
             _ = Full(bytes.ptr, bytes.len, out);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn update(this: *@This(), data: []const u8) void {
             @setRuntimeSafety(false);
             bun.assert(Update(&this.hasher, data.ptr, data.len) == 1);
@@ -58,14 +58,14 @@ fn NewEVP(comptime digest_size: comptime_int, comptime MDName: []const u8) type 
             return this;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn hash(bytes: []const u8, out: *Digest, engine: ?*BoringSSL.ENGINE) void {
             const md = @field(BoringSSL, MDName)();
 
             bun.assert(BoringSSL.EVP_Digest(bytes.ptr, bytes.len, out, null, md, engine) == 1);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn update(this: *@This(), data: []const u8) void {
             bun.assert(BoringSSL.EVP_DigestUpdate(&this.ctx, data.ptr, data.len) == 1);
         }

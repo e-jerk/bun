@@ -64,7 +64,7 @@ pub fn installIsolatedPackages(
                 try peer_name_idx.put(lockfile.allocator, dep.name_hash, {});
             }
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const peer_name_count: u32 = @intCast(peer_name_idx.count());
 
         var leaking_peers: bun.bit_set.DynamicBitSetUnmanaged.List = try .initEmpty(
@@ -85,12 +85,10 @@ pub fn installIsolatedPackages(
             );
             @memset(peer_targets, .empty);
             defer {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (peer_targets) |*list| list.deinit(lockfile.allocator);
                 lockfile.allocator.free(peer_targets);
             }
-            // safe-transpile: for with index access requires manual review
-    for (dependencies, resolutions) |dep, res| {
+            for (dependencies, resolutions) |dep, res| {
                 if (res == invalid_package_id) continue;
                 const bit = peer_name_idx.getIndex(dep.name_hash) orelse continue;
                 if (std.mem.indexOfScalar(PackageID, peer_targets[bit].items, res) == null) {
@@ -114,11 +112,11 @@ pub fn installIsolatedPackages(
             );
             defer provides.deinit(lockfile.allocator);
             for (0..lockfile.packages.len) |pkg_idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const pkg_id: PackageID = @intCast(pkg_idx);
                 const deps = pkg_dependency_slices[pkg_id];
                 for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const dep_id: DependencyID = @intCast(_dep_id);
                     const dep = dependencies[dep_id];
                     const bit = peer_name_idx.getIndex(dep.name_hash) orelse continue;
@@ -144,14 +142,14 @@ pub fn installIsolatedPackages(
             while (changed) {
                 changed = false;
                 for (0..lockfile.packages.len) |pkg_idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const pkg_id: PackageID = @intCast(pkg_idx);
                     const deps = pkg_dependency_slices[pkg_id];
 
                     scratch.copyInto(own_peers.at(pkg_id));
 
                     for (deps.begin()..deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const dep_id: DependencyID = @intCast(_dep_id);
                         const dep = dependencies[dep_id];
                         if (dep.behavior.isPeer()) {
@@ -188,7 +186,7 @@ pub fn installIsolatedPackages(
         var root_declares_workspace = try bun.bit_set.DynamicBitSetUnmanaged.initEmpty(lockfile.allocator, lockfile.packages.len);
         defer root_declares_workspace.deinit(lockfile.allocator);
         for (pkg_dependency_slices[0].begin()..pkg_dependency_slices[0].end()) |_dep_idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const dep_idx: DependencyID = @intCast(_dep_idx);
             if (!dependencies[dep_idx].behavior.isWorkspace()) continue;
             const res = resolutions[dep_idx];
@@ -262,7 +260,7 @@ pub fn installIsolatedPackages(
                 }
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const node_id: Store.Node.Id = .from(@intCast(nodes.len));
             const pkg_deps = pkg_dependency_slices[entry.pkg_id];
 
@@ -410,7 +408,7 @@ pub fn installIsolatedPackages(
             dep_ids_sort_buf.clearRetainingCapacity();
             try dep_ids_sort_buf.ensureUnusedCapacity(lockfile.allocator, pkg_deps.len);
             for (pkg_deps.begin()..pkg_deps.end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
                 dep_ids_sort_buf.appendAssumeCapacity(dep_id);
             }
@@ -786,7 +784,7 @@ pub fn installIsolatedPackages(
                 .hoisted = hoisted,
             };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const new_entry_id: Store.Entry.Id = .from(@intCast(store.len));
             try store.append(lockfile.allocator, new_entry);
 
@@ -875,7 +873,7 @@ pub fn installIsolatedPackages(
         pub fn writer(self: *@This()) @import("std-io-compat").MakeGenericWriter(*@This(), E, write) {
             return .{ .context = self };
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn write(self: *@This(), bytes: []const u8) E!usize {
             self.hasher.update(bytes);
             return bytes.len;
@@ -922,7 +920,7 @@ pub fn installIsolatedPackages(
 
         for (0..store.entries.len) |_root_id| {
             if (states[_root_id] != .unvisited) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try stack.append(manager.allocator, .{ .id = .from(@intCast(_root_id)), .dep_idx = 0, .hasher = undefined });
 
             while (stack.items.len > 0) {
@@ -985,7 +983,7 @@ pub fn installIsolatedPackages(
                             else
                                 .{ pkg_names[pkg_id].slice(string_buf), pkg_name_hashes[pkg_id] };
                             if (lockfile.hasTrustedDependency(dep_name, &pkg_res) or
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 trusted_from_update.contains(@truncate(dep_name_hash)))
                             {
                                 break :eligible false;
@@ -1097,7 +1095,7 @@ pub fn installIsolatedPackages(
         // the same hash suffix, so they resolve in any project that produces
         // the same SCC closure.
         {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const n: u32 = @intCast(store.entries.len);
             const tarjan_index = try manager.allocator.alloc(u32, n);
             defer manager.allocator.free(tarjan_index);
@@ -1118,7 +1116,7 @@ pub fn installIsolatedPackages(
             var index_counter: u32 = 0;
             for (0..n) |root| {
                 if (tarjan_index[root] != std.math.maxInt(u32)) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try work.append(manager.allocator, .{ .v = @intCast(root), .child = 0 });
                 while (work.items.len > 0) {
                     const frame = &work.items[work.items.len - 1];
@@ -1472,7 +1470,7 @@ pub fn installIsolatedPackages(
 
         var seen_entry_ids: std.AutoHashMapUnmanaged(Store.Entry.Id, void) = .empty;
         defer seen_entry_ids.deinit(lockfile.allocator);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try seen_entry_ids.ensureTotalCapacity(lockfile.allocator, @intCast(store.entries.len));
 
         // TODO: delete
@@ -1500,9 +1498,8 @@ pub fn installIsolatedPackages(
         };
         defer installer.deinit();
 
-        // safe-transpile: for with index access requires manual review
-    for (tasks, 0..) |*task, _entry_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        for (tasks, 0..) |*task, _entry_id| {
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const entry_id: Store.Entry.Id = .from(@intCast(_entry_id));
             task.* = .{
                 .entry_id = entry_id,
@@ -1515,10 +1512,10 @@ pub fn installIsolatedPackages(
         }
 
         // add the pending task count upfront
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         manager.incrementPendingTasks(@intCast(store.entries.len));
         for (0..store.entries.len) |_entry_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const entry_id: Store.Entry.Id = .from(@intCast(_entry_id));
 
             const node_id = entry_node_ids[entry_id.get()];
@@ -1607,7 +1604,7 @@ pub fn installIsolatedPackages(
                             break :stale if (sys.getFileAttributes(local.sliceZ())) |a| a.is_reparse_point else false;
                         }
                         break :stale if (sys.lstat(local.sliceZ()).asValue()) |st|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             std.posix.S.ISLNK(@intCast(st.mode))
                         else
                             false;
@@ -1902,9 +1899,8 @@ pub fn installIsolatedPackages(
 
         if (comptime Environment.ci_assert) {
             var done = true;
-            // safe-transpile: for with index access requires manual review
-    next_entry: for (store.entries.items(.step), 0..) |entry_step, _entry_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            next_entry: for (store.entries.items(.step), 0..) |entry_step, _entry_id| {
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const entry_id: Store.Entry.Id = .from(@intCast(_entry_id));
                 // .monotonic is okay because `Wait.isDone` should have already synchronized with
                 // the completed task threads, via popping from the `UnboundedQueue` in `runTasks`,

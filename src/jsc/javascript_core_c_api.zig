@@ -8,7 +8,7 @@ const bun = @import("bun");
 const jsc = bun.jsc;
 const generic = opaque {
     pub fn value(this: *const generic) jsc.JSValue {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @enumFromInt(@as(jsc.JSValue.backing_int, @bitCast(@intFromPtr(this))));
     }
 };

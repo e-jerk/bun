@@ -17,7 +17,7 @@ pub fn toHaveBeenCalledWith(this: *Expect, globalThis: *JSGlobalObject, callfram
 
     var pass = false;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const calls_count = @as(u32, @intCast(try calls.getLength(globalThis)));
     if (calls_count > 0) {
         var itr = try calls.arrayIterator(globalThis);
@@ -56,9 +56,8 @@ pub fn toHaveBeenCalledWith(this: *Expect, globalThis: *JSGlobalObject, callfram
     defer formatter.deinit();
 
     const expected_args_js_array = try JSValue.createEmptyArray(globalThis, arguments.len);
-    // safe-transpile: for with index access requires manual review
     for (arguments, 0..) |arg, i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try expected_args_js_array.putIndex(globalThis, @intCast(i), arg);
     }
     expected_args_js_array.ensureStillAlive();

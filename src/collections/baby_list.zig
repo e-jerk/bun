@@ -36,7 +36,6 @@ pub fn BabyList(comptime Type: type) type {
             var items = try allocator.alloc(Type, 1);
             items[0] = value;
             return .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .ptr = @as([*]Type, @ptrCast(items.ptr)),
                 .len = 1,
                 .cap = 1,
@@ -78,9 +77,9 @@ pub fn BabyList(comptime Type: type) type {
 
             var this: Self = .{
                 .ptr = items.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @intCast(items.len),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .cap = @intCast(capacity),
             };
 
@@ -112,9 +111,9 @@ pub fn BabyList(comptime Type: type) type {
         pub fn fromOwnedSlice(items: []Type) Self {
             return .{
                 .ptr = items.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @intCast(items.len),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .cap = @intCast(items.len),
             };
         }
@@ -124,7 +123,7 @@ pub fn BabyList(comptime Type: type) type {
             return .{
                 .ptr = buffer.ptr,
                 .len = 0,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .cap = @intCast(buffer.len),
             };
         }
@@ -136,9 +135,9 @@ pub fn BabyList(comptime Type: type) type {
 
             return Self{
                 .ptr = allocated.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .len = @intCast(allocated.len),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .cap = @intCast(allocated.len),
                 ._allocator = .init(allocator),
             };
@@ -259,7 +258,7 @@ pub fn BabyList(comptime Type: type) type {
                 "shrinkRetainingCapacity: new len ({d}) cannot exceed old ({d})",
                 .{ new_len, this.len },
             );
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.len = @intCast(new_len);
         }
 
@@ -284,11 +283,11 @@ pub fn BabyList(comptime Type: type) type {
         }
 
         pub fn appendSliceAssumeCapacity(this: *Self, values: []const Type) void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             bun.assert(this.cap >= this.len + @as(u32, @intCast(values.len)));
             const tail = this.ptr[this.len .. this.len + values.len];
             bun.copy(Type, tail, values);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.len += @intCast(values.len);
             bun.assert(this.cap >= this.len);
         }
@@ -388,7 +387,7 @@ pub fn BabyList(comptime Type: type) type {
         }
 
         /// This method is available only for `BabyList(u8)`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn appendFmt(
             this: *Self,
             allocator: std.mem.Allocator,
@@ -403,7 +402,7 @@ pub fn BabyList(comptime Type: type) type {
         }
 
         /// This method is available only for `BabyList(u8)`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(this: *Self, allocator: std.mem.Allocator, str: []const u8) OOM!u32 {
             if ((comptime safety_checks) and this.cap - this.len < str.len) this.assertOwned();
             if (comptime Type != u8)
@@ -416,7 +415,7 @@ pub fn BabyList(comptime Type: type) type {
         }
 
         /// This method is available only for `BabyList(u8)`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeLatin1(this: *Self, allocator: std.mem.Allocator, str: []const u8) OOM!u32 {
             if ((comptime safety_checks) and str.len > 0) this.assertOwned();
             if (comptime Type != u8)
@@ -463,20 +462,22 @@ pub fn BabyList(comptime Type: type) type {
             if (comptime Type != u8)
                 @compileError("Unsupported for type " ++ @typeName(Type));
             bun.assert(this.cap >= this.len + @sizeOf(Int));
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as([*]align(1) Int, @ptrCast(this.ptr[this.len .. this.len + @sizeOf(Int)]))[0] = int;
             this.len += @sizeOf(Int);
         }
 
         pub fn parse(input: *bun.css.Parser) bun.css.Result(Self) {
             return switch (input.parseCommaSeparated(Type, bun.css.generic.parseFor(Type))) {
-                .result => |v| return .{ .result = Self{
-                    .ptr = v.items.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-                    .len = @intCast(v.items.len),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-                    .cap = @intCast(v.capacity),
-                } },
+                .result => |v| return .{
+                    .result = Self{
+                        .ptr = v.items.ptr,
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        .len = @intCast(v.items.len),
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        .cap = @intCast(v.capacity),
+                    },
+                },
                 .err => |e| return .{ .err = e },
             };
         }
@@ -487,8 +488,7 @@ pub fn BabyList(comptime Type: type) type {
 
         pub fn eql(lhs: *const Self, rhs: *const Self) bool {
             if (lhs.len != rhs.len) return false;
-            // safe-transpile: for with index access requires manual review
-    for (lhs.sliceConst(), rhs.sliceConst()) |*a, *b| {
+            for (lhs.sliceConst(), rhs.sliceConst()) |*a, *b| {
                 if (!bun.css.generic.eql(Type, a, b)) return false;
             }
             return true;
@@ -598,9 +598,9 @@ pub fn BabyList(comptime Type: type) type {
 
         fn update(this: *Self, list_: anytype) void {
             this.ptr = list_.items.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.len = @intCast(list_.items.len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.cap = @intCast(list_.capacity);
             if (comptime Environment.allow_assert) {
                 bun.assert(this.len <= this.cap);
@@ -626,17 +626,17 @@ pub const OffsetByteList = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(self: *Self, allocator: std.mem.Allocator, bytes: []const u8) !void {
         _ = try self.byte_list.write(allocator, bytes);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(self: *const Self) []u8 {
         return self.byte_list.slice()[0..self.head];
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn remaining(self: *const Self) []u8 {
         return self.byte_list.slice()[self.head..];
     }

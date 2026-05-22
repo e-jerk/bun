@@ -151,7 +151,7 @@ pub const RuntimeTranspilerCache = struct {
                 }
             }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+            // safe-transpile: function returns small constant slice — consider safe.String
             pub fn byteSlice(this: *const OutputCode) []const u8 {
                 switch (this.*) {
                     .utf8 => return this.utf8,
@@ -170,7 +170,7 @@ pub const RuntimeTranspilerCache = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn save(
             destination_dir: bun.FD,
             destination_path: bun.PathString,
@@ -277,10 +277,10 @@ pub const RuntimeTranspilerCache = struct {
                     }
                     bun.assert(end_position == total);
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 bun.assert(end_position == @as(i64, @intCast(sourcemap.len + output_bytes.len + Metadata.size + esm_record.len)));
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 bun.sys.preallocate_file(tmpfile.fd.cast(), 0, @intCast(end_position)) catch {};
                 while (position < end_position) {
                     const written = try bun.sys.pwritev(tmpfile.fd, vecs, position).unwrap();
@@ -288,12 +288,12 @@ pub const RuntimeTranspilerCache = struct {
                         return error.WriteFailed;
                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     position += @intCast(written);
                 }
             }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             try tmpfile.finish(@ptrCast(std.fs.path.basename(destination_path.slice())));
         }
 
@@ -398,7 +398,7 @@ pub const RuntimeTranspilerCache = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(bytes: []const u8) u64 {
         return std.hash.Wyhash.hash(seed, bytes);
     }
@@ -417,7 +417,7 @@ pub const RuntimeTranspilerCache = struct {
         _,
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeCacheFilename(
         buf: []u8,
         input_hash: u64,
@@ -451,7 +451,7 @@ pub const RuntimeTranspilerCache = struct {
             }
 
             const len = @min(dir.len, bun.MAX_PATH_BYTES - 1);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buf[0..len], dir[0..len]);
             buf[len] = 0;
             return buf[0..len :0];
@@ -504,7 +504,7 @@ pub const RuntimeTranspilerCache = struct {
             runtime_transpiler_cache = path;
             break :path path;
         };
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buf[0..path.len], path);
         buf[path.len] = 0;
         return path;
@@ -587,7 +587,7 @@ pub const RuntimeTranspilerCache = struct {
         return path.isFile();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toFile(
         input_byte_length: u64,
         input_hash: u64,
@@ -694,7 +694,7 @@ pub const RuntimeTranspilerCache = struct {
         return this.entry != null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn put(this: *RuntimeTranspilerCache, output_code_bytes: []const u8, sourcemap: []const u8, esm_record: []const u8) void {
         if (comptime !bun.FeatureFlags.runtime_transpiler_cache)
             @compileError("RuntimeTranspilerCache is disabled");

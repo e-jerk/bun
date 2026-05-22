@@ -70,7 +70,7 @@ pub fn appendDir(event: *HotReloadEvent, allocator: Allocator, dir_path: []const
     const starts_with_sep = platform.isSeparator(sub_path[0]);
     const sep_offset: i32 = if (ends_with_sep and starts_with_sep) -1 else 1;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     bun.handleOom(event.extra_files.ensureUnusedCapacity(allocator, @intCast(@as(i32, @intCast(dir_path.len + sub_path.len)) + sep_offset + 1)));
     event.extra_files.appendSliceAssumeCapacity(if (ends_with_sep) dir_path[0 .. dir_path.len - 1] else dir_path);
     event.extra_files.appendAssumeCapacity(platform.separator());
@@ -201,9 +201,9 @@ pub fn run(first: *HotReloadEvent) void {
     const timer = first.timer;
 
     var current = first;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+    var __loop_limit_1: usize = 0;
+    while (true) : (__loop_limit_1 += 1) {
+        if (__loop_limit_1 > 1_000_000) break;
         current.processFileList(dev, &entry_points, temp_alloc);
         current = dev.watcher_atomics.recycleEventFromDevServer(current) orelse break;
         if (comptime Environment.isDebug) {

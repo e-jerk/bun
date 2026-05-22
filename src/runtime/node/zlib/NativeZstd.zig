@@ -92,10 +92,9 @@ pub fn init(this: *@This(), globalThis: *jsc.JSGlobalObject, callframe: *jsc.Cal
 
     const params_ = initParamsArray_value.asArrayBuffer(globalThis) orelse return globalThis.throwInvalidArgumentTypeValue("initParamsArray", "Uint32Array", initParamsArray_value);
     if (params_.typed_array_type != .Uint32Array) return globalThis.throwInvalidArgumentTypeValue("initParamsArray", "Uint32Array", initParamsArray_value);
-    // safe-transpile: for with index access requires manual review
     for (params_.asU32(), 0..) |x, i| {
         if (x == std.math.maxInt(u32)) continue;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const err_ = this.stream.setParams(@intCast(i), x);
         if (err_.isError()) {
             this.stream.close();
@@ -162,13 +161,13 @@ const Context = struct {
     pub fn setParams(this: *Context, key: c_uint, value: u32) Error {
         switch (this.mode) {
             .ZSTD_COMPRESS => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const result = c.ZSTD_CCtx_setParameter(@ptrCast(this.state), key, @bitCast(value));
                 if (c.ZSTD_isError(result) > 0) return .init("Setting parameter failed", -1, "ERR_ZSTD_PARAM_SET_FAILED");
                 return .ok;
             },
             .ZSTD_DECOMPRESS => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const result = c.ZSTD_DCtx_setParameter(@ptrCast(this.state), key, @bitCast(value));
                 if (c.ZSTD_isError(result) > 0) return .init("Setting parameter failed", -1, "ERR_ZSTD_PARAM_SET_FAILED");
                 return .ok;
@@ -188,9 +187,9 @@ const Context = struct {
     /// Use close() for full cleanup that also sets mode to NONE.
     fn deinitState(this: *Context) void {
         _ = switch (this.mode) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_COMPRESS => c.ZSTD_freeCCtx(@ptrCast(this.state)),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_DECOMPRESS => c.ZSTD_freeDCtx(@ptrCast(this.state)),
             else => unreachable,
         };
@@ -212,18 +211,18 @@ const Context = struct {
 
     pub fn doWork(this: *Context) void {
         this.remaining = switch (this.mode) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_COMPRESS => c.ZSTD_compressStream2(@ptrCast(this.state), &this.output, &this.input, @intCast(this.flush)),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_DECOMPRESS => c.ZSTD_decompressStream(@ptrCast(this.state), &this.output, &this.input),
             else => @panic("unreachable"),
         };
     }
 
     pub fn updateWriteResult(this: *Context, avail_in: *u32, avail_out: *u32) void {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         avail_in.* = @intCast(this.input.size - this.input.pos);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         avail_out.* = @intCast(this.output.size - this.output.pos);
     }
 
@@ -234,7 +233,7 @@ const Context = struct {
             return .ok;
         }
         return Error{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .err = @intCast(err),
             .msg = c.ZSTD_getErrorString(err),
             .code = switch (err) {
@@ -273,9 +272,9 @@ const Context = struct {
 
     pub fn close(this: *Context) void {
         _ = switch (this.mode) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_COMPRESS => c.ZSTD_CCtx_reset(@ptrCast(this.state), c.ZSTD_reset_session_and_parameters),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .ZSTD_DECOMPRESS => c.ZSTD_DCtx_reset(@ptrCast(this.state), c.ZSTD_reset_session_and_parameters),
             else => unreachable,
         };

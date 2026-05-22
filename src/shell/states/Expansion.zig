@@ -80,7 +80,6 @@ pub const Result = union(enum) {
                 return .moved;
             },
             .array_of_ptr => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.handleOom(this.array_of_ptr.append(@as([*:0]const u8, @ptrCast(buf.ptr))));
                 return .moved;
             },
@@ -104,7 +103,6 @@ pub const Result = union(enum) {
                 return .moved;
             },
             .array_of_ptr => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 bun.handleOom(this.array_of_ptr.append(@as([*:0]const u8, @ptrCast(buf.items.ptr))));
                 return .moved;
             },
@@ -375,7 +373,6 @@ pub fn expandVarAndCmdSubst(this: *Expansion, start_word_idx: u32) ?Yield {
                 this.word_idx += 1;
                 break :brk 1;
             } else 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (cmp.atoms[start_word_idx + starting_offset ..]) |*simple_atom| {
                 const is_cmd_subst = this.expandSimpleNoIO(simple_atom, &this.current_out, true);
                 if (is_cmd_subst) {
@@ -437,7 +434,6 @@ fn postSubshellExpansion(this: *Expansion, stdout_: []u8) void {
     var prev_whitespace: bool = false;
     var a: usize = 0;
     var b: usize = 1;
-    // safe-transpile: for with index access requires manual review
     for (stdout[0..], 0..) |c, i| {
         if (prev_whitespace) {
             if (c != ' ') {
@@ -493,7 +489,6 @@ fn convertNewlinesToSpaces(stdout_: []u8) []u8 {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn convertNewlinesToSpacesSlow(i: usize, stdout: []u8) void {
-    // safe-transpile: for with index access requires manual review
     for (stdout[i..], i..) |c, j| {
         if (c == '\n') {
             stdout[j] = ' ';
@@ -729,7 +724,6 @@ fn expansionSizeHint(this: *const Expansion, atom: *const ast.Atom, has_unknown:
             }
 
             var out: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (atom.compound.atoms) |*simple| {
                 out += this.expansionSizeHintSimple(simple, has_unknown);
             }

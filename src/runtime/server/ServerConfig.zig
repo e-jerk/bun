@@ -86,7 +86,6 @@ pub fn isDevelopment(this: *const ServerConfig) bool {
 pub fn memoryCost(this: *const ServerConfig) usize {
     // ignore @sizeOf(ServerConfig), assume already included.
     var cost: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.static_routes.items) |*entry| {
         cost += entry.memoryCost();
     }
@@ -168,7 +167,7 @@ fn normalizeStaticRoutesList(this: *ServerConfig) !void {
     };
 
     var static_routes_dedupe_list = std.array_list.Managed(u64).init(bun.default_allocator);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     try static_routes_dedupe_list.ensureTotalCapacity(@truncate(this.static_routes.items.len));
     defer static_routes_dedupe_list.deinit();
 
@@ -177,9 +176,9 @@ fn normalizeStaticRoutesList(this: *ServerConfig) !void {
     var list = &this.static_routes;
     if (list.items.len > 0) {
         var index = list.items.len - 1;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             const route = &list.items[index];
             const hash = Context.hash(route);
             if (std.mem.indexOfScalar(u64, static_routes_dedupe_list.items, hash) != null) {
@@ -290,7 +289,6 @@ pub fn deinit(this: *ServerConfig) void {
         this.ssl_config = null;
     }
     if (this.sni) |*sni| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (sni.slice()) |*ssl_config| {
             ssl_config.deinit();
         }
@@ -298,7 +296,6 @@ pub fn deinit(this: *ServerConfig) void {
         this.sni = null;
     }
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.static_routes.items) |*entry| {
         entry.deinit();
     }
@@ -308,7 +305,6 @@ pub fn deinit(this: *ServerConfig) void {
         bake.deinit();
     }
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.user_routes_to_build.items) |*builder| {
         builder.deinit();
     }
@@ -560,7 +556,6 @@ pub fn fromJS(
             errdefer framework_router_list.deinit();
 
             errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (args.static_routes.items) |*static_route| {
                     static_route.deinit();
                 }
@@ -760,13 +755,13 @@ pub fn fromJS(
                 }
                 args.has_idleTimeout = true;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const idleTimeout: u64 = @intCast(@max(value.toInt64(), 0));
                 if (idleTimeout > 255) {
                     return global.throwInvalidArguments("Bun.serve expects idleTimeout to be 255 or less", .{});
                 }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 args.idleTimeout = @truncate(idleTimeout);
             }
         }
@@ -787,7 +782,7 @@ pub fn fromJS(
         if (try arg.getTruthy(global, "port")) |port_| {
             args.address.tcp.port = @as(
                 u16,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @intCast(@min(
                     @max(0, try port_.coerce(i32, global)),
                     std.math.maxInt(u16),
@@ -890,7 +885,7 @@ pub fn fromJS(
 
         if (try arg.getTruthy(global, "maxRequestBodySize")) |max_request_body_size| {
             if (max_request_body_size.isNumber()) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 args.max_request_body_size = @as(u64, @intCast(@max(0, max_request_body_size.toInt64())));
             }
         }

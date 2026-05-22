@@ -134,7 +134,7 @@ pub const ShellTouchOutputTask = OutputTask(Touch, .{
 });
 
 const ShellTouchOutputTaskVTable = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeErr(this: *Touch, childptr: anytype, errbuf: []const u8) ?Yield {
         this.state.exec.output_waiting += 1;
         if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -319,7 +319,7 @@ const Opts = struct {
         return Parse.parseFlags(opts, args);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         _ = this;
         if (bun.strings.eqlComptime(flag, "--no-create")) {
@@ -349,7 +349,7 @@ const Opts = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         _ = this;
         switch (char) {
@@ -384,7 +384,6 @@ const Opts = struct {
 };
 
 pub inline fn bltn(this: *Touch) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("touch", this));
     return @fieldParentPtr("impl", impl);
 }

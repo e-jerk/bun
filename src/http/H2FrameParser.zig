@@ -90,7 +90,7 @@ pub const UInt31WithReserved = packed struct(u32) {
     uint31: u31 = 0,
 
     pub inline fn from(value: u32) UInt31WithReserved {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .{ .uint31 = @truncate(value & 0x7fffffff), .reserved = value & 0x80000000 != 0 };
     }
 
@@ -99,14 +99,14 @@ pub const UInt31WithReserved = packed struct(u32) {
     }
 
     pub inline fn toUInt32(value: UInt31WithReserved) u32 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @bitCast(value);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn fromBytes(src: []const u8) UInt31WithReserved {
         const value: u32 = u32FromBytes(src);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .{ .uint31 = @truncate(value & 0x7fffffff), .reserved = value & 0x80000000 != 0 };
     }
 };
@@ -117,9 +117,9 @@ pub const StreamPriority = packed struct(u40) {
 
     pub const byteSize: usize = 5;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn from(dst: *StreamPriority, src: []const u8) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[StreamPriority.byteSize]u8, @ptrCast(dst)), src);
         std.mem.byteSwapAllFields(StreamPriority, dst);
     }
@@ -133,9 +133,9 @@ pub const FrameHeader = packed struct(u72) {
 
     pub const byteSize: usize = 9;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn from(dst: *FrameHeader, src: []const u8, offset: usize, comptime end: bool) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[FrameHeader.byteSize]u8, @ptrCast(dst))[offset .. src.len + offset], src);
         if (comptime end) {
             std.mem.byteSwapAllFields(FrameHeader, dst);
@@ -147,9 +147,9 @@ pub const SettingsPayloadUnit = packed struct(u48) {
     type: u16,
     value: u32,
     pub const byteSize: usize = 6;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub inline fn from(dst: *SettingsPayloadUnit, src: []const u8, offset: usize, comptime end: bool) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[SettingsPayloadUnit.byteSize]u8, @ptrCast(dst))[offset .. src.len + offset], src);
         if (comptime end) {
             std.mem.byteSwapAllFields(SettingsPayloadUnit, dst);

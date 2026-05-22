@@ -69,7 +69,7 @@ pub const ModuleInfoDeserialized = struct {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     inline fn eat(rem: *[]const u8, len: usize) ![]const u8 {
         if (rem.*.len < len) return error.BadModuleInfo;
         const res = rem.*[0..len];
@@ -82,7 +82,7 @@ pub const ModuleInfoDeserialized = struct {
         rem.* = rem.*[len..];
         return res;
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn create(source: []const u8, gpa: std.mem.Allocator) !*ModuleInfoDeserialized {
         const duped = try gpa.dupe(u8, source);
         errdefer gpa.free(duped);
@@ -101,7 +101,7 @@ pub const ModuleInfoDeserialized = struct {
         const requested_modules_keys = std.mem.bytesAsSlice(StringID, try eat(&rem, requested_modules_len * @sizeOf(StringID)));
         const requested_modules_values = std.mem.bytesAsSlice(ModuleInfo.FetchParameters, try eat(&rem, requested_modules_len * @sizeOf(ModuleInfo.FetchParameters)));
 
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const flags: Flags = @bitCast((try eatC(&rem, 1))[0]);
         _ = try eat(&rem, 3); // alignment padding
 
@@ -127,7 +127,7 @@ pub const ModuleInfoDeserialized = struct {
 
     /// Wrapper around `create` for use when loading from a cache (transpiler cache or standalone module graph).
     /// Returns `null` instead of panicking on corrupt/truncated data.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createFromCachedRecord(source: []const u8, gpa: std.mem.Allocator) ?*ModuleInfoDeserialized {
         return create(source, gpa) catch |e| switch (e) {
             error.OutOfMemory => bun.outOfMemory(),
@@ -136,25 +136,25 @@ pub const ModuleInfoDeserialized = struct {
     }
 
     pub fn serialize(self: *const ModuleInfoDeserialized, writer: anytype) !void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try writer.writeInt(u32, @truncate(self.record_kinds.len), .little);
         try writer.writeAll(std.mem.sliceAsBytes(self.record_kinds));
         try writer.writeByteNTimes(0, (4 - (self.record_kinds.len % 4)) % 4); // alignment padding
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try writer.writeInt(u32, @truncate(self.buffer.len), .little);
         try writer.writeAll(std.mem.sliceAsBytes(self.buffer));
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try writer.writeInt(u32, @truncate(self.requested_modules_keys.len), .little);
         try writer.writeAll(std.mem.sliceAsBytes(self.requested_modules_keys));
         try writer.writeAll(std.mem.sliceAsBytes(self.requested_modules_values));
 
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         try writer.writeByte(@bitCast(self.flags));
         try writer.writeByteNTimes(0, 3); // alignment padding
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         try writer.writeInt(u32, @truncate(self.strings_lens.len), .little);
         try writer.writeAll(std.mem.sliceAsBytes(self.strings_lens));
         try writer.writeAll(self.strings_buf);
@@ -168,12 +168,12 @@ pub const StringContext = struct {
     strings_buf: []const u8,
     strings_lens: []const u32,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(_: @This(), s: []const u8) u32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(u32, @truncate(std.hash.Wyhash.hash(0, s)));
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(self: @This(), fetch_key: []const u8, item_key: StringMapKey, item_i: usize) bool {
         return bun.strings.eqlLong(fetch_key, self.strings_buf[@intFromEnum(item_key)..][0..self.strings_lens[item_i]], true);
     }
@@ -291,7 +291,7 @@ pub const ModuleInfo = struct {
         self.deinit();
         alloc.destroy(self);
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn str(self: *ModuleInfo, value: []const u8) !StringID {
         try self.strings_buf.ensureUnusedCapacity(self.gpa, value.len);
         try self.strings_lens.ensureUnusedCapacity(self.gpa, 1);
@@ -299,16 +299,16 @@ pub const ModuleInfo = struct {
             .strings_buf = self.strings_buf.items,
             .strings_lens = self.strings_lens.items,
         });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (gpres.found_existing) return @enumFromInt(@as(u32, @intCast(gpres.index)));
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         gpres.key_ptr.* = @enumFromInt(@as(u32, @truncate(self.strings_buf.items.len)));
         gpres.value_ptr.* = {};
         self.strings_buf.appendSliceAssumeCapacity(value);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         self.strings_lens.appendAssumeCapacity(@as(u32, @truncate(value.len)));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @enumFromInt(@as(u32, @intCast(gpres.index)));
     }
     pub fn requestModule(self: *ModuleInfo, import_record_path: StringID, fetch_parameters: FetchParameters) !void {
@@ -322,7 +322,6 @@ pub const ModuleInfo = struct {
     pub fn replaceStringID(self: *ModuleInfo, old_id: StringID, new_id: StringID) void {
         bun.assert(!self.finalized);
         // Replace in record buffer
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.buffer.items) |*item| {
             if (item.* == old_id) item.* = new_id;
         }
@@ -340,8 +339,7 @@ pub const ModuleInfo = struct {
         defer local_name_to_module_name.deinit(bun.default_allocator);
         {
             var i: usize = 0;
-            // safe-transpile: for with index access requires manual review
-    for (self.record_kinds.items, 0..) |k, idx| {
+            for (self.record_kinds.items, 0..) |k, idx| {
                 if (k == .import_info_single or k == .import_info_single_type_script) {
                     try local_name_to_module_name.put(bun.default_allocator, self.buffer.items[i + 2], .{ .module_name = self.buffer.items[i], .import_name = self.buffer.items[i + 1], .record_kinds_idx = idx, .is_namespace = false });
                 } else if (k == .import_info_namespace) {
@@ -353,7 +351,6 @@ pub const ModuleInfo = struct {
 
         {
             var i: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (self.record_kinds.items) |*k| {
                 if (k.* == .export_info_local) {
                     if (local_name_to_module_name.get(self.buffer.items[i + 1])) |ip| {

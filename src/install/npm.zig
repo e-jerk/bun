@@ -341,10 +341,10 @@ pub const Registry = struct {
                     if (registry.username.len > 0 and registry.password.len > 0 and auth.len == 0) {
                         var output_buf = try allocator.alloc(u8, registry.username.len + registry.password.len + 1 + std.base64.standard.Encoder.calcSize(registry.username.len + registry.password.len + 1));
                         user = output_buf[0 .. registry.username.len + registry.password.len + 1];
-// safe-transpile: @memcpy requires manual review
+
                         @memcpy(user[0..registry.username.len], registry.username);
                         user[registry.username.len] = ':';
-// safe-transpile: @memcpy requires manual review
+
                         @memcpy(user[registry.username.len + 1 ..][0..registry.password.len], registry.password);
                         output_buf = output_buf[user.len..];
                         auth = std.base64.standard.Encoder.encode(output_buf, user);
@@ -393,7 +393,7 @@ pub const Registry = struct {
     };
 
     const Pico = bun.picohttp;
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getPackageMetadata(
         allocator: std.mem.Allocator,
         scope: *const Registry.Scope,
@@ -449,7 +449,7 @@ pub const Registry = struct {
             package_name,
             newly_last_modified,
             new_etag,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u32, @truncate(@as(u64, @intCast(@max(0, @import("std-fs-compat").timestamp()))))) + 300,
             is_extended_manifest,
         )) |package| {
@@ -480,10 +480,9 @@ const ExternVersionMap = extern struct {
     values: PackageVersionList = PackageVersionList{},
 
     pub fn findKeyIndex(this: ExternVersionMap, buf: []const Semver.Version, find: Semver.Version) ?u32 {
-        // safe-transpile: for with index access requires manual review
-    for (this.keys.get(buf), 0..) |key, i| {
+        for (this.keys.get(buf), 0..) |key, i| {
             if (key.eql(find)) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 return @as(u32, @truncate(i));
             }
         }
@@ -530,7 +529,7 @@ pub fn Negatable(comptime T: type) type {
             return @enumFromInt(added & ~removed);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn apply(this: *Negatable(T), str: []const u8) void {
             if (str.len == 0) {
                 return;
@@ -922,8 +921,7 @@ pub const PackageManifest = struct {
                 alignment: usize,
             };
             var data: [fields.len]Data = undefined;
-            // safe-transpile: for with index access requires manual review
-    for (fields, &data) |field_info, *dat| {
+            for (fields, &data) |field_info, *dat| {
                 dat.* = .{
                     .size = @sizeOf(field_info.type),
                     .name = field_info.name,
@@ -938,8 +936,7 @@ pub const PackageManifest = struct {
             std.sort.pdq(Data, &data, {}, Sort.lessThan);
             var sizes_bytes: [fields.len]usize = undefined;
             var names: [fields.len][]const u8 = undefined;
-            // safe-transpile: for with index access requires manual review
-    for (data, &sizes_bytes, &names) |elem, *size_, *name_| {
+            for (data, &sizes_bytes, &names) |elem, *size_, *name_| {
                 size_.* = elem.size;
                 name_.* = elem.name;
             }
@@ -980,7 +977,6 @@ pub const PackageManifest = struct {
                 return error.BufferTooSmall;
             }
             const result_bytes = remaining[0..byte_len];
-// safe-transpile: @alignCast requires manual review
             const result = @as([*]const Type, @ptrCast(@alignCast(result_bytes.ptr)))[0 .. result_bytes.len / @sizeOf(Type)];
             stream.pos += result_bytes.len;
             return result;
@@ -1206,7 +1202,7 @@ pub const PackageManifest = struct {
             PackageManager.get().thread_pool.schedule(batch);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn manifestFileName(buf: []u8, file_id: u64, scope: *const Registry.Scope) ![:0]const u8 {
             const file_id_hex_fmt = bun.fmt.hexIntLower(file_id);
             return if (scope.url_hash == Registry.default_url_hash)
@@ -1222,7 +1218,7 @@ pub const PackageManifest = struct {
             var dest_path_stream = @import("std-io-compat").fixedBufferStream(&dest_path_buf);
             var dest_path_stream_writer = dest_path_stream.writer();
             const file_id_hex_fmt = bun.fmt.hexIntLower(file_id);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const hex_timestamp: usize = @intCast(@max(@import("std-fs-compat").milliTimestamp(), 0));
             const hex_timestamp_fmt = bun.fmt.hexIntLower(hex_timestamp);
             try dest_path_stream_writer.print("{f}.npm-{f}", .{ file_id_hex_fmt, hex_timestamp_fmt });
@@ -1268,7 +1264,7 @@ pub const PackageManifest = struct {
             return manifest;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn readAll(bytes: []const u8, scope: *const Registry.Scope) !?PackageManifest {
             if (!strings.eqlComptime(bytes[0..header_bytes.len], header_bytes)) {
                 return null;
@@ -1361,8 +1357,7 @@ pub const PackageManifest = struct {
 
     pub fn findByDistTag(this: *const PackageManifest, tag: string) ?FindResult {
         const versions = this.pkg.dist_tags.versions.get(this.versions);
-        // safe-transpile: for with index access requires manual review
-    for (this.pkg.dist_tags.tags.get(this.external_strings), 0..) |tag_str, i| {
+        for (this.pkg.dist_tags.tags.get(this.external_strings), 0..) |tag_str, i| {
             if (strings.eql(tag_str.slice(this.string_buf), tag)) {
                 return this.findByVersion(versions[i]);
             }
@@ -1735,7 +1730,7 @@ pub const PackageManifest = struct {
     const ExternalStringMapDeduper = std.HashMap(u64, ExternalStringList, IdentityContext(u64), 80);
 
     /// This parses [Abbreviated metadata](https://github.com/npm/registry/blob/master/docs/responses/package-metadata.md#abbreviated-metadata-format)
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parse(
         allocator: std.mem.Allocator,
         scope: *const Registry.Scope,
@@ -2372,18 +2367,18 @@ pub const PackageManifest = struct {
                                         }
 
                                         if (optional_peer_dep_names.items.len == 0) {
-// safe-transpile: @bitCast requires manual review
+                                            // safe-transpile: @bitCast requires manual review
                                             const names_hash_bytes = @as([8]u8, @bitCast(this_names[i].hash));
                                             name_hasher.update(&names_hash_bytes);
-// safe-transpile: @bitCast requires manual review
+                                            // safe-transpile: @bitCast requires manual review
                                             const versions_hash_bytes = @as([8]u8, @bitCast(this_versions[i].hash));
                                             version_hasher.update(&versions_hash_bytes);
                                         }
                                     } else {
-// safe-transpile: @bitCast requires manual review
+                                        // safe-transpile: @bitCast requires manual review
                                         const names_hash_bytes = @as([8]u8, @bitCast(this_names[i].hash));
                                         name_hasher.update(&names_hash_bytes);
-// safe-transpile: @bitCast requires manual review
+                                        // safe-transpile: @bitCast requires manual review
                                         const versions_hash_bytes = @as([8]u8, @bitCast(this_versions[i].hash));
                                         version_hasher.update(&versions_hash_bytes);
                                     }
@@ -2455,7 +2450,7 @@ pub const PackageManifest = struct {
                                 var version_list = ExternalStringList.init(version_extern_strings, this_versions);
 
                                 if (comptime is_peer) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                                     package_version.non_optional_peer_dependencies_start = @as(u32, @truncate(non_optional_peer_dependency_offset));
                                 }
 
@@ -2683,14 +2678,13 @@ pub const PackageManifest = struct {
                     const cloned_versions = all_cloned_versions[0..release.keys.len];
                     const versioned_packages_ = @constCast(release.values.get(versioned_packages));
                     const semver_versions_ = @constCast(release.keys.get(all_semver_versions));
-// safe-transpile: @memcpy requires manual review
+                    // safe-transpile: @memcpy requires manual review
                     @memcpy(cloned_packages, versioned_packages_);
-// safe-transpile: @memcpy requires manual review
+                    // safe-transpile: @memcpy requires manual review
                     @memcpy(cloned_versions, semver_versions_);
 
-                    // safe-transpile: for with index access requires manual review
-    for (indices, 0..indices.len) |*dest, i| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    for (indices, 0..indices.len) |*dest, i| {
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         dest.* = @truncate(i);
                     }
 
@@ -2701,8 +2695,7 @@ pub const PackageManifest = struct {
                     };
                     std.sort.pdq(Int, indices, sorter, ExternVersionSorter.isLessThan);
 
-                    // safe-transpile: for with index access requires manual review
-    for (indices, versioned_packages_, semver_versions_) |i, *pkg, *version| {
+                    for (indices, versioned_packages_, semver_versions_) |i, *pkg, *version| {
                         pkg.* = cloned_packages[i];
                         version.* = cloned_versions[i];
                     }
@@ -2731,7 +2724,7 @@ pub const PackageManifest = struct {
             if (src.len > 0) {
                 var dst = std.mem.sliceAsBytes(all_extern_strings[all_extern_strings.len - extern_strings.len ..]);
                 bun.assertWithLocation(dst.len >= src.len, @src());
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(dst[0..src.len], src);
             }
 
@@ -2739,11 +2732,11 @@ pub const PackageManifest = struct {
         }
 
         result.pkg.string_lists_buf.off = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         result.pkg.string_lists_buf.len = @as(u32, @truncate(all_extern_strings.len));
 
         result.pkg.versions_buf.off = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         result.pkg.versions_buf.len = @as(u32, @truncate(all_semver_versions.len));
 
         result.versions = all_semver_versions;

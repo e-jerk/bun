@@ -40,7 +40,6 @@ pub fn New(comptime Type: type, comptime Callback: anytype) type {
         }
 
         pub fn wrap(this: ?*anyopaque) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
             return @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast(this.?)))});
         }
     };

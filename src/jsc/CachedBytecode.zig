@@ -2,7 +2,7 @@ pub const CachedBytecode = opaque {
     extern fn generateCachedModuleByteCodeFromSourceCode(sourceProviderURL: *bun.String, input_code: [*]const u8, inputSourceCodeSize: usize, outputByteCode: *?[*]u8, outputByteCodeSize: *usize, cached_bytecode: *?*CachedBytecode) bool;
     extern fn generateCachedCommonJSProgramByteCodeFromSourceCode(sourceProviderURL: *bun.String, input_code: [*]const u8, inputSourceCodeSize: usize, outputByteCode: *?[*]u8, outputByteCodeSize: *usize, cached_bytecode: *?*CachedBytecode) bool;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generateForESM(sourceProviderURL: *bun.String, input: []const u8) ?struct { []const u8, *CachedBytecode } {
         var this: ?*CachedBytecode = null;
 
@@ -15,7 +15,7 @@ pub const CachedBytecode = opaque {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generateForCJS(sourceProviderURL: *bun.String, input: []const u8) ?struct { []const u8, *CachedBytecode } {
         var this: ?*CachedBytecode = null;
         var input_code_size: usize = 0;
@@ -32,7 +32,7 @@ pub const CachedBytecode = opaque {
         return CachedBytecode__deref(this);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generate(format: bun.options.Format, input: []const u8, source_provider_url: *bun.String) ?struct { []const u8, *CachedBytecode } {
         return switch (format) {
             .esm => generateForESM(source_provider_url, input),
@@ -52,12 +52,12 @@ pub const CachedBytecode = opaque {
             }
         }.alloc,
         .free = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn free(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
                 _ = buf;
                 _ = alignment;
                 _ = ret_addr;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 CachedBytecode__deref(@ptrCast(ctx));
             }
         }.free,

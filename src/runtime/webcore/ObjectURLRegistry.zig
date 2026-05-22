@@ -39,7 +39,10 @@ pub fn singleton() *ObjectURLRegistry {
         }
     };
 
-    if (!Singleton.once_done) { Singleton.get(); Singleton.once_done = true; }
+    if (!Singleton.once_done) {
+        Singleton.get();
+        Singleton.once_done = true;
+    }
 
     return &Singleton.registry;
 }

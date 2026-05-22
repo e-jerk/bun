@@ -21,7 +21,7 @@ const Node = struct {
     slice: []const u8 = "",
     next: ?*Node = null,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(joiner_alloc: Allocator, slice: []const u8, slice_alloc: ?Allocator) *Node {
         const node = bun.handleOom(safe.Box(Node).init(joiner_alloc, undefined));
         node.ptr.* = .{
@@ -96,7 +96,6 @@ pub fn done(this: *StringJoiner, allocator: Allocator) ![]u8 {
 
     var remaining = slice;
     while (current) |node| {
-// safe-transpile: @memcpy requires manual review
         @memcpy(remaining[0..node.slice.len], node.slice);
         remaining = remaining[node.slice.len..];
 
@@ -142,7 +141,6 @@ pub fn doneWithEnd(this: *StringJoiner, allocator: Allocator, end: []const u8) !
 
     var remaining = slice;
     while (current) |node| {
-// safe-transpile: @memcpy requires manual review
         @memcpy(remaining[0..node.slice.len], node.slice);
         remaining = remaining[node.slice.len..];
 
@@ -152,7 +150,7 @@ pub fn doneWithEnd(this: *StringJoiner, allocator: Allocator, end: []const u8) !
     }
 
     bun.assert(remaining.len == end.len);
-// safe-transpile: @memcpy requires manual review
+    // safe-transpile: @memcpy requires manual review
     @memcpy(remaining, end);
 
     return slice;

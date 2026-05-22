@@ -93,7 +93,7 @@ fn generateDefaultFilename(buf: *bun.PathBuffer, text_format: bool) ![]const u8 
     else
         std.c.getpid();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const epoch_microseconds: u64 = @intCast(timespec.sec *% 1_000_000 +% @divTrunc(timespec.nsec, 1000));
 
     const extension = if (text_format) "md" else "heapsnapshot";

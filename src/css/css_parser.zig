@@ -190,7 +190,7 @@ pub const VendorPrefix = packed struct(u8) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn fromName(comptime name: []const u8) VendorPrefix {
         comptime {
             var vp: VendorPrefix = .{};
@@ -211,7 +211,6 @@ pub const VendorPrefix = packed struct(u8) {
     }
 
     pub fn difference(left: @This(), right: @This()) @This() {
-// safe-transpile: @bitCast requires manual review
         return @bitCast(@as(u8, @bitCast(left)) - @as(u8, @bitCast(right)));
     }
 
@@ -224,7 +223,7 @@ pub const VendorPrefix = packed struct(u8) {
     }
 
     pub fn asBits(vp: @This()) u8 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @bitCast(vp);
     }
 };
@@ -233,13 +232,13 @@ pub const SourceLocation = struct {
     line: u32,
     column: u32,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toLoggerLocation(this: SourceLocation, file: []const u8) bun.logger.Location {
         return bun.logger.Location{
             .file = file,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .line = @intCast(this.line),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .column = @intCast(this.column),
         };
     }
@@ -583,8 +582,7 @@ pub fn DeriveParse(comptime T: type) type {
                     var first_payload_index: ?usize = null;
                     var payload_count: usize = 0;
                     var void_count: usize = 0;
-                    // safe-transpile: for with index access requires manual review
-    for (tyinfo.@"union".fields, 0..) |field, i| {
+                    for (tyinfo.@"union".fields, 0..) |field, i| {
                         if (field.type == void) {
                             void_count += 1;
                             if (first_void_index == null) first_void_index = i;
@@ -663,8 +661,7 @@ pub fn DeriveParse(comptime T: type) type {
             const first_void_index = comptime if (maybe_first_void_index) |v| v else 0;
             const last_payload_index = first_payload_index + payload_count - 1;
             if (comptime maybe_first_void_index == null) {
-                // safe-transpile: for with index access requires manual review
-    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
                     if (comptime (i == last_payload_index)) {
                         return .{ .result = switch (generic.parseFor(field.type)(input)) {
                             .result => |v| @unionInit(T, field.name, v),
@@ -688,8 +685,7 @@ pub fn DeriveParse(comptime T: type) type {
                         return .{ .result = @enumFromInt(void_field.value) };
                     }
 
-                    // safe-transpile: for with index access requires manual review
-    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
                         if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
                             return .{ .result = switch (generic.parseFor(field.type)(input)) {
                                 .result => |v| @unionInit(T, field.name, v),
@@ -701,8 +697,7 @@ pub fn DeriveParse(comptime T: type) type {
                         }
                     }
                 } else {
-                    // safe-transpile: for with index access requires manual review
-    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
                         if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
                             return .{ .result = switch (generic.parseFor(field.type)(input)) {
                                 .result => |v| @unionInit(T, field.name, v),
@@ -724,8 +719,7 @@ pub fn DeriveParse(comptime T: type) type {
                 const state = input.state();
                 if (input.tryParse(Parser.expectIdent, .{}).asValue()) |ident| {
                     if (Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) |matched| {
-                        // safe-transpile: for with index access requires manual review
-    inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
+                        inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
                             if (field_i < first_void_index or field_i >= first_void_index + void_count) continue;
                             if (field.value == @intFromEnum(matched)) {
                                 if (comptime is_union_enum) return .{ .result = @unionInit(T, field.name, {}) };
@@ -737,8 +731,7 @@ pub fn DeriveParse(comptime T: type) type {
                     input.reset(&state);
                 }
 
-                // safe-transpile: for with index access requires manual review
-    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
                     if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
                         return .{ .result = switch (generic.parseFor(field.type)(input)) {
                             .result => |v| @unionInit(T, field.name, v),
@@ -750,9 +743,8 @@ pub fn DeriveParse(comptime T: type) type {
                     }
                 }
             } else if (comptime first_void_index > first_payload_index) {
-                    // safe-transpile: for with index access requires manual review
-    inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
-                        if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
+                inline for (tyinfo.@"union".fields[first_payload_index .. first_payload_index + payload_count], first_payload_index..) |field, i| {
+                    if (comptime (i == last_payload_index and last_payload_index > first_void_index)) {
                         return .{ .result = switch (generic.parseFor(field.type)(input)) {
                             .result => |v| @unionInit(T, field.name, v),
                             .err => |e| return .{ .err = e },
@@ -769,8 +761,7 @@ pub fn DeriveParse(comptime T: type) type {
                     .err => |e| return .{ .err = e },
                 };
                 if (Map.getCaseInsensitiveWithEql(ident, bun.strings.eqlComptimeIgnoreLen)) |matched| {
-                    // safe-transpile: for with index access requires manual review
-    inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
+                    inline for (comptime bun.meta.EnumFields(T), 0..) |field, field_i| {
                         if (field_i < first_void_index or field_i >= first_void_index + void_count) continue;
                         if (field.value == @intFromEnum(matched)) {
                             if (comptime is_union_enum) return .{ .result = @unionInit(T, field.name, {}) };
@@ -827,8 +818,7 @@ pub fn DeriveToCss(comptime T: type) type {
     return struct {
         pub fn toCss(this: *const T, dest: *Printer) PrintErr!void {
             if (comptime is_enum_or_union_enum) {
-                // safe-transpile: for with index access requires manual review
-    inline for (std.meta.fields(T), 0..) |field, i| {
+                inline for (std.meta.fields(T), 0..) |field, i| {
                     if (@intFromEnum(this.*) == enum_fields[i].value) {
                         if (comptime tyinfo == .@"enum" or field.type == void) {
                             return dest.writeStr(enum_fields[i].name);
@@ -838,8 +828,7 @@ pub fn DeriveToCss(comptime T: type) type {
                             const variant_fields = std.meta.fields(field.type);
                             if (variant_fields.len > 1) {
                                 const last = variant_fields.len - 1;
-                                // safe-transpile: for with index access requires manual review
-    inline for (variant_fields, 0..) |variant_field, j| {
+                                inline for (variant_fields, 0..) |variant_field, j| {
                                     // Unwrap it from the optional
                                     if (@typeInfo(variant_field.type) == .optional) {
                                         if (@field(@field(this, field.name), variant_field.name)) |*value| {
@@ -872,7 +861,7 @@ pub fn DeriveToCss(comptime T: type) type {
 }
 
 pub const enum_property_util = struct {
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(comptime T: type, this: *const T) []const u8 {
         const tag = @intFromEnum(this.*);
         inline for (comptime bun.meta.EnumFields(T)) |field| {
@@ -944,8 +933,7 @@ pub fn DeriveValueType(comptime T: type, comptime ValueTypeMap: anytype) type {
     const field_values: []const MediaFeatureType = field_values: {
         const fields = std.meta.fields(T);
         var mapping: [fields.len]MediaFeatureType = undefined;
-        // safe-transpile: for with index access requires manual review
-    inline for (fields, 0..) |field, i| {
+        inline for (fields, 0..) |field, i| {
             // Check that it exists in the type map
             mapping[i] = @field(ValueTypeMap, field.name);
         }
@@ -955,8 +943,7 @@ pub fn DeriveValueType(comptime T: type, comptime ValueTypeMap: anytype) type {
 
     return struct {
         pub fn valueType(this: *const T) MediaFeatureType {
-            // safe-transpile: for with index access requires manual review
-    inline for (std.meta.fields(T), 0..) |field, i| {
+            inline for (std.meta.fields(T), 0..) |field, i| {
                 if (field.value == @intFromEnum(this.*)) {
                     return field_values[i];
                 }
@@ -1331,7 +1318,7 @@ pub const DefaultAtRuleParser = struct {
         pub const Prelude = void;
         pub const AtRule = DefaultAtRule;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *Parser, _: *const ParserOptions) Result(Prelude) {
             return .{ .err = input.newError(BasicParseErrorKind{ .at_rule_invalid = name }) };
         }
@@ -1393,7 +1380,7 @@ pub const BundlerAtRuleParser = struct {
         } else void;
         pub const AtRule = if (ENABLE_TAILWIND_PARSING) TailwindAtRule else DefaultAtRule;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parsePrelude(this: *This, name: []const u8, input: *Parser, _: *const ParserOptions) Result(Prelude) {
             if (comptime ENABLE_TAILWIND_PARSING) {
                 const PreludeNames = enum {
@@ -1444,9 +1431,9 @@ pub const BundlerAtRuleParser = struct {
                 .path = bun.fs.Path.init(import_rule.url),
                 .kind = if (import_rule.supports != null) .at_conditional else .at,
                 .range = bun.logger.Range{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .loc = bun.logger.Loc{ .start = @intCast(start_position) },
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .len = @intCast(end_position - start_position),
                 },
             }) catch |err| bun.handleOom(err);
@@ -1457,7 +1444,6 @@ pub const BundlerAtRuleParser = struct {
 
             bun.handleOom(this.layer_names.ensureUnusedCapacity(this.allocator, layers.len()));
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (layers.slice()) |*layer| {
                 if (this.enclosing_layer.v.len() > 0) {
                     var cloned = LayerName{
@@ -1491,10 +1477,10 @@ pub const BundlerAtRuleParser = struct {
 
         pub fn bumpAnonLayerCount(this: *This, amount: i32) void {
             if (amount > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.anon_layer_count += @intCast(amount);
             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.anon_layer_count -= @intCast(@abs(amount));
             }
         }
@@ -1712,7 +1698,7 @@ pub fn TopLevelRuleParser(comptime AtRuleParserT: type) type {
             pub const Prelude = AtRulePreludeT;
             pub const AtRule = void;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn parsePrelude(this: *This, name: []const u8, input: *Parser) Result(Prelude) {
                 const PreludeEnum = enum {
                     import,
@@ -1855,7 +1841,7 @@ pub fn TopLevelRuleParser(comptime AtRuleParserT: type) type {
                             .layer = if (prelude.import[3]) |v| .{ .v = v.value } else null,
                             .loc = loc,
                         };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         AtRuleParserT.CustomAtRuleParser.onImportRule(this.at_rule_parser, &import_rule, @intCast(start.position), @intCast(start.position + 1));
                         this.rules.v.append(this.allocator, .{
                             .import = import_rule,
@@ -2020,7 +2006,7 @@ pub fn NestedRuleParser(comptime T: type) type {
             pub const Prelude = AtRulePrelude(T.CustomAtRuleParser.Prelude);
             pub const AtRule = void;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn parsePrelude(this: *This, name: []const u8, input: *Parser) Result(Prelude) {
                 const result: Prelude = brk: {
                     const PreludeEnum = enum {
@@ -2665,7 +2651,7 @@ pub fn NestedRuleParser(comptime T: type) type {
                     for (this.composes_refs.slice()) |ref| {
                         const entry = bun.handleOom(this.local_properties.getOrPut(this.allocator, ref));
                         const property_usage: *PropertyUsage = if (!entry.found_existing) brk: {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             entry.value_ptr.* = PropertyUsage{ .range = bun.logger.Range{ .loc = bun.logger.Loc{ .start = @intCast(location) }, .len = @intCast(len) } };
                             break :brk entry.value_ptr;
                         } else entry.value_ptr;
@@ -2701,7 +2687,7 @@ pub fn NestedRuleParser(comptime T: type) type {
         pub const DeclarationParser = struct {
             pub const Declaration = void;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn parseValue(this: *This, name: []const u8, input: *Parser) Result(Declaration) {
                 return css_decls.parse_declaration_impl(
                     name,
@@ -3010,7 +2996,7 @@ pub const CssRef = packed struct(u32) {
     pub fn toRealRef(this: @This(), source_index: u32) bun.bundle_v2.Ref {
         return bun.bundle_v2.Ref{
             .inner_index = this.inner_index,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .source_index = @intCast(source_index),
             .tag = .symbol,
         };
@@ -3049,7 +3035,6 @@ pub const PropertyUsage = struct {
 
 pub const PropertyBitset = std.bit_set.ArrayBitSet(usize, std.math.ceilPowerOfTwo(u16, bun.meta.EnumFields(PropertyIdTag).len) catch unreachable);
 pub fn fillPropertyBitSet(allocator: Allocator, bitset: *PropertyBitset, block: *const DeclarationBlock, custom_properties: *bun.BabyList([]const u8)) void {
-// safe-transpile: for loop with pointer capture requires manual review
     for (block.declarations.items) |*prop| {
         const tag = switch (prop.*) {
             .custom => {
@@ -3063,7 +3048,6 @@ pub fn fillPropertyBitSet(allocator: Allocator, bitset: *PropertyBitset, block: 
         const int: u16 = @intFromEnum(tag);
         bitset.set(int);
     }
-// safe-transpile: for loop with pointer capture requires manual review
     for (block.important_declarations.items) |*prop| {
         const tag = switch (prop.*) {
             .custom => {
@@ -3135,7 +3119,6 @@ pub fn StyleSheet(comptime AtRule: type) type {
             var custom_media: ?std.StringArrayHashMapUnmanaged(css_rules.custom_media.CustomMediaRule) = if (this.options.flags.custom_media and options.targets.shouldCompileSame(.custom_media_queries)) brk: {
                 var custom_media = std.StringArrayHashMapUnmanaged(css_rules.custom_media.CustomMediaRule){};
 
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.rules.v.items) |*rule| {
                     if (rule.* == .custom_media) {
                         bun.handleOom(custom_media.put(allocator, rule.custom_media.name.v, rule.custom_media.deepClone(allocator)));
@@ -3268,13 +3251,13 @@ pub fn StyleSheet(comptime AtRule: type) type {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parse(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: ?*bun.BabyList(ImportRecord), source_index: SrcIndex) Maybe(struct { This, StylesheetExtra }, Err(ParserError)) {
             var default_at_rule_parser = DefaultAtRuleParser{};
             return parseWith(allocator, code, options, DefaultAtRuleParser, &default_at_rule_parser, import_records, source_index);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parseBundler(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: *bun.BabyList(ImportRecord), source_index: SrcIndex) Maybe(struct { This, StylesheetExtra }, Err(ParserError)) {
             var at_rule_parser = BundlerAtRuleParser{
                 .import_records = import_records,
@@ -3286,7 +3269,7 @@ pub fn StyleSheet(comptime AtRule: type) type {
         }
 
         /// Parse a style sheet from a string.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parseWith(
             allocator: Allocator,
             code: []const u8,
@@ -3381,7 +3364,6 @@ pub fn StyleSheet(comptime AtRule: type) type {
             _ = layer_names_field_len; // autofix
             var actual_layer_rules_len: usize = 0;
 
-// safe-transpile: for loop with pointer capture requires manual review
             inline for (this.rules.v.items) |*rule| {
                 switch (rule.*) {
                     .layer_block => {
@@ -3396,7 +3378,6 @@ pub fn StyleSheet(comptime AtRule: type) type {
         pub fn containsTailwindDirectives(this: *const @This()) bool {
             if (comptime AtRule != BundlerAtRule) @compileError("Expected BundlerAtRule for this function.");
             var found_import: bool = false;
-// safe-transpile: for loop with pointer capture requires manual review
             inline for (this.rules.v.items) |*rule| {
                 switch (rule.*) {
                     .custom => {
@@ -3454,7 +3435,6 @@ pub fn StyleSheet(comptime AtRule: type) type {
                     bun.handleOom(out.v.ensureUnusedCapacity(allocator, count));
                 }
                 var saw_imports = false;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.rules.v.items) |*rule| {
                     switch (rule.*) {
                         // TODO: layer, might have imports
@@ -3495,7 +3475,7 @@ pub const StyleAttribute = struct {
     declarations: DeclarationBlock,
     sources: ArrayList([]const u8),
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parse(allocator: Allocator, code: []const u8, options: ParserOptions, import_records: *bun.BabyList(ImportRecord), source_index: SrcIndex) Maybe(StyleAttribute, Err(ParserError)) {
         var parser_extra = ParserExtra{
             .local_scope = .{},
@@ -3754,7 +3734,7 @@ pub const ParserOptions = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn warnFmt(this: *const ParserOptions, comptime text: []const u8, args: anytype, line: u32, column: u32) void {
         if (this.logger) |lg| {
             lg.addWarningFmtLineCol(
@@ -3768,7 +3748,7 @@ pub const ParserOptions = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn warnFmtWithNotes(this: *const ParserOptions, comptime text: []const u8, args: anytype, line: u32, column: u32, notes: []bun.logger.Data) void {
         if (this.logger) |lg| {
             lg.addWarningFmtLineColWithNotes(
@@ -3783,12 +3763,12 @@ pub const ParserOptions = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn warnFmtWithNote(this: *const ParserOptions, comptime text: []const u8, args: anytype, line: u32, column: u32, note_fmt: []const u8, note_args: anytype, note_range: bun.logger.Range) void {
         if (this.logger) |lg| {
             lg.addRangeWarningFmtWithNote(
                 null,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 bun.logger.Loc{ .start = @intCast(line), .end = @intCast(column) },
                 this.allocator,
                 text,
@@ -3862,7 +3842,7 @@ pub const Parser = struct {
         __unused: u7 = 0,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn addSymbolForName(this: *Parser, name: []const u8, tag: CssRef.Tag, loc: bun.logger.Loc) bun.bundle_v2.Ref {
         // don't call this if css modules is not enabled!
         bun.assert(this.flags.css_modules);
@@ -3878,7 +3858,7 @@ pub const Parser = struct {
         if (!entry.found_existing) {
             entry.value_ptr.* = LocalEntry{
                 .ref = CssRef{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .inner_index = @intCast(extra.symbols.len),
                     .tag = tag,
                 },
@@ -3900,7 +3880,7 @@ pub const Parser = struct {
     }
 
     // TODO: dedupe import records??
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn addImportRecord(this: *Parser, url: []const u8, start_position: usize, kind: ImportKind) Result(u32) {
         if (this.import_records) |import_records| {
             const idx = import_records.len;
@@ -3908,9 +3888,9 @@ pub const Parser = struct {
                 .path = bun.fs.Path.init(url),
                 .kind = kind,
                 .range = bun.logger.Range{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .loc = bun.logger.Loc{ .start = @intCast(start_position) },
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .len = @intCast(url.len), // TODO: technically this is not correct because the url could be escaped
                 },
             }) catch |err| bun.handleOom(err);
@@ -3972,7 +3952,7 @@ pub const Parser = struct {
     }
 
     /// Return a slice of the CSS input, from the given position to the current one.
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn sliceFrom(this: *const Parser, start_position: usize) []const u8 {
         return this.input.tokenizer.sliceFrom(start_position);
     }
@@ -4066,8 +4046,7 @@ pub const Parser = struct {
                 var args: std.meta.ArgsTuple(@TypeOf(func)) = undefined;
                 args[0] = this;
 
-                // safe-transpile: for with index access requires manual review
-    inline for (args_, 1..) |a, i| {
+                inline for (args_, 1..) |a, i| {
                     args[i] = a;
                 }
 
@@ -4243,7 +4222,7 @@ pub const Parser = struct {
         return .{ .err = start_location.newUnexpectedTokenError(tok.*) };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn expectIdentMatching(this: *Parser, name: []const u8) Result(void) {
         const start_location = this.currentSourceLocation();
         const tok = switch (this.next()) {
@@ -4270,7 +4249,7 @@ pub const Parser = struct {
         return .{ .err = start_location.newUnexpectedTokenError(tok.*) };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn expectFunctionMatching(this: *Parser, name: []const u8) Result(void) {
         const start_location = this.currentSourceLocation();
         const tok = switch (this.next()) {
@@ -4482,7 +4461,7 @@ pub const Parser = struct {
         return ParserState{
             .position = this.input.tokenizer.getPosition(),
             .current_line_start_position = this.input.tokenizer.current_line_start_position,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .current_line_number = @intCast(this.input.tokenizer.current_line_number),
             .at_start_of = this.at_start_of,
             .import_record_count = if (this.import_records) |import_records| import_records.len else 0,
@@ -4605,7 +4584,7 @@ pub const ParserInput = struct {
     tokenizer: Tokenizer,
     cached_token: ?CachedToken = null,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn new(allocator: Allocator, code: []const u8) ParserInput {
         return ParserInput{
             .tokenizer = Tokenizer.init(allocator, code),
@@ -4628,7 +4607,7 @@ pub const ParserState = struct {
     pub fn sourceLocation(this: *const ParserState) SourceLocation {
         return .{
             .line = this.current_line_number,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .column = @intCast(this.position - this.current_line_start_position + 1),
         };
     }
@@ -4767,7 +4746,7 @@ pub const nth = struct {
         return .{ .err = input.newUnexpectedTokenError(tok.*) };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn parse_n_dash_digits(allocator: Allocator, str: []const u8) Maybe(i32, void) {
         const bytes = str;
         if (bytes.len >= 3 and
@@ -4785,7 +4764,7 @@ pub const nth = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn parse_number_saturate(allocator: Allocator, string: []const u8) Maybe(i32, void) {
         var input = ParserInput.new(allocator, string);
         var parser = Parser.new(
@@ -4840,7 +4819,7 @@ const Tokenizer = struct {
     const MAX_TWO_B: u32 = 0x800;
     const MAX_THREE_B: u32 = 0x10000;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: Allocator, src: []const u8) Tokenizer {
         var lexer = Tokenizer{
             .src = src,
@@ -4891,7 +4870,7 @@ const Tokenizer = struct {
     pub fn currentSourceLocation(this: *const Tokenizer) SourceLocation {
         return SourceLocation{
             .line = this.current_line_number,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .column = @intCast((this.position - this.current_line_start_position) + 1),
         };
     }
@@ -4905,7 +4884,7 @@ const Tokenizer = struct {
         return this.position >= this.src.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn seeFunction(this: *Tokenizer, name: []const u8) void {
         if (this.var_or_env_functions == .looking_for_them) {
             if (std.ascii.eqlIgnoreCase(name, "var") and std.ascii.eqlIgnoreCase(name, "env")) {
@@ -5261,7 +5240,7 @@ const Tokenizer = struct {
         return .{ .ident = value };
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn consumeName(this: *Tokenizer) []const u8 {
         const start_pos = this.position;
         var value_bytes: CopyOnWriteStr = undefined;
@@ -5649,7 +5628,7 @@ const Tokenizer = struct {
     pub fn consumeEscapeAndWrite(this: *Tokenizer, bytes: *CopyOnWriteStr) void {
         const val = this.consumeEscape();
         var utf8bytes: [4]u8 = undefined;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const len = std.unicode.utf8Encode(@truncate(val), utf8bytes[0..]) catch @panic("Invalid");
         bytes.append(this.allocator, utf8bytes[0..len]);
     }
@@ -5670,7 +5649,7 @@ const Tokenizer = struct {
                     }
                 }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 if (c != 0 and std.unicode.utf8ValidCodepoint(@truncate(c))) return c;
                 return REPLACEMENT_CHAR;
             },
@@ -5744,7 +5723,7 @@ const Tokenizer = struct {
         return null;
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn consumeComment(this: *Tokenizer) []const u8 {
         this.advance(2);
         const start_position = this.position;
@@ -5778,7 +5757,7 @@ const Tokenizer = struct {
         return contents;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn checkForSourceMap(this: *Tokenizer, contents: []const u8) void {
         {
             const directive = "# sourceMappingURL=";
@@ -5797,7 +5776,7 @@ const Tokenizer = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn splitSourceMap(contents: []const u8) ?[]const u8 {
         // FIXME: Use bun CodepointIterator
         var iter = std.unicode.Utf8Iterator{ .bytes = contents, .i = 0 };
@@ -5893,7 +5872,7 @@ const Tokenizer = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn startsWith(this: *Tokenizer, comptime needle: []const u8) bool {
         return bun.strings.hasPrefixComptime(this.src[this.position..], needle);
     }
@@ -5949,7 +5928,7 @@ const Tokenizer = struct {
         return this.src[this.position];
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn sliceFrom(this: *Tokenizer, start: usize) []const u8 {
         return this.src[start..this.position];
     }
@@ -6030,7 +6009,7 @@ const TokenKind = enum {
     /// Not an actual token in the spec, but we keep it anyway
     comment,
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn toString(this: TokenKind) []const u8 {
         return switch (this) {
             .at_keyword => "@-keyword",
@@ -6228,7 +6207,7 @@ pub const Token = union(TokenKind) {
                 // See comment for this variant in declaration of Token
                 // The value of delim is only ever ascii
                 bun.debugAssert(value <= 0x7F);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 try writer.writeByte(@truncate(value));
             },
             .number => |num| try serializer.writeNumeric(num.value, num.int_value, num.has_sign, writer),
@@ -6288,7 +6267,7 @@ pub const Token = union(TokenKind) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn raw(this: Token) []const u8 {
         return switch (this) {
             .ident => this.ident,
@@ -6300,7 +6279,7 @@ pub const Token = union(TokenKind) {
         return @as(TokenKind, this);
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn kindString(this: Token) []const u8 {
         return this.kind.toString();
     }
@@ -6331,7 +6310,7 @@ pub const Token = union(TokenKind) {
             },
             .delim => |x| {
                 bun.assert(x <= 0x7F);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 try writer.writeByte(@intCast(x));
             },
             .number => |n| {
@@ -6430,7 +6409,7 @@ pub const Token = union(TokenKind) {
                 // See comment for this variant in declaration of Token
                 // The value of delim is only ever ascii
                 bun.debugAssert(value <= 0x7F);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 return dest.writeChar(@truncate(value));
             },
             .number => |num| serializer.writeNumeric(num.value, num.int_value, num.has_sign, dest) catch return dest.addFmtError(),
@@ -6524,7 +6503,7 @@ const CopyOnWriteStr = union(enum) {
     borrowed: []const u8,
     owned: std.array_list.Managed(u8),
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn append(this: *@This(), allocator: Allocator, slice: []const u8) void {
         switch (this.*) {
             .borrowed => {
@@ -6539,7 +6518,7 @@ const CopyOnWriteStr = union(enum) {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn toSlice(this: *@This()) []const u8 {
         return switch (this.*) {
             .borrowed => this.borrowed,
@@ -6724,18 +6703,18 @@ pub const color = struct {
 
     /// Returns the named color with the given name.
     /// <https://drafts.csswg.org/css-color-4/#typedef-named-color>
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseNamedColor(ident: []const u8) ?struct { u8, u8, u8 } {
         return named_colors.get(ident);
     }
 
     /// Parse a color hash, without the leading '#' character.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseHashColor(value: []const u8) ?struct { u8, u8, u8, f32 } {
         return parseHashColorImpl(value) catch return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseHashColorImpl(value: []const u8) ColorError!struct { u8, u8, u8, f32 } {
         return switch (value.len) {
             8 => .{
@@ -6823,11 +6802,10 @@ pub const serializer = struct {
     ///
     /// You should only use this when you know what you're doing, when in doubt,
     /// consider using `serialize_identifier`.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn serializeName(value: []const u8, writer: anytype) !void {
         var chunk_start: usize = 0;
-        // safe-transpile: for with index access requires manual review
-    for (value, 0..) |b, i| {
+        for (value, 0..) |b, i| {
             const escaped: ?[]const u8 = switch (b) {
                 '0'...'9', 'A'...'Z', 'a'...'z', '_', '-' => continue,
                 // the unicode replacement character
@@ -6849,7 +6827,7 @@ pub const serializer = struct {
     }
 
     /// Write a double-quoted CSS string token, escaping content as necessary.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn serializeString(value: []const u8, writer: anytype) !void {
         try writer.writeAll("\"");
         var string_writer = CssStringWriter(@TypeOf(writer)).new(writer);
@@ -6857,7 +6835,7 @@ pub const serializer = struct {
         return writer.writeAll("\"");
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn serializeDimension(value: f32, unit: []const u8, dest: *Printer) PrintErr!void {
         // Check if the value is an integer - use Rust-compatible conversion
         const int_value: ?i32 = if (fract(value) == 0.0)
@@ -6890,7 +6868,7 @@ pub const serializer = struct {
     }
 
     /// Write a CSS identifier, escaping characters as necessary.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn serializeIdentifier(value: []const u8, writer: anytype) !void {
         if (value.len == 0) {
             return;
@@ -6915,11 +6893,10 @@ pub const serializer = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn serializeUnquotedUrl(value: []const u8, writer: anytype) !void {
         var chunk_start: usize = 0;
-        // safe-transpile: for with index access requires manual review
-    for (value, 0..) |b, i| {
+        for (value, 0..) |b, i| {
             const hex = switch (b) {
                 0...' ', 0x7F => true,
                 '(', ')', '"', '\'', '\\' => false,
@@ -6989,9 +6966,9 @@ pub const serializer = struct {
         const HEX_DIGITS = "0123456789abcdef";
         var bytes: [4]u8 = undefined;
         const slice: []const u8 = if (ascii_byte > 0x0F) slice: {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const high: usize = @intCast(ascii_byte >> 4);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const low: usize = @intCast(ascii_byte & 0x0F);
             bytes[0] = '\\';
             bytes[1] = HEX_DIGITS[high];
@@ -7021,11 +6998,10 @@ pub const serializer = struct {
                 return .{ .inner = inner };
             }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn writeStr(this: *@This(), str: []const u8) !void {
                 var chunk_start: usize = 0;
-                // safe-transpile: for with index access requires manual review
-    for (str, 0..) |b, i| {
+                for (str, 0..) |b, i| {
                     const escaped = switch (b) {
                         '"' => "\\\"",
                         '\\' => "\\\\",
@@ -7059,7 +7035,7 @@ pub const parse_utility = struct {
     ///
     /// NOTE: `input` should live as long as the returned value. Otherwise, strings in the
     /// returned parsed value will point to undefined memory.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseString(
         allocator: Allocator,
         comptime T: type,
@@ -7108,8 +7084,7 @@ pub const to_css = struct {
 
     pub fn fromList(comptime T: type, this: []const T, dest: *Printer) PrintErr!void {
         const len = this.len;
-        // safe-transpile: for with index access requires manual review
-    for (this, 0..) |*val, idx| {
+        for (this, 0..) |*val, idx| {
             try val.toCss(dest);
             if (idx < len - 1) {
                 try dest.delim(',', false);
@@ -7120,8 +7095,7 @@ pub const to_css = struct {
 
     pub fn fromBabyList(comptime T: type, this: *const bun.BabyList(T), dest: *Printer) PrintErr!void {
         const len = this.len;
-        // safe-transpile: for with index access requires manual review
-    for (this.sliceConst(), 0..) |*val, idx| {
+        for (this.sliceConst(), 0..) |*val, idx| {
             try val.toCss(dest);
             if (idx < len - 1) {
                 try dest.delim(',', false);
@@ -7169,7 +7143,6 @@ pub const signfns = struct {
         // IEEE754 says: isSignMinus(x) is true if and only if x has negative sign. isSignMinus
         // applies to zeros and NaNs as well.
         // SAFETY: This is just transmuting to get the sign bit, it's fine.
-// safe-transpile: @bitCast requires manual review
         return @as(u32, @bitCast(x)) & 0x8000_0000 != 0;
     }
     /// Returns a number that represents the sign of `self`.
@@ -7192,39 +7165,34 @@ pub const signfns = struct {
 /// Copies the sign of `sign` to `self`, returning a new f32 value
 pub inline fn copysign(self: f32, sign: f32) f32 {
     // Convert both floats to their bit representations
-// safe-transpile: @bitCast requires manual review
     const self_bits = @as(u32, @bitCast(self));
-// safe-transpile: @bitCast requires manual review
     const sign_bits = @as(u32, @bitCast(sign));
 
     // Clear the sign bit of self and combine with the sign bit of sign
     const result_bits = (self_bits & 0x7FFFFFFF) | (sign_bits & 0x80000000);
 
     // Convert the result back to f32
-// safe-transpile: @bitCast requires manual review
     return @as(f32, @bitCast(result_bits));
 }
 
-    pub fn deepClone(comptime V: type, allocator: Allocator, list: *const ArrayList(V)) ArrayList(V) {
-        var newlist = bun.handleOom(ArrayList(V).initCapacity(allocator, list.items.len));
+pub fn deepClone(comptime V: type, allocator: Allocator, list: *const ArrayList(V)) ArrayList(V) {
+    var newlist = bun.handleOom(ArrayList(V).initCapacity(allocator, list.items.len));
 
-// safe-transpile: for loop with pointer capture requires manual review
-        for (list.items) |*item| {
-            newlist.appendAssumeCapacity(generic.deepClone(V, item, allocator));
-        }
-
-        return newlist;
+    for (list.items) |*item| {
+        newlist.appendAssumeCapacity(generic.deepClone(V, item, allocator));
     }
 
-    pub fn deepDeinit(comptime V: type, allocator: Allocator, list: *ArrayList(V)) void {
-        if (comptime !@hasDecl(V, "deinit")) return;
-// safe-transpile: for loop with pointer capture requires manual review
-        for (list.items) |*item| {
-            item.deinit(allocator);
-        }
+    return newlist;
+}
 
-        list.deinit(allocator);
+pub fn deepDeinit(comptime V: type, allocator: Allocator, list: *ArrayList(V)) void {
+    if (comptime !@hasDecl(V, "deinit")) return;
+    for (list.items) |*item| {
+        item.deinit(allocator);
     }
+
+    list.deinit(allocator);
+}
 
 const Notation = struct {
     decimal_point: bool,
@@ -7267,14 +7235,14 @@ pub fn dtoa_short(buf: *[129]u8, value: f32, comptime precision: u8) !struct { [
 pub fn dtoa_short_impl(buf: *[129]u8, value: f32, comptime precision: u8) struct { []u8, Notation } {
     buf[0] = '0';
     bun.debugAssert(std.math.isFinite(value));
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const buf_len = bun.fmt.FormatDouble.dtoa(@ptrCast(buf[1..].ptr), @floatCast(value)).len;
     return restrict_prec(buf[0 .. buf_len + 1], precision);
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn restrict_prec(buf: []u8, comptime prec: u8) struct { []u8, Notation } {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const len: u8 = @intCast(buf.len);
 
     // Put a leading zero to capture any carry.
@@ -7298,16 +7266,16 @@ fn restrict_prec(buf: []u8, comptime prec: u8) struct { []u8, Notation } {
     for (1..len) |i| {
         if (buf[i] == '.') {
             bun.debugAssert(_pos_dot == null);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             _pos_dot = @intCast(i);
         } else if (buf[i] == 'e') {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             pos_exp = @intCast(i);
             // We don't change exponent part, so stop here.
             break;
         } else if (_prec_start == null and buf[i] != '0') {
             bun.debugAssert(buf[i] >= '1' and buf[i] <= '9');
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             _prec_start = @intCast(i);
         }
     }

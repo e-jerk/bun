@@ -65,7 +65,7 @@ export fn OPENSSL_memory_alloc(size: usize) ?*anyopaque {
 // BoringSSL always expects memory to be zero'd
 export fn OPENSSL_memory_free(ptr: *anyopaque) void {
     const len = bun.mimalloc.mi_usable_size(ptr);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     @memset(@as([*]u8, @ptrCast(ptr))[0..len], 0);
     bun.mimalloc.mi_free(ptr);
 }
@@ -212,7 +212,7 @@ pub fn checkX509ServerIdentity(
                                 .GEN_DNS => {
                                     has_identifier_san = true;
                                     const dnsName = name.d.dNSName;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     const dnsNameSlice = dnsName.data[0..@as(usize, @intCast(dnsName.length))];
                                     if (matchDnsName(dnsNameSlice, hostname)) {
                                         return true;
@@ -242,7 +242,7 @@ pub fn checkX509ServerIdentity(
                 const cn_ptr = boring.ASN1_STRING_get0_data(data);
                 const cn_len = boring.ASN1_STRING_length(data);
                 if (cn_ptr == null or cn_len <= 0) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const cn = cn_ptr[0..@intCast(cn_len)];
                 if (matchDnsName(cn, hostname)) {
                     return true;

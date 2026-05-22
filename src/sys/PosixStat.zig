@@ -26,7 +26,6 @@ pub const PosixStat = extern struct {
     /// when copying platform `struct stat` fields into `uv_stat_t`.
     fn toU64(value: anytype) u64 {
         return switch (@typeInfo(@TypeOf(value)).int.signedness) {
-// safe-transpile: @bitCast requires manual review
             .signed => @bitCast(@as(i64, value)),
             .unsigned => value,
         };

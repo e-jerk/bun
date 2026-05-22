@@ -87,7 +87,6 @@ fn writeFailingError(this: *Pipeline, comptime fmt: []const u8, args: anytype) Y
 fn setupCommands(this: *Pipeline) ?Yield {
     const cmd_count = brk: {
         var i: u32 = 0;
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.node.items) |*item| {
             if (switch (item.*) {
                 .assigns => false,
@@ -100,7 +99,6 @@ fn setupCommands(this: *Pipeline) ?Yield {
     this.cmds = if (cmd_count >= 1) bun.handleOom(this.base.allocator().alloc(CmdOrResult, cmd_count)) else null;
     if (this.cmds == null) return null;
     // Pre-fill so a mid-loop failure leaves cmds[i..] in a state deinit() can skip safely.
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.cmds.?) |*c| c.* = .{ .result = 0 };
 
     var pipes = bun.handleOom(this.base.allocator().alloc(Pipe, if (cmd_count > 1) cmd_count - 1 else 1));
@@ -109,7 +107,6 @@ fn setupCommands(this: *Pipeline) ?Yield {
     if (cmd_count > 1) {
         var pipes_set: u32 = 0;
         if (Pipeline.initializePipes(pipes, &pipes_set).asErr()) |err| {
-// safe-transpile: for loop with pointer capture requires manual review
             for (pipes[0..pipes_set]) |*pipe| {
                 closefd(pipe[0]);
                 closefd(pipe[1]);
@@ -122,7 +119,6 @@ fn setupCommands(this: *Pipeline) ?Yield {
 
     var i: u32 = 0;
     const evtloop = this.base.eventLoop();
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.node.items) |*item| {
         switch (item.*) {
             .@"if", .cmd, .condexpr, .subshell => {
@@ -140,7 +136,7 @@ fn setupCommands(this: *Pipeline) ?Yield {
                             // Close pipe ends not yet wrapped in an IOReader/IOWriter; the
                             // wrapped ones are owned by cmds[0..i]/cmd_io and close on deref.
                             for (pipes[i..]) |p| closefd(p[0]);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const w_start = @min(i + 1, @as(u32, @intCast(pipes.len)));
                             for (pipes[w_start..]) |p| closefd(p[1]);
                         }
@@ -226,14 +222,13 @@ pub fn childDone(this: *Pipeline, child: ChildPtr, exit_code: ExitCode) Yield {
     assert(this.cmds.?.len > 0);
 
     const idx = brk: {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const ptr_value: u64 = @bitCast(child.ptr.repr);
         _ = ptr_value;
-        // safe-transpile: for with index access requires manual review
-    for (this.cmds.?, 0..) |cmd_or_result, i| {
+        for (this.cmds.?, 0..) |cmd_or_result, i| {
             if (cmd_or_result == .cmd) {
                 const ptr = @as(usize, cmd_or_result.cmd.repr._ptr);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (ptr == @as(usize, @intCast(child.ptr.repr._ptr))) break :brk i;
             }
         }
@@ -265,10 +260,10 @@ pub fn childDone(this: *Pipeline, child: ChildPtr, exit_code: ExitCode) Yield {
     log("Pipeline(0x{x}) check exited_count={d} cmds.len={d}", .{ @intFromPtr(this), this.exited_count, this.cmds.?.len });
     if (this.exited_count >= this.cmds.?.len) {
         var last_exit_code: ExitCode = 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var i: i64 = @as(i64, @intCast(this.cmds.?.len)) - 1;
         while (i > 0) : (i -= 1) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const cmd_or_result = this.cmds.?[@intCast(i)];
             if (cmd_or_result == .result) {
                 last_exit_code = cmd_or_result.result;
@@ -284,7 +279,6 @@ pub fn childDone(this: *Pipeline, child: ChildPtr, exit_code: ExitCode) Yield {
 
 pub fn deinit(this: *Pipeline) void {
     if (this.cmds) |cmds| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (cmds) |*cmd_or_result| {
             if (cmd_or_result.* == .cmd) {
                 cmd_or_result.cmd.call("deinit", .{}, void);
@@ -301,7 +295,6 @@ pub fn deinit(this: *Pipeline) void {
 }
 
 fn initializePipes(pipes: []Pipe, set_count: *u32) Maybe(void) {
-// safe-transpile: for loop with pointer capture requires manual review
     for (pipes) |*pipe| {
         if (bun.Environment.isWindows) {
             pipe.* = switch (bun.sys.pipe()) {

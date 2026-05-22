@@ -1,5 +1,5 @@
 const VulnerabilityInfo = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     severity: []const u8,
     title: []const u8,
     url: []const u8,
@@ -557,9 +557,9 @@ fn findDependencyPaths(
             var seen_in_trace = bun.StringHashMap(void).init(allocator);
             defer seen_in_trace.deinit();
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+            var __loop_limit_1: usize = 0;
+            while (true) : (__loop_limit_1 += 1) {
+                if (__loop_limit_1 > 1_000_000) break;
                 // Check for cycle before processing
                 if (seen_in_trace.contains(trace)) {
                     // Cycle detected, stop tracing

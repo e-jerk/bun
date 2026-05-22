@@ -124,7 +124,7 @@ pub fn toAST(this: *const BundledAst) Ast {
 
 pub fn init(ast: Ast) BundledAst {
     return .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .approximate_newline_count = @as(u32, @truncate(ast.approximate_newline_count)),
         .nested_scope_slot_counts = ast.nested_scope_slot_counts,
 

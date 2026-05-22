@@ -70,7 +70,7 @@ fn printSourceMapContentsJSON(
         filename = filename[FileSystem.instance.top_level_dir.len - 1 ..];
     } else if (filename.len > 0 and filename[0] != '/') {
         filename_buf[0] = '/';
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(filename_buf[1..][0..filename.len], filename);
         filename = filename_buf[0 .. filename.len + 1];
     }
@@ -231,16 +231,16 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
 
         pub const SourceMapper = SourceMapFormat(SourceMapFormatType);
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub noinline fn generateChunk(b: *ThisBuilder, output: []const u8) Chunk {
             b.updateGeneratedLineAndColumn(output);
             var buffer = b.source_map.getBuffer();
             if (b.prepend_count) {
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 buffer.list.items[0..8].* = @as([8]u8, @bitCast(buffer.list.items.len));
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 buffer.list.items[8..16].* = @as([8]u8, @bitCast(b.source_map.getCount()));
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 buffer.list.items[16..24].* = @as([8]u8, @bitCast(b.approximate_input_line_count));
             }
             return Chunk{
@@ -254,13 +254,13 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
 
         // Scan over the printed text since the last source mapping and update the
         // generated line and column numbers
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn updateGeneratedLineAndColumn(b: *ThisBuilder, output: []const u8) void {
             const slice = output[b.last_generated_update..];
             var needs_mapping = b.cover_lines_without_mappings and !b.line_starts_with_mapping and b.has_prev_state;
 
             var i: usize = 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const n = @as(usize, @intCast(slice.len));
             var c: i32 = 0;
             while (i < n) {
@@ -270,14 +270,14 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
 
                 switch (c) {
                     14...127 => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         if (strings.indexOfNewlineOrNonASCII(slice, @as(u32, @intCast(i)))) |j| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             b.generated_column += @as(i32, @intCast((@as(usize, j) - i) + 1));
                             i = j;
                             continue;
                         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             b.generated_column += @as(i32, @intCast(slice[i..].len)) + 1;
                             i = n;
                             break;
@@ -322,7 +322,7 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
                 }
             }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             b.last_generated_update = @as(u32, @truncate(output.len));
         }
 
@@ -336,7 +336,7 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
             b.has_prev_state = true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn addSourceMapping(b: *ThisBuilder, loc: Logger.Loc, output: []const u8) void {
             if (
             // don't insert mappings for same location twice
@@ -359,15 +359,15 @@ pub fn NewBuilder(comptime SourceMapFormatType: type) type {
             }
 
             const original_line = LineOffsetTable.findLine(b.line_offset_table_byte_offset_list, loc);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const line = list.get(@as(usize, @intCast(@max(original_line, 0))));
 
             // Use the line to compute the column
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             var original_column = loc.start - @as(i32, @intCast(line.byte_offset_to_start_of_line));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (line.columns_for_non_ascii.len > 0 and original_column >= @as(i32, @intCast(line.byte_offset_to_first_non_ascii))) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 original_column = line.columns_for_non_ascii.slice()[@as(u32, @intCast(original_column)) - line.byte_offset_to_first_non_ascii];
             }
 

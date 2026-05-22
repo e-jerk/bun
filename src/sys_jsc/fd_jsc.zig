@@ -7,7 +7,7 @@ pub fn fromJS(value: JSValue) ?FD {
     if (fd64 < 0 or fd64 > std.math.maxInt(i32)) {
         return null;
     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const fd: i32 = @intCast(fd64);
     // On Windows, JS-visible fds are libuv/CRT fds (see `toJS`). libuv fd
     // 0/1/2 already map to stdio, so there is no need to substitute the
@@ -30,7 +30,7 @@ pub fn fromJSValidated(value: JSValue, global: *jsc.JSGlobalObject) bun.JSError!
         return global.throwRangeError(float, .{ .field_name = "fd", .min = 0, .max = std.math.maxInt(i32) });
     }
     const int: i64 = @intFromFloat(float);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const fd: c_int = @intCast(int);
     // See `fromJS` above for why stdio fds are not remapped to the cached
     // `.system` HANDLE on Windows.
@@ -65,7 +65,7 @@ pub fn toJSWithoutMakingLibUVOwned(any_fd: FD) JSValue {
     }
     if (Environment.isWindows) {
         return switch (any_fd.kind) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .system => JSValue.jsNumberFromUint64(@intCast(any_fd.value.as_system)),
             .uv => JSValue.jsNumberFromInt32(any_fd.value.as_uv),
         };

@@ -1,5 +1,5 @@
 pub const PmPkgCommand = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     const SubCommand = enum {
         get,
         set,
@@ -66,9 +66,9 @@ const zust = @import("safe");
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = cwd;
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             const pkg_path = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.sys.existsZ(pkg_path)) {
                 return try allocator.dupe(u8, pkg_path);

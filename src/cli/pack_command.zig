@@ -1,5 +1,5 @@
 pub const PackCommand = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     pub const Context = struct {
         manager: *PackageManager,
         allocator: std.mem.Allocator,
@@ -1844,7 +1844,7 @@ const zust = @import("safe");
                 break :tarball_bytes tarball_bytes;
             }
 
-        file_reader.ptr.* = .{
+            file_reader.ptr.* = .{
                 .unbuffered_reader = tarball_file.reader(),
                 .buf = undefined,
             };

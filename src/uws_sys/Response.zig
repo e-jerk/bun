@@ -15,26 +15,23 @@ pub fn NewResponse(ssl_flag: i32) type {
         const ssl = ssl_flag == 1;
 
         pub inline fn castRes(res: *c.uws_res) *Response {
-// safe-transpile: @alignCast requires manual review
             return @as(*Response, @ptrCast(@alignCast(res)));
         }
 
         pub inline fn downcast(res: *Response) *c.uws_res {
-// safe-transpile: @alignCast requires manual review
             return @as(*c.uws_res, @ptrCast(@alignCast(res)));
         }
 
         pub inline fn downcastSocket(res: *Response) *bun.uws.us_socket_t {
-// safe-transpile: @alignCast requires manual review
             return @as(*bun.uws.us_socket_t, @ptrCast(@alignCast(res)));
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn end(res: *Response, data: []const u8, close_connection: bool) void {
             c.uws_res_end(ssl_flag, res.downcast(), data.ptr, data.len, close_connection);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn tryEnd(res: *Response, data: []const u8, total: usize, close_: bool) bool {
             return c.uws_res_try_end(ssl_flag, res.downcast(), data.ptr, data.len, total, close_);
         }
@@ -54,7 +51,6 @@ pub fn NewResponse(ssl_flag: i32) type {
             return c.uws_res_is_corked(ssl_flag, res.downcast());
         }
         pub fn state(res: *const Response) State {
-// safe-transpile: @alignCast requires manual review
             return c.uws_res_state(ssl_flag, @as(*const c.uws_res, @ptrCast(@alignCast(res))));
         }
 
@@ -81,15 +77,15 @@ pub fn NewResponse(ssl_flag: i32) type {
         pub fn writeContinue(res: *Response) void {
             c.uws_res_write_continue(ssl_flag, res.downcast());
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeStatus(res: *Response, status: []const u8) void {
             c.uws_res_write_status(ssl_flag, res.downcast(), status.ptr, status.len);
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeHeader(res: *Response, key: []const u8, value: []const u8) void {
             c.uws_res_write_header(ssl_flag, res.downcast(), key.ptr, key.len, value.ptr, value.len);
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeHeaderInt(res: *Response, key: []const u8, value: u64) void {
             c.uws_res_write_header_int(ssl_flag, res.downcast(), key.ptr, key.len, value);
         }
@@ -108,7 +104,7 @@ pub fn NewResponse(ssl_flag: i32) type {
         pub fn getBufferedAmount(res: *Response) u64 {
             return c.uws_res_get_buffered_amount(ssl_flag, res.downcast());
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(res: *Response, data: []const u8) WriteResult {
             var len: usize = data.len;
             return switch (c.uws_res_write(ssl_flag, res.downcast(), data.ptr, &len)) {
@@ -120,7 +116,7 @@ pub fn NewResponse(ssl_flag: i32) type {
             return c.uws_res_get_write_offset(ssl_flag, res.downcast());
         }
         pub fn overrideWriteOffset(res: *Response, offset: anytype) void {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             c.uws_res_override_write_offset(ssl_flag, res.downcast(), @as(u64, @intCast(offset)));
         }
         pub fn hasResponded(res: *Response) bool {
@@ -138,11 +134,11 @@ pub fn NewResponse(ssl_flag: i32) type {
         pub fn getNativeHandle(res: *Response) bun.FD {
             if (comptime Environment.isWindows) {
                 // on windows uSockets exposes SOCKET
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 return .fromNative(@ptrCast(c.uws_res_get_native_handle(ssl_flag, res.downcast())));
             }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return .fromNative(@intCast(@intFromPtr(c.uws_res_get_native_handle(ssl_flag, res.downcast()))));
         }
         pub fn getRemoteAddressAsText(res: *Response) ?[]const u8 {
@@ -180,7 +176,6 @@ pub fn NewResponse(ssl_flag: i32) type {
                     } else if (data) |user_data_ptr| {
                         // null should always be treated as a no-op, there's no case where it should have any effect.
                         return @call(bun.callmod_inline, handler, .{
-// safe-transpile: @alignCast requires manual review
                             @as(UserDataType, @ptrCast(@alignCast(user_data_ptr))),
                             amount,
                             castRes(this),
@@ -207,7 +202,6 @@ pub fn NewResponse(ssl_flag: i32) type {
                         @call(bun.callmod_inline, handler, .{ {}, castRes(this), {} });
                     } else if (user_data) |user_data_ptr| {
                         // null should always be treated as a no-op, there's no case where it should have any effect.
-// safe-transpile: @alignCast requires manual review
                         @call(bun.callmod_inline, handler, .{ @as(UserDataType, @ptrCast(@alignCast(user_data_ptr))), castRes(this) });
                     }
                 }
@@ -225,7 +219,6 @@ pub fn NewResponse(ssl_flag: i32) type {
                         @call(bun.callmod_inline, handler, .{ {}, castRes(this) });
                     } else if (user_data) |user_data_ptr| {
                         // null should always be treated as a no-op, there's no case where it should have any effect.
-// safe-transpile: @alignCast requires manual review
                         @call(bun.callmod_inline, handler, .{ @as(UserDataType, @ptrCast(@alignCast(user_data_ptr))), castRes(this) });
                     }
                 }
@@ -259,7 +252,6 @@ pub fn NewResponse(ssl_flag: i32) type {
                     } else if (user_data) |user_data_ptr| {
                         // null should always be treated as a no-op, there's no case where it should have any effect.
                         @call(bun.callmod_inline, handler_fn, .{
-// safe-transpile: @alignCast requires manual review
                             @as(UserDataType, @ptrCast(@alignCast(user_data_ptr))),
                             castRes(this),
                             if (len > 0) chunk_ptr[0..len] else "",
@@ -285,13 +277,12 @@ pub fn NewResponse(ssl_flag: i32) type {
                 const handler_fn = handler;
                 const Args = *@TypeOf(args_tuple);
                 pub fn handle(user_data: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                     const args: Args = @ptrCast(@alignCast(user_data.?));
                     @call(bun.callmod_inline, handler_fn, args.*);
                 }
             };
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             c.uws_res_cork(ssl_flag, res.downcast(), @ptrCast(@constCast(&args_tuple)), Wrapper.handle);
         }
 
@@ -309,7 +300,6 @@ pub fn NewResponse(ssl_flag: i32) type {
                         });
                     } else {
                         @call(bun.callmod_inline, handler, .{
-// safe-transpile: @alignCast requires manual review
                             @as(UserDataType, @ptrCast(@alignCast(user_data.?))),
                         });
                     }
@@ -319,7 +309,7 @@ pub fn NewResponse(ssl_flag: i32) type {
             c.uws_res_cork(ssl_flag, res.downcast(), optional_data, Wrapper.handle);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn upgrade(
             res: *Response,
             comptime Data: type,
@@ -466,13 +456,13 @@ pub const AnyResponse = union(enum) {
     pub fn onData(this: AnyResponse, comptime UserDataType: type, comptime handler: fn (UserDataType, []const u8, bool) void, optional_data: UserDataType) void {
         switch (this) {
             inline .SSL, .TCP => |resp, ssl| resp.onData(UserDataType, struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                // safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn onDataCallback(user_data: UserDataType, _: *uws.NewApp(ssl == .SSL).Response, data: []const u8, last: bool) void {
                     @call(bun.callmod_inline, handler, .{ user_data, data, last });
                 }
             }.onDataCallback, optional_data),
             .H3 => |resp| resp.onData(UserDataType, struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                // safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn onDataCallback(user_data: UserDataType, _: *H3Response, data: []const u8, last: bool) void {
                     @call(bun.callmod_inline, handler, .{ user_data, data, last });
                 }
@@ -480,28 +470,28 @@ pub const AnyResponse = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeStatus(this: AnyResponse, status: []const u8) void {
         switch (this) {
             inline else => |resp| resp.writeStatus(status),
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeHeader(this: AnyResponse, key: []const u8, value: []const u8) void {
         switch (this) {
             inline else => |resp| resp.writeHeader(key, value),
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(this: AnyResponse, data: []const u8) WriteResult {
         return switch (this) {
             inline else => |resp| resp.write(data),
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn end(this: AnyResponse, data: []const u8, close_connection: bool) void {
         switch (this) {
             inline else => |resp| resp.end(data, close_connection),
@@ -514,7 +504,7 @@ pub const AnyResponse = union(enum) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn tryEnd(this: AnyResponse, data: []const u8, total_size: usize, close_connection: bool) bool {
         return switch (this) {
             inline else => |resp| resp.tryEnd(data, total_size, close_connection),
@@ -533,7 +523,7 @@ pub const AnyResponse = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeHeaderInt(this: AnyResponse, key: []const u8, value: u64) void {
         switch (this) {
             inline else => |resp| resp.writeHeaderInt(key, value),
@@ -672,7 +662,7 @@ pub const AnyResponse = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn upgrade(
         this: AnyResponse,
         comptime Data: type,

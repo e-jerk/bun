@@ -63,7 +63,7 @@ const log = Output.scoped(.WebSocketServer, .visible);
 pub fn onOpen(this: *ServerWebSocket, ws: uws.AnyWebSocket) void {
     log("OnOpen", .{});
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     this._flags.packed_websocket_ptr = @truncate(@intFromPtr(ws.raw()));
     this._flags.closed = false;
     this._flags.ssl = ws == .ssl;
@@ -432,7 +432,7 @@ pub fn publish(
         return JSValue.jsNumber(
             // if 0, return 0
             // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
         );
     }
@@ -455,7 +455,7 @@ pub fn publish(
         return JSValue.jsNumber(
             // if 0, return 0
             // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
         );
     }
@@ -520,7 +520,7 @@ pub fn publishText(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -582,7 +582,7 @@ pub fn publishBinary(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -622,7 +622,7 @@ pub fn publishBinaryWithoutTypeChecks(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }
@@ -665,7 +665,7 @@ pub fn publishTextWithoutTypeChecks(
     return JSValue.jsNumber(
         // if 0, return 0
         // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         if (result) @as(i32, @intCast(@as(u31, @truncate(buffer.len)))) else @as(i32, 0),
     );
 }

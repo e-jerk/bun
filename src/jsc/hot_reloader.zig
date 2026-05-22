@@ -187,7 +187,7 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
             /// we check if the file exists and trigger the reload.
             is_waiting_for_dir_change: bool = false,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn init(file: []const u8) MainFile {
                 var main = MainFile{
                     .file = file,
@@ -347,12 +347,12 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
             reloader.ptr.getContext().start() catch @panic("Failed to start File Watcher");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn putTombstone(this: *@This(), key: []const u8, value: *bun.fs.FileSystem.RealFS.EntriesOption) void {
             this.tombstones.put(bun.default_allocator, key, value) catch unreachable;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn getTombstone(this: *@This(), key: []const u8) ?*bun.fs.FileSystem.RealFS.EntriesOption {
             return this.tombstones.get(key);
         }
@@ -492,15 +492,14 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
 
                                 // if a file descriptor is stale, we need to close it
                                 if (event.op.delete and entries_option != null) {
-                                    // safe-transpile: for with index access requires manual review
-    for (parents, 0..) |parent_hash, entry_id| {
+                                    for (parents, 0..) |parent_hash, entry_id| {
                                         if (parent_hash == current_hash) {
                                             const affected_path = file_paths[entry_id];
                                             var path_buf: [std.fs.max_path_bytes]u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
                                             @memcpy(path_buf[0..affected_path.len], affected_path);
                                             path_buf[affected_path.len] = 0;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                                             const was_deleted = std.c.faccessat(std.c.AT.FDCWD, @as([*:0]u8, @ptrCast(&path_buf)), std.c.F_OK, 0) != 0;
                                             if (!was_deleted) continue;
 
@@ -544,15 +543,14 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
                                     var path_string: bun.PathString = undefined;
                                     var file_hash: Watcher.HashType = last_file_hash;
                                     const abs_path: string = brk: {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                                        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                         if (dir_ent.entries.get(@as([]const u8, @ptrCast(changed_name)))) |file_ent| {
                                             // reset the file descriptor
                                             file_ent.entry.cache.fd = .invalid;
                                             file_ent.entry.need_stat = true;
                                             path_string = file_ent.entry.abs_path;
                                             file_hash = Watcher.getHash(path_string.slice());
-                                            // safe-transpile: for with index access requires manual review
-    for (hashes, 0..) |hash, entry_id| {
+                                            for (hashes, 0..) |hash, entry_id| {
                                                 if (hash == file_hash) {
                                                     if (file_descriptors[entry_id].isValid()) {
                                                         if (prev_entry_id != entry_id) {
@@ -561,7 +559,7 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
                                                             if (this.verbose)
                                                                 debug("Removing file: {s}", .{path_string.slice()});
                                                             ctx.removeAtIndex(
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                                                                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                                                 @as(u16, @truncate(entry_id)),
                                                                 0,
                                                                 &.{},
@@ -578,11 +576,10 @@ pub fn NewHotReloader(comptime Ctx: type, comptime EventLoopType: type, comptime
                                             break :brk path_string.slice();
                                         } else {
                                             const file_path_without_trailing_slash = std.mem.trimEnd(u8, file_path, std.fs.path.sep_str);
-// safe-transpile: @memcpy requires manual review
+
                                             @memcpy(_on_file_update_path_buf[0..file_path_without_trailing_slash.len], file_path_without_trailing_slash);
                                             _on_file_update_path_buf[file_path_without_trailing_slash.len] = std.fs.path.sep;
 
-// safe-transpile: @memcpy requires manual review
                                             @memcpy(_on_file_update_path_buf[file_path_without_trailing_slash.len..][0..changed_name.len], changed_name);
                                             const path_slice = _on_file_update_path_buf[0 .. file_path_without_trailing_slash.len + changed_name.len + 1];
                                             file_hash = Watcher.getHash(path_slice);

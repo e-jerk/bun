@@ -59,7 +59,6 @@ pub const RunCommand = struct {
                 pub fn run(PATH_: string, cwd_: string) ?stringZ {
                     if (findShellImpl(PATH_, cwd_)) |found| {
                         if (found.len < shell_buf.len) {
-// safe-transpile: @memcpy requires manual review
                             @memcpy(shell_buf[0..found.len], found);
                             shell_buf[found.len] = 0;
                             return shell_buf[0..found.len :0];
@@ -372,7 +371,7 @@ pub const RunCommand = struct {
     /// When printing error messages from 'bun run', attribute bun overridden node.js to bun
     /// This prevents '"node" exited with ...' when it was actually bun.
     /// As of writing this is only used for 'runBinary'
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn basenameOrBun(str: []const u8) []const u8 {
         // The full path is not used here, because on windows it is dependant on the
         // username. Before windows we checked bun_node_dir, but this is not allowed on Windows.
@@ -388,7 +387,7 @@ pub const RunCommand = struct {
     ///
     /// This function only returns if an error starting the process is
     /// encountered, most other errors are handled by printing and exiting.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn runBinary(
         ctx: Command.Context,
         executable: []const u8,
@@ -413,7 +412,7 @@ pub const RunCommand = struct {
 
             bun.assert(wpath.len > bun.windows.nt_object_prefix.len + ".exe".len);
             wpath.len += ".bunx".len - ".exe".len;
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(wpath[wpath.len - "bunx".len ..], comptime bun.strings.w("bunx"));
 
             BunXFastPath.tryLaunch(ctx, wpath, env, passthrough);
@@ -430,7 +429,7 @@ pub const RunCommand = struct {
         );
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn runBinaryGenericError(executable: []const u8, silent: bool, err: bun.sys.Error) noreturn {
         if (!silent) {
             Output.prettyErrorln("<r><red>error<r>: Failed to run \"<b>{s}<r>\" due to:\n{f}", .{ basenameOrBun(executable), err.withPath(executable) });
@@ -439,7 +438,7 @@ pub const RunCommand = struct {
         Global.exit(1);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn runBinaryWithoutBunxPath(
         ctx: Command.Context,
         executable: []const u8,
@@ -627,7 +626,7 @@ pub const RunCommand = struct {
         var target_path_buffer: bun.PathBuffer = undefined;
         const len = bun.windows.GetTempPathW(
             temp_path_buffer.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @ptrCast(&temp_path_buffer),
         );
         if (len == 0) {
@@ -641,7 +640,7 @@ pub const RunCommand = struct {
 
         const dir_name = "bun-node" ++ if (Environment.git_sha_short.len > 0) "-" ++ Environment.git_sha_short else "";
         const file_name = dir_name ++ "\\node.exe";
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(target_path_buffer[converted.len..][0..file_name.len], file_name);
 
         target_path_buffer[converted.len + file_name.len] = 0;
@@ -657,7 +656,6 @@ pub const RunCommand = struct {
         if (CLI.pretend_to_be_node) return;
 
         if (Environment.isPosix) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             var argv0 = @as([*:0]const u8, @ptrCast(optional_bun_path.ptr));
 
             // if we are already an absolute path, use that
@@ -684,9 +682,9 @@ pub const RunCommand = struct {
             const paths = .{ bun_node_dir ++ "/node", bun_node_dir ++ "/bun" };
             inline for (paths) |path| {
                 var retried = false;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+                var __loop_limit_1: usize = 0;
+                while (true) : (__loop_limit_1 += 1) {
+                    if (__loop_limit_1 > 1_000_000) break;
                     inner: {
                         bun.sys.symlinkat(std.mem.sliceTo(argv0, 0), bun.FD.cwd(), std.mem.sliceTo(path, 0)).unwrap() catch |err| {
                             if (err == error.PathAlreadyExists) break :inner;
@@ -717,7 +715,7 @@ while (true) : (__loop_limit_1 += 1) {
 
             const len = bun.windows.GetTempPathW(
                 target_path_buffer.len - prefix.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 @ptrCast(&target_path_buffer[prefix.len]),
             );
             if (len == 0) {
@@ -725,7 +723,6 @@ while (true) : (__loop_limit_1 += 1) {
                 return;
             }
 
-// safe-transpile: @memcpy requires manual review
             @memcpy(target_path_buffer[0..prefix.len], prefix);
 
             const dir_name = "bun-node" ++ if (Environment.isDebug)
@@ -734,7 +731,7 @@ while (true) : (__loop_limit_1 += 1) {
                 "-" ++ Environment.git_sha_short
             else
                 "";
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(target_path_buffer[prefix.len..][len..].ptr, comptime bun.strings.w(dir_name));
             const dir_slice = target_path_buffer[0 .. prefix.len + len + dir_name.len];
 
@@ -748,12 +745,11 @@ while (true) : (__loop_limit_1 += 1) {
             const image_path = bun.windows.exePathW();
             inline for (.{ "node.exe", "bun.exe" }) |name| {
                 const file_name = dir_name ++ "\\" ++ name ++ "\x00";
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(target_path_buffer[len + prefix.len ..][0..file_name.len], comptime bun.strings.w(file_name));
 
                 const file_slice = target_path_buffer[0 .. prefix.len + len + file_name.len - "\x00".len];
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (bun.windows.CreateHardLinkW(@ptrCast(file_slice.ptr), image_path.ptr, null) == 0) {
                     switch (std.os.windows.kernel32.GetLastError()) {
                         .ALREADY_EXISTS => {},
@@ -765,7 +761,6 @@ while (true) : (__loop_limit_1 += 1) {
                                 target_path_buffer[dir_slice.len] = '\\';
                             }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             if (bun.windows.CreateHardLinkW(@ptrCast(file_slice.ptr), image_path.ptr, null) == 0) {
                                 return;
                             }
@@ -883,8 +878,7 @@ while (true) : (__loop_limit_1 += 1) {
 
             if (package_json.config) |config| {
                 try this_transpiler.env.map.ensureUnusedCapacity(config.count());
-                // safe-transpile: for with index access requires manual review
-    for (config.keys(), config.values()) |k, v| {
+                for (config.keys(), config.values()) |k, v| {
                     const key = try bun.strings.concat(bun.default_allocator, &.{ "npm_package_config_", k });
                     this_transpiler.env.map.putAssumeCapacity(key, v);
                 }
@@ -894,7 +888,7 @@ while (true) : (__loop_limit_1 += 1) {
         return root_dir_info;
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn configurePathForRunWithPackageJsonDir(
         ctx: Command.Context,
         package_json_dir: string,
@@ -1305,7 +1299,7 @@ while (true) : (__loop_limit_1 += 1) {
     /// http(s) image URL it finds to a temp file, and populate `out_map`
     /// with url → temp-path entries. Failures are silent — an image that
     /// can't be downloaded just falls back to alt-text rendering.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn prefetchRemoteImages(
         contents: []const u8,
         md_opts: bun.md.Options,
@@ -1450,7 +1444,7 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     /// Null-terminate `path` on the stack and unlink it. Never allocates.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn unlinkStagedPath(path: []const u8) void {
         var buf: bun.PathBuffer = undefined;
         _ = bun.sys.unlink(bun.path.z(path, &buf));
@@ -1493,7 +1487,7 @@ while (true) : (__loop_limit_1 += 1) {
                     var csbi: windows.CONSOLE_SCREEN_BUFFER_INFO = undefined;
                     if (windows.kernel32.GetConsoleScreenBufferInfo(handle, &csbi) != windows.FALSE) {
                         const w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         if (w > 0) break :brk @intCast(w);
                     }
                 }
@@ -1619,7 +1613,6 @@ while (true) : (__loop_limit_1 += 1) {
                     );
                 } else if (!strings.hasPrefix(script_name_to_search, "..") and script_name_to_search[0] != '~') {
                     const file_pathZ = brk2: {
-// safe-transpile: @memcpy requires manual review
                         @memcpy(script_name_buf[0..file_path.len], file_path);
                         script_name_buf[file_path.len] = 0;
                         break :brk2 script_name_buf[0..file_path.len :0];
@@ -1648,7 +1641,7 @@ while (true) : (__loop_limit_1 += 1) {
             switch (bun.sys.fstat(file)) {
                 .result => |stat| {
                     // directories cannot be run. if only there was a faster way to check this
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     if (bun.S.ISDIR(@intCast(stat.mode))) return false;
                 },
                 .err => return false,
@@ -1755,9 +1748,9 @@ while (true) : (__loop_limit_1 += 1) {
             var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
             var cwd_buf: bun.PathBuffer = undefined;
             const cwd = try bun.sys.getcwd(&cwd_buf).unwrap();
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(entry_point_buf[0..cwd.len], cwd);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
             const entry_path = entry_point_buf[0 .. cwd.len + trigger.len];
 
@@ -1894,7 +1887,7 @@ while (true) : (__loop_limit_1 += 1) {
             // generate this full path anyways.
             var ptr: []u16 = &BunXFastPath.direct_launch_buffer;
             const root = comptime bun.strings.w("\\??\\");
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(ptr[0..root.len], root);
             ptr = ptr[4..];
             const cwd_len = windows.kernel32.GetCurrentDirectoryW(
@@ -1904,13 +1897,13 @@ while (true) : (__loop_limit_1 += 1) {
             if (cwd_len == 0) break :try_bunx_file;
             ptr = ptr[cwd_len..];
             const prefix = comptime bun.strings.w("\\node_modules\\.bin\\");
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(ptr[0..prefix.len], prefix);
             ptr = ptr[prefix.len..];
             const encoded = bun.strings.convertUTF8toUTF16InBuffer(ptr[0..], target_name);
             ptr = ptr[encoded.len..];
             const ext = comptime bun.strings.w(".bunx");
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(ptr[0..ext.len], ext);
             ptr[ext.len] = 0;
 
@@ -1986,9 +1979,9 @@ while (true) : (__loop_limit_1 += 1) {
             var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
             var eval_buf: bun.PathBuffer = undefined;
             const cwd = try bun.sys.getcwd(&eval_buf).unwrap();
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(entry_point_buf[0..cwd.len], cwd);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
             try Run.boot(ctx, entry_point_buf[0 .. cwd.len + trigger.len], null);
             return;
@@ -2033,9 +2026,9 @@ while (true) : (__loop_limit_1 += 1) {
         var entry_point_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
         var path_buf3: bun.PathBuffer = undefined;
         const cwd = try bun.sys.getcwd(&path_buf3).unwrap();
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(entry_point_buf[0..cwd.len], cwd);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(entry_point_buf[cwd.len..][0..trigger.len], trigger);
         ctx.runtime_options.eval.script = if (bun.Environment.codegen_embed)
             @embedFile("eval/feedback.ts")
@@ -2062,7 +2055,7 @@ pub const BunXFastPath = struct {
     /// SAFETY: Caller must ensure `buffer` has sufficient space. Worst case requires
     /// approximately `2 * arg.len + 3` UTF-16 code units (when every character needs escaping).
     /// The command line buffer is sized to Windows' 32,767 character limit.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn appendWindowsArgument(buffer: []u16, arg: []const u8) usize {
         // Temporary buffer for UTF-16 conversion (max 2048 wide chars = 4KB)
         var temp_buf: [2048]u16 = undefined;
@@ -2086,7 +2079,7 @@ pub const BunXFastPath = struct {
 
         if (!needs_quote) {
             // No quoting needed, just copy to output
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buffer[0..len], source);
             return len;
         }
@@ -2099,7 +2092,7 @@ pub const BunXFastPath = struct {
         if (!has_quote_or_backslash) {
             // Simple case: just wrap in quotes
             buffer[0] = '"';
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(buffer[1 .. 1 + len], source);
             buffer[len + 1] = '"';
             return len + 2;

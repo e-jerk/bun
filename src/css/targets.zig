@@ -25,7 +25,7 @@ pub const Targets = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseDebugTarget(val_: []const u8) ?u32 {
         const val = bun.strings.trim(val_, " \n\r\t");
         if (val.len == 0) return null;
@@ -35,8 +35,7 @@ pub const Targets = struct {
         var rhs: u32 = 0;
 
         var i: usize = 0;
-        // safe-transpile: for with index access requires manual review
-    for (val, 0..) |c, j| {
+        for (val, 0..) |c, j| {
             if (!std.ascii.isDigit(c)) {
                 i = j;
                 lhs = std.fmt.parseInt(u32, val[0..j], 10) catch @panic("invalid bytes");
@@ -60,7 +59,7 @@ pub const Targets = struct {
         }
         i += 1;
         rhs = std.fmt.parseInt(u32, val[i..], 10) catch @panic("invalid bytes");
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return lhs << @intCast(rhs);
     }
 
@@ -237,8 +236,7 @@ pub const Browsers = struct {
             for_loop: for (entries_without_es) |entry| {
                 if (bun.strings.eql(entry, "esnext")) continue;
                 const maybe_idx: ?usize = maybe_idx: {
-                    // safe-transpile: for with index access requires manual review
-    for (entry, 0..) |c, i| {
+                    for (entry, 0..) |c, i| {
                         if (std.ascii.isDigit(c)) break :maybe_idx i;
                     }
                     break :maybe_idx null;

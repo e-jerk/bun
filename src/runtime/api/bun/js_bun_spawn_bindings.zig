@@ -320,7 +320,7 @@ pub fn spawnMaybeSync(
                                 },
                             };
                             if (opt == .ipc) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 ipc_channel = @intCast(extra_fds.items.len);
                             }
                             try extra_fds.append(opt);
@@ -379,7 +379,7 @@ pub fn spawnMaybeSync(
 
                     const timeout_int = try globalThis.validateIntegerRange(timeout_value, u64, 0, .{ .min = 0, .field_name = "timeout" });
                     if (timeout_int > 0)
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         timeout = @intCast(@as(u31, @truncate(timeout_int)));
                 }
             }
@@ -501,7 +501,7 @@ pub fn spawnMaybeSync(
         const ipc_fd: i32 = brk: {
             if (ipc_channel == -1) {
                 // If the user didn't specify an IPC channel, we need to add one
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 ipc_channel = @intCast(extra_fds.items.len);
                 var ipc_extra_fd_default = Stdio{ .ipc = {} };
                 const fd: i32 = ipc_channel + 3;
@@ -515,7 +515,7 @@ pub fn spawnMaybeSync(
                 }
                 break :brk fd;
             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 break :brk @intCast(ipc_channel + 3);
             }
         };
@@ -538,9 +538,8 @@ pub fn spawnMaybeSync(
     try argv.append(null);
 
     if (comptime is_sync) {
-        // safe-transpile: for with index access requires manual review
-    for (&stdio, 0..) |*io, i| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        for (&stdio, 0..) |*io, i| {
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             io.toSync(@truncate(i));
         }
     }
@@ -629,9 +628,9 @@ pub fn spawnMaybeSync(
 
     var spawned = switch (bun.spawn.spawnProcess(
         &spawn_options,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @ptrCast(argv.items.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @ptrCast(env_array.items.ptr),
     ) catch |err| switch (err) {
         error.EMFILE, error.ENFILE => {
@@ -691,7 +690,7 @@ pub fn spawnMaybeSync(
     });
 
     const posix_ipc_fd = if (Environment.isPosix and !is_sync and maybe_ipc_mode != null)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         spawned.extra_pipes.items[@intCast(ipc_channel)].fd()
     else
         bun.invalid_fd;
@@ -849,17 +848,17 @@ pub fn spawnMaybeSync(
                 subprocess.ipc_data.?.socket = .{ .open = posix_ipc_info };
             }
             // uws owns the fd now (owns_fd=1); neutralize the slot so finalizeStreams doesn't double-close.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             subprocess.stdio_pipes.items[@intCast(ipc_channel)] = .unavailable;
         } else {
             if (ipc_data.windowsConfigureServer(
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 subprocess.stdio_pipes.items[@intCast(ipc_channel)].buffer,
             ).asErr()) |err| {
                 subprocess.deref();
                 return globalThis.throwValue(try err.toJS(globalThis));
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             subprocess.stdio_pipes.items[@intCast(ipc_channel)] = .unavailable;
         }
         ipc_data.writeVersionPacket(globalThis);

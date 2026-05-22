@@ -18,7 +18,7 @@ pub const RunCommand = struct {
         return error.Unimplemented;
     }
 
-    pub fn runPackageScriptForeground(ctx: anytype, allocator: anytype, script: anytype, name: anytype, cwd: anytype, env: anytype, _: anytype, _: anytype, _: anytype) (error{MissingShell, OutOfMemory} || error{Unimplemented})!void {
+    pub fn runPackageScriptForeground(ctx: anytype, allocator: anytype, script: anytype, name: anytype, cwd: anytype, env: anytype, _: anytype, _: anytype, _: anytype) (error{ MissingShell, OutOfMemory } || error{Unimplemented})!void {
         _ = ctx;
         _ = allocator;
         _ = script;

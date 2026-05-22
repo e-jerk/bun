@@ -28,7 +28,6 @@ export fn zig__ModuleInfoDeserialized__toJSModuleRecord(
     var identifiers = IdentifierArray.create(res.strings_lens.len);
     defer identifiers.destroy();
     var offset: usize = 0;
-    // safe-transpile: for with index access requires manual review
     for (0.., res.strings_lens) |index, len| {
         if (res.strings_buf.len < offset + len) return null; // error!
         const sub = res.strings_buf[offset..][0..len];
@@ -52,7 +51,6 @@ export fn zig__ModuleInfoDeserialized__toJSModuleRecord(
 
     const module_record = JSModuleRecord.create(globalObject, vm, module_key, source_code, declared_variables, lexical_variables, res.flags.contains_import_meta, res.flags.is_typescript, res.flags.has_tla);
 
-    // safe-transpile: for with index access requires manual review
     for (res.requested_modules_keys, res.requested_modules_values) |reqk, reqv| {
         switch (reqv) {
             .none => module_record.addRequestedModuleNullAttributesPtr(identifiers, reqk),
@@ -100,7 +98,7 @@ const IdentifierArray = opaque {
     pub const destroy = JSC__IdentifierArray__destroy;
 
     extern fn JSC__IdentifierArray__setFromUtf8(identifier_array: *IdentifierArray, n: usize, vm: *bun.jsc.VM, str: [*]const u8, len: usize) void;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn setFromUtf8(self: *IdentifierArray, n: usize, vm: *bun.jsc.VM, str: []const u8) void {
         JSC__IdentifierArray__setFromUtf8(self, n, vm, str.ptr, str.len);
     }

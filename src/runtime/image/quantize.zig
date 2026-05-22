@@ -39,7 +39,7 @@ const Box = struct {
             const s: i32 = @as(i32, self.max[c]) - @as(i32, self.min[c]);
             if (s > span) {
                 span = s;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 best = @intCast(c);
             }
         }
@@ -60,7 +60,7 @@ pub const Options = struct {
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemory}!Result {
     const max_colors = opts.max_colors;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const n: u32 = @intCast(rgba.len / 4);
     const want: u16 = @max(1, @min(max_colors, 256));
 
@@ -68,8 +68,7 @@ pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemo
     // each Box owns a contiguous [lo,hi) slice of it.
     var order = try bun.default_allocator.alloc(u32, n);
     defer bun.default_allocator.free(order);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-    // safe-transpile: for with index access requires manual review
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     for (order, 0..) |*o, i| o.* = @intCast(i);
 
     var boxes = try std.ArrayList(Box).initCapacity(bun.default_allocator, want);
@@ -81,8 +80,7 @@ pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemo
         // most wants splitting.
         var pick: usize = 0;
         var best: i32 = -1;
-        // safe-transpile: for with index access requires manual review
-    for (boxes.items, 0..) |b, i| {
+        for (boxes.items, 0..) |b, i| {
             const c = b.widestChannel();
             const s: i32 = @as(i32, b.max[c]) - @as(i32, b.min[c]);
             if (s > best) {
@@ -103,19 +101,18 @@ pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemo
         boxes.appendAssumeCapacity(shrink(rgba, order, mid, b.hi));
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const k: u16 = @intCast(boxes.items.len);
     var palette = try bun.default_allocator.alloc(u8, @as(usize, k) * 4);
     errdefer bun.default_allocator.free(palette);
     var has_alpha = false;
-    // safe-transpile: for with index access requires manual review
     for (boxes.items, 0..) |b, i| {
         var sum: [4]u64 = .{ 0, 0, 0, 0 };
         for (order[b.lo..b.hi]) |px| inline for (0..4) |c| {
             sum[c] += rgba[@as(usize, px) * 4 + c];
         };
         const cnt: u64 = b.hi - b.lo;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         inline for (0..4) |c| palette[i * 4 + c] = @intCast((sum[c] + cnt / 2) / cnt);
         if (palette[i * 4 + 3] < 255) has_alpha = true;
     }
@@ -129,7 +126,7 @@ pub fn quantize(rgba: []const u8, w: u32, h: u32, opts: Options) error{OutOfMemo
         // highway-dispatched kernel so it runs under the best -march.
         for (0..n) |px| {
             const p = rgba[px * 4 ..][0..4];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             indices[px] = @intCast(bun_image_nearest_palette(palette.ptr, k, p[0], p[1], p[2], p[3]));
         }
     }
@@ -178,9 +175,9 @@ fn mapFloydSteinberg(
         const step: i64 = if (ltr) 1 else -1;
         var x: i64 = if (ltr) 0 else @as(i64, w) - 1;
         while (x >= 0 and x < w) : (x += step) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const px: usize = @as(usize, y) * w + @as(usize, @intCast(x));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const off: usize = @as(usize, @intCast(x)) * 4;
 
             // Candidate colour = source + accumulated error (clamped for the
@@ -189,7 +186,7 @@ fn mapFloydSteinberg(
             var cand: [4]i32 = undefined;
             inline for (0..4) |c| cand[c] = @as(i32, rgba[px * 4 + c]) + cur[off + c];
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const idx: u8 = @intCast(bun_image_nearest_palette(
                 palette.ptr,
                 k,
@@ -206,12 +203,12 @@ fn mapFloydSteinberg(
                 const dir = step;
                 const xr = x + dir;
                 const xl = x - dir;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (xr >= 0 and xr < w) cur[@as(usize, @intCast(xr)) * 4 + c] += (err * 7) >> 4;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (xl >= 0 and xl < w) nxt[@as(usize, @intCast(xl)) * 4 + c] += (err * 3) >> 4;
                 nxt[off + c] += (err * 5) >> 4;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (xr >= 0 and xr < w) nxt[@as(usize, @intCast(xr)) * 4 + c] += err >> 4;
             }
         }

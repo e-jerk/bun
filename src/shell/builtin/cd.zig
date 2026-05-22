@@ -67,7 +67,7 @@ pub fn start(this: *Cd) Yield {
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
 fn handleChangeCwdErr(this: *Cd, err: Syscall.Error, new_cwd_: []const u8) Yield {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const errno: usize = @intCast(err.errno);
 
     switch (errno) {
@@ -130,7 +130,6 @@ pub fn onIOWriterChunk(this: *Cd, _: usize, e: ?jsc.SystemError) Yield {
 }
 
 pub inline fn bltn(this: *Cd) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("cd", this));
     return @fieldParentPtr("impl", impl);
 }

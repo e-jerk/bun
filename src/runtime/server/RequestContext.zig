@@ -442,7 +442,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                 .reason = .fetch_event_handler,
                 .cwd = VirtualMachine.get().transpiler.fs.top_level_dir,
                 .problems = Api.Problems{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .code = @as(u16, @truncate(@intFromError(err))),
                     .name = @errorName(err),
                     .exceptions = exceptions,
@@ -498,7 +498,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             this.response_buf_owned.items.len = 0;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn end(this: *RequestContext, data: []const u8, closeConnection: bool) void {
             ctxLog("end", .{});
             if (this.resp) |resp| {
@@ -785,7 +785,6 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
         }
 
         fn onFileStreamComplete(ctx: *anyopaque, _: uws.AnyResponse) void {
-// safe-transpile: @alignCast requires manual review
             const this: *RequestContext = @ptrCast(@alignCast(ctx));
             this.detachResponse();
             this.endRequestStreamingAndDrain();
@@ -793,7 +792,6 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
         }
 
         fn onFileStreamAbort(ctx: *anyopaque, resp: uws.AnyResponse) void {
-// safe-transpile: @alignCast requires manual review
             const this: *RequestContext = @ptrCast(@alignCast(ctx));
             // Route through the real onAbort so flags.aborted, request.signal,
             // and additional_on_abort fire exactly as they did pre-consolidation.
@@ -820,12 +818,12 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             return true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn sendWritableBytesForBlob(this: *RequestContext, bytes_: []const u8, write_offset_: u64, resp: *App.Response) bool {
             assert(this.resp == resp);
             const write_offset: usize = write_offset_;
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const bytes = bytes_[@min(bytes_.len, @as(usize, @truncate(write_offset)))..];
             if (resp.tryEnd(bytes, bytes_.len, this.shouldCloseConnection())) {
                 this.detachResponse();
@@ -839,12 +837,12 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn sendWritableBytesForCompleteResponseBuffer(this: *RequestContext, bytes_: []const u8, write_offset_: u64, resp: *App.Response) bool {
             const write_offset: usize = write_offset_;
             assert(this.resp == resp);
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const bytes = bytes_[@min(bytes_.len, @as(usize, @truncate(write_offset)))..];
             if (resp.tryEnd(bytes, bytes_.len, this.shouldCloseConnection())) {
                 this.response_buf_owned.items.len = 0;
@@ -896,11 +894,11 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
 
             const is_regular = bun.isRegularFile(stat.mode);
             const file_type: bun.io.FileType, const pollable: bool = brk: {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (bun.S.ISFIFO(@intCast(stat.mode)) or bun.S.ISCHR(@intCast(stat.mode))) break :brk .{ .pipe, true };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (bun.S.ISSOCK(@intCast(stat.mode))) break :brk .{ .socket, true };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (bun.S.ISDIR(@intCast(stat.mode))) {
                     if (auto_close) fd.close();
                     var sys = (bun.sys.Error{
@@ -914,7 +912,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             };
 
             const original_size = this.blob.Blob.size;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const stat_size: Blob.SizeType = @intCast(@max(stat.size, 0));
             this.blob.Blob.size = if (is_regular) stat_size else @min(original_size, stat_size);
 
@@ -952,9 +950,9 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                 switch (this.range.resolve(stat_size)) {
                     .none => {},
                     .satisfiable => |r| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         this.sendfile.offset = @intCast(r.start);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         this.sendfile.remain = @intCast(r.end - r.start + 1);
                         this.sendfile.total = stat_size;
                         this.flags.needs_content_range = true;
@@ -1066,7 +1064,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                     .res = resp,
                     .allocator = this.allocator,
                     .buffer = bun.ByteList{},
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                     .onFirstWrite = @ptrCast(&handleFirstStreamWrite),
                     .ctx = this,
                     .globalThis = globalThis,
@@ -1092,7 +1090,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                 globalThis,
                 stream.value,
                 response_stream,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 @as(**anyopaque, @ptrCast(&signal.ptr)),
             );
 
@@ -1450,7 +1448,6 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                         const path = blob.store.?.data.s3.path();
                         const env = globalThis.bunVM().transpiler.env;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         S3.stat(credentials, path, @ptrCast(&onS3SizeResolved), this, if (env.getHttpProxy(true, null, null)) |proxy| proxy.href else null, blob.store.?.data.s3.request_payer) catch {}; // TODO: properly propagate exception upwards
                         return;
                     }
@@ -2251,7 +2248,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             if (this.cookies) |cookies| {
                 this.cookies = null;
                 defer cookies.deref();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 cookies.write(this.server.?.globalThis, resp_kind, @ptrCast(this.resp.?)) catch return; // TODO: properly propagate exception upwards
             }
 
@@ -2382,7 +2379,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             this.doRender();
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onBufferedBodyChunk(this: *RequestContext, resp: *App.Response, chunk: []const u8, last: bool) void {
             ctxLog("onBufferedBodyChunk {} {}", .{ chunk.len, last });
 
@@ -2500,7 +2497,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
                         const prev_len = bytes.items.len;
                         bytes.items.len = total;
                         var slice = bytes.items[prev_len..];
-// safe-transpile: @memcpy requires manual review
+
                         @memcpy(slice[0..chunk.len], chunk);
                         body.value = .{
                             .InternalBlob = .{
@@ -2539,7 +2536,7 @@ pub fn NewRequestContext(comptime ssl_enabled: bool, comptime debug_mode: bool, 
             // This means we have received part of the body but not the whole thing
             if (this.request_body_buf.items.len > 0) {
                 var emptied = this.request_body_buf;
-                    this.request_body_buf = .empty;
+                this.request_body_buf = .empty;
                 return .{
                     .owned = .{
                         .list = emptied.toManaged(this.allocator),

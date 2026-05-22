@@ -47,13 +47,16 @@ pub inline fn readCounter() u64 {
 /// resolved without measuring it. Never recurses into `getRoughTickCount`.
 pub inline fn nowNs() u64 {
     if (comptime is_supported) {
-        if (!calibrate_once_done) { calibrate(); calibrate_once_done = true; }
+        if (!calibrate_once_done) {
+            calibrate();
+            calibrate_once_done = true;
+        }
         if (calibration.mult != 0) {
             const ticks = readCounter() -% calibration.start_counter;
             // u64×u64→u128 widening mul + shift: 2 insns on x64 (`mul`+`shrd`),
             // 3 on arm64 (`mul`+`umulh`+`extr`). `mulWide` guarantees LLVM sees
             // a widening mul, not a generic 128×128 `__multi3`.
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const ns: u64 = @truncate(std.math.mulWide(u64, ticks, calibration.mult) >> shift);
             return calibration.start_ns +% ns;
         }
@@ -84,7 +87,7 @@ fn calibrate() void {
     calibration = .{
         .start_counter = readCounter(),
         .start_ns = start_ns,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .mult = @intCast(((@as(u128, std.time.ns_per_s) << shift) + (freq / 2)) / freq),
     };
 }
@@ -152,20 +155,18 @@ fn osMonotonicNs() u64 {
         // QPF is a constant read from KUSER_SHARED_DATA; no need to cache.
         const counter = std.os.windows.QueryPerformanceCounter();
         const freq = std.os.windows.QueryPerformanceFrequency();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(std.math.mulWide(u64, counter, std.time.ns_per_s) / freq);
     }
     var spec = bun.timespec{ .sec = 0, .nsec = 0 };
     if (comptime Environment.isLinux) {
         // CLOCK_MONOTONIC, not _RAW: guaranteed vDSO (no syscall). _RAW only
         // joined the vDSO in 5.3.
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         _ = std.os.linux.clock_gettime(.MONOTONIC, @ptrCast(&spec));
     } else if (comptime Environment.isMac) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _ = std.c.clock_gettime(.MONOTONIC_RAW, @ptrCast(&spec));
     } else {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _ = std.c.clock_gettime(.MONOTONIC, @ptrCast(&spec));
     }
     return spec.ns();

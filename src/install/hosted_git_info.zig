@@ -92,7 +92,7 @@ pub const HostedGitInfo = struct {
     ///
     /// Therefore, we use this function to first take a URL string, encode it into a *jsc.URL and
     /// then decode it back to a normal string. Kind of a lot of work, but it works.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn decodeAndAppend(
         sb: *bun.StringBuilder,
         input: []const u8,
@@ -110,7 +110,7 @@ pub const HostedGitInfo = struct {
         return writable[0..decoded_len];
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn copyFrom(
         committish: ?[]const u8,
         project: []const u8,
@@ -179,7 +179,7 @@ pub const HostedGitInfo = struct {
 
     /// Given a URL-like (including shortcuts) string, parses it into a HostedGitInfo structure.
     /// The HostedGitInfo is valid only for as long as `git_url` is valid.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUrl(
         allocator: std.mem.Allocator,
         git_url: []const u8,
@@ -342,7 +342,7 @@ pub const WellDefinedProtocol = enum {
 
     /// Look up a protocol from a string that includes the trailing colon (e.g., "https:").
     /// This method strips the colon before looking up in the strings map.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromStringWithColon(protocol_with_colon: []const u8) ?Self {
         return if (protocol_with_colon.len == 0)
             return null
@@ -368,13 +368,13 @@ pub const WellDefinedProtocol = enum {
     /// Get the protocol string with colon (e.g., "https:") for a given protocol enum.
     /// Takes a buffer pointer to hold the result.
     /// Returns a slice into that buffer containing the protocol string with colon.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn toStringWithColon(self: Self, buf: *StringWithColonBuffer) []const u8 {
         // Look up the protocol string (without colon) from the map
         const protocol_str = strings.getKey(self).?;
 
         // Copy to buffer and append colon
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buf[0..protocol_str.len], protocol_str);
         buf[protocol_str.len] = ':';
         return buf[0 .. protocol_str.len + 1];
@@ -385,7 +385,7 @@ pub const WellDefinedProtocol = enum {
     /// don't support this, for example `github:user/repo` is valid.
     ///
     /// Kind of arbitrary and implemented to match hosted-git-info's behavior.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn protocolResourceIdentifierConcatenationToken(self: Self) []const u8 {
         return switch (self) {
             .git,
@@ -458,7 +458,6 @@ pub fn isGitHubShorthand(npa_str: []const u8) bool {
     var pound_idx: ?usize = null;
     var seen_slash = false;
 
-    // safe-transpile: for with index access requires manual review
     for (npa_str, 0..) |c, i| {
         switch (c) {
             // Implement atOnlyAfterHash and colonOnlyAfterHash
@@ -530,7 +529,7 @@ pub const UrlProtocolPair = struct {
     },
     protocol: UrlProtocol,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn urlSlice(self: *const Self) []const u8 {
         return switch (self.url) {
             .managed => |s| s.buf,
@@ -597,18 +596,18 @@ pub const UrlProtocolPair = struct {
 fn normalizeProtocol(npa_str: []const u8) UrlProtocolPair {
     var first_colon_idx: i32 = -1;
     if (bun.strings.indexOfChar(npa_str, ':')) |idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         first_colon_idx = @intCast(idx);
     }
 
     // The cast here is safe -- first_colon_idx is guaranteed to be [-1, infty)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const proto_slice = npa_str[0..@intCast(first_colon_idx + 1)];
 
     if (WellDefinedProtocol.fromStringWithColon(proto_slice)) |url_protocol| {
         // We need to slice off the protocol from the string. Note there are two very annoying
         // cases -- one where the protocol string is foo://bar and one where it is foo:bar.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var post_colon = bun.strings.substring(npa_str, @intCast(first_colon_idx + 1), null);
 
         return .{
@@ -691,10 +690,10 @@ fn normalizeProtocol(npa_str: []const u8) UrlProtocolPair {
     if (first_colon_idx != -1) {
         return .{
             .url = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .unmanaged = bun.strings.substring(npa_str, @intCast(first_colon_idx + 1), null),
             },
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .protocol = .{ .custom = npa_str[0..@intCast(first_colon_idx + 1)] },
         };
     }
@@ -715,7 +714,7 @@ pub fn correctUrl(
         '@',
         '#',
     )) |idx|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(idx)
     else
         -1;
@@ -725,14 +724,14 @@ pub fn correctUrl(
         ':',
         '#',
     )) |idx|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(idx)
     else
         -1;
 
     if (col_idx > at_idx) {
         var duped = try allocator.dupe(u8, url_proto_pair.urlSlice());
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         duped[@intCast(col_idx)] = '/';
 
         return .{
@@ -775,7 +774,7 @@ const HostProvider = enum {
     gitlab,
     sourcehut,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn formatSsh(
         self: Self,
         allocator: std.mem.Allocator,
@@ -786,7 +785,7 @@ const HostProvider = enum {
         return configs.get(self).format_ssh(self, allocator, user, project, committish);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn formatSshUrl(
         self: Self,
         allocator: std.mem.Allocator,
@@ -797,7 +796,7 @@ const HostProvider = enum {
         return configs.get(self).format_sshurl(self, allocator, user, project, committish);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn formatHttps(
         self: Self,
         allocator: std.mem.Allocator,
@@ -809,7 +808,7 @@ const HostProvider = enum {
         return configs.get(self).format_https(self, allocator, auth, user, project, committish);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn formatShortcut(
         self: Self,
         allocator: std.mem.Allocator,
@@ -864,7 +863,7 @@ const HostProvider = enum {
                     committish: ?[]const u8,
                 ) error{OutOfMemory}![]const u8;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn default(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -883,7 +882,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn gist(
                     self: Self,
                     allocator: std.mem.Allocator,
@@ -913,7 +912,7 @@ const HostProvider = enum {
                     committish: ?[]const u8,
                 ) error{OutOfMemory}![]const u8;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn default(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -932,7 +931,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn gist(
                     self: Self,
                     allocator: std.mem.Allocator,
@@ -963,7 +962,7 @@ const HostProvider = enum {
                     committish: ?[]const u8,
                 ) error{OutOfMemory}![]const u8;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn default(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -986,7 +985,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn gist(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -1008,7 +1007,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn sourcehut(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -1041,7 +1040,7 @@ const HostProvider = enum {
                     committish: ?[]const u8,
                 ) error{OutOfMemory}![]const u8;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn default(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -1061,7 +1060,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn gist(
                     self: Self,
                     alloc: std.mem.Allocator,
@@ -1467,7 +1466,7 @@ const HostProvider = enum {
 
                 const default: Type = null;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn github(
                     self: Self,
                     allocator: std.mem.Allocator,
@@ -1490,7 +1489,7 @@ const HostProvider = enum {
                     );
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn gist(
                     self: Self,
                     allocator: std.mem.Allocator,
@@ -1571,17 +1570,17 @@ const HostProvider = enum {
     });
 
     /// Return the string representation of the provider.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn typeStr(self: Self) []const u8 {
         return @tagName(self);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn shortcut(self: Self) []const u8 {
         return configs.get(self).shortcut;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn domain(self: Self) []const u8 {
         return configs.get(self).domain;
     }
@@ -1590,7 +1589,7 @@ const HostProvider = enum {
         return configs.get(self).protocols;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn shortcutWithoutColon(self: Self) []const u8 {
         const shct = self.shortcut();
         return shct[0 .. shct.len - 1];
@@ -1612,7 +1611,7 @@ const HostProvider = enum {
     ///
     /// The second parameter allows you to declare whether the given string includes the protocol:
     /// colon or not.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn fromShortcut(
         shortcut_str: []const u8,
         comptime with_colon: enum { with_colon, without_colon },
@@ -1638,7 +1637,7 @@ const HostProvider = enum {
     }
 
     /// Find the appropriate host provider by its domain (e.g. "github.com").
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn fromDomain(domain_str: []const u8) ?HostProvider {
         inline for (std.meta.fields(Self)) |field| {
             const provider: HostProvider = @enumFromInt(field.value);

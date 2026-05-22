@@ -73,7 +73,7 @@ pub const ClientEntryPoint = struct {
         return strings.startsWith("entry.", extname);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generateEntryPointPath(outbuffer: []u8, original_path: Fs.PathName) string {
         var joined_base_and_dir_parts = [_]string{ original_path.dir, original_path.base };
         var generated_path = Fs.FileSystem.instance.absBuf(&joined_base_and_dir_parts, outbuffer);
@@ -84,7 +84,7 @@ pub const ClientEntryPoint = struct {
         return outbuffer[0 .. generated_path.len + original_path.ext.len];
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decodeEntryPointPath(outbuffer: []u8, original_path: Fs.PathName) string {
         var joined_base_and_dir_parts = [_]string{ original_path.dir, original_path.base };
         const generated_path = Fs.FileSystem.instance.absBuf(&joined_base_and_dir_parts, outbuffer);
@@ -264,7 +264,7 @@ pub const MacroEntryPoint = struct {
     output_code_buffer: [bun.MAX_PATH_BYTES * 8 + 500]u8 = undefined,
     source: logger.Source = undefined,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generateID(entry_path: string, function_name: string, buf: []u8, len: *u32) i32 {
         var hasher = bun.Wyhash11.init(0);
         hasher.update(js_ast.Macro.namespaceWithColon);
@@ -274,14 +274,14 @@ pub const MacroEntryPoint = struct {
         const fmt = bun.fmt.hexIntLower(hash);
 
         const specifier = std.fmt.bufPrint(buf, js_ast.Macro.namespaceWithColon ++ "//{f}.js", .{fmt}) catch unreachable;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         len.* = @as(u32, @truncate(specifier.len));
 
         return generateIDFromSpecifier(specifier);
     }
 
     pub fn generateIDFromSpecifier(specifier: string) i32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(i32, @bitCast(@as(u32, @truncate(bun.hash(specifier)))));
     }
 

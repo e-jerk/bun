@@ -83,7 +83,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                             session.fatal_error = error.HTTP2ProtocolError;
                             return;
                         }
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         session.remote_max_frame_size = @truncate(unit.value);
                     },
                     .SETTINGS_MAX_CONCURRENT_STREAMS => session.remote_max_concurrent_streams = unit.value,
@@ -111,7 +111,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                                 session.fatal_error = error.HTTP2FlowControlError;
                                 return;
                             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             s.send_window = @intCast(next);
                         }
                     },
@@ -130,7 +130,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                 session.fatal_error = error.HTTP2FrameSizeError;
                 return;
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const inc: i32 = @intCast(wire.UInt31WithReserved.fromBytes(payload[0..4]).uint31);
             if (header.streamIdentifier == 0) {
                 // RFC 9113 §6.9: zero increment on stream 0 is a
@@ -145,10 +145,10 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                     session.fatal_error = error.HTTP2FlowControlError;
                     return;
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 session.conn_send_window = @intCast(next);
                 session.stream_progressed = true;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             } else if (session.streams.get(@truncate(header.streamIdentifier & 0x7fffffff))) |stream| {
                 // §6.9/§6.9.1: zero increment / overflow on a stream are
                 // stream-level errors; RST_STREAM and fail just that one.
@@ -163,14 +163,14 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                     stream.fatal_error = error.HTTP2FlowControlError;
                     return;
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 stream.send_window = @intCast(next);
                 session.stream_progressed = true;
             } else {
                 // §5.1: WINDOW_UPDATE on an idle/server-initiated stream
                 // is a connection PROTOCOL_ERROR. Silent ignore is correct
                 // for closed streams (odd ids we already used).
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const sid: u31 = @intCast(header.streamIdentifier);
                 if (sid & 1 == 0 or sid >= session.next_stream_id) {
                     session.fatal_error = error.HTTP2ProtocolError;
@@ -210,7 +210,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
         },
         .HTTP_FRAME_HEADERS => {
             var fragment = payload;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const stream_id: u31 = @intCast(header.streamIdentifier);
             const maybe_stream = session.streams.get(stream_id);
             if (maybe_stream == null) {
@@ -314,7 +314,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
         },
         .HTTP_FRAME_DATA => {
             session.conn_unacked_bytes +|= header.length;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const stream_id: u31 = @intCast(header.streamIdentifier);
             const stream = session.streams.get(stream_id) orelse {
                 // §6.1/§5.1: DATA on stream 0, an idle stream, or a
@@ -362,7 +362,7 @@ pub fn dispatchFrame(session: *ClientSession, header: wire.FrameHeader, payload:
                 session.fatal_error = error.HTTP2FrameSizeError;
                 return;
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const stream_id: u31 = @intCast(header.streamIdentifier);
             // RFC 9113 §6.4: stream 0, or an idle stream (one we never
             // opened — even ids included since push is disabled), is a
@@ -490,13 +490,13 @@ pub fn decodeHeaderBlock(session: *ClientSession, stream: *Stream) void {
             session.fatal_error = error.HTTP2HeaderListTooLarge;
             return;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const name_start: u32 = @intCast(stream.decoded_bytes.items.len);
         bun.handleOom(stream.decoded_bytes.appendSlice(bun.default_allocator, result.name));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const value_start: u32 = @intCast(stream.decoded_bytes.items.len);
         bun.handleOom(stream.decoded_bytes.appendSlice(bun.default_allocator, result.value));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(bounds.append(bun.default_allocator, .{ name_start, value_start, @intCast(stream.decoded_bytes.items.len) }));
     }
 

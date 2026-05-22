@@ -271,8 +271,7 @@ pub fn ReplTransforms(comptime P: type) type {
             // Final output: hoisted declarations + IIFE call
             const final_stmts_count = hoisted_stmts.items.len + 1;
             var final_stmts = bun.handleOom(allocator.alloc(Stmt, final_stmts_count));
-            // safe-transpile: for with index access requires manual review
-    for (hoisted_stmts.items, 0..) |stmt, j| {
+            for (hoisted_stmts.items, 0..) |stmt, j| {
                 final_stmts[j] = stmt;
             }
             final_stmts[hoisted_stmts.items.len] = p.s(S.SExpr{ .value = iife }, logger.Loc.Empty);
@@ -446,8 +445,7 @@ pub fn ReplTransforms(comptime P: type) type {
                 },
                 .b_array => |arr| {
                     var items = bun.handleOom(allocator.alloc(Expr, arr.items.len));
-                    // safe-transpile: for with index access requires manual review
-    for (arr.items, 0..) |item, i| {
+                    for (arr.items, 0..) |item, i| {
                         const expr = convertBindingToExpr(p, item.binding, allocator);
                         // Check for spread pattern: if has_spread and this is the last element
                         if (arr.has_spread and i == arr.items.len - 1) {
@@ -469,8 +467,7 @@ pub fn ReplTransforms(comptime P: type) type {
                 },
                 .b_object => |obj| {
                     var properties = bun.handleOom(allocator.alloc(G.Property, obj.properties.len));
-                    // safe-transpile: for with index access requires manual review
-    for (obj.properties, 0..) |prop, i| {
+                    for (obj.properties, 0..) |prop, i| {
                         properties[i] = G.Property{
                             .flags = prop.flags,
                             .key = prop.key,

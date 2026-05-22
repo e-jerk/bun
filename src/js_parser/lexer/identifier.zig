@@ -2,7 +2,7 @@ pub fn isIdentifierStart(codepoint: i32) bool {
     return switch (codepoint) {
         'a'...'z', 'A'...'Z', '_', '$' => true,
         std.math.minInt(i32)...0, 0x10FFFF...std.math.maxInt(i32) => false,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         else => isIDStartESNext(@intCast(codepoint)),
     };
 }
@@ -11,7 +11,7 @@ pub fn isIdentifierPart(codepoint: i32) bool {
     return switch (codepoint) {
         'a'...'z', 'A'...'Z', '0'...'9', '_', '$' => true,
         std.math.minInt(i32)...0, 0x10FFFF...std.math.maxInt(i32) => false,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         else => isIDContinueESNext(@intCast(codepoint)),
     };
 }
@@ -24,7 +24,7 @@ pub fn isIDStartES5(cp: u21) bool {
     const stage2_idx = idStartES5.stage1[high];
     const bit_pos = stage2_idx + low;
     const u64_idx = bit_pos >> 6;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const bit_idx = @as(u6, @intCast(bit_pos & 63));
     return (idStartES5.stage2[u64_idx] & (@as(u64, 1) << bit_idx)) != 0;
 }
@@ -40,7 +40,7 @@ pub fn isIDContinueES5(cp: u21) bool {
     const stage2_idx = idContinueES5.stage1[high];
     const bit_pos = stage2_idx + low;
     const u64_idx = bit_pos >> 6;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const bit_idx = @as(u6, @intCast(bit_pos & 63));
     return (idContinueES5.stage2[u64_idx] & (@as(u64, 1) << bit_idx)) != 0;
 }
@@ -56,7 +56,7 @@ pub fn isIDStartESNext(cp: u21) bool {
     const stage2_idx = idStartESNext.stage1[high];
     const bit_pos = stage2_idx + low;
     const u64_idx = bit_pos >> 6;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const bit_idx = @as(u6, @intCast(bit_pos & 63));
     return (idStartESNext.stage2[u64_idx] & (@as(u64, 1) << bit_idx)) != 0;
 }
@@ -72,7 +72,7 @@ pub fn isIDContinueESNext(cp: u21) bool {
     const stage2_idx = idContinueESNext.stage1[high];
     const bit_pos = stage2_idx + low;
     const u64_idx = bit_pos >> 6;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const bit_idx = @as(u6, @intCast(bit_pos & 63));
     return (idContinueESNext.stage2[u64_idx] & (@as(u64, 1) << bit_idx)) != 0;
 }

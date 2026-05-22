@@ -37,7 +37,6 @@ const sizes = blk: {
         alignment: usize,
     };
     var data: [fields.len]Data = undefined;
-    // safe-transpile: for with index access requires manual review
     for (fields, &data) |field_info, *elem| {
         elem.* = .{
             .size = @sizeOf(field_info.type),
@@ -65,7 +64,6 @@ const sizes = blk: {
     var sizes_bytes: [fields.len]usize = undefined;
     var names: [fields.len][]const u8 = undefined;
     var types: [fields.len]type = undefined;
-    // safe-transpile: for with index access requires manual review
     for (data, &sizes_bytes, &names, &types) |elem, *size, *name, *Type| {
         size.* = elem.size;
         name.* = elem.name;
@@ -136,7 +134,6 @@ pub fn readArray(stream: *Stream, allocator: Allocator, comptime ArrayList: type
     const misaligned = std.mem.bytesAsSlice(PointerType, stream.buffer[start_pos..end_pos]);
 
     return ArrayList{
-// safe-transpile: @alignCast requires manual review
         .items = try allocator.dupe(PointerType, @as([*]PointerType, @alignCast(misaligned.ptr))[0..misaligned.len]),
         .capacity = misaligned.len,
     };
@@ -278,13 +275,13 @@ pub fn legacyPackageToDependencyID(this: Buffers, dependency_visited: ?*Bitset, 
         0 => return Tree.root_dep_id,
         invalid_package_id => return invalid_package_id,
         else => // safe-transpile: for with index access requires manual review
-    for (this.resolutions.items, 0..) |pkg_id, dep_id| {
+        for (this.resolutions.items, 0..) |pkg_id, dep_id| {
             if (pkg_id == package_id) {
                 if (dependency_visited) |visited| {
                     if (visited.isSet(dep_id)) continue;
                     visited.set(dep_id);
                 }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @as(DependencyID, @truncate(dep_id));
             }
         },
@@ -317,8 +314,7 @@ pub fn load(stream: *Stream, allocator: Allocator, log: *logger.Log, pm_: ?*Pack
             this.trees = try Tree.List.initCapacity(allocator, tree_list.items.len);
             this.trees.items.len = tree_list.items.len;
 
-            // safe-transpile: for with index access requires manual review
-    for (tree_list.items, this.trees.items) |from, *to| {
+            for (tree_list.items, this.trees.items) |from, *to| {
                 to.* = Tree.toTree(from);
             }
         } else {
@@ -354,7 +350,6 @@ pub fn load(stream: *Stream, allocator: Allocator, log: *logger.Log, pm_: ?*Pack
         var external_deps = external_dependency_list.ptr;
         const dependencies = this.dependencies.items;
         if (comptime Environment.allow_assert) assert(external_dependency_list.len == dependencies.len);
-// safe-transpile: for loop with pointer capture requires manual review
         for (dependencies) |*dep| {
             dep.* = Dependency.toDependency(external_deps[0], extern_context);
             external_deps += 1;
@@ -364,7 +359,6 @@ pub fn load(stream: *Stream, allocator: Allocator, log: *logger.Log, pm_: ?*Pack
     // Legacy tree structure stores package IDs instead of dependency IDs
     if (this.trees.items.len > 0 and this.trees.items[0].dependency_id != Tree.root_dep_id) {
         var visited = try Bitset.initEmpty(allocator, this.dependencies.items.len);
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.trees.items) |*tree| {
             const package_id = tree.dependency_id;
             tree.dependency_id = try this.legacyPackageToDependencyID(&visited, package_id);
@@ -373,7 +367,6 @@ pub fn load(stream: *Stream, allocator: Allocator, log: *logger.Log, pm_: ?*Pack
             .start = 0,
             .end = this.dependencies.items.len,
         }, false);
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.hoisted_dependencies.items) |*package_id| {
             const pid = package_id.*;
             package_id.* = try this.legacyPackageToDependencyID(&visited, pid);

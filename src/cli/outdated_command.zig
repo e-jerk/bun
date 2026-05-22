@@ -106,7 +106,7 @@ pub const OutdatedCommand = struct {
         name: []const u8,
         path: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(pattern: []const u8, is_path: bool) @This() {
             return if (is_path) .{
                 .path = pattern,
@@ -129,10 +129,9 @@ pub const OutdatedCommand = struct {
         const pkg_resolutions = packages.items(.resolution);
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
-        // safe-transpile: for with index access requires manual review
-    for (pkg_resolutions, 0..) |resolution, pkg_id| {
+        for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
 
@@ -152,10 +151,9 @@ pub const OutdatedCommand = struct {
         const string_buf = lockfile.buffers.string_bytes.items;
 
         var workspace_pkg_ids: std.ArrayListUnmanaged(PackageID) = .empty;
-        // safe-transpile: for with index access requires manual review
-    for (pkg_resolutions, 0..) |resolution, pkg_id| {
+        for (pkg_resolutions, 0..) |resolution, pkg_id| {
             if (resolution.tag != .workspace and resolution.tag != .root) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try workspace_pkg_ids.append(allocator, @intCast(pkg_id));
         }
 
@@ -163,8 +161,7 @@ pub const OutdatedCommand = struct {
 
         const converted_filters = converted_filters: {
             const buf = try allocator.alloc(WorkspaceFilter, filters.len);
-            // safe-transpile: for with index access requires manual review
-    for (filters, buf) |filter, *converted| {
+            for (filters, buf) |filter, *converted| {
                 converted.* = try WorkspaceFilter.init(allocator, filter, original_cwd, &path_buf);
             }
             break :converted_filters buf;
@@ -307,8 +304,7 @@ pub const OutdatedCommand = struct {
             } else {
                 try workspace_names.appendSlice("catalog (");
             }
-            // safe-transpile: for with index access requires manual review
-    for (workspace_list.items, 0..) |workspace_id, i| {
+            for (workspace_list.items, 0..) |workspace_id, i| {
                 if (i > 0) try workspace_names.appendSlice(", ");
                 const workspace_name = pkg_names[workspace_id].slice(string_buf);
                 try workspace_names.appendSlice(workspace_name);
@@ -340,8 +336,7 @@ pub const OutdatedCommand = struct {
             var at_least_one_greater_than_zero = false;
 
             const patterns_buf = bun.handleOom(bun.default_allocator.alloc(FilterType, args.len));
-            // safe-transpile: for with index access requires manual review
-    for (args, patterns_buf) |arg, *converted| {
+            for (args, patterns_buf) |arg, *converted| {
                 if (arg.len == 0) {
                     converted.* = FilterType.init(&.{}, false);
                     continue;
@@ -494,7 +489,7 @@ pub const OutdatedCommand = struct {
                     bun.default_allocator,
                     .{
                         .package_id = package_id,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .dep_id = @intCast(dep_id),
                         .workspace_pkg_id = workspace_pkg_id,
                         .is_catalog = dep.version.tag == .catalog,

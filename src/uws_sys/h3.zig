@@ -9,12 +9,12 @@ pub const ListenSocket = opaque {
     pub fn getLocalPort(this: *ListenSocket) i32 {
         return c.uws_h3_listen_socket_port(this);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getLocalAddress(this: *ListenSocket, buf: []u8) ?[]const u8 {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const n = c.uws_h3_listen_socket_local_address(this, buf.ptr, @intCast(buf.len));
         if (n <= 0) return null;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return buf[0..@intCast(n)];
     }
 };
@@ -29,23 +29,23 @@ pub const Request = opaque {
     pub fn setYield(this: *Request, y: bool) void {
         c.uws_h3_req_set_yield(this, y);
     }
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn url(this: *Request) []const u8 {
         var p: [*]const u8 = undefined;
         return p[0..c.uws_h3_req_get_url(this, &p)];
     }
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn method(this: *Request) []const u8 {
         var p: [*]const u8 = undefined;
         return p[0..c.uws_h3_req_get_method(this, &p)];
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn header(this: *Request, name: []const u8) ?[]const u8 {
         var p: [*]const u8 = undefined;
         const n = c.uws_h3_req_get_header(this, name.ptr, name.len, &p);
         return if (n == 0) null else p[0..n];
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn dateForHeader(this: *Request, name: []const u8) bun.JSError!?u64 {
         const value = this.header(name) orelse return null;
         var s = bun.String.init(value);
@@ -54,12 +54,12 @@ pub const Request = opaque {
         if (!std.math.isNan(ms) and std.math.isFinite(ms) and ms >= 0) return @intFromFloat(ms);
         return null;
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn query(this: *Request, name: []const u8) []const u8 {
         var p: [*]const u8 = undefined;
         return p[0..c.uws_h3_req_get_query(this, name.ptr, name.len, &p)];
     }
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn parameter(this: *Request, idx: u16) []const u8 {
         var p: [*]const u8 = undefined;
         return p[0..c.uws_h3_req_get_parameter(this, idx, &p)];
@@ -72,7 +72,6 @@ pub const Request = opaque {
     ) void {
         const Wrap = struct {
             fn each(n: [*]const u8, nl: usize, v: [*]const u8, vl: usize, ud: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 cb(@ptrCast(@alignCast(ud.?)), n[0..nl], v[0..vl]);
             }
         };
@@ -81,11 +80,11 @@ pub const Request = opaque {
 };
 
 pub const Response = opaque {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn end(this: *Response, data: []const u8, close_connection: bool) void {
         c.uws_h3_res_end(this, data.ptr, data.len, close_connection);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn tryEnd(this: *Response, data: []const u8, total: usize, close_connection: bool) bool {
         return c.uws_h3_res_try_end(this, data.ptr, data.len, total, close_connection);
     }
@@ -98,20 +97,20 @@ pub const Response = opaque {
     pub fn endSendFile(this: *Response, write_offset: u64, close_connection: bool) void {
         c.uws_h3_res_end_sendfile(this, write_offset, close_connection);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(this: *Response, data: []const u8) WriteResult {
         var len: usize = data.len;
         return if (c.uws_h3_res_write(this, data.ptr, &len)) .{ .want_more = len } else .{ .backpressure = len };
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeStatus(this: *Response, status: []const u8) void {
         c.uws_h3_res_write_status(this, status.ptr, status.len);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeHeader(this: *Response, key: []const u8, value: []const u8) void {
         c.uws_h3_res_write_header(this, key.ptr, key.len, value.ptr, value.len);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn writeHeaderInt(this: *Response, key: []const u8, value: u64) void {
         c.uws_h3_res_write_header_int(this, key.ptr, key.len, value);
     }
@@ -189,7 +188,6 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, off: u64, p: ?*anyopaque) callconv(.c) bool {
-// safe-transpile: @alignCast requires manual review
                 return handler(@ptrCast(@alignCast(p.?)), off, r);
             }
         };
@@ -206,7 +204,6 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)), r);
             }
         };
@@ -223,7 +220,6 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)), r);
             }
         };
@@ -240,7 +236,6 @@ pub const Response = opaque {
     ) void {
         const W = struct {
             fn cb(r: *Response, ptr: [*c]const u8, len: usize, last: bool, p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)), r, if (len > 0) ptr[0..len] else "", last);
             }
         };
@@ -256,7 +251,6 @@ pub const Response = opaque {
     pub fn runCorkedWithType(this: *Response, comptime UD: type, comptime handler: fn (UD) void, ud: UD) void {
         const W = struct {
             fn cb(p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)));
             }
         };
@@ -281,7 +275,7 @@ pub const App = opaque {
         c.uws_h3_app_clear_routes(this);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn route(
         comptime which: @TypeOf(.x),
         this: *App,
@@ -292,7 +286,6 @@ pub const App = opaque {
     ) void {
         const W = struct {
             fn cb(res: *Response, req: *Request, p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)), req, res);
             }
         };
@@ -312,39 +305,39 @@ pub const App = opaque {
         f(this, pattern.ptr, pattern.len, W.cb, ud);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn get(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.get, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn post(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.post, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn put(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.put, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn delete(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.delete, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn patch(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.patch, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn head(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.head, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn options(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.options, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn any(this: *App, p: []const u8, comptime UD: type, ud: UD, comptime h: fn (UD, *Request, *Response) void) void {
         route(.any, this, p, UD, ud, h);
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn method(
         this: *App,
         m: bun.http.Method,
@@ -376,7 +369,6 @@ pub const App = opaque {
     ) void {
         const W = struct {
             fn cb(ls: ?*ListenSocket, p: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 handler(@ptrCast(@alignCast(p.?)), ls);
             }
         };

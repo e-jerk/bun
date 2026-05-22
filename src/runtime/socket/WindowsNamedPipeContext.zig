@@ -190,25 +190,25 @@ pub fn create(globalThis: *jsc.JSGlobalObject, socket: SocketType) *WindowsNamed
     // named_pipe owns the pipe (PipeWriter owns the pipe and will close and deinit it)
     this.named_pipe = uws.WindowsNamedPipe.from(bun.new(uv.Pipe, std.mem.zeroes(uv.Pipe)), .{
         .ctx = this,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .ref_ctx = @ptrCast(&WindowsNamedPipeContext.ref),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .deref_ctx = @ptrCast(&WindowsNamedPipeContext.deref),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onOpen = @ptrCast(&WindowsNamedPipeContext.onOpen),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onData = @ptrCast(&WindowsNamedPipeContext.onData),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onHandshake = @ptrCast(&WindowsNamedPipeContext.onHandshake),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onEnd = @ptrCast(&WindowsNamedPipeContext.onEnd),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onWritable = @ptrCast(&WindowsNamedPipeContext.onWritable),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onError = @ptrCast(&WindowsNamedPipeContext.onError),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onTimeout = @ptrCast(&WindowsNamedPipeContext.onTimeout),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onClose = @ptrCast(&WindowsNamedPipeContext.onClose),
     }, vm);
     this.task = jsc.AnyTask.New(WindowsNamedPipeContext, WindowsNamedPipeContext.runEvent).init(this);
@@ -280,7 +280,6 @@ pub fn connect(globalThis: *jsc.JSGlobalObject, path: []const u8, ssl_config: ?j
         // we need to null terminate the path
         const len = @min(path.len, path_buf.len - 1);
 
-// safe-transpile: @memcpy requires manual review
         @memcpy(path_buf[0..len], path[0..len]);
         path_buf[len] = 0;
         const slice_z = path_buf[0..len :0];

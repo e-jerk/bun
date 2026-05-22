@@ -4,9 +4,9 @@ pub const linux = struct {
     // This is to compensate for older glibc versions.
 
     fn simulateLibcErrno(rc: usize) c_int {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const signed: isize = @bitCast(rc);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const int: c_int = @intCast(if (signed > -4096 and signed < 0) -signed else 0);
         std.c._errno().* = int;
         return if (signed > -4096 and signed < 0) -1 else int;
@@ -95,7 +95,7 @@ pub const windows = struct {
         const hay = haystack.?[0..haystacklen];
         const nee = needle.?[0..needlelen];
 
-// zust: use safe.String or safe.GuardedSlice for slice operations
+        // zust: use safe.String or safe.GuardedSlice for slice operations
         const i = std.mem.indexOf(u8, hay, nee) orelse return null;
         return hay.ptr + i;
     }

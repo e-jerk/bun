@@ -42,7 +42,7 @@ const MimallocAllocator = struct {
             }
         }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as(?[*]u8, @ptrCast(ptr));
     }
 
@@ -54,14 +54,14 @@ const MimallocAllocator = struct {
         return alignedAlloc(len, alignment);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize_with_default_allocator(_: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
         return mimalloc.mi_expand(buf.ptr, new_len) != null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn remap_with_default_allocator(_: *anyopaque, buf: []u8, alignment: Alignment, new_len: usize, _: usize) ?[*]u8 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(mimalloc.mi_realloc_aligned(buf.ptr, new_len, alignment.toByteUnits()));
     }
 
@@ -98,7 +98,7 @@ const ZAllocator = struct {
             }
         }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as(?[*]u8, @ptrCast(ptr));
     }
 
@@ -110,7 +110,7 @@ const ZAllocator = struct {
         return alignedAlloc(len, alignment);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize_with_z_allocator(_: *anyopaque, buf: []u8, _: Alignment, new_len: usize, _: usize) bool {
         if (new_len <= buf.len) {
             return true;

@@ -86,7 +86,6 @@ pub fn deinit(ptr_or_slice: anytype) void {
     const ptr_info = @typeInfo(PtrType);
     switch (comptime ptr_info.pointer.size) {
         .slice => {
-// safe-transpile: for loop with pointer capture requires manual review
             for (ptr_or_slice) |*elem| {
                 deinit(elem);
             }
@@ -108,7 +107,6 @@ pub fn deinit(ptr_or_slice: anytype) void {
         .void, .bool, .int, .float, .pointer, .comptime_float, .comptime_int => return,
         .undefined, .null, .error_set, .@"enum", .vector => return,
         .array => {
-// safe-transpile: for loop with pointer capture requires manual review
             for (ptr_or_slice) |*elem| {
                 deinit(elem);
             }

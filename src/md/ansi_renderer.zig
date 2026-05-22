@@ -61,12 +61,11 @@ pub const ImageUrlCollector = struct {
     fn noopEnterBlock(_: *anyopaque, _: BlockType, _: u32, _: u32) bun.JSError!void {}
     fn noopLeaveBlock(_: *anyopaque, _: BlockType, _: u32) bun.JSError!void {}
     fn noopLeaveSpan(_: *anyopaque, _: SpanType) bun.JSError!void {}
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn noopText(_: *anyopaque, _: TextType, _: []const u8) bun.JSError!void {}
 
     fn enterSpanImpl(ptr: *anyopaque, span_type: SpanType, detail: SpanDetail) bun.JSError!void {
         if (span_type != .img) return;
-// safe-transpile: @alignCast requires manual review
         const self: *ImageUrlCollector = @ptrCast(@alignCast(ptr));
         if (detail.href.len == 0) return;
         // detail.href is a slice into the parser's reusable buffer, which
@@ -184,7 +183,7 @@ pub const AnsiRenderer = struct {
         allocator: Allocator,
         oom: bool,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn write(self: *OutputBuffer, data: []const u8) void {
             if (self.oom) return;
             self.list.appendSlice(self.allocator, data) catch {
@@ -200,7 +199,7 @@ pub const AnsiRenderer = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: Allocator, src_text: []const u8, theme: Theme) AnsiRenderer {
         var r: AnsiRenderer = .{
             .out = .{ .list = .empty, .allocator = allocator, .oom = false },
@@ -253,32 +252,27 @@ pub const AnsiRenderer = struct {
     };
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: BlockType, data: u32, flags: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *AnsiRenderer = @ptrCast(@alignCast(ptr));
         self.enterBlock(block_type, data, flags);
     }
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: BlockType, data: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *AnsiRenderer = @ptrCast(@alignCast(ptr));
         self.leaveBlock(block_type, data);
     }
 
     fn enterSpanImpl(ptr: *anyopaque, span_type: SpanType, detail: SpanDetail) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *AnsiRenderer = @ptrCast(@alignCast(ptr));
         self.enterSpan(span_type, detail);
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: SpanType) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *AnsiRenderer = @ptrCast(@alignCast(ptr));
         self.leaveSpan(span_type);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn textImpl(ptr: *anyopaque, text_type: TextType, content: []const u8) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *AnsiRenderer = @ptrCast(@alignCast(ptr));
         self.text(text_type, content);
     }
@@ -338,7 +332,7 @@ pub const AnsiRenderer = struct {
                 self.writeStyled(reset(), "");
                 // Wrapped continuation lines need to land under the item's
                 // content (past the marker), so record the marker width.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 entry.indent = @intCast(visibleWidth(glyph));
                 self.block_stack.append(self.allocator, entry) catch {
                     self.out.oom = true;
@@ -367,7 +361,7 @@ pub const AnsiRenderer = struct {
             },
             .h => {
                 self.ensureBlankLine();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 self.heading_level = @intCast(data);
                 self.heading_buf.clearRetainingCapacity();
                 // heading content is buffered; on leaveBlock we print with
@@ -625,7 +619,7 @@ pub const AnsiRenderer = struct {
     // Text rendering
     // ========================================
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn text(self: *AnsiRenderer, text_type: TextType, content: []const u8) void {
         switch (text_type) {
             .null_char => self.writeContent("\xEF\xBF\xBD"),
@@ -663,7 +657,7 @@ pub const AnsiRenderer = struct {
 
     /// Route a chunk of rendered text to the appropriate sink (code buffer,
     /// heading buffer, table cell, image alt, or directly to output).
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeContent(self: *AnsiRenderer, data: []const u8) void {
         if (self.image_depth > 0) {
             self.image_alt.appendSlice(self.allocator, data) catch {
@@ -695,7 +689,7 @@ pub const AnsiRenderer = struct {
 
     /// Emit a chunk to output, wrapping at word boundaries when the column
     /// exceeds `theme.columns`.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeWrapped(self: *AnsiRenderer, data: []const u8) void {
         if (self.theme.columns == 0) {
             // No-wrap path: still emit the indent after each embedded
@@ -763,7 +757,7 @@ pub const AnsiRenderer = struct {
                     var cut = visibleIndexAt(rest, r);
                     if (cut == 0) cut = @min(rest.len, @as(usize, bun.strings.wtf8ByteSequenceLengthWithInvalid(rest[0])));
                     self.writeRaw(rest[0..cut]);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     self.col += @intCast(visibleWidth(rest[0..cut]));
                     self.last_was_newline = false;
                     rest = rest[cut..];
@@ -774,7 +768,7 @@ pub const AnsiRenderer = struct {
                     self.wrapBreak();
                 }
                 self.writeRaw(word);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 self.col += @intCast(word_width);
                 self.last_was_newline = (word.len == 0);
             }
@@ -811,7 +805,7 @@ pub const AnsiRenderer = struct {
     /// (flushTable/flushHeading/emitImage) emits them at the right spot.
     /// ANSI escape bytes are dropped inside image alt text since alt text
     /// is plain.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn emitInline(self: *AnsiRenderer, bytes: []const u8) void {
         if (bytes.len == 0) return;
         if (self.image_depth > 0) {
@@ -866,7 +860,7 @@ pub const AnsiRenderer = struct {
     /// Emit a styled sequence + text, respecting color settings. Routes
     /// both the escape prefix and the text through the active buffer so
     /// spans inside cells/headings flush correctly.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeStyled(self: *AnsiRenderer, prefix: []const u8, text_: []const u8) void {
         const in_main_flow = !self.in_cell and self.heading_level == 0 and
             !self.in_code_block and self.image_depth == 0;
@@ -899,7 +893,7 @@ pub const AnsiRenderer = struct {
         const max = self.theme.columns;
         if (max == 0) {
             self.emitInline(text_);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             self.col += @intCast(visibleWidth(text_));
             self.last_was_newline = false;
             return;
@@ -913,7 +907,7 @@ pub const AnsiRenderer = struct {
                     // Pathological: indent >= columns. Emit as-is to
                     // avoid an infinite loop.
                     self.emitInline(rest);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     self.col += @intCast(visibleWidth(rest));
                     self.last_was_newline = false;
                     return;
@@ -924,7 +918,7 @@ pub const AnsiRenderer = struct {
             const cut = visibleIndexAt(rest, room);
             if (cut == rest.len) {
                 self.emitInline(rest);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 self.col += @intCast(visibleWidth(rest));
                 self.last_was_newline = false;
                 return;
@@ -939,7 +933,7 @@ pub const AnsiRenderer = struct {
                     const adv = visibleIndexAt(rest, 2);
                     const one = if (adv == 0) @min(rest.len, @as(usize, bun.strings.wtf8ByteSequenceLengthWithInvalid(rest[0]))) else adv;
                     self.emitInline(rest[0..one]);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     self.col += @intCast(visibleWidth(rest[0..one]));
                     self.last_was_newline = false;
                     rest = rest[one..];
@@ -950,7 +944,7 @@ pub const AnsiRenderer = struct {
                 continue;
             }
             self.emitInline(rest[0..cut]);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             self.col += @intCast(visibleWidth(rest[0..cut]));
             self.last_was_newline = false;
             rest = rest[cut..];
@@ -974,7 +968,7 @@ pub const AnsiRenderer = struct {
     /// Emit raw text (typically a single char or newline). Routes through
     /// the active inline buffer and keeps last_was_newline current. Does
     /// not track column width — callers that need it use writeStyled.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeRaw(self: *AnsiRenderer, data: []const u8) void {
         if (data.len == 0) return;
         self.emitInline(data);
@@ -986,12 +980,12 @@ pub const AnsiRenderer = struct {
     /// right path for closing delimiters (`]]`, `$`, `$$`) that must
     /// stay attached to whatever they close — otherwise a wrap can push
     /// the closer onto a new line and orphan it.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeNoWrap(self: *AnsiRenderer, text_: []const u8) void {
         if (text_.len == 0) return;
         self.emitInline(text_);
         if (!self.in_cell and self.heading_level == 0 and !self.in_code_block and self.image_depth == 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             self.col += @intCast(visibleWidth(text_));
             self.last_was_newline = false;
         }
@@ -999,7 +993,7 @@ pub const AnsiRenderer = struct {
 
     /// Emit raw bytes that must not appear in `image_alt`. Goes through
     /// the active buffer for cells/headings, but never into image alt.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeRawNoColor(self: *AnsiRenderer, data: []const u8) void {
         if (!self.theme.colors) return;
         if (data.len == 0) return;
@@ -1085,7 +1079,7 @@ pub const AnsiRenderer = struct {
         return total;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn updateColFromText(self: *AnsiRenderer, data: []const u8) void {
         // Advance col by visible width per-segment (between newlines) so
         // multi-byte UTF-8 content stays consistent with every other
@@ -1100,7 +1094,7 @@ pub const AnsiRenderer = struct {
             }
         }
         if (start < data.len) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             self.col += @intCast(visibleWidth(data[start..]));
             self.last_was_newline = false;
         }
@@ -1206,7 +1200,7 @@ pub const AnsiRenderer = struct {
             const width = if (self.theme.columns == 0)
                 text_w
             else
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 @min(text_w, (@as(usize, @intCast(self.theme.columns))) -| @as(usize, indent_cols));
             if (self.theme.colors) self.out.write(color(.dim));
             const char = if (self.theme.colors) (if (level == 1) "═" else "─") else (if (level == 1) "=" else "-");
@@ -1220,7 +1214,7 @@ pub const AnsiRenderer = struct {
     }
 
     /// ANSI color for a given heading level.
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn headingColor(level: u8) []const u8 {
         return switch (level) {
             1 => color(.magenta),
@@ -1295,7 +1289,7 @@ pub const AnsiRenderer = struct {
         self.last_was_newline = true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeHighlightedJs(self: *AnsiRenderer, line: []const u8) void {
         const highlighter = bun.fmt.QuickAndDirtyJavaScriptSyntaxHighlighter{
             .text = line,
@@ -1336,8 +1330,7 @@ pub const AnsiRenderer = struct {
         defer self.allocator.free(aligns);
         @memset(aligns, .default);
         for (self.table_rows.items) |row| {
-            // safe-transpile: for with index access requires manual review
-    for (row.cells, 0..) |cell, i| {
+            for (row.cells, 0..) |cell, i| {
                 widths[i] = @max(widths[i], visibleWidth(cell.content));
                 if (aligns[i] == .default) aligns[i] = cell.alignment;
             }
@@ -1353,8 +1346,7 @@ pub const AnsiRenderer = struct {
             const budget = self.theme.columns;
             while (total > budget) {
                 var widest: usize = 0;
-                // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+                for (widths, 0..) |w, i| {
                     if (w > widths[widest]) widest = i;
                 }
                 if (widths[widest] <= 3) break;
@@ -1368,8 +1360,7 @@ pub const AnsiRenderer = struct {
         self.writeIndent();
         if (self.theme.colors) self.out.write(color(.dim));
         self.out.write(chars.tl);
-        // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+        for (widths, 0..) |w, i| {
             var j: usize = 0;
             while (j < w + 2) : (j += 1) self.out.write(chars.h);
             self.out.write(if (i == widths.len - 1) chars.tr else chars.t);
@@ -1390,8 +1381,7 @@ pub const AnsiRenderer = struct {
         self.writeIndent();
         if (self.theme.colors) self.out.write(color(.dim));
         self.out.write(chars.bl);
-        // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+        for (widths, 0..) |w, i| {
             var j: usize = 0;
             while (j < w + 2) : (j += 1) self.out.write(chars.h);
             self.out.write(if (i == widths.len - 1) chars.br else chars.b);
@@ -1446,7 +1436,7 @@ pub const AnsiRenderer = struct {
 
         /// Walk `bytes` forward, updating `self` to reflect any SGR and
         /// OSC 8 toggles encountered. Unrecognized escapes are skipped.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn scan(self: *CellAnsiState, bytes: []const u8) void {
             var i: usize = 0;
             while (i < bytes.len) {
@@ -1519,7 +1509,7 @@ pub const AnsiRenderer = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn applySgr(self: *CellAnsiState, seq: []const u8, params: []const u8) void {
             // Empty param ("\x1b[m") is equivalent to "\x1b[0m".
             if (params.len == 0) {
@@ -1581,7 +1571,7 @@ pub const AnsiRenderer = struct {
     /// OSC 8 href that literally contains a space byte, so a naive
     /// byte scan would break the sequence in half and leave the
     /// terminal stuck in persistent hyperlink mode.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn lastWordBreakOutsideEscapes(bytes: []const u8) ?usize {
         var last: ?usize = null;
         var i: usize = 0;
@@ -1641,7 +1631,6 @@ pub const AnsiRenderer = struct {
             return;
         };
         defer {
-// safe-transpile: for loop with pointer capture requires manual review
             for (segments) |*s| s.deinit(self.allocator);
             self.allocator.free(segments);
         }
@@ -1657,15 +1646,13 @@ pub const AnsiRenderer = struct {
             return;
         };
         defer {
-// safe-transpile: for loop with pointer capture requires manual review
             for (state_at) |*s| s.deinit(self.allocator);
             self.allocator.free(state_at);
         }
         @memset(state_at, .empty);
 
         var lines: usize = 1;
-        // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+        for (widths, 0..) |w, i| {
             const content = if (i < row.cells.len) row.cells[i].content else "";
             var rest = content;
             var state = CellAnsiState{};
@@ -1713,8 +1700,7 @@ pub const AnsiRenderer = struct {
             if (self.theme.colors) self.out.write(color(.dim));
             self.out.write(chars.v);
             if (self.theme.colors) self.out.write("\x1b[0m");
-            // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+            for (widths, 0..) |w, i| {
                 const seg: []const u8 = if (line < segments[i].items.len) segments[i].items[line] else "";
                 const opens: CellAnsiState = if (line < state_at[i].items.len) state_at[i].items[line] else .{};
                 self.out.writeByte(' ');
@@ -1760,8 +1746,7 @@ pub const AnsiRenderer = struct {
         self.writeIndent();
         if (self.theme.colors) self.out.write(color(.dim));
         self.out.write(chars.ml);
-        // safe-transpile: for with index access requires manual review
-    for (widths, 0..) |w, i| {
+        for (widths, 0..) |w, i| {
             var j: usize = 0;
             while (j < w + 2) : (j += 1) self.out.write(chars.h);
             self.out.write(if (i == widths.len - 1) chars.mr else chars.x);
@@ -1925,7 +1910,7 @@ pub const AnsiRenderer = struct {
     /// the absolute file `path`. Uses `t=f` (transmission medium = regular
     /// file by path) so the terminal reads the file directly. Terminals
     /// that don't understand the APC sequence silently drop it.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn emitKittyImageFile(self: *AnsiRenderer, path: []const u8) void {
         // Base64-encode the file path (Kitty expects the payload to be b64).
         const encoded_len = bun.base64.encodeLen(path);
@@ -1950,7 +1935,7 @@ pub const AnsiRenderer = struct {
     /// the PNG bytes encoded directly in the APC payload via `t=d`. The
     /// `base64_payload` is already the base64 body of a `data:image/png`
     /// URL, so we forward it as-is — no temp file, no re-encoding.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn emitKittyImageDirect(self: *AnsiRenderer, base64_payload: []const u8) void {
         self.writeRawNoColor("\x1b_Ga=T,t=d,f=100,q=2;");
         self.writeRawNoColor(base64_payload);

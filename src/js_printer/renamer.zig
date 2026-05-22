@@ -77,13 +77,12 @@ pub const SymbolSlot = struct {
         bytes: [15]u8 = [_]u8{0} ** 15,
         len: u8 = 0,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(str: []const u8) InlineString {
             var this: InlineString = .{};
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.len = @as(u8, @intCast(@min(str.len, 15)));
-            // safe-transpile: for with index access requires manual review
-    for (this.bytes[0..this.len], str[0..this.len]) |*b, c| {
+            for (this.bytes[0..this.len], str[0..this.len]) |*b, c| {
                 b.* = c;
             }
             return this;
@@ -139,8 +138,7 @@ pub const MinifyRenamer = struct {
         const renamer = try safe.Box(MinifyRenamer).init(allocator, undefined);
         var slots = SymbolSlot.List.initUndefined();
 
-        // safe-transpile: for with index access requires manual review
-    for (first_top_level_slots.slots.values, 0..) |count, ns| {
+        for (first_top_level_slots.slots.values, 0..) |count, ns| {
             slots.values[ns] = try std.array_list.Managed(SymbolSlot).initCapacity(allocator, count);
             slots.values[ns].items.len = count;
             @memset(slots.values[ns].items[0..count], SymbolSlot{});
@@ -158,7 +156,6 @@ pub const MinifyRenamer = struct {
     }
 
     pub fn deinit(this: *MinifyRenamer, allocator: std.mem.Allocator) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (&this.slots.values) |*val| {
             val.deinit();
         }
@@ -279,10 +276,9 @@ pub const MinifyRenamer = struct {
             try sorted.ensureUnusedCapacity(slots.items.len);
             sorted.items.len = slots.items.len;
 
-            // safe-transpile: for with index access requires manual review
-    for (sorted.items, slots.items, 0..) |*elem, slot, i| {
+            for (sorted.items, slots.items, 0..) |*elem, slot, i| {
                 elem.* = SlotAndCount{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     .slot = @as(u32, @intCast(i)),
                     .count = slot.count,
                 };
@@ -587,7 +583,7 @@ pub const NumberRenamer = struct {
             std.sort.pdq(u32, sorted.items, {}, std.sort.asc(u32));
 
             for (sorted.items) |inner_index| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 r.assignName(s, Ref.init(@intCast(inner_index), source_index, false));
             }
         }
@@ -675,7 +671,7 @@ pub const NumberRenamer = struct {
             same_scope: u32,
             used: void,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn find(this: *NumberScope, name: []const u8) NameUse {
                 // This version doesn't allocate
                 if (comptime Environment.allow_assert)
@@ -706,7 +702,7 @@ pub const NumberRenamer = struct {
         };
 
         /// Caller must use an arena allocator
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn findUnusedName(this: *NumberScope, allocator: std.mem.Allocator, temp_allocator: std.mem.Allocator, input_name: []const u8) UnusedName {
             var name = bun.MutableString.ensureValidIdentifier(input_name, temp_allocator) catch unreachable;
 
@@ -821,7 +817,7 @@ pub const ExportRenamer = struct {
         this.string_buffer.deinit();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn nextRenamedName(this: *ExportRenamer, input: []const u8) string {
         var entry = this.used.getOrPut(input) catch unreachable;
         var tries: u32 = 1;
@@ -882,7 +878,7 @@ pub fn computeInitialReservedNames(
     try names.ensureTotalCapacityContext(
         allocator,
         cjs_names_len +
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @as(u32, @truncate(JSLexer.Keywords.keys().len + JSLexer.StrictModeReservedWords.keys().len + 1 + extras.len)),
         bun.StringHashMapContext{},
     );

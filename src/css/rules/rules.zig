@@ -133,7 +133,6 @@ pub fn CssRuleList(comptime AtRule: type) type {
             // _ = style_rules; // autofix
             var rules = ArrayList(CssRule(AtRule)).empty;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.v.items) |*rule| {
                 // NOTE Anytime you append to `rules` with this `rule`, you must set `moved_rule` to true.
                 var moved_rule = false;
@@ -474,7 +473,6 @@ pub fn CssRuleList(comptime AtRule: type) type {
             var first = true;
             var last_without_block = false;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.v.items) |*rule| {
                 if (rule.* == .ignored) continue;
 
@@ -569,7 +567,7 @@ pub fn StyleRuleKey(comptime R: type) type {
                 V,
                 struct {
                     pub fn hash(_: @This(), key: This) u32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         return @truncate(key.hash);
                     }
 

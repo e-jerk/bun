@@ -161,7 +161,7 @@ pub fn readlink(file_path: [:0]const u8, buf: []u8) Maybe([:0]u8) {
             return .{ .err = .{ .errno = @intFromEnum(bun.sys.E.NAMETOOLONG), .syscall = .readlink, .path = file_path } };
         }
         log("uv readlink({s}) = {d}, {s}", .{ file_path, rc.int(), slice });
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buf[0..slice.len], slice);
         buf[slice.len] = 0;
         return .{ .result = buf[0..slice.len :0] };
@@ -330,7 +330,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
             &req,
             uv_fd,
             chunk_bufs.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(chunk_len),
             current_position,
             null,
@@ -346,7 +346,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
             return .{ .err = .{ .errno = @intFromEnum(e), .fd = fd, .syscall = .read } };
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const bytes_read: usize = @intCast(req.result.int());
         total_read += bytes_read;
 
@@ -359,7 +359,7 @@ pub fn preadv(fd: FD, bufs: []const bun.PlatformIOVec, position: i64) Maybe(usiz
 
         // Update position for the next chunk (if position tracking is enabled)
         if (current_position >= 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             current_position += @intCast(bytes_read);
         }
     }
@@ -391,7 +391,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
             &req,
             uv_fd,
             chunk_bufs.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(chunk_len),
             current_position,
             null,
@@ -407,7 +407,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
             return .{ .err = .{ .errno = @intFromEnum(e), .fd = fd, .syscall = .write } };
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const bytes_written: usize = @intCast(req.result.int());
         total_written += bytes_written;
 
@@ -420,7 +420,7 @@ pub fn pwritev(fd: FD, bufs: []const bun.PlatformIOVecConst, position: i64) Mayb
 
         // Update position for the next chunk (if position tracking is enabled)
         if (current_position >= 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             current_position += @intCast(bytes_written);
         }
     }
@@ -460,7 +460,7 @@ pub fn pread(fd: FD, buf: []u8, position: i64) Maybe(usize) {
 
                 remaining = remaining[chunk_len..];
                 if (current_position >= 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     current_position += @intCast(bytes_read);
                 }
             },
@@ -535,7 +535,7 @@ pub fn pwrite(fd: FD, buf: []const u8, position: i64) Maybe(usize) {
 
                 remaining = remaining[chunk_len..];
                 if (current_position >= 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     current_position += @intCast(bytes_written);
                 }
             },

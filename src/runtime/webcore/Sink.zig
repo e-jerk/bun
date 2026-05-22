@@ -49,7 +49,7 @@ pub const UTF8Fallback = struct {
 
         if (stack_size >= str.len) {
             var buf: [stack_size]u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buf[0..str.len], str);
 
             bun.strings.replaceLatin1WithUTF8(buf[0..str.len]);
@@ -64,7 +64,7 @@ pub const UTF8Fallback = struct {
 
         {
             var slice = bun.default_allocator.alloc(u8, str.len) catch return .{ .err = Syscall.Error.oom };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(slice[0..str.len], str);
 
             bun.strings.replaceLatin1WithUTF8(slice[0..str.len]);
@@ -122,23 +122,18 @@ pub const VTable = struct {
     ) VTable {
         const Functions = struct {
             pub fn onWrite(this: *anyopaque, data: streams.Result) streams.Result.Writable {
-// safe-transpile: @alignCast requires manual review
                 return Wrapped.write(@as(*Wrapped, @ptrCast(@alignCast(this))), data);
             }
             pub fn onConnect(this: *anyopaque, signal: streams.Signal) bun.sys.Maybe(void) {
-// safe-transpile: @alignCast requires manual review
                 return Wrapped.connect(@as(*Wrapped, @ptrCast(@alignCast(this))), signal);
             }
             pub fn onWriteLatin1(this: *anyopaque, data: streams.Result) streams.Result.Writable {
-// safe-transpile: @alignCast requires manual review
                 return Wrapped.writeLatin1(@as(*Wrapped, @ptrCast(@alignCast(this))), data);
             }
             pub fn onWriteUTF16(this: *anyopaque, data: streams.Result) streams.Result.Writable {
-// safe-transpile: @alignCast requires manual review
                 return Wrapped.writeUTF16(@as(*Wrapped, @ptrCast(@alignCast(this))), data);
             }
             pub fn onEnd(this: *anyopaque, err: ?Syscall.Error) bun.sys.Maybe(void) {
-// safe-transpile: @alignCast requires manual review
                 return Wrapped.end(@as(*Wrapped, @ptrCast(@alignCast(this))), err);
             }
         };
@@ -232,17 +227,17 @@ pub fn JSSink(comptime SinkType: type, comptime abi_name: []const u8) type {
             pub fn init(cpp: JSValue) streams.Signal {
                 // this one can be null
                 @setRuntimeSafety(false);
-// safe-transpile: @bitCast requires manual review
+
                 return streams.Signal.initWithType(SinkSignal, @as(*SinkSignal, @ptrFromInt(@as(usize, @bitCast(@intFromEnum(cpp))))));
             }
 
             pub fn close(this: *@This(), _: ?Syscall.Error) void {
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 onClose(@as(SinkSignal, @bitCast(@intFromPtr(this))).cpp, .js_undefined);
             }
 
             pub fn ready(this: *@This(), _: ?Blob.SizeType, _: ?Blob.SizeType) void {
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 onReady(@as(SinkSignal, @bitCast(@intFromPtr(this))).cpp, .js_undefined, .js_undefined);
             }
 
@@ -323,7 +318,6 @@ pub fn JSSink(comptime SinkType: type, comptime abi_name: []const u8) type {
         }
 
         pub fn finalize(ptr: *anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
             var this = @as(*ThisSink, @ptrCast(@alignCast(ptr)));
 
             this.sink.finalize();
@@ -337,7 +331,7 @@ pub fn JSSink(comptime SinkType: type, comptime abi_name: []const u8) type {
             if (this.sink.signal.isDead())
                 return;
             this.sink.signal.clear();
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             const value = @as(JSValue, @enumFromInt(@as(jsc.JSValue.backing_int, @bitCast(@intFromPtr(ptr)))));
             value.unprotect();
             detachPtr(globalThis, value) catch {}; // TODO: properly propagate exception upwards
@@ -480,7 +474,6 @@ pub fn JSSink(comptime SinkType: type, comptime abi_name: []const u8) type {
 
         pub fn close(globalThis: *JSGlobalObject, sink_ptr: ?*anyopaque) callconv(.c) JSValue {
             jsc.markBinding(@src());
-// safe-transpile: @alignCast requires manual review
             const this: *ThisSink = @ptrCast(@alignCast(sink_ptr orelse return .js_undefined));
 
             if (comptime @hasDecl(SinkType, "getPendingError")) {
@@ -580,7 +573,6 @@ pub fn JSSink(comptime SinkType: type, comptime abi_name: []const u8) type {
         pub fn endWithSink(ptr: *anyopaque, globalThis: *JSGlobalObject) callconv(jsc.conv) JSValue {
             jsc.markBinding(@src());
 
-// safe-transpile: @alignCast requires manual review
             var this = @as(*ThisSink, @ptrCast(@alignCast(ptr)));
 
             if (comptime @hasDecl(SinkType, "getPendingError")) {

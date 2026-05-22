@@ -31,7 +31,7 @@ pub const PluginRunner = struct {
         return (!std.fs.path.isAbsolute(specifier) and strings.containsChar(specifier, ':'));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onResolve(
         this: *PluginRunner,
         specifier: []const u8,

@@ -21,7 +21,7 @@ pub fn requiredAndOptionalArg(a: bool, b: ?usize, c: i32, d: ?u8) i32 {
     const b_nonnull = b orelse {
         return (123456 +% c) +% (d orelse 0);
     };
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var math_result: i32 = @truncate(@as(isize, @as(u53, @truncate(
         (b_nonnull +% @as(usize, @abs(c))) *% (d orelse 1),
     ))));

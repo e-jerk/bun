@@ -12,14 +12,13 @@ pub fn init(slice: []const u8) *RefCountedStr {
     const this = bun.handleOom(safe.Box(RefCountedStr).init(bun.default_allocator, undefined));
     this.ptr.* = .{
         .refcount = 1,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .len = @intCast(slice.len),
         .ptr = slice.ptr,
     };
     return this.ptr;
 }
 
-// safe-transpile: function returns small constant slice — consider safe.String
 pub fn byteSlice(this: *RefCountedStr) []const u8 {
     if (this.len == 0) return "";
     return this.ptr[0..this.len];

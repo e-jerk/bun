@@ -21,7 +21,6 @@ pub fn deinit(this: *@This()) void {
     this.structure.deinit();
     if (this.fields) |fields| {
         this.fields = null;
-// safe-transpile: for loop with pointer capture requires manual review
         for (fields) |*name| {
             name.deinit();
         }

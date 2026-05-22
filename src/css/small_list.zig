@@ -41,7 +41,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 .data = .{ .inlined = undefined },
             };
 
-// safe-transpile: @memcpy requires manual review
             @memcpy(this.data.inlined[0..values.len], values);
 
             return this;
@@ -70,8 +69,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
         pub fn toCss(this: *const @This(), dest: *Printer) PrintErr!void {
             const length = this.len();
-            // safe-transpile: for with index access requires manual review
-    for (this.slice(), 0..) |*val, idx| {
+            for (this.slice(), 0..) |*val, idx| {
                 try val.toCss(dest);
                 if (idx < length - 1) {
                     try dest.delim(',', false);
@@ -92,7 +90,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 .capacity = list.len,
                 .data = .{ .inlined = undefined },
             };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.data.inlined[0..list.len], list.items[0..list.len]);
             return this;
         }
@@ -108,7 +106,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 .capacity = list.len,
                 .data = .{ .inlined = undefined },
             };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.data.inlined[0..list.len], list.items[0..list.len]);
             return this;
         }
@@ -127,7 +125,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 .capacity = list_.len,
                 .data = .{ .inlined = undefined },
             };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.data.inlined[0..list_.len], list_.items[0..list_.len]);
             return this;
         }
@@ -143,7 +141,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 .capacity = list.len,
                 .data = .{ .inlined = undefined },
             };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.data.inlined[0..list.len], list.ptr[0..list.len]);
             return this;
         }
@@ -200,7 +198,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
         }
 
         pub fn isCompatible(this: *const @This(), browsers: css.targets.Browsers) bool {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.slice()) |*v| {
                 if (!v.isCompatible(browsers)) return false;
             }
@@ -216,7 +213,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 var prefixes = css.VendorPrefix{};
                 var fallbacks = ColorFallbackKind{};
                 var res: bun.BabyList(@This()) = .{};
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.slice()) |*item| {
                     bun.bits.insert(css.VendorPrefix, &prefixes, item.getImage().getNecessaryPrefixes(targets));
                     bun.bits.insert(css.ColorFallbackKind, &fallbacks, item.getNecessaryFallbacks(targets));
@@ -225,8 +221,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 // Get RGB fallbacks if needed.
                 const rgb: ?SmallList(T, 1) = if (fallbacks.rgb) brk: {
                     var shallow_clone = this.shallowClone(allocator);
-                    // safe-transpile: for with index access requires manual review
-    for (shallow_clone.slice_mut(), this.slice_mut()) |*out, *in| {
+                    for (shallow_clone.slice_mut(), this.slice_mut()) |*out, *in| {
                         out.* = in.getFallback(allocator, ColorFallbackKind{ .rgb = true });
                     }
                     break :brk shallow_clone;
@@ -239,7 +234,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 if (prefixes.webkit and targets.browsers != null and css.prefixes.Feature.isWebkitGradient(targets.browsers.?)) {
                     const images = images: {
                         var images = SmallList(T, 1){};
-// safe-transpile: for loop with pointer capture requires manual review
                         for (prefix_images.slice()) |*item| {
                             if (item.getImage().getLegacyWebkit(allocator)) |img| {
                                 images.append(allocator, item.withImage(allocator, img));
@@ -253,13 +247,12 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 }
 
                 const prefix = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                    // safe-transpile: function uses raw slice parameter — consider safe.String
                     pub inline fn helper(comptime prefix: []const u8, pfs: *css.VendorPrefix, pfi: *const SmallList(T, 1), r: *bun.BabyList(This), alloc: Allocator) void {
                         if (bun.bits.contains(css.VendorPrefix, pfs.*, .fromName(prefix))) {
                             var images = SmallList(T, 1).initCapacity(alloc, pfi.len());
                             images.setLen(pfi.len());
-                            // safe-transpile: for with index access requires manual review
-    for (images.slice_mut(), pfi.slice()) |*out, *in| {
+                            for (images.slice_mut(), pfi.slice()) |*out, *in| {
                                 const image = in.getImage().getPrefixed(alloc, css.VendorPrefix.fromName(prefix));
                                 out.* = in.withImage(alloc, image);
                             }
@@ -279,8 +272,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
                     if (fallbacks.p3) {
                         var p3_images = this.shallowClone(allocator);
-                        // safe-transpile: for with index access requires manual review
-    for (p3_images.slice_mut(), this.slice_mut()) |*out, *in| {
+                        for (p3_images.slice_mut(), this.slice_mut()) |*out, *in| {
                             out.* = in.getFallback(allocator, ColorFallbackKind{ .p3 = true });
                         }
                         bun.handleOom(res.append(allocator, p3_images));
@@ -288,7 +280,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
                     // Convert to lab if needed (e.g. if oklab is not supported but lab is).
                     if (fallbacks.lab) {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (this.slice_mut()) |*item| {
                             var old = item.*;
                             item.* = item.getFallback(allocator, ColorFallbackKind{ .lab = true });
@@ -307,7 +298,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             }
             if (T == TextShadow and N == 1) {
                 var fallbacks = css.ColorFallbackKind{};
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.slice()) |*shadow| {
                     bun.bits.insert(css.ColorFallbackKind, &fallbacks, shadow.color.getNecessaryFallbacks(targets));
                 }
@@ -315,7 +305,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 var res = SmallList(SmallList(TextShadow, 1), 2){};
                 if (fallbacks.rgb) {
                     var rgb = SmallList(TextShadow, 1).initCapacity(allocator, this.len());
-// safe-transpile: for loop with pointer capture requires manual review
                     for (this.slice()) |*shadow| {
                         var new_shadow = shadow.*;
                         // dummy non-alloced color to avoid deep cloning the real one since we will replace it
@@ -329,7 +318,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
                 if (fallbacks.p3) {
                     var p3 = SmallList(TextShadow, 1).initCapacity(allocator, this.len());
-// safe-transpile: for loop with pointer capture requires manual review
                     for (this.slice()) |*shadow| {
                         var new_shadow = shadow.*;
                         // dummy non-alloced color to avoid deep cloning the real one since we will replace it
@@ -342,7 +330,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
                 }
 
                 if (fallbacks.lab) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (this.slice_mut()) |*shadow| {
                         const out = shadow.color.toLAB(allocator).?;
                         shadow.color.deinit(allocator);
@@ -368,7 +355,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
         // TODO: remove this stupid function
         pub fn map(this: *@This(), comptime func: anytype) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.slice_mut()) |*item| {
                 func(item);
             }
@@ -376,7 +362,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
         /// `predicate` must be: `fn(*const T) bool`
         pub fn any(this: *const @This(), comptime predicate: anytype) bool {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.slice()) |*item| {
                 if (predicate(item)) return true;
             }
@@ -422,7 +407,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             if (!this.spilled()) return this.*;
             var h = HeapData.initCapacity(allocator, this.capacity);
             h.len = this.data.heap.len;
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(h.ptr[0..h.len], this.data.heap.ptr[0..h.len]);
             return .{
                 .capacity = this.capacity,
@@ -433,8 +418,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
         pub fn deepClone(this: *const @This(), allocator: Allocator) @This() {
             var ret: @This() = initCapacity(allocator, this.len());
             ret.setLen(this.len());
-            // safe-transpile: for with index access requires manual review
-    for (this.slice(), ret.slice_mut()) |*in, *out| {
+            for (this.slice(), ret.slice_mut()) |*in, *out| {
                 out.* = generic.deepClone(T, in, allocator);
             }
             return ret;
@@ -442,8 +426,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
 
         pub fn eql(lhs: *const @This(), rhs: *const @This()) bool {
             if (lhs.len() != rhs.len()) return false;
-            // safe-transpile: for with index access requires manual review
-    for (lhs.slice(), rhs.slice()) |*a, *b| {
+            for (lhs.slice(), rhs.slice()) |*a, *b| {
                 if (!generic.eql(T, a, b)) return false;
             }
             return true;
@@ -456,7 +439,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             // Preserve the invariant that the heap allocation holds `capacity` elements,
             // otherwise a later append that trusts `capacity` would write out of bounds.
             const buf = bun.handleOom(allocator.alloc(T, this.capacity));
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buf[0..ret.data.heap.len], ret.data.heap.ptr[0..ret.data.heap.len]);
             ret.data.heap.ptr = buf.ptr;
             return ret;
@@ -469,7 +452,6 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
         }
 
         pub fn hash(this: *const @This(), hasher: anytype) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.slice()) |*item| {
                 css.generic.hash(T, item, hasher);
             }
@@ -566,7 +548,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
         }
 
         pub inline fn insertSlice(this: *@This(), allocator: Allocator, index: u32, items: []const T) void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.reserve(allocator, @intCast(items.len));
             this.insertSliceAssumeCapacity(index, items);
         }
@@ -577,9 +559,9 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             const ptr: [*]T = this.as_ptr()[index..];
             const count = length - index;
             std.mem.copyBackwards(T, ptr[items.len..][0..count], ptr[0..count]);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(ptr[0..items.len], items);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.setLen(length + @as(u32, @intCast(items.len)));
         }
 
@@ -627,14 +609,14 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             if (new_cap <= N) {
                 if (unspilled) return;
                 this.data = .{ .inlined = undefined };
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(this.data.inlined[0..length], ptr[0..length]);
                 this.capacity = length;
                 allocator.free(ptr[0..cap]);
             } else if (new_cap != cap) {
                 const new_alloc: [*]T = if (unspilled) new_alloc: {
                     const new_alloc = bun.handleOom(allocator.alloc(T, new_cap));
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(new_alloc[0..length], ptr[0..length]);
                     break :new_alloc new_alloc.ptr;
                 } else new_alloc: {
@@ -661,7 +643,7 @@ pub fn SmallList(comptime T: type, comptime N: comptime_int) type {
             bun.assert(!this.spilled());
             const new_size = growCapacity(this.capacity, this.capacity + additional);
             var slc = bun.handleOom(allocator.alloc(T, new_size));
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(slc[0..this.capacity], this.data.inlined[0..this.capacity]);
             this.data = .{ .heap = HeapData{ .len = this.capacity, .ptr = slc.ptr } };
             this.capacity = new_size;

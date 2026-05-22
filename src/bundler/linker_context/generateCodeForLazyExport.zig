@@ -131,7 +131,6 @@ pub fn generateCodeForLazyExport(this: *LinkerContext, source_index: Index.Int) 
                         // while parsing we check that we only allow `composes` on single class selectors
                         bun.assert(css_ref.tag.class);
 
-// safe-transpile: for loop with pointer capture requires manual review
                         for (composes.composes.slice()) |*compose| {
                             // it is imported
                             if (compose.from != null) {

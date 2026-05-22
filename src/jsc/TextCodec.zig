@@ -6,7 +6,7 @@ extern fn Bun__isEncodingSupported(encodingName: [*]const u8, encodingNameLen: u
 extern fn Bun__getCanonicalEncodingName(encodingName: [*]const u8, encodingNameLen: usize, outLen: *usize) ?[*]const u8;
 
 pub const TextCodec = opaque {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn create(encoding: []const u8) ?*TextCodec {
         jsc.markBinding(@src());
         return Bun__createTextCodec(encoding.ptr, encoding.len);
@@ -17,7 +17,7 @@ pub const TextCodec = opaque {
         Bun__deleteTextCodec(self);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decode(self: *TextCodec, data: []const u8, flush: bool, stopOnError: bool) struct { result: bun.String, sawError: bool } {
         jsc.markBinding(@src());
         var sawError: bool = false;
@@ -31,13 +31,13 @@ pub const TextCodec = opaque {
         Bun__stripBOMFromTextCodec(self);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isSupported(encoding: []const u8) bool {
         jsc.markBinding(@src());
         return Bun__isEncodingSupported(encoding.ptr, encoding.len);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getCanonicalEncodingName(encoding: []const u8) ?[]const u8 {
         jsc.markBinding(@src());
         var len: usize = 0;

@@ -25,7 +25,7 @@ pub const TestingAPIs = struct {
             return .js_undefined;
         }
         const err: Error = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .errno = @intCast(arguments[0].toInt32()),
             .syscall = .open,
             .from_libuv = true,
@@ -63,7 +63,7 @@ pub const TestingAPIs = struct {
             fn handler(_: i32) callconv(.c) void {}
         };
         var mask = bun.sys.sigemptyset();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         bun.sys.sigaddset(&mask, @intCast(posix.SIG.USR2));
         const act = bun.sys.Sigaction{
             .handler = .{ .handler = &sentry.handler },
@@ -72,11 +72,11 @@ pub const TestingAPIs = struct {
         };
         var prev: bun.sys.Sigaction = undefined;
         var readback: bun.sys.Sigaction = undefined;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         bun.sys.sigaction(@intCast(posix.SIG.USR2), &act, &prev);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         bun.sys.sigaction(@intCast(posix.SIG.USR2), null, &readback);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         bun.sys.sigaction(@intCast(posix.SIG.USR2), &prev, null);
 
         const installed = (try jsc.JSObject.create(.{

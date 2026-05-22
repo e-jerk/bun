@@ -281,43 +281,42 @@ pub const Archive = opaque {
         return archive_version_number();
     }
     extern fn archive_version_string() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn versionString() []const u8 {
         return bun.sliceTo(archive_version_string(), 0);
     }
     extern fn archive_version_details() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn versionDetails() []const u8 {
         return bun.sliceTo(archive_version_details(), 0);
     }
     extern fn archive_zlib_version() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn zlibVersion() []const u8 {
         return bun.sliceTo(archive_zlib_version(), 0);
     }
     extern fn archive_liblzma_version() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn liblzmaVersion() []const u8 {
         return bun.sliceTo(archive_liblzma_version(), 0);
     }
     extern fn archive_bzlib_version() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn bzlibVersion() []const u8 {
         return bun.sliceTo(archive_bzlib_version(), 0);
     }
     extern fn archive_liblz4_version() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn liblz4Version() []const u8 {
         return bun.sliceTo(archive_liblz4_version(), 0);
     }
     extern fn archive_libzstd_version() [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn libzstdVersion() []const u8 {
         return bun.sliceTo(archive_libzstd_version(), 0);
     }
 
     extern fn archive_error_string(*Archive) [*c]const u8;
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn errorString(archive: *Archive) []const u8 {
         const err_str = archive_error_string(archive);
         if (err_str == null) return "";
@@ -488,7 +487,7 @@ pub const Archive = opaque {
     }
 
     extern fn archive_write_data(*Archive, ?*const anyopaque, usize) isize;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeData(archive: *Archive, data: []const u8) isize {
         return archive_write_data(archive, data.ptr, data.len);
     }
@@ -653,7 +652,7 @@ pub const Archive = opaque {
     }
 
     extern fn archive_read_open_memory(*Archive, ?*const anyopaque, usize) Result;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readOpenMemory(archive: *Archive, buf: []const u8) Result {
         return archive_read_open_memory(archive, buf.ptr, buf.len);
     }
@@ -677,16 +676,16 @@ pub const Archive = opaque {
     pub fn next(archive: *Archive, offset: *i64) ?Block {
         var buff: *const anyopaque = undefined;
         var size: usize = 0;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         const r = archive_read_data_block(@ptrCast(archive), @ptrCast(&buff), &size, offset);
         if (r == Result.eof) return null;
         if (r != Result.ok) return .{ .offset = offset.*, .result = r };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const ptr: [*]const u8 = @ptrCast(buff);
         return .{ .bytes = ptr[0..size], .offset = offset.*, .result = r };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readData(archive: *Archive, buf: []u8) isize {
         return archive_read_data(archive, buf.ptr, buf.len);
     }
@@ -726,7 +725,7 @@ pub const Archive = opaque {
             const data = block.bytes;
 
             // Track the furthest point we need to write to (for final truncation)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             final_offset = @max(final_offset, block.offset + @as(i64, @intCast(data.len)));
 
             if (comptime bun.Environment.isPosix) {
@@ -740,7 +739,7 @@ pub const Archive = opaque {
                         },
                         .result => {
                             // pwrite doesn't update file position, but track logical position for fallback
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             actual_offset = @max(actual_offset, block.offset + @as(i64, @intCast(data.len)));
                             continue;
                         },
@@ -751,7 +750,7 @@ pub const Archive = opaque {
             // Handle mismatch between actual position and target position
             if (block.offset != actual_offset) seek: {
                 if (can_use_lseek.*) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     switch (bun.sys.setFileOffset(fd, @intCast(block.offset))) {
                         .err => can_use_lseek.* = false,
                         .result => {
@@ -764,7 +763,7 @@ pub const Archive = opaque {
                 // lseek failed or not available
                 if (block.offset > actual_offset) {
                     // Write zeros to fill the gap
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const zero_count: usize = @intCast(block.offset - actual_offset);
                     const zero_result = writeZerosToFile(file, zero_count);
                     if (zero_result != Result.ok) {
@@ -780,7 +779,7 @@ pub const Archive = opaque {
             switch (file.writeAll(data)) {
                 .err => return Result.failed,
                 .result => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     actual_offset += @intCast(data.len);
                 },
             }
@@ -951,7 +950,7 @@ pub const Archive = opaque {
             return archive_entry_size(entry);
         }
         pub fn mtime(entry: *Entry) i64 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @intCast(archive_entry_mtime(@ptrCast(entry)));
         }
         extern fn archive_entry_symlink(*Entry) [*c]const u8;
@@ -984,7 +983,7 @@ pub const Archive = opaque {
                 },
                 result: T,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 pub fn initErr(arch: *Archive, msg: []const u8) @This() {
                     return .{ .err = .{ .message = msg, .archive = arch } };
                 }
@@ -995,7 +994,7 @@ pub const Archive = opaque {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(tarball_bytes: []const u8) Iterator.Result(@This()) {
             const Return = Iterator.Result(@This());
 
@@ -1049,14 +1048,14 @@ pub const Archive = opaque {
                 const size = this.entry.size();
                 if (size < 0) return Return.initErr(archive, "invalid archive entry size");
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const buf = try allocator.alloc(u8, @intCast(size));
 
                 const read = archive.readData(buf);
                 if (read < 0) {
                     return Return.initErr(archive, "failed to read archive data");
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return Return.initRes(buf[0..@intCast(read)]);
             }
         };
@@ -1497,7 +1496,6 @@ pub const GrowingBuffer = struct {
     }
 
     pub fn openCallback(_: *struct_archive, client_data: *anyopaque) callconv(.c) c_int {
-// safe-transpile: @alignCast requires manual review
         const self: *GrowingBuffer = @ptrCast(@alignCast(client_data));
         self.list.clearRetainingCapacity();
         self.had_error = false;
@@ -1505,16 +1503,15 @@ pub const GrowingBuffer = struct {
     }
 
     pub fn writeCallback(_: *struct_archive, client_data: *anyopaque, buff: ?*const anyopaque, length: usize) callconv(.c) la_ssize_t {
-// safe-transpile: @alignCast requires manual review
         const self: *GrowingBuffer = @ptrCast(@alignCast(client_data));
         if (buff == null or length == 0) return 0;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const data: [*]const u8 = @ptrCast(buff.?);
         self.list.appendSlice(self.allocator, data[0..length]) catch {
             self.had_error = true;
             return -1;
         };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(length);
     }
 

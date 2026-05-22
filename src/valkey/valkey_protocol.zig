@@ -101,7 +101,6 @@ pub const RESPValue = union(RESPType) {
             .Integer => {},
             .BulkString => |maybe_str| if (maybe_str) |str| allocator.free(str),
             .Array => |array| {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (array) |*value| {
                     value.deinit(allocator);
                 }
@@ -116,14 +115,12 @@ pub const RESPValue = union(RESPType) {
                 allocator.free(verbatim.content);
             },
             .Map => |entries| {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (entries) |*entry| {
                     entry.deinit(allocator);
                 }
                 allocator.free(entries);
             },
             .Set => |set| {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (set) |*value| {
                     value.deinit(allocator);
                 }
@@ -153,8 +150,7 @@ pub const RESPValue = union(RESPType) {
             },
             .Array => |array| {
                 try writer.writeAll("[");
-                // safe-transpile: for with index access requires manual review
-    for (array, 0..) |value, i| {
+                for (array, 0..) |value, i| {
                     if (i > 0) try writer.writeAll(", ");
                     try value.format(writer);
                 }
@@ -167,8 +163,7 @@ pub const RESPValue = union(RESPType) {
             .VerbatimString => |verbatim| try writer.print("{s}:{s}", .{ verbatim.format, verbatim.content }),
             .Map => |entries| {
                 try writer.writeAll("{");
-                // safe-transpile: for with index access requires manual review
-    for (entries, 0..) |entry, i| {
+                for (entries, 0..) |entry, i| {
                     if (i > 0) try writer.writeAll(", ");
                     try entry.key.format(writer);
                     try writer.writeAll(": ");
@@ -178,8 +173,7 @@ pub const RESPValue = union(RESPType) {
             },
             .Set => |set| {
                 try writer.writeAll("Set{");
-                // safe-transpile: for with index access requires manual review
-    for (set, 0..) |value, i| {
+                for (set, 0..) |value, i| {
                     if (i > 0) try writer.writeAll(", ");
                     try value.format(writer);
                 }
@@ -188,8 +182,7 @@ pub const RESPValue = union(RESPType) {
             .Attribute => |attribute| {
                 try writer.writeAll("(Attr: ");
                 try writer.writeAll("{");
-                // safe-transpile: for with index access requires manual review
-    for (attribute.attributes, 0..) |entry, i| {
+                for (attribute.attributes, 0..) |entry, i| {
                     if (i > 0) try writer.writeAll(", ");
                     try entry.key.format(writer);
                     try writer.writeAll(": ");
@@ -201,8 +194,7 @@ pub const RESPValue = union(RESPType) {
             },
             .Push => |push| {
                 try writer.print("Push({s}: [", .{push.kind});
-                // safe-transpile: for with index access requires manual review
-    for (push.data, 0..) |value, i| {
+                for (push.data, 0..) |value, i| {
                     if (i > 0) try writer.writeAll(", ");
                     try value.format(writer);
                 }
@@ -221,7 +213,7 @@ pub const ValkeyReader = struct {
     buffer: []const u8,
     pos: usize = 0,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(buffer: []const u8) ValkeyReader {
         return .{
             .buffer = buffer,
@@ -237,8 +229,7 @@ pub const ValkeyReader = struct {
 
     pub fn readUntilCRLF(self: *ValkeyReader) RedisError![]const u8 {
         const buffer = self.buffer[self.pos..];
-        // safe-transpile: for with index access requires manual review
-    for (buffer, 0..) |byte, i| {
+        for (buffer, 0..) |byte, i| {
             if (byte == '\r' and buffer.len > i + 1 and buffer[i + 1] == '\n') {
                 const result = buffer[0..i];
                 self.pos += i + 2;
@@ -280,12 +271,12 @@ pub const ValkeyReader = struct {
     pub fn readVerbatimString(self: *ValkeyReader, allocator: std.mem.Allocator) RedisError!VerbatimString {
         const len = try self.readInteger();
         if (len < 0) return error.InvalidVerbatimString;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (self.pos + @as(usize, @intCast(len)) > self.buffer.len) return error.InvalidVerbatimString;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const content_with_format = self.buffer[self.pos .. self.pos + @as(usize, @intCast(len))];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.pos += @as(usize, @intCast(len));
 
         // Expect CRLF after content
@@ -337,11 +328,11 @@ pub const ValkeyReader = struct {
             .BulkString => {
                 const len = try self.readInteger();
                 if (len < 0) return RESPValue{ .BulkString = null };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (self.pos + @as(usize, @intCast(len)) > self.buffer.len) return error.InvalidResponse;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const str = self.buffer[self.pos .. self.pos + @as(usize, @intCast(len))];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.pos += @as(usize, @intCast(len));
                 const crlf = try self.readUntilCRLF();
                 if (crlf.len != 0) return error.InvalidBulkString;
@@ -352,12 +343,11 @@ pub const ValkeyReader = struct {
                 if (depth >= max_nesting_depth) return error.NestingDepthExceeded;
                 const len = try self.readInteger();
                 if (len < 0) return RESPValue{ .Array = &[_]RESPValue{} };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const array = try allocator.alloc(RESPValue, @as(usize, @intCast(len)));
                 errdefer allocator.free(array);
                 var i: usize = 0;
                 errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (array[0..i]) |*item| {
                         item.deinit(allocator);
                     }
@@ -384,11 +374,11 @@ pub const ValkeyReader = struct {
             .BlobError => {
                 const len = try self.readInteger();
                 if (len < 0) return error.InvalidBlobError;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (self.pos + @as(usize, @intCast(len)) > self.buffer.len) return error.InvalidBlobError;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const str = self.buffer[self.pos .. self.pos + @as(usize, @intCast(len))];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.pos += @as(usize, @intCast(len));
                 const crlf = try self.readUntilCRLF();
                 if (crlf.len != 0) return error.InvalidBlobError;
@@ -403,12 +393,11 @@ pub const ValkeyReader = struct {
                 const len = try self.readInteger();
                 if (len < 0) return error.InvalidMap;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const entries = try allocator.alloc(MapEntry, @as(usize, @intCast(len)));
                 errdefer allocator.free(entries);
                 var i: usize = 0;
                 errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (entries[0..i]) |*entry| {
                         entry.deinit(allocator);
                     }
@@ -427,12 +416,11 @@ pub const ValkeyReader = struct {
                 const len = try self.readInteger();
                 if (len < 0) return error.InvalidSet;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 var set = try allocator.alloc(RESPValue, @as(usize, @intCast(len)));
                 errdefer allocator.free(set);
                 var i: usize = 0;
                 errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (set[0..i]) |*item| {
                         item.deinit(allocator);
                     }
@@ -447,12 +435,11 @@ pub const ValkeyReader = struct {
                 const len = try self.readInteger();
                 if (len < 0) return error.InvalidAttribute;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 var attrs = try allocator.alloc(MapEntry, @as(usize, @intCast(len)));
                 errdefer allocator.free(attrs);
                 var i: usize = 0;
                 errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (attrs[0..i]) |*entry| {
                         entry.deinit(allocator);
                     }
@@ -503,12 +490,11 @@ pub const ValkeyReader = struct {
                 errdefer allocator.free(push_type_dup);
 
                 // Read the rest of the data
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 var data = try allocator.alloc(RESPValue, @as(usize, @intCast(len - 1)));
                 errdefer allocator.free(data);
                 var i: usize = 0;
                 errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data[0..i]) |*item| {
                         item.deinit(allocator);
                     }
@@ -557,7 +543,6 @@ pub const Push = struct {
 
     pub fn deinit(self: *Push, allocator: std.mem.Allocator) void {
         allocator.free(self.kind);
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.data) |*item| {
             item.deinit(allocator);
         }
@@ -569,7 +554,6 @@ pub const Attribute = struct {
     value: *RESPValue,
 
     pub fn deinit(self: *Attribute, allocator: std.mem.Allocator) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.attributes) |*entry| {
             entry.deinit(allocator);
         }

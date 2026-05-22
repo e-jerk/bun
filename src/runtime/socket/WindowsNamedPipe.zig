@@ -93,7 +93,7 @@ fn onReadAlloc(this: *WindowsNamedPipe, suggested_size: usize) []u8 {
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn onRead(this: *WindowsNamedPipe, buffer: []const u8) void {
     log("onRead ({})", .{buffer.len});
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     this.incoming.len += @as(u32, @truncate(buffer.len));
     bun.assert(this.incoming.len <= this.incoming.cap);
     bun.assert(bun.isSliceInBuffer(buffer, this.incoming.allocatedSlice()));
@@ -494,19 +494,19 @@ pub fn loop(this: *WindowsNamedPipe) *bun.Async.Loop {
 pub fn encodeAndWrite(this: *WindowsNamedPipe, data: []const u8) i32 {
     log("encodeAndWrite (len: {})", .{data.len});
     if (this.wrapper) |*wrapper| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(i32, @intCast(wrapper.writeData(data) catch 0));
     } else {
         this.internalWrite(data);
     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(data.len);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn rawWrite(this: *WindowsNamedPipe, encoded_data: []const u8) i32 {
     this.internalWrite(encoded_data);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(encoded_data.len);
 }
 
@@ -562,9 +562,9 @@ pub fn ssl(this: *WindowsNamedPipe) ?*BoringSSL.SSL {
 pub fn sslError(this: *WindowsNamedPipe) us_bun_verify_error_t {
     return .{
         .error_no = this.ssl_error.error_no,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .code = @ptrCast(this.ssl_error.code.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .reason = @ptrCast(this.ssl_error.reason.ptr),
     };
 }

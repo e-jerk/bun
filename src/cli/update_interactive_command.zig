@@ -1,5 +1,5 @@
 pub const TerminalHyperlink = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     link: []const u8,
     text: []const u8,
     enabled: bool,
@@ -1208,9 +1208,9 @@ pub const UpdateInteractiveCommand = struct {
             }
         }
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             // Check for terminal resize
             const current_size = getTerminalSize();
             if (current_size.width != last_terminal_width) {

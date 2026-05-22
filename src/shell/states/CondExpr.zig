@@ -127,7 +127,7 @@ pub fn next(this: *CondExpr) Yield {
                                 return this.parent.childDone(this, 1);
                             },
                         };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         return this.parent.childDone(this, if (bun.S.ISREG(@intCast(st.mode))) 0 else 1);
                     },
                     .@"-d" => {
@@ -138,7 +138,7 @@ pub fn next(this: *CondExpr) Yield {
                                 return this.parent.childDone(this, 1);
                             },
                         };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         return this.parent.childDone(this, if (bun.S.ISDIR(@intCast(st.mode))) 0 else 1);
                     },
                     .@"-c" => {
@@ -149,7 +149,7 @@ pub fn next(this: *CondExpr) Yield {
                                 return this.parent.childDone(this, 1);
                             },
                         };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         return this.parent.childDone(this, if (bun.S.ISCHR(@intCast(st.mode))) 0 else 1);
                     },
                     .@"-z", .@"-n", .@"==", .@"!=" => @panic("This conditional expression op does not need `stat()`. This indicates a bug in Bun. Please file a GitHub issue."),

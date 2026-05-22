@@ -42,7 +42,6 @@ pub fn ComptimeClap(
         pub fn parse(iter: anytype, opt: clap.ParseOptions) !@This() {
             const allocator = opt.allocator;
             var multis = [_]std.array_list.Managed([]const u8){undefined} ** multi_options;
-// safe-transpile: for loop with pointer capture requires manual review
             for (&multis) |*multi| {
                 multi.* = std.array_list.Managed([]const u8).init(allocator);
             }
@@ -98,8 +97,7 @@ pub fn ComptimeClap(
                 }
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (&multis, 0..) |*multi, i|
+            for (&multis, 0..) |*multi, i|
                 res.multi_options[i] = try multi.toOwnedSlice();
             res.pos = try pos.toOwnedSlice();
             res.passthrough_positionals = try passthrough_positionals.toOwnedSlice();
@@ -112,7 +110,7 @@ pub fn ComptimeClap(
             parser.allocator.free(parser.pos);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn flag(parser: @This(), comptime name: []const u8) bool {
             const param = comptime findParam(name);
             if (param.takes_value != .none and param.takes_value != .one_optional)
@@ -121,7 +119,7 @@ pub fn ComptimeClap(
             return parser.flags[param.id];
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn option(parser: @This(), comptime name: []const u8) ?[]const u8 {
             const param = comptime findParam(name);
             if (param.takes_value == .none)
@@ -131,7 +129,7 @@ pub fn ComptimeClap(
             return parser.single_options[param.id];
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn options(parser: @This(), comptime name: []const u8) []const []const u8 {
             const param = comptime findParam(name);
             if (param.takes_value == .none)
@@ -150,7 +148,7 @@ pub fn ComptimeClap(
             return parser.passthrough_positionals;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn hasFlag(comptime name: []const u8) bool {
             comptime {
                 for (converted_params) |param| {
@@ -173,7 +171,7 @@ pub fn ComptimeClap(
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn findParam(comptime name: []const u8) clap.Param(usize) {
             comptime {
                 for (converted_params) |param| {

@@ -1,5 +1,5 @@
 pub const EventType = enum(u8) {
-const zust = @import("safe");
+    const zust = @import("safe");
     Event,
     MessageEvent,
     CloseEvent,
@@ -168,9 +168,9 @@ pub const JestPrettyFormat = struct {
             if (level == .Error) {
                 writer.writeAll(comptime Output.prettyFmt("<r><red>", true)) catch unreachable;
             }
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+            var __loop_limit_1: usize = 0;
+            while (true) : (__loop_limit_1 += 1) {
+                if (__loop_limit_1 > 1_000_000) break;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }
@@ -193,9 +193,9 @@ while (true) : (__loop_limit_1 += 1) {
                 writer.writeAll(comptime Output.prettyFmt("<r>", true)) catch unreachable;
             }
         } else {
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+            var __loop_limit_2: usize = 0;
+            while (true) : (__loop_limit_2 += 1) {
+                if (__loop_limit_2 > 1_000_000) break;
                 if (any) {
                     _ = writer.write(" ") catch 0;
                 }

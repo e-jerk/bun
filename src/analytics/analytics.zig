@@ -309,7 +309,10 @@ pub const GenerateHeader = struct {
                 return 0;
             }
 
-            if (!detectUseMsgXOnMacOS14OrLater_once_done) { detectUseMsgXOnMacOS14OrLater(); detectUseMsgXOnMacOS14OrLater_once_done = true; }
+            if (!detectUseMsgXOnMacOS14OrLater_once_done) {
+                detectUseMsgXOnMacOS14OrLater();
+                detectUseMsgXOnMacOS14OrLater_once_done = true;
+            }
             return @intFromBool(use_msgx_on_macos_14_or_later);
         }
 
@@ -354,7 +357,7 @@ pub const GenerateHeader = struct {
             }
 
             // Linux DESKTOP-P4LCIEM 5.10.16.3-microsoft-standard-WSL2 #1 SMP Fri Apr 2 22:23:49 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
-// zust: use safe.String or safe.GuardedSlice for slice operations
+            // zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, release, "microsoft") != null) {
                 return analytics.Platform{ .os = analytics.OperatingSystem.wsl, .version = release, .arch = platform_arch };
             }

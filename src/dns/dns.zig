@@ -22,7 +22,7 @@ pub const GetAddrInfo = struct {
         hints.ai_family = this.options.family.toLibC();
         hints.ai_socktype = this.options.socktype.toLibC();
         hints.ai_protocol = this.options.protocol.toLibC();
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         hints.ai_flags = @bitCast(this.options.flags);
 
         return hints;
@@ -231,7 +231,6 @@ pub const GetAddrInfo = struct {
 
         pub fn fromAddrInfo(addrinfo: *std.c.addrinfo) ?Result {
             return Result{
-// safe-transpile: @alignCast requires manual review
                 .address = @import("std-net-shim").Address.initPosix(@alignCast(addrinfo.addr orelse return null)),
                 // no TTL in POSIX getaddrinfo()
                 .ttl = 0,
@@ -245,7 +244,7 @@ pub fn addressToString(address: *const @import("std-net-shim").Address) bun.OOM!
     switch (address.any.family) {
         std.posix.AF.INET => {
             var self = address.in;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             const bytes = @as(*const [4]u8, @ptrCast(&self.addr));
             return String.createFormat("{}.{}.{}.{}", .{
                 bytes[0],

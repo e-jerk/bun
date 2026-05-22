@@ -76,7 +76,7 @@ pub const AnyRoute = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn bundledHTMLManifestItemFromJS(argument: jsc.JSValue, index_path: []const u8, init_ctx: *ServerInitContext) bun.JSError!?AnyRoute {
         if (!argument.isObject()) return null;
 
@@ -218,7 +218,7 @@ pub const AnyRoute = union(enum) {
         user_routes: *std.array_list.Managed(ServerConfig.StaticRouteEntry),
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fromJS(
         global: *jsc.JSGlobalObject,
         path: []const u8,
@@ -265,7 +265,7 @@ pub const AnyRoute = union(enum) {
                 if (init_ctx.framework_router_list.items.len > limit) {
                     return global.throwInvalidArguments("Too many framework routers. Maximum is {d}.", .{limit});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return .{ .framework_router = .init(@intCast(init_ctx.framework_router_list.items.len - 1)) };
             }
         }
@@ -374,8 +374,7 @@ const ServePlugins = struct {
         const alloc = sfb.get();
         const bunstring_array = bun.handleOom(alloc.alloc(bun.String, plugin_list.len));
         defer alloc.free(bunstring_array);
-        // safe-transpile: for with index access requires manual review
-    for (plugin_list, bunstring_array) |raw_plugin, *out| {
+        for (plugin_list, bunstring_array) |raw_plugin, *out| {
             out.* = bun.String.init(raw_plugin);
         }
         const plugin_js_array = try bun.String.toJSArray(global, bunstring_array);
@@ -657,7 +656,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
         pub fn requestIP(this: *ThisServer, request: *jsc.WebCore.Request) bun.JSError!jsc.JSValue {
             if (this.config.address == .unix) return JSValue.jsNull();
             const info = request.request_context.getRemoteSocketInfo() orelse return JSValue.jsNull();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return SocketAddress.createDTO(this.globalThis, info.ip, @intCast(info.port), info.is_ipv6);
         }
 
@@ -688,7 +687,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             if (arguments[0].as(Request)) |request| {
                 _ = request.request_context.setTimeout(value);
             } else if (arguments[0].as(NodeHTTPResponse)) |response| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 response.setTimeout(@truncate(value % 255));
             } else {
                 return this.globalThis.throwInvalidArguments("timeout() requires a Request object", .{});
@@ -698,7 +697,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
         }
 
         pub fn setIdleTimeout(this: *ThisServer, seconds: c_uint) void {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             this.config.idleTimeout = @truncate(@min(seconds, 255));
         }
 
@@ -714,7 +713,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn appendStaticRoute(this: *ThisServer, path: []const u8, route: AnyRoute, method: HTTP.Method.Optional) !void {
             try this.config.appendStaticRoute(path, route, method);
         }
@@ -744,7 +743,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 return JSValue.jsNumber(
                     // if 0, return 0
                     // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     @as(i32, @intFromBool(uws.AnyWebSocket.publishWithOptions(ssl_enabled, app, topic_slice.slice(), buffer.slice(), .binary, compress))) * @as(i32, @intCast(@as(u31, @truncate(buffer.len)))),
                 );
             }
@@ -761,7 +760,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 return JSValue.jsNumber(
                     // if 0, return 0
                     // else return number of bytes sent
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     @as(i32, @intFromBool(uws.AnyWebSocket.publishWithOptions(ssl_enabled, app, topic_slice.slice(), buffer, .text, compress))) * @as(i32, @intCast(@as(u31, @truncate(buffer.len)))),
                 );
             }
@@ -1074,7 +1073,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 }
 
                 if (cookies_to_write) |cookies| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     try cookies.write(globalThis, uws.ResponseKind.from(ssl_enabled, false), @ptrCast(resp));
                 }
             }
@@ -1164,7 +1163,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
 
             var static_routes = this.config.static_routes;
             this.config.static_routes = .init(bun.default_allocator);
-// safe-transpile: for loop with pointer capture requires manual review
             for (static_routes.items) |*route| {
                 route.deinit();
             }
@@ -1178,13 +1176,11 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             this.config.negative_routes = new_config.negative_routes;
 
             if (new_config.had_routes_object) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.config.user_routes_to_build.items) |*route| {
                     route.deinit();
                 }
                 this.config.user_routes_to_build.clearAndFree();
                 this.config.user_routes_to_build = new_config.user_routes_to_build;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.user_routes.items) |*route| {
                     route.deinit();
                 }
@@ -1424,12 +1420,12 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
         }
 
         pub fn getPendingRequests(this: *ThisServer, _: *jsc.JSGlobalObject) jsc.JSValue {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return jsc.JSValue.jsNumber(@as(i32, @intCast(@as(u31, @truncate(this.pending_requests)))));
         }
 
         pub fn getPendingWebSockets(this: *ThisServer, _: *jsc.JSGlobalObject) jsc.JSValue {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return jsc.JSValue.jsNumber(@as(i32, @intCast(@as(u31, @truncate(this.activeSocketsCount())))));
         }
 
@@ -1444,7 +1440,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                     var port: u16 = this.config.address.tcp.port;
 
                     if (this.listener) |listener| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         port = @intCast(listener.getLocalPort());
 
                         var buf: [64]u8 = [_]u8{0} ** 64;
@@ -1456,7 +1452,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                         return addr.intoDTO(this.globalThis);
                     }
                     if (comptime has_h3) if (this.h3_listener) |h3l| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         port = @intCast(h3l.getLocalPort());
                         var buf: [64]u8 = [_]u8{0} ** 64;
                         const address_bytes = h3l.getLocalAddress(&buf) orelse return JSValue.jsNull();
@@ -1490,10 +1486,10 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 .tcp => |tcp| blk: {
                     var port: u16 = tcp.port;
                     if (this.listener) |listener| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         port = @intCast(listener.getLocalPort());
                     } else if (comptime has_h3) if (this.h3_listener) |h3l| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         port = @intCast(h3l.getLocalPort());
                     };
                     break :blk bun.fmt.URLFormatter{
@@ -1577,7 +1573,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
 
         pub fn activeSocketsCount(this: *const ThisServer) u32 {
             const websocket = &(this.config.websocket orelse return 0);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(websocket.handler.active_connections));
         }
 
@@ -1778,7 +1774,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             this.notifyInspectorServerStopped();
 
             this.all_closed_promise.deinit();
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.user_routes.items) |*user_route| {
                 user_route.deinit();
             }
@@ -1892,7 +1887,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                         if (reason.len == 0) {
                             break;
                         }
-// safe-transpile: @memcpy requires manual review
+
                         @memcpy(output_buf[written..][0..reason.len], reason);
                         written += reason.len;
                     }
@@ -1904,7 +1899,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                         if (reason.len > 0) {
                             output_buf[written..][0.." via ".len].* = " via ".*;
                             written += " via ".len;
-// safe-transpile: @memcpy requires manual review
+
                             @memcpy(output_buf[written..][0..reason.len], reason);
                             written += reason.len;
                         }
@@ -1917,7 +1912,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                         if (reason.len > 0) {
                             output_buf[written..][0] = ' ';
                             written += 1;
-// safe-transpile: @memcpy requires manual review
+
                             @memcpy(output_buf[written..][0..reason.len], reason);
                             written += reason.len;
                         }
@@ -2618,7 +2613,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             jsc.markBinding(@src());
             if (id == 1) {
                 // This is actually a UserRoute if id is 1 so it's safe to cast
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 upgradeWebSocketUserRoute(@ptrCast(this), resp, req, upgrade_ctx, null);
                 return;
             }
@@ -2731,7 +2726,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 defer bun.path_buffer_pool.put(buffer);
                 const main = jsc.VirtualMachine.get().main;
                 const len = @min(main.len, buffer.len);
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 break :brk @bitCast(bun.hash(bun.strings.copyLowercase(main[0..len], buffer[0..len])));
             };
 
@@ -2741,7 +2736,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 defer bun.path_buffer_pool.put(buffer);
                 const root = this.dev_server.?.root;
                 const len = @min(root.len, buffer.len);
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 break :brk @bitCast(bun.hash(bun.strings.copyLowercase(root[0..len], buffer[0..len])));
             };
 
@@ -2784,7 +2779,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 var user_routes_to_build_list = this.config.user_routes_to_build.moveToUnmanaged();
                 var old_user_routes = this.user_routes;
                 defer {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (old_user_routes.items) |*r| r.route.deinit();
                     old_user_routes.deinit(bun.default_allocator);
                 }
@@ -2794,12 +2788,11 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                 const callbacks_js = bun.default_allocator.alloc(jsc.JSValue, user_routes_to_build_list.items.len) catch @panic("OOM");
                 defer bun.default_allocator.free(callbacks_js);
 
-                // safe-transpile: for with index access requires manual review
-    for (user_routes_to_build_list.items, paths_zig, callbacks_js, 0..) |*builder, *p_zig, *cb_js, i| {
+                for (user_routes_to_build_list.items, paths_zig, callbacks_js, 0..) |*builder, *p_zig, *cb_js, i| {
                     p_zig.* = ZigString.init(builder.route.path);
                     cb_js.* = builder.callback.get().?;
                     this.user_routes.appendAssumeCapacity(.{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         .id = @truncate(i),
                         .server = this,
                         .route = builder.route,
@@ -2807,7 +2800,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                     builder.route = .{}; // Mark as moved
                 }
                 route_list_value = Bun__ServerRouteList__create(this.globalThis, callbacks_js.ptr, paths_zig.ptr, user_routes_to_build_list.items.len);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (user_routes_to_build_list.items) |*builder| builder.deinit();
                 user_routes_to_build_list.deinit(bun.default_allocator);
             }
@@ -2824,7 +2816,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             var has_any_user_route_for_star_path = false; // True if "/*" path appears in user_routes at all
             var has_any_ws_route_for_star_path = false;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.user_routes.items) |*user_route| {
                 const is_star_path = strings.eqlComptime(user_route.route.path, "/*");
                 if (is_star_path) {
@@ -2902,7 +2893,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             var has_static_route_for_star_path = false;
 
             if (this.config.static_routes.items.len > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.config.static_routes.items) |*entry| {
                     if (strings.eqlComptime(entry.path, "/*")) {
                         has_static_route_for_star_path = true;
@@ -3141,7 +3131,6 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
 
                 // apply SNI routes if any
                 if (this.config.sni) |*sni| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (sni.slice()) |*sni_ssl_config| {
                         const sni_servername: [:0]const u8 = std.mem.span(sni_ssl_config.server_name.?);
                         if (sni_servername.len > 0) {
@@ -3220,7 +3209,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
                     if (comptime has_h3) {
                         if (this.h3_app) |h3_app| {
                             // Same UDP port as the TCP listener so Alt-Svc works.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             const h3_port: u16 = if (this.listener) |ls| @intCast(ls.getLocalPort()) else tcp.port;
                             h3_app.listenWithConfig(*ThisServer, this, onH3Listen, .{
                                 .port = h3_port,
@@ -3275,7 +3264,7 @@ pub fn NewServer(protocol_enum: enum { http, https }, development_kind: enum { d
             return route_list_value;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onClientErrorCallback(this: *ThisServer, socket: *uws.Socket, error_code: u8, raw_packet: []const u8) void {
             if (this.on_clienterror.get()) |callback| {
                 const is_ssl = protocol_enum == .https;
@@ -3475,7 +3464,7 @@ pub const AnyServer = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn loadAndResolvePlugins(this: AnyServer, bundle: *HTMLBundle.HTMLBundleRoute, raw_plugins: []const []const u8, bunfig_path: []const u8) void {
         return switch (this.ptr.tag()) {
             Ptr.case(HTTPServer) => this.ptr.as(HTTPServer).getPluginsAsync(bundle, raw_plugins, bunfig_path),
@@ -3510,7 +3499,7 @@ pub const AnyServer = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn appendStaticRoute(this: AnyServer, path: []const u8, route: AnyRoute, method: HTTP.Method.Optional) !void {
         return switch (this.ptr.tag()) {
             Ptr.case(HTTPServer) => this.ptr.as(HTTPServer).appendStaticRoute(path, route, method),
@@ -3601,7 +3590,7 @@ pub const AnyServer = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn publish(this: AnyServer, topic: []const u8, message: []const u8, opcode: uws.Opcode, compress: bool) bool {
         return switch (this.ptr.tag()) {
             Ptr.case(HTTPServer) => this.ptr.as(HTTPServer).app.?.publish(topic, message, opcode, compress),
@@ -3644,7 +3633,7 @@ pub const AnyServer = struct {
             else => bun.unreachablePanic("Invalid pointer tag", .{}),
         };
     }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn numSubscribers(this: AnyServer, topic: []const u8) u32 {
         return switch (this.ptr.tag()) {
             Ptr.case(HTTPServer) => this.ptr.as(HTTPServer).app.?.numSubscribers(topic),

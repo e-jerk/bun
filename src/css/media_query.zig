@@ -66,7 +66,6 @@ pub const MediaList = struct {
         }
 
         var first = true;
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.media_queries.items) |*query| {
             if (!first) {
                 try dest.delim(',', false);
@@ -103,7 +102,6 @@ pub const MediaList = struct {
     pub fn alwaysMatches(this: *const MediaList) bool {
         // If the media list is empty, it always matches.
         return this.media_queries.items.len == 0 or brk: {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.media_queries.items) |*query| {
                 if (!query.alwaysMatches()) break :brk false;
             }
@@ -114,7 +112,6 @@ pub const MediaList = struct {
     /// Returns whether the media query list never matches.
     pub fn neverMatches(this: *const MediaList) bool {
         return this.media_queries.items.len > 0 and brk: {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.media_queries.items) |*query| {
                 if (!query.neverMatches()) break :brk false;
             }
@@ -130,7 +127,7 @@ pub const Operator = enum {
     /// The `or` operator.
     @"or",
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -294,7 +291,7 @@ pub const Qualifier = enum {
     /// Negates a media query.
     not,
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -332,7 +329,7 @@ pub const MediaType = union(enum) {
         return .{ .result = MediaType.fromStr(name) };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn fromStr(name: []const u8) MediaType {
         const Enumerations = enum { all, print, screen };
         const Map = comptime bun.ComptimeEnumMap(Enumerations);
@@ -358,7 +355,6 @@ pub fn operationToCss(comptime QueryCondition: type, operator: Operator, conditi
     const first = &conditions.items[0];
     try toCssWithParensIfNeeded(first, dest, first.needsParens(operator, &dest.targets));
     if (conditions.items.len == 1) return;
-// safe-transpile: for loop with pointer capture requires manual review
     for (conditions.items[1..]) |*item| {
         try dest.writeChar(' ');
         try operator.toCss(dest);
@@ -748,7 +744,7 @@ pub const MediaFeatureId = enum {
         .@"-moz-device-pixel-ratio" = MediaFeatureType.number,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toCssWithPrefix(
         this: *const MediaFeatureId,
         prefix: []const u8,
@@ -765,7 +761,7 @@ pub const MediaFeatureId = enum {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub inline fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -1156,7 +1152,7 @@ pub const MediaFeatureComparison = enum(u8) {
     /// `<=`
     @"less-than-equal" = 16,
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -1443,7 +1439,7 @@ pub fn MediaFeatureName(comptime FeatureId: type) type {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn toCssWithPrefix(this: *const This, prefix: []const u8, dest: *Printer) PrintErr!void {
             return switch (this.*) {
                 .standard => |v| v.toCssWithPrefix(prefix, dest),

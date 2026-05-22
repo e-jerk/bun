@@ -15,7 +15,6 @@ pub fn init(allocator: std.mem.Allocator, log: *logger.Log, source: *const logge
 }
 
 pub fn deinit(this: *HTMLScanner) void {
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.import_records.slice()) |*record| {
         this.allocator.free(record.path.text);
     }
@@ -224,7 +223,7 @@ pub fn HTMLProcessor(
             return Handler.handle;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn run(this: *T, input: []const u8) !void {
             var builder = lol.HTMLRewriter.Builder.init();
             defer builder.deinit();
@@ -253,8 +252,7 @@ pub fn HTMLProcessor(
             }
 
             if (visit_document_tags) {
-                // safe-transpile: for with index access requires manual review
-    inline for (.{ "body", "head", "html" }, &.{ T.onBodyTag, T.onHeadTag, T.onHtmlTag }) |tag, cb| {
+                inline for (.{ "body", "head", "html" }, &.{ T.onBodyTag, T.onHeadTag, T.onHtmlTag }) |tag, cb| {
                     const head_selector = try lol.HTMLSelector.parse(tag);
                     selectors.appendAssumeCapacity(head_selector);
                     try builder.addElementContentHandlers(

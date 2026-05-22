@@ -21,7 +21,7 @@ pub const UpgradeClientUnion = union(enum) {
     https: *NewHTTPUpgradeClient(true),
     none: void,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn handleDecryptedData(self: UpgradeClientUnion, data: []const u8) void {
         switch (self) {
             .http => |client| client.handleDecryptedData(data),
@@ -74,7 +74,7 @@ const SocketUnion = union(enum) {
     ssl: uws.NewSocketHandler(true),
     none: void,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(self: SocketUnion, data: []const u8) c_int {
         return switch (self) {
             .tcp => |s| s.write(data),
@@ -292,7 +292,7 @@ fn writeEncrypted(this: *WebSocketProxyTunnel, encrypted_data: []const u8) void 
     }
 
     // Buffer remaining data
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const written_usize: usize = @intCast(written);
     if (written_usize < encrypted_data.len) {
         bun.handleOom(this._write_buffer.write(encrypted_data[written_usize..]));
@@ -315,7 +315,7 @@ pub fn onWritable(this: *WebSocketProxyTunnel) void {
         const written = this._socket.write(to_send);
         if (written < 0) return;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const written_usize: usize = @intCast(written);
         if (written_usize == to_send.len) {
             this._write_buffer.reset();

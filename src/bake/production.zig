@@ -132,7 +132,7 @@ pub fn writeSourcemapToDisk(
     try source_maps.put(
         allocator,
         try std.fmt.allocPrint(allocator, "bake:/{s}", .{without_prefix}),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         OutputFile.Index.init(@intCast(source_map_index)),
     );
 }
@@ -318,7 +318,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
             .framework = framework.*,
             .client_transpiler = &client_transpiler,
             .ssr_transpiler = if (separate_ssr_graph) &ssr_transpiler else &server_transpiler,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .plugins = @ptrCast(options.bundler_options.plugin),
         },
         allocator,
@@ -355,7 +355,6 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     var output_module_map: bun.StringArrayHashMapUnmanaged(OutputFile.Index) = .{};
     var source_maps: bun.StringArrayHashMapUnmanaged(OutputFile.Index) = .{};
     @memset(module_keys, bun.String.dead);
-    // safe-transpile: for with index access requires manual review
     for (bundled_outputs, 0..) |file, i| {
         log("src_index={?f} side={s} src={s} dest={s} - {?d}\n", .{
             file.source_index.unwrap(),
@@ -375,7 +374,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
 
         if (file.entry_point_index) |entry_point| {
             if (entry_point < output_indexes.len) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 output_indexes[entry_point] = OutputFile.Index.init(@intCast(i));
             }
         }
@@ -387,7 +386,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
             if (comptime bun.Environment.allow_assert) {
                 bun.assertf(maybe_runtime_file_index == null, "Runtime file should only be in one chunk.", .{});
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             maybe_runtime_file_index = @intCast(i);
         }
 
@@ -436,7 +435,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
                         try output_module_map.put(
                             allocator,
                             try std.fmt.allocPrint(allocator, "bake:/{s}", .{without_prefix}),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             OutputFile.Index.init(@intCast(i)),
                         );
                     },
@@ -495,17 +494,16 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     const server_param_funcs = try JSValue.createEmptyArray(global, router.types.len);
     const client_entry_urls = try JSValue.createEmptyArray(global, router.types.len);
 
-    // safe-transpile: for with index access requires manual review
     for (router.types, 0..) |router_type, i| {
         if (router_type.client_file.unwrap()) |client_file| {
             const str = try (try bun.String.createFormat("{s}{s}", .{
                 public_path,
                 pt.outputFile(client_file).dest_path,
             })).toJS(global);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try client_entry_urls.putIndex(global, @intCast(i), str);
         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try client_entry_urls.putIndex(global, @intCast(i), .null);
         }
 
@@ -542,22 +540,20 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
             }
         else
             JSValue.null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try server_render_funcs.putIndex(global, @intCast(i), server_render_func);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try server_param_funcs.putIndex(global, @intCast(i), server_param_func);
     }
 
     var navigatable_routes = std.array_list.Managed(FrameworkRouter.Route.Index).init(allocator);
-    // safe-transpile: for with index access requires manual review
     for (router.routes.items, 0..) |route, i| {
         _ = route.file_page.unwrap() orelse continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try navigatable_routes.append(FrameworkRouter.Route.Index.init(@intCast(i)));
     }
 
     const css_chunk_js_strings = try allocator.alloc(JSValue, css_chunks_count);
-    // safe-transpile: for with index access requires manual review
     for (bundled_outputs[css_chunks_first..][0..css_chunks_count], css_chunk_js_strings) |output_file, *str| {
         bun.assert(output_file.dest_path[0] != '.');
         // CSS chunks must be in contiguous order!!
@@ -590,7 +586,6 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
     const route_style_references = try JSValue.createEmptyArray(global, navigatable_routes.items.len);
 
     var params_buf: std.ArrayListUnmanaged([]const u8) = .empty;
-    // safe-transpile: for with index access requires manual review
     for (navigatable_routes.items, 0..) |route_index, nav_index| {
         defer params_buf.clearRetainingCapacity();
 
@@ -615,10 +610,10 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
             else => {},
         }
         var file_count: u32 = 1;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var css_file_count: u32 = @intCast(main_file.referenced_css_chunks.len);
         if (route.file_layout.unwrap()) |file| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             css_file_count += @intCast(pt.outputFile(file).referenced_css_chunks.len);
             file_count += 1;
         }
@@ -639,7 +634,7 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
                 else => {},
             }
             if (parent.file_layout.unwrap()) |file| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 css_file_count += @intCast(pt.outputFile(file).referenced_css_chunks.len);
                 file_count += 1;
             }
@@ -683,16 +678,16 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
         // Init the items
         var pattern_string = bun.String.cloneUTF8(pattern.slice());
         defer pattern_string.deref();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try route_patterns.putIndex(global, @intCast(nav_index), try pattern_string.toJS(global));
 
         var src_path = bun.String.cloneUTF8(bun.path.relative(cwd, pt.inputFile(main_file_route_index).absPath()));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try route_source_files.putIndex(global, @intCast(nav_index), try src_path.transferToJS(global));
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try route_nested_files.putIndex(global, @intCast(nav_index), file_list);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try route_type_and_flags.putIndex(global, @intCast(nav_index), JSValue.jsNumberFromInt32(@bitCast(TypeAndFlags{
             .type = route.type.get(),
             .no_client = main_file.bake_extra.fully_static,
@@ -700,18 +695,17 @@ pub fn buildWithVm(ctx: bun.cli.Command.Context, cwd: []const u8, vm: *VirtualMa
 
         if (params_buf.items.len > 0) {
             const param_info_array = try JSValue.createEmptyArray(global, params_buf.items.len);
-            // safe-transpile: for with index access requires manual review
-    for (params_buf.items, 0..) |param, i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            for (params_buf.items, 0..) |param, i| {
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try param_info_array.putIndex(global, @intCast(params_buf.items.len - i - 1), try bun.String.createUTF8ForJS(global, param));
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try route_param_info.putIndex(global, @intCast(nav_index), param_info_array);
         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try route_param_info.putIndex(global, @intCast(nav_index), .null);
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try route_style_references.putIndex(global, @intCast(nav_index), styles);
     }
 
@@ -891,17 +885,17 @@ pub const EntryPointMap = struct {
         abs_path_len: u32,
         side: bake.Side,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn init(abs_path: []const u8, side: bake.Side) InputFile {
             return .{
                 .abs_path_ptr = abs_path.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .abs_path_len = @intCast(abs_path.len),
                 .side = side,
             };
         }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+        // safe-transpile: function returns small constant slice — consider safe.String
         pub fn absPath(key: InputFile) []const u8 {
             return key.abs_path_ptr[0..key.abs_path_len];
         }
@@ -917,7 +911,7 @@ pub const EntryPointMap = struct {
         };
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getOrPutEntryPoint(map: *EntryPointMap, abs_path: []const u8, side: bake.Side) !OpaqueFileId {
         const k = InputFile.init(abs_path, side);
         const gop = try map.files.getOrPut(map.allocator, k);
@@ -925,16 +919,16 @@ pub const EntryPointMap = struct {
             errdefer map.files.swapRemoveAt(gop.index);
             gop.key_ptr.* = InputFile.init(try map.allocator.dupe(u8, abs_path), side);
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return OpaqueFileId.init(@intCast(gop.index));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getFileIdForRouter(map: *EntryPointMap, abs_path: []const u8, _: FrameworkRouter.Route.Index, _: FrameworkRouter.Route.FileKind) !FrameworkRouter.OpaqueFileId {
         return map.getOrPutEntryPoint(abs_path, .server);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onRouterCollisionError(dev: *EntryPointMap, rel_path: []const u8, other_id: OpaqueFileId, ty: FrameworkRouter.Route.FileKind) bun.OOM!void {
         Output.errGeneric("Multiple {s} matching the same route pattern is ambiguous", .{
             switch (ty) {
@@ -1049,13 +1043,13 @@ pub const PerThread = struct {
             pt.loaded_files.set(id.get());
             try pt.all_server_files.putIndex(
                 pt.vm.global,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(id.get()),
                 try pt.module_keys[id.get()].toJS(pt.vm.global),
             );
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return JSValue.jsNumberFromInt32(@intCast(id.get()));
     }
 };

@@ -402,7 +402,7 @@ fn parentPidOf(pid: std.c.pid_t) std.c.pid_t {
         const size: c_int = @sizeOf(bun.c.struct_proc_bsdinfo);
         const rc = bun.c.proc_pidinfo(pid, bun.c.PROC_PIDTBSDINFO, 0, &info, size);
         if (rc != size) return 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(info.pbi_ppid);
     }
     if (comptime Environment.isLinux) {
@@ -430,10 +430,10 @@ fn listChildPids(parent: std.c.pid_t, out: []std.c.pid_t) ?usize {
         // proc_listchildpids returns the *count* of pids written (libproc.c
         // already divides the kernel's byte count by sizeof(int)); buffersize
         // is in bytes.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = bun.c.proc_listchildpids(parent, out.ptr, @intCast(out.len * @sizeOf(std.c.pid_t)));
         if (rc <= 0) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(@min(@as(usize, @intCast(rc)), out.len));
     }
     if (comptime Environment.isLinux) {

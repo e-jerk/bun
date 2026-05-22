@@ -20,13 +20,13 @@ pub fn NewWriterWrap(
             try writeFn(this.wrapped, encodeLengthInt(data).slice());
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub inline fn writeLengthEncodedString(this: @This(), data: []const u8) AnyMySQLError.Error!void {
             try this.writeLengthEncodedInt(data.len);
             try writeFn(this.wrapped, data);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn write(this: @This(), data: []const u8) AnyMySQLError.Error!void {
             try writeFn(this.wrapped, data);
         }
@@ -40,7 +40,7 @@ pub fn NewWriterWrap(
                 const new_offset = offsetFn(this.ctx.wrapped);
                 // fix position for packet header
                 const length = new_offset - this.offset - PacketHeader.size;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 this.header.length = @intCast(length);
                 debug("writing packet header: {d}", .{this.header.length});
                 try pwrite(this.ctx, &this.header.encode(), this.offset);
@@ -62,7 +62,7 @@ pub fn NewWriterWrap(
             return offsetFn(this.wrapped);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn pwrite(this: @This(), data: []const u8, i: usize) AnyMySQLError.Error!void {
             try pwriteFn(this.wrapped, data, i);
         }
@@ -79,7 +79,7 @@ pub fn NewWriterWrap(
             try this.write(&[_]u8{value});
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeZ(this: @This(), value: []const u8) AnyMySQLError.Error!void {
             try this.write(value);
             if (value.len == 0 or value[value.len - 1] != 0)

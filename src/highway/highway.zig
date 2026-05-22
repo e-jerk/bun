@@ -197,7 +197,7 @@ pub fn indexOfNeedsEscapeForJavaScriptString(slice: string, quote_char: u8) ?u32
         }
     }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @truncate(result);
 }
 

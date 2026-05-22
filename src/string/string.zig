@@ -53,11 +53,11 @@ pub const String = extern struct {
     pub fn toInt32(this: *const String) ?i32 {
         const val = bun.cpp.BunString__toInt32(this);
         if (val > std.math.maxInt(i32)) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(val);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn ascii(bytes: []const u8) String {
         return String{ .tag = .ZigString, .value = .{ .ZigString = ZigString.init(bytes) } };
     }
@@ -116,7 +116,7 @@ pub const String = extern struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createIfDifferent(other: String, utf8_slice: []const u8) String {
         if (other.tag == .WTFStringImpl) {
             if (other.eqlUTF8(utf8_slice)) {
@@ -185,7 +185,7 @@ pub const String = extern struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn cloneLatin1(bytes: []const u8) String {
         jsc.markBinding(@src());
         if (bytes.len == 0) return String.empty;
@@ -204,7 +204,7 @@ pub const String = extern struct {
         return this;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn cloneUTF8(bytes: []const u8) String {
         return jsc.WebCore.encoding.toBunStringComptime(bytes, .utf8);
     }
@@ -258,7 +258,6 @@ pub const String = extern struct {
         if (this.isUTF16()) {
             const new, const bytes = createUninitialized(.utf16, this.length());
             if (new.tag != .Dead) {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(bytes, this.value.ZigString.utf16Slice());
             }
             return new;
@@ -268,13 +267,13 @@ pub const String = extern struct {
     }
 
     /// Must be given ascii input
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createAtomASCII(bytes: []const u8) String {
         return bun.cpp.BunString__createAtom(bytes.ptr, bytes.len);
     }
 
     /// Will return null if the input is non-ascii or too long
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn tryCreateAtom(bytes: []const u8) ?String {
         const atom = bun.cpp.BunString__tryCreateAtom(bytes.ptr, bytes.len);
         return if (atom.tag == .Dead) null else atom;
@@ -283,7 +282,7 @@ pub const String = extern struct {
     /// Atomized strings are interned strings
     /// They're de-duplicated in a threadlocal hash table
     /// They cannot be used from other threads.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createAtomIfPossible(bytes: []const u8) String {
         if (bytes.len == 0) {
             return String.empty;
@@ -410,7 +409,7 @@ pub const String = extern struct {
     /// - Allocates memory for backing `WTF::ExternalStringImpl` struct. Does
     ///   not allocate for actual string bytes.
     /// - `bytes` is borrowed.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createExternal(
         comptime Ctx: type,
         bytes: []const u8,
@@ -423,12 +422,12 @@ pub const String = extern struct {
         jsc.markBinding(@src());
         if (bytes.len >= max_length()) {
             if (callback) |cb| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 cb(ctx, @ptrCast(@constCast(bytes.ptr)), @truncate(bytes.len));
             }
             return dead;
         }
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         return validateRefCount(BunString__createExternal(@ptrCast(bytes.ptr), bytes.len, isLatin1, ctx, @ptrCast(callback)));
     }
 
@@ -436,7 +435,7 @@ pub const String = extern struct {
     ///
     /// So this really only makes sense when you need to dynamically allocate a
     /// string that will never be freed.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn createStaticExternal(bytes: []const u8, isLatin1: bool) String {
         jsc.markBinding(@src());
         bun.assert(bytes.len > 0);
@@ -484,7 +483,7 @@ pub const String = extern struct {
     /// - `value` is borrowed.
     /// - Never allocates or copies any memory
     /// - Does not increment reference counts
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn borrowUTF8(value: []const u8) String {
         return String.init(ZigString.initUTF8(value));
     }
@@ -502,7 +501,7 @@ pub const String = extern struct {
         return String.init(ZigString.initUTF16(value));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn initLatin1OrASCIIView(value: []const u8) String {
         return String.init(ZigString.init(value));
     }
@@ -516,7 +515,7 @@ pub const String = extern struct {
     /// - `value` is borrowed.
     /// - Never allocates or copies any memory
     /// - Does not increment reference counts
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromBytes(value: []const u8) String {
         return String.init(ZigString.fromBytes(value));
     }
@@ -565,7 +564,6 @@ pub const String = extern struct {
         return self.toZigString().utf16SliceAligned();
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn latin1(self: String) []const u8 {
         if (self.tag == .Empty)
             return &[_]u8{};
@@ -624,7 +622,7 @@ pub const String = extern struct {
         return self.toZigString().githubAction();
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn byteSlice(this: String) []const u8 {
         return switch (this.tag) {
             .ZigString, .StaticZigString => this.value.ZigString.byteSlice(),
@@ -645,7 +643,7 @@ pub const String = extern struct {
 
     pub const toJSByParseJSON = string_jsc.toJSByParseJSON;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encodeInto(self: String, out: []u8, comptime enc: jsc.Node.Encoding) !usize {
         if (self.isUTF16()) {
             return jsc.WebCore.encoding.encodeIntoFrom16(self.utf16(), out, enc, true);
@@ -658,12 +656,12 @@ pub const String = extern struct {
         return jsc.WebCore.encoding.encodeIntoFrom8(self.latin1(), out, enc);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn encode(self: String, enc: jsc.Node.Encoding) []u8 {
         return self.toZigString().encodeWithAllocator(bun.default_allocator, enc);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn utf8(self: String) []const u8 {
         if (comptime bun.Environment.allow_assert) {
             bun.assert(self.tag == .ZigString or self.tag == .StaticZigString);
@@ -747,7 +745,7 @@ pub const String = extern struct {
     }
 
     /// The returned slice is always allocated by `allocator`.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn toUTF8Bytes(this: String, allocator: std.mem.Allocator) []u8 {
         return this.toUTF8Owned(allocator).mut();
     }
@@ -838,7 +836,7 @@ pub const String = extern struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eqlComptime(this: String, comptime value: []const u8) bool {
         return this.toZigString().eqlComptime(value);
     }
@@ -865,7 +863,7 @@ pub const String = extern struct {
     pub fn indexOfAsciiChar(this: String, chr: u8) ?usize {
         bun.assert(chr < 128);
         return switch (this.isUTF16()) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             true => std.mem.indexOfScalar(u16, this.utf16(), @intCast(chr)),
             false => bun.strings.indexOfCharUsize(this.byteSlice(), chr),
         };
@@ -894,8 +892,7 @@ pub const String = extern struct {
     pub fn indexOfComptimeWithCheckLen(this: String, comptime values: []const []const u8, comptime check_len: usize) ?usize {
         if (this.is8Bit()) {
             const bytes = this.byteSlice();
-            // safe-transpile: for with index access requires manual review
-    for (values, 0..) |val, i| {
+            for (values, 0..) |val, i| {
                 if (bun.strings.eqlComptimeCheckLenWithType(u8, bytes, val, check_len)) {
                     return i;
                 }
@@ -905,8 +902,7 @@ pub const String = extern struct {
         }
 
         const u16_bytes = this.byteSlice();
-        // safe-transpile: for with index access requires manual review
-    inline for (values, 0..) |val, i| {
+        inline for (values, 0..) |val, i| {
             if (bun.strings.eqlComptimeCheckLenWithType(u16, u16_bytes, comptime bun.strings.toUTF16Literal(val), check_len)) {
                 return i;
             }
@@ -936,7 +932,7 @@ pub const String = extern struct {
             if (uchar > 255)
                 return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             buffer[i] = @as(u8, @intCast(uchar));
         }
 
@@ -974,12 +970,11 @@ pub const String = extern struct {
         const u16_bytes = this.utf16();
         const buffer: [values[0].len]u8 = brk: {
             var bytes: [values[0].len]u8 = undefined;
-            // safe-transpile: for with index access requires manual review
-    for (&bytes, u16_bytes) |*byte, uchar| {
+            for (&bytes, u16_bytes) |*byte, uchar| {
                 if (uchar > 255)
                     return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 byte.* = @as(u8, @intCast(uchar));
             }
             break :brk bytes;
@@ -994,7 +989,7 @@ pub const String = extern struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hasPrefixComptime(this: String, comptime value: []const u8) bool {
         if (this.tag == .WTFStringImpl) {
             return this.value.WTFStringImpl.hasPrefix(value);
@@ -1010,7 +1005,7 @@ pub const String = extern struct {
         return this.vtable == StringImplAllocator.VTablePtr;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eqlBytes(this: String, value: []const u8) bool {
         return bun.strings.eqlLong(this.byteSlice(), value, true);
     }
@@ -1038,7 +1033,7 @@ pub const String = extern struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eqlUTF8(this: String, other: []const u8) bool {
         return this.toZigString().eql(ZigString.fromUTF8(other));
     }
@@ -1098,7 +1093,7 @@ pub const SliceWithUnderlyingString = struct {
     /// Transcode a byte array to an encoded String, avoiding unnecessary copies.
     ///
     /// owned_input_bytes ownership is transferred to this function
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn transcodeFromOwnedSlice(owned_input_bytes: []u8, encoding: jsc.Node.Encoding) SliceWithUnderlyingString {
         if (owned_input_bytes.len == 0) {
             return .{
@@ -1113,7 +1108,7 @@ pub const SliceWithUnderlyingString = struct {
     }
 
     /// Assumes default allocator in use
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromUTF8(utf8: []const u8) SliceWithUnderlyingString {
         return .{
             .utf8 = ZigString.Slice.init(bun.default_allocator, utf8),
@@ -1144,7 +1139,7 @@ pub const SliceWithUnderlyingString = struct {
         this.underlying.deref();
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: SliceWithUnderlyingString) []const u8 {
         return this.utf8.slice();
     }

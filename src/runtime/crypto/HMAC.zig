@@ -10,7 +10,7 @@ pub fn init(algorithm: EVP.Algorithm, key: []const u8) ?*HMAC {
     const md = algorithm.md() orelse return null;
     var ctx: BoringSSL.HMAC_CTX = undefined;
     BoringSSL.HMAC_CTX_init(&ctx);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (BoringSSL.HMAC_Init_ex(&ctx, key.ptr, @intCast(key.len), md, null) != 1) {
         BoringSSL.HMAC_CTX_cleanup(&ctx);
         return null;

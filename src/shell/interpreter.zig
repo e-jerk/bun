@@ -488,13 +488,13 @@ pub const Interpreter = struct {
             return this.__prev_cwd.items[0..this.__prev_cwd.items.len -| 1 :0];
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub inline fn prevCwd(this: *ShellExecEnv) []const u8 {
             const prevcwdz = this.prevCwdZ();
             return prevcwdz[0..prevcwdz.len];
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub inline fn cwd(this: *ShellExecEnv) []const u8 {
             const cwdz = this.cwdZ();
             return cwdz[0..cwdz.len];
@@ -631,7 +631,6 @@ pub const Interpreter = struct {
             const new_cwd: [:0]const u8 = brk: {
                 if (is_abs) {
                     if (is_sentinel) {
-// safe-transpile: @memcpy requires manual review
                         @memcpy(ResolvePath.join_buf[0..new_cwd_.len], new_cwd_[0..new_cwd_.len]);
                         ResolvePath.join_buf[new_cwd_.len] = 0;
                         break :brk ResolvePath.join_buf[0..new_cwd_.len :0];
@@ -705,7 +704,7 @@ pub const Interpreter = struct {
             return env_var orelse EnvStr.initSlice(if (comptime bun.Environment.isAndroid) "/data/local/tmp" else "");
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeFailingErrorFmt(
             this: *ShellExecEnv,
             ctx: anytype,
@@ -861,7 +860,7 @@ pub const Interpreter = struct {
 
     extern fn Bun__createShellInterpreter(globalThis: *jsc.JSGlobalObject, ptr: *Interpreter, parsed_shell_script: JSValue, resolve: JSValue, reject: JSValue) callconv(jsc.conv) JSValue;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parse(
         arena_allocator: std.mem.Allocator,
         script: []const u8,
@@ -870,7 +869,7 @@ pub const Interpreter = struct {
         out_parser: *?bun.shell.Parser,
         out_lex_result: *?shell.LexResult,
     ) !ast.Script {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const jsobjs_len: u32 = @intCast(jsobjs.len);
         const lex_result = brk: {
             if (bun.strings.isAllASCII(script)) {
@@ -1042,7 +1041,7 @@ pub const Interpreter = struct {
         return interpreter.ptr;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initAndRunFromFile(ctx: bun.cli.Command.Context, mini: *jsc.MiniEventLoop, path: []const u8) !bun.shell.ExitCode {
         var shargs = ShellArgs.init();
         const src = try bun.sys.File.readFrom(bun.FD.cwd(), path, shargs.arena_allocator()).unwrap();
@@ -1119,7 +1118,7 @@ pub const Interpreter = struct {
         return code;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initAndRunFromSource(ctx: bun.cli.Command.Context, mini: *jsc.MiniEventLoop, path_for_errors: []const u8, src: []const u8, cwd: ?[]const u8) !ExitCode {
         bun.analytics.Features.standalone_shell += 1;
         var shargs = ShellArgs.init();
@@ -1498,7 +1497,7 @@ pub const Interpreter = struct {
         return &this.root_io;
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn getVmArgsUtf8(this: *Interpreter, argv: []const *WTFStringImplStruct, idx: u8) []const u8 {
         if (this.vm_args_utf8.items.len != argv.len) {
             bun.handleOom(this.vm_args_utf8.ensureTotalCapacity(argv.len));
@@ -1660,7 +1659,7 @@ pub fn StatePtrUnion(comptime TypesValue: anytype) type {
             return @intFromEnum(this.ptr.tag());
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn tagName(this: @This()) []const u8 {
             return Ptr.typeNameFromTag(this.tagInt()).?;
         }
@@ -1720,7 +1719,7 @@ const CmdEnvIter = struct {
             try writer.writeAll(self.val);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn eqlComptime(this: Key, comptime str: []const u8) bool {
             return bun.strings.eqlComptime(this.val, str);
         }
@@ -1810,7 +1809,7 @@ pub fn ShellTask(
 }
 
 inline fn errnocast(errno: anytype) u16 {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     return @intCast(errno);
 }
 
@@ -1852,7 +1851,7 @@ pub const ShellSyscall = struct {
             };
             const source_root = ResolvePath.windowsFilesystemRoot(dirpath);
             std.mem.copyForwards(u8, buf[0..source_root.len], source_root);
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(buf[source_root.len..][0 .. to.len - 1], to[1..]);
             buf[source_root.len + to.len - 1] = 0;
             return .{ .result = buf[0 .. source_root.len + to.len - 1 :0] };
@@ -1864,7 +1863,7 @@ pub const ShellSyscall = struct {
                 .result => |path| path,
                 .err => |e| return .{ .err = e.withFd(dirfd) },
             };
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buf[0..dirfd.len], dirfd[0..dirfd.len]);
             break :brk buf[0..dirfd.len];
         };
@@ -2052,7 +2051,7 @@ pub const OutputSrc = union(enum) {
     owned_buf: []const u8,
     borrowed_buf: []const u8,
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *OutputSrc) []const u8 {
         return switch (this.*) {
             .arrlist => this.arrlist.items[0..],
@@ -2112,7 +2111,7 @@ pub fn FlagParser(comptime Opts: type) type {
             return .{ .err = .show_usage };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn parseFlag(opts: Opts, flag: []const u8) ParseFlagResult {
             if (flag.len == 0) return .done;
             if (flag[0] != '-') return .done;
@@ -2124,8 +2123,7 @@ pub fn FlagParser(comptime Opts: type) type {
             }
 
             const small_flags = flag[1..];
-            // safe-transpile: for with index access requires manual review
-    for (small_flags, 0..) |char, i| {
+            for (small_flags, 0..) |char, i| {
                 if (opts.parseShort(char, small_flags, i)) |err| {
                     return err;
                 }

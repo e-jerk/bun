@@ -138,7 +138,7 @@ pub const BunxCommand = struct {
 
     /// Adds `create-` to the string, but also handles scoped packages correctly.
     /// Always clones the string in the process.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn addCreatePrefix(allocator: std.mem.Allocator, input: []const u8) ![:0]const u8 {
         const prefixLength = "create-".len;
 
@@ -150,38 +150,36 @@ pub const BunxCommand = struct {
             // @org/some@v -> @org/create-some@v
             if (strings.indexOfChar(input, '/')) |slash_i| {
                 const index = slash_i + 1;
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(new_str[0..index], input[0..index]);
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[index .. index + prefixLength], "create-");
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[index + prefixLength ..], input[index..]);
                 return new_str;
             }
             // @org@v -> @org/create@v
             else if (strings.indexOfChar(input[1..], '@')) |at_i| {
                 const index = at_i + 1;
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(new_str[0..index], input[0..index]);
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[index .. index + prefixLength], "/create");
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[index + prefixLength ..], input[index..]);
                 return new_str;
             }
             // @org -> @org/create
             else {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[0..input.len], input);
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(new_str[input.len..], "/create");
                 return new_str;
             }
         }
 
-// safe-transpile: @memcpy requires manual review
         @memcpy(new_str[0..prefixLength], "create-");
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(new_str[prefixLength..], input);
 
         return new_str;
@@ -192,7 +190,7 @@ pub const BunxCommand = struct {
     /// 1 day
     const nanoseconds_cache_valid = seconds_cache_valid * 1000000000;
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn getBinNameFromSubpath(transpiler: *bun.Transpiler, dir_fd: bun.FD, subpath_z: [:0]const u8) ![]const u8 {
         const target_package_json_fd = try bun.sys.openat(dir_fd, subpath_z, bun.O.RDONLY, 0).unwrap();
         const target_package_json = bun.sys.File{ .handle = target_package_json_fd };
@@ -263,14 +261,14 @@ pub const BunxCommand = struct {
         return error.NoBinFound;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn getBinNameFromProjectDirectory(transpiler: *bun.Transpiler, dir_fd: bun.FD, package_name: []const u8) ![]const u8 {
         var subpath: bun.PathBuffer = undefined;
         const subpath_z = std.fmt.bufPrintZ(&subpath, bun.pathLiteral("node_modules/{s}/package.json"), .{package_name}) catch unreachable;
         return try getBinNameFromSubpath(transpiler, dir_fd, subpath_z);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn getBinNameFromTempDirectory(transpiler: *bun.Transpiler, tempdir_name: []const u8, package_name: []const u8, with_stale_check: bool) ![]const u8 {
         var subpath: bun.PathBuffer = undefined;
         if (with_stale_check) {
@@ -322,7 +320,7 @@ pub const BunxCommand = struct {
 
     /// Check the enclosing package.json for a matching "bin"
     /// If not found, check bunx cache dir
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn getBinName(transpiler: *bun.Transpiler, toplevel_fd: bun.FD, tempdir_name: []const u8, package_name: []const u8) error{ NoBinFound, NeedToInstall }![]const u8 {
         bun.assert(toplevel_fd.isValid());
         return getBinNameFromProjectDirectory(transpiler, toplevel_fd, package_name) catch |err| {

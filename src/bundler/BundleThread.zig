@@ -53,7 +53,10 @@ pub fn BundleThread(CompletionStruct: type) type {
             }
 
             pub fn get() *Self {
-                if (!once_done) { loadOnceImpl(); once_done = true; }
+                if (!once_done) {
+                    loadOnceImpl();
+                    once_done = true;
+                }
                 return instance.?;
             }
 

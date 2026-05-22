@@ -1,5 +1,5 @@
 pub const Readable = union(enum) {
-const zust = @import("safe");
+    const zust = @import("safe");
     fd: bun.FD,
     memfd: bun.FD,
     pipe: *PipeReader,

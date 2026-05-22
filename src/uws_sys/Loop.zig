@@ -87,7 +87,7 @@ pub const PosixLoop = extern struct {
     pub fn unrefCount(this: *PosixLoop, count: i32) void {
         log("unref x {d}", .{count});
         this.num_polls -= count;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.active -|= @as(u32, @intCast(count));
     }
 
@@ -151,7 +151,6 @@ pub const PosixLoop = extern struct {
     pub fn nextTick(this: *PosixLoop, comptime UserType: type, user_data: UserType, comptime deferCallback: fn (ctx: UserType) void) void {
         const Handler = struct {
             pub fn callback(data: *anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 deferCallback(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };
@@ -168,7 +167,6 @@ pub const PosixLoop = extern struct {
                 return c.uws_loop_removePostHandler(handler.loop, callback);
             }
             pub fn callback(data: *anyopaque, _: *Loop) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 callback_fn(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };
@@ -302,7 +300,6 @@ pub const WindowsLoop = extern struct {
     pub fn nextTick(this: *Loop, comptime UserType: type, user_data: UserType, comptime deferCallback: fn (ctx: UserType) void) void {
         const Handler = struct {
             pub fn callback(data: *anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 deferCallback(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };
@@ -327,7 +324,6 @@ pub const WindowsLoop = extern struct {
                 return c.uws_loop_removePostHandler(handler.loop, callback);
             }
             pub fn callback(data: *anyopaque, _: *Loop) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                 callback_fn(@as(UserType, @ptrCast(@alignCast(data))));
             }
         };

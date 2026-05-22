@@ -20,7 +20,7 @@ pub const DecodedJSValue = extern struct {
     }
 
     fn asU64(self: Self) u64 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @bitCast(self.u.asInt64);
     }
 

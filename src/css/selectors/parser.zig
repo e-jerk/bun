@@ -245,7 +245,6 @@ pub fn compute_specificity(comptime Impl: type, iter: []const GenericComponent(I
 fn compute_complex_selector_specificity(comptime Impl: type, iter: []const GenericComponent(Impl)) Specificity {
     var specificity: Specificity = .{};
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (iter) |*simple_selector| {
         compute_simple_selector_specificity(Impl, simple_selector, &specificity);
     }
@@ -306,7 +305,6 @@ fn compute_simple_selector_specificity(
             //     selector argument S.
             specificity.class_like_selectors += 1;
             var max: u32 = 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (nth_of_data.selectors) |*selector| {
                 max = @max(selector.specificity(), max);
             }
@@ -325,7 +323,6 @@ fn compute_simple_selector_specificity(
                 else => unreachable,
             };
             var max: u32 = 0;
-// safe-transpile: for loop with pointer capture requires manual review
             for (list) |*selector| {
                 max = @max(selector.specificity(), max);
             }
@@ -711,7 +708,7 @@ pub const Direction = enum {
         return css.implementEql(@This(), lhs, rhs);
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -1031,11 +1028,11 @@ pub const SelectorParser = struct {
 
     pub const Impl = impl.Selectors;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn newLocalIdentifier(_: *SelectorParser, input: *css.Parser, tag: css.CssRef.Tag, raw: []const u8, loc: usize) Impl.SelectorImpl.LocalIdentifier {
         if (input.flags.css_modules) {
             return Impl.SelectorImpl.LocalIdentifier.fromRef(input.addSymbolForName(raw, tag, bun.logger.Loc{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .start = @intCast(loc),
             }), if (comptime bun.Environment.isDebug) .{ raw, input.allocator() } else {});
         }
@@ -1047,7 +1044,7 @@ pub const SelectorParser = struct {
         return prefix.v;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseFunctionalPseudoElement(this: *SelectorParser, name: []const u8, input: *css.Parser) Result(Impl.SelectorImpl.PseudoElement) {
         const Enum = enum {
             cue,
@@ -1109,7 +1106,7 @@ pub const SelectorParser = struct {
     }
 
     /// Whether the given function name is an alias for the `:is()` function.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn parseAnyPrefix(_: *const SelectorParser, name: []const u8) ?css.VendorPrefix {
         const Map = comptime bun.ComptimeStringMap(css.VendorPrefix, .{
             .{ "-webkit-any", css.VendorPrefix{ .webkit = true } },
@@ -1119,7 +1116,7 @@ pub const SelectorParser = struct {
         return Map.getAnyCase(name);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseNonTsPseudoClass(
         this: *SelectorParser,
         loc: css.SourceLocation,
@@ -1238,7 +1235,7 @@ pub const SelectorParser = struct {
         return true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseNonTsFunctionalPseudoClass(
         this: *SelectorParser,
         name: []const u8,
@@ -1340,7 +1337,7 @@ pub const SelectorParser = struct {
         return .ignore_invalid_selector;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parsePseudoElement(this: *SelectorParser, loc: css.SourceLocation, name: []const u8) Result(PseudoElement) {
         const Map = comptime bun.ComptimeStringMap(PseudoElement, .{
             .{ "before", PseudoElement.before },
@@ -1399,8 +1396,7 @@ pub fn GenericSelectorList(comptime Impl: type) type {
                 if (comptime !bun.Environment.isDebug) return;
                 try writer.print("SelectorList[\n", .{});
                 const last = this.this.v.len() -| 1;
-                // safe-transpile: for with index access requires manual review
-    for (this.this.v.slice(), 0..) |*sel, i| {
+                for (this.this.v.slice(), 0..) |*sel, i| {
                     if (i != last) {
                         try writer.print(" {f}\n", .{sel.debug()});
                     } else {
@@ -1416,7 +1412,6 @@ pub fn GenericSelectorList(comptime Impl: type) type {
         }
 
         pub fn anyHasPseudoElement(this: *const This) bool {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.v.slice()) |*sel| {
                 if (sel.hasPseudoElement()) return true;
             }
@@ -1428,7 +1423,6 @@ pub fn GenericSelectorList(comptime Impl: type) type {
             if (this.v.len() == 1) return true;
 
             const value = this.v.at(0).specificity();
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.v.slice()[1..]) |*sel| {
                 if (sel.specificity() != value) return false;
             }
@@ -1671,8 +1665,7 @@ pub fn GenericSelector(comptime Impl: type) type {
 
         pub fn append(this: *This, allocator: Allocator, component: GenericComponent(Impl)) void {
             const index = index: {
-                // safe-transpile: for with index access requires manual review
-    for (this.components.items, 0..) |*comp, i| {
+                for (this.components.items, 0..) |*comp, i| {
                     switch (comp.*) {
                         .combinator, .pseudo_element => break :index i,
                         else => {},
@@ -1692,7 +1685,6 @@ pub fn GenericSelector(comptime Impl: type) type {
         }
 
         pub fn hasCombinator(this: *const This) bool {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.components.items) |*c| {
                 if (c.* == .combinator and c.combinator.isTreeCombinator()) return true;
             }
@@ -2028,7 +2020,7 @@ pub const NthSelectorData = struct {
         return this.a != 0 or this.b != 1;
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn numberSign(num: i32) []const u8 {
         if (num >= 0) return "+";
         return "";
@@ -3015,8 +3007,7 @@ pub fn parse_attribute_selector(comptime Impl: type, parser: *SelectorParser, in
     const value: Impl.SelectorImpl.AttrValue = value_str;
     const local_name_lower: Impl.SelectorImpl.LocalName, const local_name_is_ascii_lowercase: bool = brk: {
         if (a: {
-            // safe-transpile: for with index access requires manual review
-    for (local_name, 0..) |b, i| {
+            for (local_name, 0..) |b, i| {
                 if (b >= 'A' and b <= 'Z') break :a i;
             }
             break :a null;
@@ -3315,8 +3306,7 @@ pub fn parse_is_or_where(
             var args: std.meta.ArgsTuple(@TypeOf(func)) = undefined;
             args[0] = selector_slice;
 
-            // safe-transpile: for with index access requires manual review
-    inline for (args_, 1..) |a, i| {
+            inline for (args_, 1..) |a, i| {
                 args[i] = a;
             }
 
@@ -3540,7 +3530,7 @@ pub const AttributeFlags = enum {
     // No flags.  Matching behavior depends on the name of the attribute.
     case_sensitivity_depends_on_name,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn toCaseSensitivity(this: AttributeFlags, local_name: []const u8, have_namespace: bool) attrs.ParsedCaseSensitivity {
         return switch (this) {
             .case_sensitive => .explicit_case_sensitive,

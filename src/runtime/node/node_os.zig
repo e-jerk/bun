@@ -70,7 +70,7 @@ fn cpusImplLinux(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
             // hidepid mounts (common on Android) deny /proc/stat. lazyCpus in os.ts
             // pre-creates hostCpuCount lazy proxies, so return that many stub
             // entries (zeroed times / unknown model / speed 0) — matches Node.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const count: u32 = @intCast(@max(1, bun_sysconf__SC_NPROCESSORS_ONLN()));
             const stubs = try jsc.JSValue.createEmptyArray(globalThis, count);
             var i: u32 = 0;
@@ -169,7 +169,7 @@ fn cpusImplLinux(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
 
     // Read /sys/devices/system/cpu/cpu{}/cpufreq/scaling_cur_freq to get current frequency (optional)
     for (0..num_cpus) |cpu_index| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const cpu = try values.getIndex(globalThis, @truncate(cpu_index));
 
         var path_buf: [128]u8 = undefined;
@@ -218,24 +218,24 @@ fn cpusImplFreeBSD(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
     if (std.c.sysctlbyname("kern.cp_times", times_buf.ptr, &times_len, null, 0) != 0) return error.Unexpected;
 
     const ticks: i64 = bun_sysconf__SC_CLK_TCK();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const mult: u64 = if (ticks > 0) 1000 / @as(u64, @intCast(ticks)) else 1;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const values = try jsc.JSValue.createEmptyArray(globalThis, @intCast(ncpu));
     var i: u32 = 0;
     while (i < ncpu) : (i += 1) {
         const off = @as(usize, i) * cpu_states;
         const times = CPUTimes{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .user = @as(u64, @intCast(@max(times_buf[off + 0], 0))) * mult,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .nice = @as(u64, @intCast(@max(times_buf[off + 1], 0))) * mult,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .sys = @as(u64, @intCast(@max(times_buf[off + 2], 0))) * mult,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .irq = @as(u64, @intCast(@max(times_buf[off + 3], 0))) * mult,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .idle = @as(u64, @intCast(@max(times_buf[off + 4], 0))) * mult,
         };
         const cpu = jsc.JSValue.createEmptyObject(globalThis, 3);
@@ -257,7 +257,7 @@ fn cpusImplDarwin(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
         std.c.mach_host_self(),
         bun.c.PROCESSOR_CPU_LOAD_INFO,
         &num_cpus,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @as(*bun.c.processor_info_array_t, @ptrCast(&info)),
         &info_size,
     ) != 0) {
@@ -297,11 +297,11 @@ fn cpusImplDarwin(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
 
     // Get the multiplier; this is the number of ms/tick
     const ticks: i64 = bun_sysconf__SC_CLK_TCK();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const multiplier = 1000 / @as(u64, @intCast(ticks));
 
     // Set up each CPU value in the return
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const values = try jsc.JSValue.createEmptyArray(globalThis, @as(u32, @intCast(num_cpus)));
     var cpu_index: u32 = 0;
     while (cpu_index < num_cpus) : (cpu_index += 1) {
@@ -332,11 +332,10 @@ pub fn cpusImplWindows(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
     }
     defer libuv.uv_free_cpu_info(cpu_infos, count);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const values = try jsc.JSValue.createEmptyArray(globalThis, @intCast(count));
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-    // safe-transpile: for with index access requires manual review
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     for (cpu_infos[0..@intCast(count)], 0..@intCast(count)) |cpu_info, i| {
         const times = CPUTimes{
             .user = cpu_info.cpu_times.user,
@@ -351,7 +350,7 @@ pub fn cpusImplWindows(globalThis: *jsc.JSGlobalObject) !jsc.JSValue {
         cpu.put(globalThis, jsc.ZigString.static("speed"), jsc.JSValue.jsNumber(cpu_info.speed));
         cpu.put(globalThis, jsc.ZigString.static("times"), times.toValue(globalThis));
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         try values.putIndex(globalThis, @intCast(i), cpu);
     }
 
@@ -617,9 +616,9 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
         if (helpers.skip(iface) or helpers.isLinkLayer(iface)) continue;
 
         const interface_name = std.mem.sliceTo(iface.ifa_name, 0);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         const addr = @import("std-net-shim").Address.initPosix(@alignCast(@as(*std.posix.sockaddr, @ptrCast(iface.ifa_addr))));
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         const netmask = @import("std-net-shim").Address.initPosix(@alignCast(@as(*std.posix.sockaddr, @ptrCast(iface.ifa_netmask))));
 
         var interface = jsc.JSValue.createEmptyObject(globalThis, 0);
@@ -631,7 +630,7 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
             //  be converted to a CIDR suffix
             const maybe_suffix: ?u8 = switch (addr.any.family) {
                 std.posix.AF.INET => netmaskToCIDRSuffix(netmask.in.addr),
-// safe-transpile: @bitCast requires manual review
+
                 std.posix.AF.INET6 => netmaskToCIDRSuffix(@as(u128, @bitCast(netmask.in6.addr))),
                 else => null,
             };
@@ -684,10 +683,8 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
                 // This is the correct link-layer interface entry for the current interface,
                 //  cast to a link-layer socket address
                 if (comptime Environment.isLinux) {
-// safe-transpile: @alignCast requires manual review
                     break @as(?*std.posix.sockaddr.ll, @ptrCast(@alignCast(ll_iface.ifa_addr)));
                 } else if (comptime Environment.isMac or Environment.isFreeBSD) {
-// safe-transpile: @alignCast requires manual review
                     break @as(?*c.sockaddr_dl, @ptrCast(@alignCast(ll_iface.ifa_addr)));
                 } else {
                     @compileError("unreachable");
@@ -726,7 +723,7 @@ fn networkInterfacesPosix(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSVal
         // Does this entry already exist?
         if (try ret.get(globalThis, interface_name)) |array| {
             // Add this interface entry to the existing array
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const next_index: u32 = @intCast(try array.getLength(globalThis));
             try array.putIndex(globalThis, next_index, interface);
         } else {
@@ -763,7 +760,7 @@ fn networkInterfacesWindows(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSV
     var ip_buf: [65]u8 = undefined;
     var mac_buf: [17]u8 = undefined;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     for (ifaces[0..@intCast(count)]) |iface| {
         var interface = jsc.JSValue.createEmptyObject(globalThis, 7);
 
@@ -775,7 +772,7 @@ fn networkInterfacesWindows(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSV
             //  be converted to a CIDR suffix
             const maybe_suffix: ?u8 = switch (iface.address.address4.family) {
                 std.posix.AF.INET => netmaskToCIDRSuffix(iface.netmask.netmask4.addr),
-// safe-transpile: @bitCast requires manual review
+
                 std.posix.AF.INET6 => netmaskToCIDRSuffix(@as(u128, @bitCast(iface.netmask.netmask6.addr))),
                 else => null,
             };
@@ -785,7 +782,7 @@ fn networkInterfacesWindows(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSV
             // e.g. addr_str = "192.168.88.254", cidr_str = "192.168.88.254/24"
             const addr_str = bun.fmt.formatIp(
                 // @import("std-net-shim").Address will do ptrCast depending on the family so this is ok
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 @import("std-net-shim").Address.initPosix(@ptrCast(&iface.address.address4)),
                 &ip_buf,
             ) catch unreachable;
@@ -806,7 +803,7 @@ fn networkInterfacesWindows(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSV
         {
             const str = bun.fmt.formatIp(
                 // @import("std-net-shim").Address will do ptrCast depending on the family so this is ok
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 @import("std-net-shim").Address.initPosix(@ptrCast(&iface.netmask.netmask4)),
                 &ip_buf,
             ) catch unreachable;
@@ -845,7 +842,7 @@ fn networkInterfacesWindows(globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSV
         const interface_name = bun.span(iface.name);
         if (try ret.get(globalThis, interface_name)) |array| {
             // Add this interface entry to the existing array
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const next_index: u32 = @intCast(try array.getLength(globalThis));
             try array.putIndex(globalThis, next_index, interface);
         } else {
@@ -893,7 +890,7 @@ pub fn release() bun.String {
                 break :slice "unknown";
             }
             const value = bun.sliceTo(&info.release, 0);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(name_buffer[0..value.len], value);
             break :slice name_buffer[0..value.len];
         },
@@ -983,7 +980,6 @@ pub fn totalmem() u64 {
         },
         .linux => {
             var info: c.struct_sysinfo = undefined;
-// safe-transpile: @bitCast requires manual review
             if (c.sysinfo(&info) == @as(c_int, 0)) return @as(u64, @bitCast(info.totalram)) *% @as(c_ulong, @bitCast(@as(c_ulong, info.mem_unit)));
             return 0;
         },
@@ -1100,7 +1096,7 @@ pub fn version() bun.JSError!bun.String {
                 break :slice "unknown";
             }
             const slice = bun.sliceTo(&info.version, 0);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(name_buffer[0..slice.len], slice);
             break :slice name_buffer[0..slice.len];
         },

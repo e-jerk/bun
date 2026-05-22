@@ -250,7 +250,7 @@ pub const Runner = struct {
                 macro_callback,
                 null,
                 args.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 @as([*]js.JSObjectRef, @ptrCast(args.ptr)),
             );
 
@@ -388,7 +388,7 @@ pub const Runner = struct {
                     }
 
                     expr.data.e_array.items = ExprNodeList.fromOwnedSlice(array);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     expr.data.e_array.items.len = @truncate(i);
                     return expr;
                 },
@@ -543,8 +543,7 @@ pub const Runner = struct {
                 js_args = try allocator.alloc(jsc.JSValue, call_args.len + @as(usize, @intFromBool(javascript_object != .zero)));
                 js_processed_args_len = js_args.len;
 
-                // safe-transpile: for with index access requires manual review
-    for (0.., call_args, js_args[0..call_args.len]) |i, in, *out| {
+                for (0.., call_args, js_args[0..call_args.len]) |i, in, *out| {
                     const value = in.toJS(
                         allocator,
                         globalObject,

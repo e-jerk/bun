@@ -168,8 +168,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
 
             // Check if user provided a custom protocol for subprotocols validation
             var protocol_for_subprotocols: []const u8 = client_protocol_slice.slice();
-            // safe-transpile: for with index access requires manual review
-    for (extra_headers.names(), extra_headers.values()) |name, value| {
+            for (extra_headers.names(), extra_headers.values()) |name, value| {
                 if (strings.eqlCaseInsensitiveASCII(name, "sec-websocket-protocol", true)) {
                     protocol_for_subprotocols = value;
                     break;
@@ -495,7 +494,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                         this.fail(ErrorCode.tls_handshake_failed);
                         return;
                     }
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr = @as(*BoringSSL.c.SSL, @ptrCast(socket.getNativeHandle()));
                     if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername| {
                         const hostname = servername[0..bun.len(servername)];
@@ -539,7 +538,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 return;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.input_body_buf[@as(usize, @intCast(wrote))..];
         }
 
@@ -547,7 +546,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             return socket.socket.eq(this.tcp.socket);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleData(this: *HTTPClient, socket: Socket, data: []const u8) void {
             log("onData", .{});
 
@@ -625,11 +624,11 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 }
             };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.processResponse(response, body[@as(usize, @intCast(response.bytes_read))..]);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn handleProxyResponse(this: *HTTPClient, socket: Socket, data: []const u8) void {
             log("handleProxyResponse", .{});
 
@@ -683,7 +682,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             // Clear the body buffer for WebSocket handshake
             this.body.clearRetainingCapacity();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const remain_buf = body[@as(usize, @intCast(response.bytes_read))..];
 
             // Safely unwrap proxy state - it must exist if we're in proxy_handshake state
@@ -716,7 +715,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 return;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.input_body_buf[@as(usize, @intCast(wrote))..];
 
             // If there's remaining data after the proxy response, process it
@@ -726,7 +725,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
         }
 
         /// Start TLS handshake inside the proxy tunnel for wss:// connections
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn startProxyTLSHandshake(this: *HTTPClient, socket: Socket, initial_data: []const u8) void {
             log("startProxyTLSHandshake", .{});
 
@@ -803,7 +802,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
         }
 
         /// Called by WebSocketProxyTunnel with decrypted data from the TLS tunnel
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleDecryptedData(this: *HTTPClient, data: []const u8) void {
             log("handleDecryptedData: {} bytes", .{data.len});
 
@@ -839,7 +838,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 }
             };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.processResponse(response, body[@as(usize, @intCast(response.bytes_read))..]);
         }
 
@@ -848,7 +847,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
             this.terminate(ErrorCode.ended);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn processResponse(this: *HTTPClient, response: PicoHTTP.Response, remain_buf: []const u8) void {
             var upgrade_header = PicoHTTP.Header{ .name = "", .value = "" };
             var connection_header = PicoHTTP.Header{ .name = "", .value = "" };
@@ -1033,7 +1032,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                     this.terminate(ErrorCode.invalid_response);
                     return;
                 };
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(overflow, remain_buf);
             }
 
@@ -1152,7 +1151,7 @@ pub fn NewHTTPUpgradeClient(comptime ssl: bool) type {
                 this.terminate(ErrorCode.failed_to_write);
                 return;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.to_send = this.to_send[@min(@as(usize, @intCast(wrote)), this.to_send.len)..];
         }
         pub fn handleTimeout(
@@ -1260,7 +1259,6 @@ const Headers8Bit = struct {
     }
 
     pub fn deinit(self: Headers8Bit) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.slices) |*s| s.deinit();
         if (self.slices.len > 0) {
             self.allocator.free(self.slices);
@@ -1284,8 +1282,7 @@ const Headers8Bit = struct {
         };
         errdefer headers.deinit();
 
-        // safe-transpile: for with index access requires manual review
-    for (self.name_slices, self.value_slices) |name, value| {
+        for (self.name_slices, self.value_slices) |name, value| {
             try headers.append(name, value);
         }
 
@@ -1327,8 +1324,7 @@ fn buildConnectRequest(
         const slice = hdrs.entries.slice();
         const names = slice.items(.name);
         const values = slice.items(.value);
-        // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name_ptr, idx| {
+        for (names, 0..) |name_ptr, idx| {
             // Skip Proxy-Authorization if user provided one (we already added it)
             const name = hdrs.asStr(name_ptr);
             if (proxy_authorization != null and strings.eqlCaseInsensitiveASCII(name, "proxy-authorization", true)) {
@@ -1372,7 +1368,6 @@ fn buildRequestBody(
     var user_protocol: ?[]const u8 = null;
     var user_authorization: bool = false;
 
-    // safe-transpile: for with index access requires manual review
     for (extra_headers.names(), extra_headers.values()) |name_slice, value| {
         if (user_host == null and strings.eqlCaseInsensitiveASCII(name_slice, "host", true)) {
             user_host = value;
@@ -1442,7 +1437,6 @@ fn buildRequestBody(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (extra_headers.names(), extra_headers.values()) |name_slice, value| {
         if (strings.eqlCaseInsensitiveASCII(name_slice, "host", true) or
             strings.eqlCaseInsensitiveASCII(name_slice, "connection", true) or

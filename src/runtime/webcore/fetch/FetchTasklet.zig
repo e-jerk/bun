@@ -1,5 +1,5 @@
 pub const FetchTasklet = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     pub const ResumableSink = jsc.WebCore.ResumableFetchSink;
 
     const log = Output.scoped(.FetchTasklet, .visible);

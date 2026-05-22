@@ -98,12 +98,12 @@ pub const CryptoHasher = union(enum) {
             switch (handle.*) {
                 .zig => {
                     const res = handle.zig.finalWithLen(digest_buf, buf_len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     return @intCast(res.len);
                 },
                 .evp => {
                     const res = handle.evp.final(global.bunVM().rareData().boringEngine(), digest_buf);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     return @intCast(res.len);
                 },
                 else => {
@@ -440,7 +440,7 @@ pub const CryptoHasher = union(enum) {
         return encoding.encodeWithMaxSize(globalThis, BoringSSL.EVP_MAX_MD_SIZE, out);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn final(this: *CryptoHasher, globalThis: *JSGlobalObject, output_digest_slice: []u8) bun.JSError![]u8 {
         return switch (this.*) {
             .hmac => |inner| brk: {
@@ -588,7 +588,7 @@ const CryptoHasherZig = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(algorithm: []const u8) ?CryptoHasherZig {
         inline for (algo_map) |item| {
             const name, const T = item;
@@ -605,11 +605,10 @@ const CryptoHasherZig = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn update(self: *CryptoHasherZig, bytes: []const u8) void {
         inline for (algo_map) |item| {
             if (self.algorithm == @field(EVP.Algorithm, item[0])) {
-// safe-transpile: @alignCast requires manual review
                 return item[1].update(@ptrCast(@alignCast(self.state)), bytes);
             }
         }
@@ -621,7 +620,6 @@ const CryptoHasherZig = struct {
             if (self.algorithm == @field(EVP.Algorithm, item[0])) {
                 return .{
                     .algorithm = self.algorithm,
-// safe-transpile: @alignCast requires manual review
                     .state = bun.dupe(item[1], @ptrCast(@alignCast(self.state))),
                     .digest_length = self.digest_length,
                 };
@@ -630,14 +628,12 @@ const CryptoHasherZig = struct {
         @panic("unreachable");
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn finalWithLen(self: *CryptoHasherZig, output_digest_slice: []u8, res_len: usize) []u8 {
         inline for (algo_map) |pair| {
             const name, const T = pair;
             if (self.algorithm == @field(EVP.Algorithm, name)) {
-// safe-transpile: @alignCast requires manual review
                 T.final(@ptrCast(@alignCast(self.state)), @ptrCast(output_digest_slice));
-// safe-transpile: @alignCast requires manual review
                 const reset: *T = @ptrCast(@alignCast(self.state));
                 reset.* = T.init(.{});
                 return output_digest_slice[0..res_len];
@@ -646,7 +642,7 @@ const CryptoHasherZig = struct {
         @panic("unreachable");
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn final(self: *CryptoHasherZig, output_digest_slice: []u8) []u8 {
         return self.finalWithLen(output_digest_slice, self.digest_length);
     }
@@ -654,7 +650,6 @@ const CryptoHasherZig = struct {
     fn deinit(self: *CryptoHasherZig) void {
         inline for (algo_map) |item| {
             if (self.algorithm == @field(EVP.Algorithm, item[0])) {
-// safe-transpile: @alignCast requires manual review
                 return bun.destroy(@as(*item[1], @ptrCast(@alignCast(self.state))));
             }
         }

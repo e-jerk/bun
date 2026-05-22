@@ -55,11 +55,10 @@ pub fn Generator(
             var block: Block = undefined;
             var block_len: u16 = 0;
             for (0..std.math.maxInt(u21) + 1) |cp| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const elem = try self.ctx.get(@as(u21, @intCast(cp)));
                 const block_idx = block_idx: {
-                    // safe-transpile: for with index access requires manual review
-    for (stage3.items, 0..) |item, i| {
+                    for (stage3.items, 0..) |item, i| {
                         if (self.ctx.eql(item, elem)) break :block_idx i;
                     }
 

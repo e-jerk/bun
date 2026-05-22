@@ -33,7 +33,10 @@ pub fn getZone(comptime name: [:0]const u8) *Zone {
         pub var once_done = false;
     };
 
-    if (!static.once_done) { static.initOnce(); static.once_done = true; }
+    if (!static.once_done) {
+        static.initOnce();
+        static.once_done = true;
+    }
     return static.zone;
 }
 
@@ -51,7 +54,7 @@ pub const Zone = opaque {
         // multiple of the pointer size
         const eff_alignment = @max(alignment.toByteUnits(), @sizeOf(usize));
         const ptr = malloc_zone_memalign(zone, eff_alignment, len);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @as(?[*]u8, @ptrCast(ptr));
     }
 
@@ -60,11 +63,11 @@ pub const Zone = opaque {
     }
 
     fn rawAlloc(zone: *anyopaque, len: usize, alignment: std.mem.Alignment, _: usize) ?[*]u8 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return alignedAlloc(@ptrCast(zone), len, alignment);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn resize(_: *anyopaque, buf: []u8, _: std.mem.Alignment, new_len: usize, _: usize) bool {
         if (new_len <= buf.len) {
             return true;
@@ -78,9 +81,9 @@ pub const Zone = opaque {
         return false;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn rawFree(zone: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         malloc_zone_free(@ptrCast(zone), @ptrCast(buf.ptr));
     }
 
@@ -106,7 +109,7 @@ pub const Zone = opaque {
     /// Error-returning version of `create`.
     pub inline fn tryCreate(zone: *Zone, comptime T: type, data: T) !*T {
         const alignment: std.mem.Alignment = .fromByteUnits(@alignOf(T));
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         const ptr: *T = @ptrCast(@alignCast(
             rawAlloc(zone, @sizeOf(T), alignment, @returnAddress()) orelse return error.OutOfMemory,
         ));
@@ -116,7 +119,7 @@ pub const Zone = opaque {
 
     /// Free a single-item pointer
     pub inline fn destroy(zone: *Zone, comptime T: type, ptr: *T) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         malloc_zone_free(zone, @ptrCast(ptr));
     }
 

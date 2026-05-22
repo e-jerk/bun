@@ -172,7 +172,6 @@ pub fn getByIndex(expr: *const Expr, index: u32, index_str: string, allocator: s
             return array.items.slice()[index];
         },
         .e_object => |object| {
-// safe-transpile: for loop with pointer capture requires manual review
             for (object.properties.sliceConst()) |*prop| {
                 const key = &(prop.key orelse continue);
                 switch (key.data) {
@@ -861,13 +860,11 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
         E.Dot => {
             return Expr{
                 .loc = loc,
-                .data = Data{
-                    .e_dot = brk: {
-                        const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
-                        item.ptr.* = st;
-                        break :brk item.ptr;
-                    }
-                },
+                .data = Data{ .e_dot = brk: {
+                    const item = zust.Box(Type).init(allocator, undefined) catch unreachable;
+                    item.ptr.* = st;
+                    break :brk item.ptr;
+                } },
             };
         },
         E.Index => {
@@ -1109,7 +1106,7 @@ pub fn allocate(allocator: std.mem.Allocator, comptime Type: type, st: Type, loc
                 .data = Data{
                     .e_string = brk: {
                         const item = zust.Box(Type).initDefault(allocator) catch unreachable;
-            item.ptr.* = st.*;
+                        item.ptr.* = st.*;
                         break :brk item;
                     },
                 },
@@ -2343,8 +2340,7 @@ pub const Data = union(Tag) {
             },
             .e_class => |el| {
                 const properties = try allocator.alloc(G.Property, el.properties.len);
-                // safe-transpile: for with index access requires manual review
-    for (el.properties, 0..) |prop, i| {
+                for (el.properties, 0..) |prop, i| {
                     properties[i] = try prop.deepClone(allocator);
                 }
 
@@ -2543,7 +2539,6 @@ pub const Data = union(Tag) {
                 }
             },
             .e_unary => |e| {
-// safe-transpile: @bitCast requires manual review
                 writeAnyToHasher(hasher, @as(u8, @bitCast(e.flags)));
                 writeAnyToHasher(hasher, .{e.op});
                 e.value.data.writeToHasher(hasher, symbol_table);

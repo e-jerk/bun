@@ -114,7 +114,7 @@ pub fn next(this: *Stmt) Yield {
 
 pub fn childDone(this: *Stmt, child: ChildPtr, exit_code: ExitCode) Yield {
     const data = child.ptr.repr.data;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     log("child done Stmt {x} child({s})={x} exit={d}", .{ @intFromPtr(this), child.tagName(), @as(usize, @intCast(child.ptr.repr._ptr)), exit_code });
     this.last_exit_code = exit_code;
     this.idx += 1;

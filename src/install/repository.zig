@@ -13,7 +13,10 @@ const SloppyGlobalGitConfig = struct {
     var load_and_parse_once_done = false;
 
     pub fn get() SloppyGlobalGitConfig {
-        if (!load_and_parse_once_done) { loadAndParse(); load_and_parse_once_done = true; }
+        if (!load_and_parse_once_done) {
+            loadAndParse();
+            load_and_parse_once_done = true;
+        }
         return holder;
     }
 
@@ -169,8 +172,7 @@ pub const Repository = extern struct {
         }
         var hash: usize = 0;
         var slash: usize = 0;
-        // safe-transpile: for with index access requires manual review
-    for (remain, 0..) |c, i| {
+        for (remain, 0..) |c, i| {
             switch (c) {
                 '/' => slash = i,
                 '#' => hash = i,
@@ -192,7 +194,7 @@ pub const Repository = extern struct {
         return result;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn createDependencyNameFromVersionLiteral(
         allocator: std.mem.Allocator,
         repository: *const Repository,
@@ -233,7 +235,7 @@ pub const Repository = extern struct {
         return bun.handleOom(allocator.dupe(u8, name));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn order(lhs: *const Repository, rhs: *const Repository, lhs_buf: []const u8, rhs_buf: []const u8) std.math.Order {
         const owner_order = lhs.owner.order(&rhs.owner, lhs_buf, rhs_buf);
         if (owner_order != .eq) return owner_order;
@@ -243,7 +245,7 @@ pub const Repository = extern struct {
         return lhs.committish.order(&rhs.committish, lhs_buf, rhs_buf);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn count(this: *const Repository, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) void {
         builder.count(this.owner.slice(buf));
         builder.count(this.repo.slice(buf));
@@ -252,7 +254,7 @@ pub const Repository = extern struct {
         builder.count(this.package_name.slice(buf));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn clone(this: *const Repository, buf: []const u8, comptime StringBuilder: type, builder: StringBuilder) Repository {
         return .{
             .owner = builder.append(String, this.owner.slice(buf)),
@@ -263,7 +265,7 @@ pub const Repository = extern struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eql(lhs: *const Repository, rhs: *const Repository, lhs_buf: []const u8, rhs_buf: []const u8) bool {
         if (!lhs.owner.eql(rhs.owner, lhs_buf, rhs_buf)) return false;
         if (!lhs.repo.eql(rhs.repo, lhs_buf, rhs_buf)) return false;
@@ -271,7 +273,7 @@ pub const Repository = extern struct {
         return lhs.resolved.eql(rhs.resolved, lhs_buf, rhs_buf);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn formatAs(this: *const Repository, label: string, buf: []const u8, writer: *std.Io.Writer) std.Io.Writer.Error!void {
         const formatter = Formatter{ .label = label, .repository = this, .buf = buf };
         return try formatter.format(writer);
@@ -318,7 +320,7 @@ pub const Repository = extern struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmt(this: *const Repository, label: string, buf: []const u8) Formatter {
         return .{
             .repository = this,

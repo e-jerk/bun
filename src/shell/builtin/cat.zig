@@ -129,7 +129,7 @@ pub fn onIOWriterChunk(this: *Cat, _: usize, err: ?jsc.SystemError) Yield {
     // Writing to stdout errored, cancel everything and write error
     if (err) |e| {
         defer e.deref();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const errno: ExitCode = @intCast(@intFromEnum(e.getErrno()));
         switch (this.state) {
             .exec_stdin => {
@@ -210,7 +210,7 @@ pub fn onIOReaderChunk(this: *Cat, chunk: []const u8, remove: *bool) Yield {
 pub fn onIOReaderDone(this: *Cat, err: ?jsc.SystemError) Yield {
     const errno: ExitCode = if (err) |e| brk: {
         defer e.deref();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         break :brk @as(ExitCode, @intCast(@intFromEnum(e.getErrno())));
     } else 0;
     debug("onIOReaderDone(0x{x}, {s}, errno={d})", .{ @intFromPtr(this), @tagName(this.state), errno });
@@ -253,7 +253,6 @@ pub fn onIOReaderDone(this: *Cat, err: ?jsc.SystemError) Yield {
 pub fn deinit(_: *Cat) void {}
 
 pub inline fn bltn(this: *Cat) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("cat", this));
     return @fieldParentPtr("impl", impl);
 }
@@ -300,14 +299,14 @@ const Opts = struct {
         return Parse.parseFlags(opts, args);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         _ = this; // autofix
         _ = flag;
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         _ = this; // autofix
         switch (char) {

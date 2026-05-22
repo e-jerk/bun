@@ -45,7 +45,10 @@ fn isEnabledOnce() void {
 }
 
 pub fn isEnabled() bool {
-    if (!is_enabled_once_done) { isEnabledOnce(); is_enabled_once_done = true; }
+    if (!is_enabled_once_done) {
+        isEnabledOnce();
+        is_enabled_once_done = true;
+    }
     return is_enabled.load(.seq_cst);
 }
 
@@ -112,7 +115,10 @@ pub const Darwin = struct {
     }
 
     pub fn get() ?*OSLog {
-        if (!os_log_once_done) { getOnce(); os_log_once_done = true; }
+        if (!os_log_once_done) {
+            getOnce();
+            os_log_once_done = true;
+        }
         return os_log;
     }
 };
@@ -134,7 +140,10 @@ pub const Linux = struct {
     }
 
     pub fn isSupported() bool {
-        if (!init_once_done) { initOnce(); init_once_done = true; }
+        if (!init_once_done) {
+            initOnce();
+            init_once_done = true;
+        }
         return is_initialized.load(.monotonic);
     }
 
@@ -150,7 +159,7 @@ pub const Linux = struct {
 
         const duration = bun.timespec.now(.force_real_time).ns() -| this.start_time;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = Bun__linux_trace_emit(@tagName(this.event).ptr, @intCast(duration));
     }
 };

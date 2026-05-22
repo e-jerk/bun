@@ -68,7 +68,7 @@ pub fn indexOfAny(slice: string, comptime str: []const u8) ?OptionalUsize {
         0 => @compileError("str cannot be empty"),
         1 => return indexOfChar(slice, str[0]),
         else => if (bun.highway.indexOfAnyChar(slice, str)) |i|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(i)
         else
             null,
@@ -82,11 +82,10 @@ pub fn indexOfAny16(self: []const u16, comptime str: anytype) ?OptionalUsize {
 pub fn indexOfAnyT(comptime T: type, str: []const T, comptime chars: anytype) ?OptionalUsize {
     if (T == u8) return indexOfAny(str, chars);
 
-    // safe-transpile: for with index access requires manual review
     for (str, 0..) |c, i| {
         inline for (chars) |a| {
             if (c == a) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return @as(OptionalUsize, @intCast(i));
             }
         }
@@ -103,7 +102,7 @@ pub fn containsComptime(self: string, comptime str: string) callconv(bun.callcon
     const Int = std.meta.Int(.unsigned, str.len * 8);
 
     while (remain.len >= comptime str.len) {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         if (@as(Int, @bitCast(remain.ptr[0..str.len].*)) == @as(Int, @bitCast(str.ptr[0..str.len].*))) {
             return true;
         }
@@ -149,7 +148,6 @@ pub fn isNPMPackageNameIgnoreLength(target: string) bool {
     };
 
     var slash_index: usize = 0;
-    // safe-transpile: for with index access requires manual review
     for (target[1..], 0..) |c, i| {
         switch (c) {
             // Old packages may have capital letters
@@ -371,15 +369,14 @@ pub fn findUrlPassword(text: string) ?struct { usize, usize } {
     const at = indexOfChar(remain, '@') orelse return null;
     const colon = indexOfCharNeg(remain[0..at], ':');
     if (colon == -1 or colon == at - 1) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     offset += @intCast(colon + 1);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const len: usize = at - @as(usize, @intCast(colon + 1));
     return .{ offset, len };
 }
 
 pub fn indexAnyComptime(target: string, comptime chars: string) ?usize {
-    // safe-transpile: for with index access requires manual review
     for (target, 0..) |parent, i| {
         inline for (chars) |char| {
             if (char == parent) return i;
@@ -389,7 +386,6 @@ pub fn indexAnyComptime(target: string, comptime chars: string) ?usize {
 }
 
 pub fn indexAnyComptimeT(comptime T: type, target: []const T, comptime chars: []const T) ?usize {
-    // safe-transpile: for with index access requires manual review
     for (target, 0..) |parent, i| {
         inline for (chars) |char| {
             if (char == parent) return i;
@@ -399,7 +395,6 @@ pub fn indexAnyComptimeT(comptime T: type, target: []const T, comptime chars: []
 }
 
 pub fn indexEqualAny(in: anytype, target: string) ?usize {
-    // safe-transpile: for with index access requires manual review
     for (in, 0..) |str, i| if (eqlLong(str, target, true)) return i;
     return null;
 }
@@ -417,18 +412,17 @@ pub fn repeatingBuf(self: []u8, char: u8) void {
 }
 
 pub fn indexOfCharNeg(self: string, char: u8) i32 {
-    // safe-transpile: for with index access requires manual review
     for (self, 0..) |c, i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (c == char) return @as(i32, @intCast(i));
     }
     return -1;
 }
 
 pub fn indexOfSigned(self: string, str: string) i32 {
-// zust: use safe.String or safe.GuardedSlice for slice operations
+    // zust: use safe.String or safe.GuardedSlice for slice operations
     const i = std.mem.indexOf(u8, self, str) orelse return -1;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(i32, @intCast(i));
 }
 
@@ -447,7 +441,7 @@ pub fn lastIndexOfChar(self: []const u8, char: u8) callconv(bun.callconv_inline)
         }
         const start = bun.c.memrchr(self.ptr, char, self.len) orelse return null;
         const i = @intFromPtr(start) - @intFromPtr(self.ptr);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(i);
     }
     return lastIndexOfCharT(u8, self, char);
@@ -463,7 +457,7 @@ pub fn lastIndexOf(self: string, str: string) callconv(bun.callconv_inline) ?usi
 
 pub fn indexOf(self: string, str: string) ?usize {
     if (comptime !bun.Environment.isNative) {
-// zust: use safe.String or safe.GuardedSlice for slice operations
+        // zust: use safe.String or safe.GuardedSlice for slice operations
         return std.mem.indexOf(u8, self, str);
     }
 
@@ -487,13 +481,13 @@ pub fn indexOf(self: string, str: string) ?usize {
 
     const i = @intFromPtr(start) - @intFromPtr(self_ptr);
     bun.unsafeAssert(i < self_len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(usize, @intCast(i));
 }
 
 pub fn indexOfT(comptime T: type, haystack: []const T, needle: []const T) ?usize {
     if (T == u8) return indexOf(haystack, needle);
-// zust: use safe.String or safe.GuardedSlice for slice operations
+    // zust: use safe.String or safe.GuardedSlice for slice operations
     return std.mem.indexOf(T, haystack, needle);
 }
 
@@ -514,7 +508,7 @@ pub const SplitIterator = struct {
 
     /// Returns a slice of the first field. This never fails.
     /// Call this only to get the first field and then use `next` to get all subsequent fields.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn first(self: *Self) []const u8 {
         bun.unsafeAssert((self.index.?) == 0);
         return self.next().?;
@@ -536,7 +530,7 @@ pub const SplitIterator = struct {
     }
 
     /// Returns a slice of the remaining bytes. Does not affect iterator state.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn rest(self: Self) []const u8 {
         const end = self.buffer.len;
         const start = self.index orelse end;
@@ -571,7 +565,7 @@ pub const StringOrTinyString = struct {
         bun.unsafeAssert(@sizeOf(@This()) == 32);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *const StringOrTinyString) callconv(bun.callconv_inline) []const u8 {
         // This is a switch expression instead of a statement to make sure it uses the faster assembly
         return switch (this.meta.is_tiny_string) {
@@ -613,12 +607,14 @@ pub const StringOrTinyString = struct {
             },
             1...(@sizeOf(Buffer)) => {
                 @setRuntimeSafety(false);
-                var tiny = StringOrTinyString{ .meta = .{
-                    .is_tiny_string = 1,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-                    .remainder_len = @as(u7, @truncate(stringy.len)),
-                } };
-// safe-transpile: @memcpy requires manual review
+                var tiny = StringOrTinyString{
+                    .meta = .{
+                        .is_tiny_string = 1,
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        .remainder_len = @as(u7, @truncate(stringy.len)),
+                    },
+                };
+
                 @memcpy(tiny.remainder_buf[0..tiny.meta.remainder_len], stringy[0..tiny.meta.remainder_len]);
                 return tiny;
             },
@@ -644,11 +640,13 @@ pub const StringOrTinyString = struct {
             },
             1...(@sizeOf(Buffer)) => {
                 @setRuntimeSafety(false);
-                var tiny = StringOrTinyString{ .meta = .{
-                    .is_tiny_string = 1,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
-                    .remainder_len = @as(u7, @truncate(stringy.len)),
-                } };
+                var tiny = StringOrTinyString{
+                    .meta = .{
+                        .is_tiny_string = 1,
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        .remainder_len = @as(u7, @truncate(stringy.len)),
+                    },
+                };
                 _ = copyLowercase(stringy, &tiny.remainder_buf);
                 return tiny;
             },
@@ -671,8 +669,7 @@ pub fn copyLowercase(in: string, out: []u8) string {
     var out_slice = out;
 
     begin: while (true) {
-        // safe-transpile: for with index access requires manual review
-    for (in_slice, 0..) |c, i| {
+        for (in_slice, 0..) |c, i| {
             switch (c) {
                 'A'...'Z' => {
                     bun.copy(u8, out_slice, in_slice[0..i]);
@@ -700,8 +697,7 @@ pub fn copyLowercaseIfNeeded(in: string, out: []u8) string {
     var any = false;
 
     begin: while (true) {
-        // safe-transpile: for with index access requires manual review
-    for (in_slice, 0..) |c, i| {
+        for (in_slice, 0..) |c, i| {
             switch (c) {
                 'A'...'Z' => {
                     bun.copy(u8, out_slice, in_slice[0..i]);
@@ -729,7 +725,6 @@ pub fn copyLowercaseIfNeeded(in: string, out: []u8) string {
 pub fn copy(buf: []u8, src: []const u8) []const u8 {
     const len = @min(buf.len, src.len);
     if (len > 0)
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..len], src[0..len]);
     return buf[0..len];
 }
@@ -775,7 +770,6 @@ pub fn isOnCharBoundary(self: string, idx: usize) bool {
 
 pub fn isUtf8CharBoundary(c: u8) bool {
     // This is bit magic equivalent to: b < 128 || b >= 192
-// safe-transpile: @bitCast requires manual review
     return @as(i8, @bitCast(c)) >= -0x40;
 }
 
@@ -864,7 +858,7 @@ pub fn countChar(self: string, char: u8) usize {
 
     while (remaining.len >= 16) {
         const vec: AsciiVector = remaining[0..ascii_vector_size].*;
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const cmp = @popCount(@as(@Vector(ascii_vector_size, u1), @bitCast(vec == splatted)));
         total += @as(usize, @reduce(.Add, cmp));
         remaining = remaining[ascii_vector_size..];
@@ -967,7 +961,6 @@ fn eqlComptimeCheckLenU8Impl(a: []const u8, comptime b: []const u8, comptime che
     comptime var b_ptr: usize = 0;
 
     inline while (b.len - b_ptr >= @sizeOf(usize)) {
-// safe-transpile: @bitCast requires manual review
         if (@as(usize, @bitCast(a[b_ptr..][0..@sizeOf(usize)].*)) != comptime @as(usize, @bitCast(b[b_ptr..][0..@sizeOf(usize)].*)))
             return false;
         comptime b_ptr += @sizeOf(usize);
@@ -976,7 +969,6 @@ fn eqlComptimeCheckLenU8Impl(a: []const u8, comptime b: []const u8, comptime che
 
     if (comptime @sizeOf(usize) == 8) {
         if (comptime (b.len & 4) != 0) {
-// safe-transpile: @bitCast requires manual review
             if (@as(u32, @bitCast(a[b_ptr..][0..@sizeOf(u32)].*)) != comptime @as(u32, @bitCast(b[b_ptr..][0..@sizeOf(u32)].*)))
                 return false;
             comptime b_ptr += @sizeOf(u32);
@@ -985,7 +977,6 @@ fn eqlComptimeCheckLenU8Impl(a: []const u8, comptime b: []const u8, comptime che
     }
 
     if (comptime (b.len & 2) != 0) {
-// safe-transpile: @bitCast requires manual review
         if (@as(u16, @bitCast(a[b_ptr..][0..@sizeOf(u16)].*)) != comptime @as(u16, @bitCast(b[b_ptr..][0..@sizeOf(u16)].*)))
             return false;
 
@@ -1045,7 +1036,6 @@ pub fn eqlCaseInsensitiveT(comptime T: type, a: []const T, b: []const u8) bool {
     if (a.len != b.len or a.len == 0) return false;
     if (comptime T == u8) return eqlCaseInsensitiveASCIIIgnoreLength(a, b);
 
-    // safe-transpile: for with index access requires manual review
     for (a, b) |c, d| {
         switch (c) {
             'a'...'z' => if (c != d and c & 0b11011111 != d) return false,
@@ -1107,7 +1097,6 @@ pub fn eqlLong(a_str: string, b_str: string, comptime check_len: bool) bool {
     {
         var dword_length = len >> 3;
         while (dword_length > 0) : (dword_length -= 1) {
-// safe-transpile: @bitCast requires manual review
             if (@as(usize, @bitCast(a[0..@sizeOf(usize)].*)) != @as(usize, @bitCast(b[0..@sizeOf(usize)].*)))
                 return false;
             b += @sizeOf(usize);
@@ -1118,7 +1107,6 @@ pub fn eqlLong(a_str: string, b_str: string, comptime check_len: bool) bool {
 
     if (comptime @sizeOf(usize) == 8) {
         if ((len & 4) != 0) {
-// safe-transpile: @bitCast requires manual review
             if (@as(u32, @bitCast(a[0..@sizeOf(u32)].*)) != @as(u32, @bitCast(b[0..@sizeOf(u32)].*)))
                 return false;
 
@@ -1129,7 +1117,6 @@ pub fn eqlLong(a_str: string, b_str: string, comptime check_len: bool) bool {
     }
 
     if ((len & 2) != 0) {
-// safe-transpile: @bitCast requires manual review
         if (@as(u16, @bitCast(a[0..@sizeOf(u16)].*)) != @as(u16, @bitCast(b[0..@sizeOf(u16)].*)))
             return false;
 
@@ -1149,10 +1136,8 @@ pub fn eqlLong(a_str: string, b_str: string, comptime check_len: bool) bool {
 pub fn append(allocator: std.mem.Allocator, self: string, other: string) callconv(bun.callconv_inline) ![]u8 {
     var buf = try allocator.alloc(u8, self.len + other.len);
     if (self.len > 0)
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..self.len], self);
     if (other.len > 0)
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[self.len..][0..other.len], other);
     return buf;
 }
@@ -1178,7 +1163,7 @@ pub fn concatBufT(comptime T: type, out: []T, strs: anytype) callconv(bun.callco
         if (s.len > remain.len) {
             return error.NoSpaceLeft;
         }
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(remain.ptr, s);
         remain = remain[s.len..];
         n += s.len;
@@ -1189,7 +1174,7 @@ pub fn concatBufT(comptime T: type, out: []T, strs: anytype) callconv(bun.callco
 
 pub fn index(self: string, str: string) i32 {
     if (strings.indexOf(self, str)) |i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(i32, @intCast(i));
     } else {
         return -1;
@@ -1228,7 +1213,7 @@ pub fn firstNonASCII(slice: []const u8) ?u32 {
         return null;
     }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(result.count));
 }
 
@@ -1253,7 +1238,7 @@ pub fn indexOfSpaceOrNewlineOrNonASCII(slice_: []const u8, offset: u32) ?u32 {
     }
 
     const i = bun.highway.indexOfSpaceOrNewlineOrNonASCII(remaining) orelse return null;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(i)) + offset;
 }
 
@@ -1273,7 +1258,7 @@ pub fn indexOfNewlineOrNonASCIICheckStart(slice_: []const u8, offset: u32, compt
     }
 
     const i = bun.highway.indexOfNewlineOrNonASCII(remaining) orelse return null;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(i)) + offset;
 }
 
@@ -1320,36 +1305,36 @@ pub fn indexOfNeedsURLEncode(slice: []const u8) ?u32 {
         while (remaining.len >= ascii_vector_size) {
             const vec: AsciiVector = remaining[0..ascii_vector_size].*;
             const cmp: AsciiVectorU1 =
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec > max_16_ascii)) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast((vec < min_16_ascii))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('%')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('\\')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('"')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('#')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('?')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('[')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat(']')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('^')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('|')))) |
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @as(AsciiVectorU1, @bitCast(vec == @as(AsciiVector, @splat('~'))));
 
             if (@reduce(.Max, cmp) > 0) {
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 const bitmask = @as(AsciiVectorInt, @bitCast(cmp));
                 const first = @ctz(bitmask);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 return @as(u32, first) + @as(u32, @truncate(@intFromPtr(remaining.ptr) - @intFromPtr(slice.ptr)));
             }
 
@@ -1357,7 +1342,6 @@ pub fn indexOfNeedsURLEncode(slice: []const u8) ?u32 {
         }
     }
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (remaining) |*char_| {
         const char = char_.*;
         if (char > 127 or char < 0x20 or
@@ -1372,7 +1356,7 @@ pub fn indexOfNeedsURLEncode(slice: []const u8) ?u32 {
             char == '|' or
             char == '~')
         {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(@intFromPtr(char_) - @intFromPtr(slice.ptr)));
         }
     }
@@ -1381,13 +1365,13 @@ pub fn indexOfNeedsURLEncode(slice: []const u8) ?u32 {
 }
 
 pub fn indexOfCharZ(sliceZ: [:0]const u8, char: u8) ?u63 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @truncate(bun.highway.indexOfChar(sliceZ, char) orelse return null);
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn indexOfChar(slice: []const u8, char: u8) ?u32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u32, @truncate(indexOfCharUsize(slice, char) orelse return null));
 }
 
@@ -1436,12 +1420,12 @@ pub fn indexOfNotChar(slice: []const u8, char: u8) ?u32 {
         while (remaining.len >= ascii_vector_size) {
             const vec: AsciiVector = remaining[0..ascii_vector_size].*;
             const cmp = @as(AsciiVector, @splat(char)) != vec;
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             if (@reduce(.Max, @as(AsciiVectorU1, @bitCast(cmp))) > 0) {
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 const bitmask = @as(AsciiVectorInt, @bitCast(cmp));
                 const first = @ctz(bitmask);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return @as(u32, first) + @as(u32, @intCast(slice.len - remaining.len));
             }
 
@@ -1449,10 +1433,9 @@ pub fn indexOfNotChar(slice: []const u8, char: u8) ?u32 {
         }
     }
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (remaining) |*current| {
         if (current.* != char) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(@intFromPtr(current) - @intFromPtr(slice.ptr)));
         }
     }
@@ -1512,9 +1495,9 @@ fn _decodeHexToBytes(destination: []u8, comptime Char: type, source: []const Cha
                 return error.InvalidByteSequence;
             }
         }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const a = hex_table[@as(u8, @truncate(int[0]))];
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const b = hex_table[@as(u8, @truncate(int[1]))];
         if (a == invalid_char or b == invalid_char) {
             if (comptime truncate) break;
@@ -1607,7 +1590,7 @@ pub fn encodeBytesToHex(destination: []u8, source: []const u8) usize {
                 upper_16,
             });
 
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             remaining_dest[0..32].* = @bitCast(output_chunk);
             remaining_dest = remaining_dest[32..];
             remaining = remaining[16..];
@@ -1700,7 +1683,7 @@ pub fn indexOfLineRanges(text: []const u8, target_line: u32, comptime line_range
         if (target_line == 0) {
             ranges.appendAssumeCapacity(.{
                 .start = 0,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .end = @truncate(text.len),
             });
         }
@@ -1741,7 +1724,7 @@ pub fn indexOfLineRanges(text: []const u8, target_line: u32, comptime line_range
 
         ranges.appendAssumeCapacity(.{
             .start = 0,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             .end = @truncate(text.len),
         });
         return ranges;
@@ -1819,7 +1802,6 @@ pub fn getLinesInText(text: []const u8, line: u32, comptime line_range_count: us
     var results = bun.BoundedArray([]const u8, line_range_count){};
     results.len = ranges.len;
 
-    // safe-transpile: for with index access requires manual review
     for (results.slice()[0..ranges.len], ranges.slice()) |*chunk, range| {
         chunk.* = text[range.start..range.end];
     }
@@ -1842,12 +1824,11 @@ pub fn firstNonASCII16(slice: []const u16) ?u32 {
 
                 if (max_value > 127) {
                     const cmp = vec > max_u16_ascii;
-// safe-transpile: @bitCast requires manual review
                     const bitmask: u8 = @as(u8, @bitCast(cmp));
                     const index_of_first_nonascii_in_vector = @ctz(bitmask);
 
                     const offset_of_vector_in_input = (@intFromPtr(remaining.ptr) - @intFromPtr(remaining_start)) / 2;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const out: u32 = @intCast(offset_of_vector_in_input + index_of_first_nonascii_in_vector);
 
                     if (comptime Environment.isDebug) {
@@ -1874,7 +1855,7 @@ pub fn firstNonASCII16(slice: []const u16) ?u32 {
 
     for (remaining) |char| {
         if (char > 127) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(i);
         }
         i += 1;
@@ -1908,7 +1889,6 @@ pub fn isAllWhitespace(slice: []const u8) bool {
 pub const whitespace_chars = [_]u8{ ' ', '\t', '\n', '\r', std.ascii.control_code.vt, std.ascii.control_code.ff };
 
 pub fn lengthOfLeadingWhitespaceASCII(slice: string) usize {
-// safe-transpile: for loop with pointer capture requires manual review
     brk: for (slice) |*c| {
         inline for (whitespace_chars) |wc| if (c.* == wc) continue :brk;
         return @intFromPtr(c) - @intFromPtr(slice.ptr);
@@ -2099,7 +2079,7 @@ pub fn isIPAddress(input: []const u8) bool {
 
     var sockaddr: std.posix.sockaddr = undefined;
     @memset(std.mem.asBytes(&sockaddr), 0);
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(max_ip_address_buffer[0..input.len], input);
     max_ip_address_buffer[input.len] = 0;
 
@@ -2115,7 +2095,7 @@ pub fn isIPV6Address(input: []const u8) bool {
 
     var sockaddr: std.posix.sockaddr = undefined;
     @memset(std.mem.asBytes(&sockaddr), 0);
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(max_ip_address_buffer[0..input.len], input);
     max_ip_address_buffer[input.len] = 0;
 
@@ -2171,7 +2151,6 @@ pub fn concatWithLength(
     const out = try allocator.alloc(u8, length);
     var remain = out;
     for (args) |arg| {
-// safe-transpile: @memcpy requires manual review
         @memcpy(remain[0..arg.len], arg);
         remain = remain[arg.len..];
     }
@@ -2245,7 +2224,6 @@ pub fn concatIfNeeded(
     dest.* = buf;
     var remain = buf[0..];
     for (args) |arg| {
-// safe-transpile: @memcpy requires manual review
         @memcpy(remain[0..arg.len], arg);
 
         remain = remain[arg.len..];
@@ -2525,7 +2503,7 @@ pub const ANSIIterator = extern struct {
     slice_ptr: ?[*]const u8,
     slice_len: usize,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(input: []const u8) ANSIIterator {
         return .{
             .input = input.ptr,

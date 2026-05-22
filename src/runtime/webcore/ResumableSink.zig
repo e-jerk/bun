@@ -75,7 +75,7 @@ pub fn ResumableSink(
                 if (byte_stream.pipe.isEmpty()) {
                     // equivalent to onStart to get the highWaterMark
                     this.highWaterMark = if (byte_stream.highWaterMark < std.math.maxInt(i64))
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         @intCast(byte_stream.highWaterMark)
                     else
                         std.math.maxInt(i64);

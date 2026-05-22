@@ -267,7 +267,7 @@ pub const BundleV2 = struct {
     /// By calling this function, it implies that the returned log *will* be
     /// written to. For DevServer, this allocates a per-file log for the sources
     /// it is called on. Function must be called on the bundle thread.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn logForResolutionFailures(this: *BundleV2, abs_path: []const u8, bake_graph: bake.Graph) *bun.logger.Log {
         if (this.transpiler.options.dev_server) |dev| {
             return bun.handleOom(dev.getLogForResolutionFailures(abs_path, bake_graph));
@@ -331,7 +331,6 @@ pub const BundleV2 = struct {
             // when there are no import records, v index will be invalid
             if (import_record_list_id.get() < v.all_import_records.len) {
                 const import_records = v.all_import_records[import_record_list_id.get()].slice();
-// safe-transpile: for loop with pointer capture requires manual review
                 for (import_records) |*import_record| {
                     var other_source = import_record.source_index;
                     if (other_source.isValid()) {
@@ -460,8 +459,7 @@ pub const BundleV2 = struct {
         const additional_files = this.graph.input_files.items(.additional_files);
         const unique_keys = this.graph.input_files.items(.unique_key_for_additional_file);
         const content_hashes = this.graph.input_files.items(.content_hash_for_additional_file);
-        // safe-transpile: for with index access requires manual review
-    for (all_urls_for_css, 0..) |url_for_css, index| {
+        for (all_urls_for_css, 0..) |url_for_css, index| {
             if (url_for_css.len > 0) {
                 // We like to inline additional files in CSS if they fit a size threshold
                 // If we do inline a file in CSS, and it is not imported by JS, then we don't need to copy the additional file into the output directory
@@ -526,11 +524,9 @@ pub const BundleV2 = struct {
         const max_valid_source_index: Index = .init(this.graph.input_files.len);
         const secondary_paths: []const []const u8 = this.graph.input_files.items(.secondary_path);
 
-        // safe-transpile: for with index access requires manual review
-    for (ast_import_records, targets) |*ast_import_record_list, target| {
+        for (ast_import_records, targets) |*ast_import_record_list, target| {
             const import_records: []ImportRecord = ast_import_record_list.slice();
             const path_to_source_index_map = this.pathToSourceIndexMap(target);
-// safe-transpile: for loop with pointer capture requires manual review
             for (import_records) |*import_record| {
                 const source_index = import_record.source_index.get();
                 if (source_index >= max_valid_source_index.get()) {
@@ -770,7 +766,7 @@ pub const BundleV2 = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn enqueueFileFromDevServerIncrementalGraphInvalidation(
         this: *BundleV2,
         path_slice: []const u8,
@@ -1137,8 +1133,7 @@ pub const BundleV2 = struct {
                     }
                 },
                 .dev_server => {
-                    // safe-transpile: for with index access requires manual review
-    for (data.files.set.keys(), data.files.set.values()) |abs_path, flags| {
+                    for (data.files.set.keys(), data.files.set.values()) |abs_path, flags| {
 
                         // Ensure we have the proper conditions set for client-side entrypoints.
                         const transpiler = if (flags.client and !flags.server and !flags.ssr)
@@ -1223,7 +1218,6 @@ pub const BundleV2 = struct {
         bun.safety.alloc.assertEq(this.allocator(), this.linker.graph.allocator);
         this.linker.graph.ast = try this.graph.ast.clone(this.allocator());
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.linker.graph.ast.items(.module_scope)) |*module_scope| {
             for (module_scope.children.slice()) |child| {
                 child.parent = module_scope;
@@ -1268,8 +1262,7 @@ pub const BundleV2 = struct {
         const specifier_string = server.newExpr(E.String{ .data = "specifier" });
         const empty_array = server.newExpr(E.Array{});
 
-        // safe-transpile: for with index access requires manual review
-    for (
+        for (
             scbs.items(.use_directive),
             scbs.items(.source_index),
             scbs.items(.ssr_source_index),
@@ -1306,8 +1299,7 @@ pub const BundleV2 = struct {
                     }),
                 });
 
-                // safe-transpile: for with index access requires manual review
-    for (keys, client_manifest_items) |export_name_string, *client_item| {
+                for (keys, client_manifest_items) |export_name_string, *client_item| {
                     const server_key_string = try std.fmt.allocPrint(alloc, "{f}S{d:0>8}#{s}", .{
                         bun.fmt.hexIntLower(this.unique_key),
                         source_id,
@@ -1384,7 +1376,7 @@ pub const BundleV2 = struct {
         loader: Loader,
         known_target: options.Target,
     ) OOM!Index.Int {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const source_index = Index.init(@as(u32, @intCast(this.graph.ast.len)));
         this.graph.ast.append(this.allocator(), JSAst.empty) catch unreachable;
 
@@ -1425,7 +1417,7 @@ pub const BundleV2 = struct {
         loader: Loader,
         known_target: options.Target,
     ) OOM!Index.Int {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const source_index = Index.init(@as(u32, @intCast(this.graph.ast.len)));
         this.graph.ast.append(this.allocator(), JSAst.empty) catch unreachable;
 
@@ -1500,7 +1492,7 @@ pub const BundleV2 = struct {
 
         this.graph.pool.worker_pool.schedule(.from(&task.task));
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return @intCast(source_index);
     }
 
@@ -1530,7 +1522,6 @@ pub const BundleV2 = struct {
 
         for (reachable_files) |source_index| {
             const records: []const ImportRecord = import_records[source_index.get()].slice();
-// safe-transpile: for loop with pointer capture requires manual review
             for (records) |*record| {
                 if (!record.source_index.isValid() and record.tag == .none) {
                     const path = record.path.text;
@@ -1590,7 +1581,7 @@ pub const BundleV2 = struct {
 
         this.waitForParse();
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         minify_duration.* = @as(u64, @intCast(@divTrunc(@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp())) - @as(i64, @truncate(bun.cli.start_time)), @as(i64, std.time.ns_per_ms))));
         source_code_size.* = this.source_code_length;
 
@@ -1766,8 +1757,7 @@ pub const BundleV2 = struct {
         {
             const scbs = this.graph.server_component_boundaries.slice();
             try this.graph.entry_points.ensureUnusedCapacity(this.allocator(), scbs.list.len * 2);
-            // safe-transpile: for with index access requires manual review
-    for (scbs.list.items(.source_index), scbs.list.items(.ssr_source_index)) |original_index, ssr_index| {
+            for (scbs.list.items(.source_index), scbs.list.items(.ssr_source_index)) |original_index, ssr_index| {
                 inline for (.{ original_index, ssr_index }) |idx| {
                     this.graph.entry_points.appendAssumeCapacity(Index.init(idx));
                 }
@@ -1846,7 +1836,7 @@ pub const BundleV2 = struct {
                         .is_executable = false,
                     })) catch unreachable;
                     additional_files[index].append(this.allocator(), AdditionalFile{
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         .output_file = @as(u32, @truncate(additional_output_files.items.len - 1)),
                     }) catch |err| bun.handleOom(err);
                 }
@@ -1866,7 +1856,6 @@ pub const BundleV2 = struct {
         metafile_markdown: ?[]const u8 = null,
 
         pub fn deinit(this: *BuildResult) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.output_files.items) |*output_file| {
                 output_file.deinit();
             }
@@ -2136,7 +2125,7 @@ pub const BundleV2 = struct {
                         existing.key_ptr.* = path.text;
 
                         // We need to parse this
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const source_index = Index.init(@as(u32, @intCast(this.graph.ast.len)));
                         existing.value_ptr.* = source_index.get();
                         out_source_index = source_index;
@@ -2368,7 +2357,7 @@ pub const BundleV2 = struct {
 
     /// Writes a metafile (JSON or markdown) to disk and appends it to the output_files list.
     /// Metafile paths are relative to outdir, like all other output files.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn writeMetafileOutput(
         output_files: *std.array_list.Managed(options.OutputFile),
         outdir: []const u8,
@@ -2394,15 +2383,17 @@ pub const BundleV2 = struct {
             // Write to disk relative to outdir
             var path_buf: bun.PathBuffer = undefined;
             _ = jsc.Node.fs.NodeFS.writeFileWithPathBuffer(&path_buf, .{
-                .data = .{ .buffer = .{
+                .data = .{
                     .buffer = .{
-                        .ptr = @constCast(content.ptr),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-                        .len = @as(u32, @truncate(content.len)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-                        .byte_len = @as(u32, @truncate(content.len)),
+                        .buffer = .{
+                            .ptr = @constCast(content.ptr),
+                            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                            .len = @as(u32, @truncate(content.len)),
+                            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                            .byte_len = @as(u32, @truncate(content.len)),
+                        },
                     },
-                } },
+                },
                 .encoding = .buffer,
                 .mode = 0o644,
                 .dirfd = bun.FD.fromStdDir(root_dir),
@@ -2429,14 +2420,14 @@ pub const BundleV2 = struct {
         }));
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn shouldAddWatcherPlugin(bv2: *BundleV2, namespace: []const u8, path: []const u8) bool {
         return bun.strings.eqlComptime(namespace, "file") and
             std.fs.path.isAbsolute(path) and
             bv2.shouldAddWatcher(path);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn shouldAddWatcher(bv2: *BundleV2, path: []const u8) bool {
         return if (bv2.transpiler.options.dev_server != null)
             bun.strings.indexOf(path, "/node_modules/") == null and
@@ -2488,8 +2479,7 @@ pub const BundleV2 = struct {
             const input_files = this.graph.input_files.slice();
             const loaders = input_files.items(.loader);
             const sources = input_files.items(.source);
-            // safe-transpile: for with index access requires manual review
-    for (
+            for (
                 asts.items(.parts)[1..],
                 asts.items(.import_records)[1..],
                 css_asts[1..],
@@ -2509,7 +2499,7 @@ pub const BundleV2 = struct {
                         var log = Logger.Log.init(this.allocator());
                         defer log.deinit();
                         if (this.linker.scanCSSImports(
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             @intCast(index),
                             import_records.slice(),
                             css_asts,
@@ -2541,14 +2531,12 @@ pub const BundleV2 = struct {
                             js_files.appendAssumeCapacity(Index.init(index));
 
                             // Mark every part live.
-// safe-transpile: for loop with pointer capture requires manual review
                             for (part_list.slice()) |*p| {
                                 p.is_live = true;
                             }
                         }
 
                         // Discover all CSS roots.
-// safe-transpile: for loop with pointer capture requires manual review
                         for (import_records.slice()) |*record| {
                             if (!record.source_index.isValid()) continue;
                             if (loaders[record.source_index.get()] != .css) continue;
@@ -2615,7 +2603,7 @@ pub const BundleV2 = struct {
         if (Environment.isDebug) for (js_reachable_files) |idx| {
             bun.assert(this.graph.ast.items(.parts)[idx.get()].len != 0); // will create a memory leak
         };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         this.linker.computeDataForSourceMap(@as([]Index.Int, @ptrCast(js_reachable_files)));
         errdefer {
             // reminder that the caller cannot handle this error, since source contents
@@ -2628,8 +2616,7 @@ pub const BundleV2 = struct {
         // Generate chunks
         const js_part_ranges = try this.allocator().alloc(PartRange, js_reachable_files.len);
         const parts = this.graph.ast.items(.parts);
-        // safe-transpile: for with index access requires manual review
-    for (js_reachable_files, js_part_ranges) |source_index, *part_range| {
+        for (js_reachable_files, js_part_ranges) |source_index, *part_range| {
             part_range.* = .{
                 .source_index = source_index,
                 .part_index_begin = 0,
@@ -2652,7 +2639,7 @@ pub const BundleV2 = struct {
             .content = .{
                 .javascript = .{
                     // TODO(@paperclover): remove this ptrCast when Source Index is fixed
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     .files_in_chunk_order = @ptrCast(js_reachable_files),
                     .parts_in_chunk_in_order = js_part_ranges,
                 },
@@ -2661,12 +2648,11 @@ pub const BundleV2 = struct {
         };
 
         // Then all the distinct CSS bundles (these are JS->CSS, not CSS->CSS)
-        // safe-transpile: for with index access requires manual review
-    for (chunks[1..][0..start.css_entry_points.count()], start.css_entry_points.keys()) |*chunk, entry_point| {
+        for (chunks[1..][0..start.css_entry_points.count()], start.css_entry_points.keys()) |*chunk, entry_point| {
             const order = this.linker.findImportedFilesInCSSOrder(this.allocator(), &.{entry_point});
             chunk.* = .{
                 .entry_point = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .entry_point_id = @intCast(entry_point.get()),
                     .source_index = entry_point.get(),
                     .is_entry_point = false,
@@ -2682,11 +2668,10 @@ pub const BundleV2 = struct {
         }
 
         // Then all HTML files
-        // safe-transpile: for with index access requires manual review
-    for (html_files.keys(), chunks[1 + start.css_entry_points.count() ..]) |source_index, *chunk| {
+        for (html_files.keys(), chunks[1 + start.css_entry_points.count() ..]) |source_index, *chunk| {
             chunk.* = .{
                 .entry_point = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .entry_point_id = @intCast(source_index.get()),
                     .source_index = source_index.get(),
                     .is_entry_point = false,
@@ -2714,7 +2699,7 @@ pub const BundleV2 = struct {
         });
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn enqueueOnResolvePluginIfNeeded(
         this: *BundleV2,
         source_index: Index.Int,
@@ -2752,7 +2737,7 @@ pub const BundleV2 = struct {
         return false;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn enqueueEntryPointOnResolvePluginIfNeeded(
         this: *BundleV2,
         entry_point: []const u8,
@@ -2943,7 +2928,6 @@ pub const BundleV2 = struct {
         const loader = ctx.loader;
         const source_dir = source.path.sourceDir();
         var estimated_resolve_queue_count: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
         for (ctx.import_records.slice()) |*import_record| {
             if (import_record.flags.is_internal) {
                 import_record.tag = .runtime;
@@ -2962,13 +2946,12 @@ pub const BundleV2 = struct {
             estimated_resolve_queue_count += @as(usize, @intFromBool(!(import_record.flags.is_internal or import_record.flags.is_unused or import_record.source_index.isValid())));
         }
         var resolve_queue = ResolveQueue.init(this.allocator());
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         bun.handleOom(resolve_queue.ensureTotalCapacity(@intCast(estimated_resolve_queue_count)));
 
         var last_error: ?anyerror = null;
 
-        // safe-transpile: for with index access requires manual review
-    outer: for (ctx.import_records.slice(), 0..) |*import_record, i| {
+        outer: for (ctx.import_records.slice(), 0..) |*import_record, i| {
             // Preserve original import specifier before resolution modifies path
             if (import_record.original_path.len == 0) {
                 import_record.original_path = import_record.path.text;
@@ -3055,7 +3038,7 @@ pub const BundleV2 = struct {
                 import_record.flags.is_external_without_side_effects = true;
             }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             if (this.enqueueOnResolvePluginIfNeeded(source.index.get(), import_record, source.path.text, @as(u32, @truncate(i)), ctx.target)) {
                 continue;
             }
@@ -3523,14 +3506,13 @@ pub const BundleV2 = struct {
         }
 
         const path_to_source_index_map = this.pathToSourceIndexMap(ctx.target);
-        // safe-transpile: for with index access requires manual review
-    for (import_records.slice(), 0..) |*record, i| {
+        for (import_records.slice(), 0..) |*record, i| {
             if (path_to_source_index_map.getPath(&record.path)) |source_index| {
                 if (save_import_record_source_index or input_file_loaders[source_index].isCSS())
                     record.source_index.value = source_index;
 
                 if (getRedirectId(ctx.redirect_import_record_index)) |compare| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     if (compare == @as(u32, @truncate(i))) {
                         path_to_source_index_map.put(
                             this.allocator(),
@@ -3543,7 +3525,7 @@ pub const BundleV2 = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn generateServerHTMLModule(this: *BundleV2, path: *const Fs.Path, target: options.Target, import_record: *ImportRecord, path_text: []const u8) !void {
         // 1. Create the ast right here
         // 2. Create a separate "virutal" module that becomes the manifest later on.
@@ -3629,9 +3611,9 @@ pub const BundleV2 = struct {
 
         var diff: i32 = -1;
         defer {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             logScanCounter("in parse task .pending_items += {d} = {d}\n", .{ diff, @as(i32, @intCast(graph.pending_items)) + diff });
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             graph.pending_items = @intCast(@as(i32, @intCast(graph.pending_items)) + diff);
             if (diff < 0)
                 this.onAfterDecrementScanCounter();
@@ -3857,7 +3839,7 @@ pub const BundleV2 = struct {
     }
 
     /// To satisfy the interface from NewHotReloader()
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn bustDirCache(vm: *BundleV2, path: []const u8) bool {
         return vm.transpiler.resolver.bustDirCache(path);
     }
@@ -4194,14 +4176,12 @@ pub const CrossChunkImport = struct {
 
         const import_items_list = imports_from_other_chunks.values();
         const chunk_indices = imports_from_other_chunks.keys();
-        // safe-transpile: for with index access requires manual review
-    for (chunk_indices, import_items_list) |chunk_index, import_items| {
+        for (chunk_indices, import_items_list) |chunk_index, import_items| {
             var chunk = &chunks[chunk_index];
 
             // Sort imports from a single chunk by alias for determinism
             const exports_to_other_chunks = &chunk.content.javascript.exports_to_other_chunks;
             // TODO: do we need to clone this array?
-// safe-transpile: for loop with pointer capture requires manual review
             for (import_items.slice()) |*item| {
                 item.export_alias = exports_to_other_chunks.get(item.ref).?;
                 bun.assert(item.export_alias.len > 0);
@@ -4233,7 +4213,7 @@ pub const CompileResult = union(enum) {
         /// without re-scanning the original (unconverted) AST.
         decls: []const DeclInfo = &.{},
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn code(this: @This()) []const u8 {
             return switch (this.result) {
                 .result => |result| result.code,
@@ -4264,7 +4244,7 @@ pub const CompileResult = union(enum) {
         },
     };
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn code(this: *const CompileResult) []const u8 {
         return switch (this.*) {
             .javascript => |r| r.code(),
@@ -4308,14 +4288,14 @@ pub const ContentHasher = struct {
 
     const log = bun.Output.scoped(.ContentHasher, .hidden);
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(self: *ContentHasher, bytes: []const u8) void {
         log("HASH_UPDATE {d}:\n{s}\n----------\n", .{ bytes.len, std.mem.sliceAsBytes(bytes) });
         self.hasher.update(std.mem.asBytes(&bytes.len));
         self.hasher.update(bytes);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn run(bytes: []const u8) u64 {
         var hasher = ContentHasher{};
         hasher.write(bytes);
@@ -4470,9 +4450,8 @@ const ExternalFreeFunctionAllocator = struct {
         bun.default_allocator.destroy(self);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn free(ext_free_function: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize) void {
-// safe-transpile: @alignCast requires manual review
         const info: *ExternalFreeFunctionAllocator = @ptrCast(@alignCast(ext_free_function));
         info.free_callback(info.context);
         info.deinit();

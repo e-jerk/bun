@@ -247,7 +247,7 @@ pub fn listen(globalObject: *jsc.JSGlobalObject, opts: JSValue) bun.JSError!JSVa
                 const hostz = bun.handleOom(bun.default_allocator.dupeZ(u8, host.host));
                 defer bun.default_allocator.free(hostz);
                 const ls = this.group.listen(kind, this.secure_ctx, hostz.ptr, host.port, socket_flags, @sizeOf(?*anyopaque), &errno);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 if (ls) |s| connection.host.port = @intCast(s.getLocalPort());
                 break :brk ls;
             },
@@ -645,7 +645,7 @@ pub fn connectInner(globalObject: *jsc.JSGlobalObject, prev_maybe_tcp: ?*TCPSock
                 }
                 if (fd_type == uv.Handle.Type.unknown) {
                     // is not a libuv fd, check if it's a named pipe
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const osfd: uv.uv_os_fd_t = @ptrFromInt(@as(usize, @intCast(uvfd)));
                     if (bun.windows.GetFileType(osfd) == bun.windows.FILE_TYPE_PIPE) {
                         // yay its a named pipe lets make it a libuv fd
@@ -962,9 +962,9 @@ fn normalizePipeName(pipe_name: []const u8, buffer: []u8) ?[]const u8 {
         // normalize pipe name with can have mixed slashes
         // pipes are simple and this will be faster than using node:path.resolve()
         // we dont wanna to normalize the pipe name it self only the pipe identifier (//./pipe/, //?/pipe/, etc)
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buffer[0..9], "\\\\.\\pipe\\");
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buffer[9..pipe_name.len], pipe_name[9..]);
         return buffer[0..pipe_name.len];
     } else {
@@ -1004,7 +1004,6 @@ pub const WindowsNamedPipeListeningContext = if (Environment.isWindows) struct {
     }
 
     fn onPipeClosed(pipe: *uv.Pipe) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
         const this: *WindowsNamedPipeListeningContext = @ptrCast(@alignCast(pipe.data));
         this.deinit();
     }
@@ -1015,7 +1014,7 @@ pub const WindowsNamedPipeListeningContext = if (Environment.isWindows) struct {
         this.uvPipe.close(onPipeClosed);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn listen(
         globalThis: *jsc.JSGlobalObject,
         path: []const u8,
@@ -1059,7 +1058,6 @@ pub const WindowsNamedPipeListeningContext = if (Environment.isWindows) struct {
             // we need to null terminate the path
             const len = @min(path.len, path_buf.len - 1);
 
-// safe-transpile: @memcpy requires manual review
             @memcpy(path_buf[0..len], path[0..len]);
             path_buf[len] = 0;
             const slice_z = path_buf[0..len :0];

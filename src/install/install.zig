@@ -10,7 +10,6 @@ pub const max_buntag_hash_buf_len: comptime_int = max_hex_hash_len + bun_hash_ta
 pub const BuntagHashBuf = [max_buntag_hash_buf_len]u8;
 
 pub fn buntaghashbuf_make(buf: *BuntagHashBuf, patch_hash: u64) [:0]u8 {
-// safe-transpile: @memcpy requires manual review
     @memcpy(buf[0..bun_hash_tag.len], bun_hash_tag);
     const digits = std.fmt.bufPrint(buf[bun_hash_tag.len..], "{x}", .{patch_hash}) catch |err|
         switch (err) {

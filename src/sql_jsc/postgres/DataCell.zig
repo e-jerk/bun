@@ -84,7 +84,6 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
     var stack_buffer: [16 * 1024]u8 = undefined;
 
     errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (array.items) |*cell| {
             cell.deinit();
         }
@@ -122,8 +121,7 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
                 const source = slice[1..];
                 // simple escape check to avoid something like "\\\\" and "\""
                 var is_escaped = false;
-                // safe-transpile: for with index access requires manual review
-    for (source, 0..source.len) |byte, index| {
+                for (source, 0..source.len) |byte, index| {
                     if (byte == '"' and !is_escaped) {
                         current_idx = index + 1;
                         break;
@@ -229,8 +227,7 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
                         // this is also a string until we reach "," or "}" but a single word string like Bun
                         var current_idx: usize = 0;
 
-                        // safe-transpile: for with index access requires manual review
-    for (slice, 0..slice.len) |byte, index| {
+                        for (slice, 0..slice.len) |byte, index| {
                             switch (byte) {
                                 '}', separator => {
                                     current_idx = index;
@@ -344,8 +341,7 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
                                 var has_exponent = false;
                                 var has_negative_sign = false;
                                 var has_positive_sign = false;
-                                // safe-transpile: for with index access requires manual review
-    for (slice, 0..slice.len) |byte, index| {
+                                for (slice, 0..slice.len) |byte, index| {
                                     switch (byte) {
                                         '0'...'9' => {},
                                         closing_brace, separator => {
@@ -430,7 +426,7 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
                                     else => {
                                         const value = std.fmt.parseInt(i32, element, 0) catch return error.UnsupportedArrayFormat;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                         try array.append(bun.default_allocator, SQLDataCell{ .tag = .int4, .value = .{ .int4 = @intCast(value) } });
                                         slice = trySlice(slice, current_idx);
                                         continue;
@@ -467,7 +463,7 @@ fn parseArray(bytes: []const u8, bigint: bool, comptime arrayType: types.Tag, gl
 
         return error.UnsupportedArrayFormat;
     }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return SQLDataCell{ .tag = .array, .value = .{ .array = .{ .ptr = array.items.ptr, .len = @truncate(array.items.len), .cap = @truncate(array.capacity) } }, .free_value = 1 };
 }
 
@@ -481,9 +477,9 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
                     return error.InvalidBinaryData;
                 }
                 // https://github.com/postgres/postgres/blob/master/src/backend/utils/adt/arrayfuncs.c#L1549-L1645
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 const dimensions_raw: int4 = @bitCast(bytes[0..4].*);
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 const contains_nulls: int4 = @bitCast(bytes[4..8].*);
 
                 const dimensions = @byteSwap(dimensions_raw);
@@ -517,7 +513,6 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
                 if (bytes.len < 20) {
                     return error.InvalidBinaryData;
                 }
-// safe-transpile: @bitCast requires manual review
                 const array_len: i32 = @byteSwap(@as(i32, @bitCast(bytes[12..16].*)));
                 if (array_len < 0) {
                     return error.InvalidBinaryData;
@@ -526,7 +521,7 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
                 // 4-byte length prefix + the 4-byte value for int4/float4).
                 const element_stride: usize = @sizeOf(try tag.byteArrayType()) * 2;
                 const max_elements = (bytes.len - 20) / element_stride;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (@as(usize, @intCast(array_len)) > max_elements) {
                     return error.InvalidBinaryData;
                 }
@@ -538,11 +533,11 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
                     .value = .{
                         .typed_array = .{
                             .head_ptr = if (bytes.len > 0) @constCast(bytes.ptr) else null,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                             .ptr = if (elements.len > 0) @ptrCast(elements.ptr) else null,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .len = @truncate(elements.len),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             .byte_len = @truncate(bytes.len),
                             .type = try tag.toJSTypedArrayType(),
                         },
@@ -651,7 +646,6 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
             if (binary) {
                 if (tag == .time and bytes.len == 8) {
                     // PostgreSQL sends time as microseconds since midnight in binary format
-// safe-transpile: @bitCast requires manual review
                     const microseconds = @byteSwap(@as(i64, @bitCast(bytes[0..8].*)));
 
                     // Use C++ helper for formatting
@@ -661,9 +655,7 @@ pub fn fromBytes(binary: bool, bigint: bool, oid: types.Tag, bytes: []const u8, 
                     return SQLDataCell{ .tag = .string, .value = .{ .string = bun.String.cloneUTF8(buffer[0..len]).value.WTFStringImpl }, .free_value = 1 };
                 } else if (tag == .timetz and bytes.len == 12) {
                     // PostgreSQL sends timetz as microseconds since midnight (8 bytes) + timezone offset in seconds (4 bytes)
-// safe-transpile: @bitCast requires manual review
                     const microseconds = @byteSwap(@as(i64, @bitCast(bytes[0..8].*)));
-// safe-transpile: @bitCast requires manual review
                     const tz_offset_seconds = @byteSwap(@as(i32, @bitCast(bytes[8..12].*)));
 
                     // Use C++ helper for formatting with timezone
@@ -760,11 +752,11 @@ fn pg_ntoT(comptime IntSize: usize, i: anytype) std.meta.Int(.unsigned, IntSize)
     @setRuntimeSafety(false);
     const T = @TypeOf(i);
     if (@typeInfo(T) == .array) {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return pg_ntoT(IntSize, @as(std.meta.Int(.unsigned, IntSize), @bitCast(i)));
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const casted: std.meta.Int(.unsigned, IntSize) = @intCast(i);
     return @byteSwap(casted);
 }
@@ -779,7 +771,7 @@ const PGNummericString = union(enum) {
     static: [:0]const u8,
     dynamic: []const u8,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: PGNummericString) []const u8 {
         return switch (this) {
             .static => |value| value,
@@ -830,7 +822,7 @@ fn parseBinaryNumeric(input: []const u8, result: *std.array_list.Managed(u8)) !P
     var scale_start: i32 = 0;
     if (weight < 0) {
         try result.append('0');
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         scale_start = @as(i32, @intCast(weight)) + 1;
     } else {
         var idx: usize = 0;
@@ -861,7 +853,7 @@ fn parseBinaryNumeric(input: []const u8, result: *std.array_list.Managed(u8)) !P
         // negative scale means we need to add zeros before the decimal point
         // greater than ndigits means we need to add zeros after the decimal point
         var idx: isize = scale_start;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const end: usize = result.items.len + @as(usize, @intCast(dscale));
         while (idx < dscale) : (idx += 4) {
             if (idx >= 0 and idx < dscale) {
@@ -886,13 +878,11 @@ fn parseBinaryNumeric(input: []const u8, result: *std.array_list.Managed(u8)) !P
 pub fn parseBinary(comptime tag: types.Tag, comptime ReturnType: type, bytes: []const u8) AnyPostgresError!ReturnType {
     switch (comptime tag) {
         .float8 => {
-// safe-transpile: @bitCast requires manual review
             return @as(f64, @bitCast(try parseBinary(.int8, i64, bytes)));
         },
         .int8 => {
             // pq_getmsgfloat8
             if (bytes.len != 8) return error.InvalidBinaryData;
-// safe-transpile: @bitCast requires manual review
             return @byteSwap(@as(i64, @bitCast(bytes[0..8].*)));
         },
         .int4 => {
@@ -902,11 +892,9 @@ pub fn parseBinary(comptime tag: types.Tag, comptime ReturnType: type, bytes: []
                     return bytes[0];
                 },
                 2 => {
-// safe-transpile: @bitCast requires manual review
                     return pg_ntoh16(@as(u16, @bitCast(bytes[0..2].*)));
                 },
                 4 => {
-// safe-transpile: @bitCast requires manual review
                     return @bitCast(pg_ntoh32(@as(u32, @bitCast(bytes[0..4].*))));
                 },
                 else => {
@@ -920,11 +908,9 @@ pub fn parseBinary(comptime tag: types.Tag, comptime ReturnType: type, bytes: []
                     return bytes[0];
                 },
                 2 => {
-// safe-transpile: @bitCast requires manual review
                     return pg_ntoh16(@as(u16, @bitCast(bytes[0..2].*)));
                 },
                 4 => {
-// safe-transpile: @bitCast requires manual review
                     return pg_ntoh32(@as(u32, @bitCast(bytes[0..4].*)));
                 },
                 else => {
@@ -941,10 +927,10 @@ pub fn parseBinary(comptime tag: types.Tag, comptime ReturnType: type, bytes: []
                 2 => {
                     // PostgreSQL stores numbers in big-endian format, so we must read as big-endian
                     // Read as raw 16-bit unsigned integer
-// safe-transpile: @bitCast requires manual review
+                    // safe-transpile: @bitCast requires manual review
                     const value: u16 = @bitCast(bytes[0..2].*);
                     // Convert from big-endian to native-endian (we always use little endian)
-// safe-transpile: @bitCast requires manual review
+                    // safe-transpile: @bitCast requires manual review
                     return @bitCast(@byteSwap(value)); // Cast to signed 16-bit integer (i16)
                 },
                 else => {
@@ -954,7 +940,6 @@ pub fn parseBinary(comptime tag: types.Tag, comptime ReturnType: type, bytes: []
         },
         .float4 => {
             // pq_getmsgfloat4
-// safe-transpile: @bitCast requires manual review
             return @as(f32, @bitCast(try parseBinary(.int4, i32, bytes)));
         },
         else => @compileError("TODO"),
@@ -974,7 +959,7 @@ pub const Putter = struct {
         if (cached_structure) |c| {
             if (c.fields) |f| {
                 names = f.ptr;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 names_count = @truncate(f.len);
             }
         }
@@ -984,7 +969,7 @@ pub const Putter = struct {
             array,
             structure,
             this.list.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             @truncate(this.fields.len),
             flags,
             @intFromEnum(result_mode),
@@ -1011,7 +996,7 @@ pub const Putter = struct {
         if (is_raw) {
             cell.* = SQLDataCell.raw(optional_bytes);
         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const tag = if (std.math.maxInt(short) < oid) .text else @as(types.Tag, @enumFromInt(@as(short, @intCast(oid))));
             cell.* = if (optional_bytes) |data|
                 try fromBytes((field.binary or this.binary) and tag.isBinaryFormatSupported(), this.bigint, tag, data.slice(), this.globalObject)
@@ -1028,7 +1013,7 @@ pub const Putter = struct {
             // The indexed columns can be out of order.
             .index => |i| i,
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             else => @intCast(index),
         };
 

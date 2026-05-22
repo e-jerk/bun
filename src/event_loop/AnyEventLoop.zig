@@ -38,7 +38,7 @@ pub const AnyEventLoop = union(EventLoopKind) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn pipeReadBuffer(this: *AnyEventLoop) []u8 {
         return switch (this.*) {
             .js => this.js.pipeReadBuffer(),
@@ -65,7 +65,7 @@ pub const AnyEventLoop = union(EventLoopKind) {
                 }
             },
             .mini => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 this.mini.tick(context, @ptrCast(isDone));
             },
         }

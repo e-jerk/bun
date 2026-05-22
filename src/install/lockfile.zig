@@ -440,7 +440,7 @@ pub fn maybeCloneFilteringRootPackages(
     const old_resolutions_lists = old_packages.items(.resolutions);
     const old_resolutions = old_packages.items(.resolution);
     var any_changes = false;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const end: PackageID = @truncate(old.packages.len);
 
     // set all disabled dependencies of workspaces to `invalid_package_id`
@@ -453,8 +453,7 @@ pub fn maybeCloneFilteringRootPackages(
         const old_workspace_dependencies = old_workspace_dependencies_list.get(old.buffers.dependencies.items);
         const old_workspace_resolutions = old_workspace_resolutions_list.mut(old.buffers.resolutions.items);
 
-        // safe-transpile: for with index access requires manual review
-    for (old_workspace_dependencies, old_workspace_resolutions) |dependency, *resolution| {
+        for (old_workspace_dependencies, old_workspace_resolutions) |dependency, *resolution| {
             if (!dependency.behavior.isEnabled(features) and resolution.* < end) {
                 resolution.* = invalid_package_id;
                 any_changes = true;
@@ -482,8 +481,7 @@ fn preprocessUpdateRequests(old: *Lockfile, manager: *PackageManager, updates: [
 
             for (updates) |update| {
                 if (update.package_id == invalid_package_id) {
-                    // safe-transpile: for with index access requires manual review
-    for (root_deps, old_resolutions) |dep, old_resolution| {
+                    for (root_deps, old_resolutions) |dep, old_resolution| {
                         if (dep.name_hash == String.Builder.stringHash(update.name)) {
                             if (old_resolution >= old.packages.len) continue;
                             const res = resolutions_of_yore[old_resolution];
@@ -519,11 +517,9 @@ fn preprocessUpdateRequests(old: *Lockfile, manager: *PackageManager, updates: [
             const old_resolutions: []const PackageID = old_resolutions_list.get(old.buffers.resolutions.items);
             const resolutions_of_yore: []const Resolution = old.packages.items(.resolution);
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (updates) |*update| {
                 if (update.package_id == invalid_package_id) {
-                    // safe-transpile: for with index access requires manual review
-    for (root_deps, old_resolutions) |*dep, old_resolution| {
+                    for (root_deps, old_resolutions) |*dep, old_resolution| {
                         if (dep.name_hash == String.Builder.stringHash(update.name)) {
                             if (old_resolution >= old.packages.len) continue;
                             const res = resolutions_of_yore[old_resolution];
@@ -568,7 +564,6 @@ pub fn clean(
     // This is wasteful, but we rarely log anything so it's fine.
     var log = logger.Log.init(bun.default_allocator);
     defer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (log.msgs.items) |*item| {
             item.deinit(bun.default_allocator);
         }
@@ -610,10 +605,9 @@ pub fn getWorkspacePkgIfWorkspaceDep(this: *const Lockfile, id: DependencyID) Pa
     const packages = this.packages.slice();
     const resolutions = packages.items(.resolution);
     const dependencies_lists = packages.items(.dependencies);
-    // safe-transpile: for with index access requires manual review
     for (resolutions, dependencies_lists, 0..) |resolution, dependencies, pkg_id| {
         if (resolution.tag != .workspace and resolution.tag != .root) continue;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (dependencies.contains(id)) return @intCast(pkg_id);
     }
 
@@ -632,10 +626,9 @@ pub fn getWorkspacePackageID(this: *const Lockfile, workspace_name_hash: ?Packag
         const packages = this.packages.slice();
         const name_hashes = packages.items(.name_hash);
         const resolutions = packages.items(.resolution);
-        // safe-transpile: for with index access requires manual review
-    for (resolutions, name_hashes, 0..) |res, name_hash, i| {
+        for (resolutions, name_hashes, 0..) |res, name_hash, i| {
             if (res.tag == .workspace and name_hash == workspace_name_hash_) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 break :brk @intCast(i);
             }
         }
@@ -744,7 +737,6 @@ pub fn cleanWithLogger(
             .string_buf = old.buffers.string_bytes.items,
         });
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (old.workspace_paths.values()) |*path| {
             workspace_paths_builder.count(old.str(path));
         }
@@ -757,8 +749,7 @@ pub fn cleanWithLogger(
 
         new.workspace_paths.entries.len = old.workspace_paths.entries.len;
 
-        // safe-transpile: for with index access requires manual review
-    for (old.workspace_paths.values(), new.workspace_paths.values()) |*src, *dest| {
+        for (old.workspace_paths.values(), new.workspace_paths.values()) |*src, *dest| {
             dest.* = workspace_paths_builder.append(String, old.str(src));
         }
         @memcpy(
@@ -768,8 +759,7 @@ pub fn cleanWithLogger(
 
         try new.workspace_versions.ensureTotalCapacity(z_allocator, old.workspace_versions.count());
         new.workspace_versions.entries.len = old.workspace_versions.entries.len;
-        // safe-transpile: for with index access requires manual review
-    for (versions, new.workspace_versions.values()) |src, *dest| {
+        for (versions, new.workspace_versions.values()) |src, *dest| {
             dest.* = src.append(old.buffers.string_bytes.items, @TypeOf(&workspace_paths_builder), &workspace_paths_builder);
         }
 
@@ -796,8 +786,7 @@ pub fn cleanWithLogger(
         var builder = new.stringBuilder();
         for (old.patched_dependencies.values()) |patched_dep| builder.count(patched_dep.path.slice(old.buffers.string_bytes.items));
         try builder.allocate();
-        // safe-transpile: for with index access requires manual review
-    for (old.patched_dependencies.keys(), old.patched_dependencies.values()) |k, v| {
+        for (old.patched_dependencies.keys(), old.patched_dependencies.values()) |k, v| {
             bun.assert(!v.patchfile_hash_is_null);
             var patchdep = v;
             patchdep.path = builder.append(String, patchdep.path.slice(old.buffers.string_bytes.items));
@@ -819,11 +808,9 @@ pub fn cleanWithLogger(
         const workspace_deps: []const Dependency = dep_list.get(new.buffers.dependencies.items);
         const resolved_ids: []const PackageID = res_list.get(new.buffers.resolutions.items);
 
-// safe-transpile: for loop with pointer capture requires manual review
         request_updated: for (updates) |*update| {
             if (update.package_id == invalid_package_id) {
-                // safe-transpile: for with index access requires manual review
-    for (resolved_ids, workspace_deps) |package_id, dep| {
+                for (resolved_ids, workspace_deps) |package_id, dep| {
                     if (update.matches(dep, string_buf)) {
                         if (package_id > new.packages.len) continue;
                         update.version_buf = string_buf;
@@ -1006,8 +993,7 @@ pub fn fetchNecessaryPackageMetadataAfterYarnOrPnpmMigration(this: *Lockfile, ma
     const pkg_metas = if (update_os_cpu) pkgs.items(.meta) else undefined;
 
     if (update_os_cpu) {
-        // safe-transpile: for with index access requires manual review
-    for (pkg_names, pkg_name_hashes, pkg_resolutions, pkg_bins, pkg_metas) |pkg_name, pkg_name_hash, pkg_res, *pkg_bin, *pkg_meta| {
+        for (pkg_names, pkg_name_hashes, pkg_resolutions, pkg_bins, pkg_metas) |pkg_name, pkg_name_hash, pkg_res, *pkg_bin, *pkg_meta| {
             switch (pkg_res.tag) {
                 .npm => {
                     const manifest = manager.manifests.byNameHash(
@@ -1052,8 +1038,7 @@ pub fn fetchNecessaryPackageMetadataAfterYarnOrPnpmMigration(this: *Lockfile, ma
             }
         }
     } else {
-        // safe-transpile: for with index access requires manual review
-    for (pkg_names, pkg_name_hashes, pkg_resolutions, pkg_bins) |pkg_name, pkg_name_hash, pkg_res, *pkg_bin| {
+        for (pkg_names, pkg_name_hashes, pkg_resolutions, pkg_bins) |pkg_name, pkg_name_hash, pkg_res, *pkg_bin| {
             switch (pkg_res.tag) {
                 .npm => {
                     const manifest = manager.manifests.byNameHash(
@@ -1286,7 +1271,7 @@ pub fn saveToDisk(this: *Lockfile, load_result: *const LoadResult, options: *con
             Global.crash();
         };
         if (bytes.items.len >= end_pos)
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             bytes.items[end_pos..][0..@sizeOf(usize)].* = @bitCast(total_size);
         break :bytes bytes.items;
     };
@@ -1441,7 +1426,7 @@ pub fn appendPackageDedupe(this: *Lockfile, pkg: *Package, buf: string) OOM!Pack
     const entry = try this.package_index.getOrPut(pkg.name_hash);
 
     if (!entry.found_existing) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const new_id: PackageID = @intCast(this.packages.len);
         pkg.meta.id = new_id;
         try this.packages.append(this.allocator, pkg.*);
@@ -1458,7 +1443,7 @@ pub fn appendPackageDedupe(this: *Lockfile, pkg: *Package, buf: string) OOM!Pack
                 return existing_id;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const new_id: PackageID = @intCast(this.packages.len);
             pkg.meta.id = new_id;
             try this.packages.append(this.allocator, pkg.*);
@@ -1487,15 +1472,14 @@ pub fn appendPackageDedupe(this: *Lockfile, pkg: *Package, buf: string) OOM!Pack
                 }
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const new_id: PackageID = @intCast(this.packages.len);
             pkg.meta.id = new_id;
             try this.packages.append(this.allocator, pkg.*);
 
             resolutions = this.packages.items(.resolution);
 
-            // safe-transpile: for with index access requires manual review
-    for (existing_ids.items, 0..) |existing_id, i| {
+            for (existing_ids.items, 0..) |existing_id, i| {
                 if (pkg.resolution.order(&resolutions[existing_id], buf, buf) == .gt) {
                     try existing_ids.insert(this.allocator, i, new_id);
                     return new_id;
@@ -1536,8 +1520,7 @@ pub fn getOrPutID(this: *Lockfile, id: PackageID, name_hash: PackageNameHash) OO
                 const resolutions = this.packages.items(.resolution);
                 const buf = this.buffers.string_bytes.items;
 
-                // safe-transpile: for with index access requires manual review
-    for (existing_ids.items, 0..) |existing_id, i| {
+                for (existing_ids.items, 0..) |existing_id, i| {
                     if (resolutions[id].order(&resolutions[existing_id], buf, buf) == .gt) {
                         try existing_ids.insert(this.allocator, i, id);
                         return;
@@ -1554,7 +1537,7 @@ pub fn getOrPutID(this: *Lockfile, id: PackageID, name_hash: PackageNameHash) OO
 }
 
 pub fn appendPackage(this: *Lockfile, package_: Lockfile.Package) OOM!Lockfile.Package {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const id: PackageID = @truncate(this.packages.len);
     return try appendPackageWithID(this, package_, id);
 }
@@ -1639,7 +1622,7 @@ pub const StringBuilder = struct {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn allocatedSlice(this: *StringBuilder) []const u8 {
         return if (this.ptr) |ptr| ptr[0..this.cap] else "";
     }
@@ -1914,7 +1897,6 @@ pub fn eql(l: *const Lockfile, r: *const Lockfile, cut_off_pkg_id: usize, alloca
     const l_extern_strings = l.buffers.extern_strings.items;
     const r_extern_strings = r.buffers.extern_strings.items;
 
-    // safe-transpile: for with index access requires manual review
     for (l_buf, r_buf) |l_ids, r_ids| {
         const l_pkg_id = l_ids.pkg_id;
         const r_pkg_id = r_ids.pkg_id;
@@ -1976,7 +1958,7 @@ pub fn generateMetaHash(this: *Lockfile, print_name_version_string: bool, packag
         while (i + 16 < packages_len) : (i += 16) {
             comptime var j: usize = 0;
             inline while (j < 16) : (j += 1) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 alphabetized_names[(i + j) - 1] = @as(PackageID, @truncate((i + j)));
                 // posix path separators because we only use posix in the lockfile
                 string_builder.fmtCount("{s}@{f}\n", .{ names[i + j].slice(bytes), resolutions[i + j].fmt(bytes, .posix) });
@@ -1984,7 +1966,7 @@ pub fn generateMetaHash(this: *Lockfile, print_name_version_string: bool, packag
         }
 
         while (i < packages_len) : (i += 1) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             alphabetized_names[i - 1] = @as(PackageID, @truncate(i));
             // posix path separators because we only use posix in the lockfile
             string_builder.fmtCount("{s}@{f}\n", .{ names[i].slice(bytes), resolutions[i].fmt(bytes, .posix) });
@@ -2109,7 +2091,7 @@ pub const default_trusted_dependencies_list: []const []const u8 = brk: {
     }
 
     const Sorter = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn lessThan(_: void, lhs: []const u8, rhs: []const u8) bool {
             return std.mem.order(u8, lhs, rhs) == .lt;
         }
@@ -2119,7 +2101,7 @@ pub const default_trusted_dependencies_list: []const []const u8 = brk: {
     std.sort.pdq([]const u8, buf[0..i], {}, Sorter.lessThan);
 
     var names: [i][]const u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(names[0..i], buf[0..i]);
     const final = names;
     break :brk &final;
@@ -2128,14 +2110,14 @@ pub const default_trusted_dependencies_list: []const []const u8 = brk: {
 /// The default list of trusted dependencies is a static hashmap
 pub const default_trusted_dependencies = brk: {
     const StringHashContext = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn hash(_: @This(), s: []const u8) u64 {
             @setEvalBranchQuota(999999);
             // truncate to u32 because Lockfile.trustedDependencies uses the same u32 string hash
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @intCast(@as(u32, @truncate(String.Builder.stringHash(s))));
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn eql(_: @This(), a: []const u8, b: []const u8) bool {
             @setEvalBranchQuota(999999);
             return std.mem.eql(u8, a, b);
@@ -2162,7 +2144,7 @@ pub const default_trusted_dependencies = brk: {
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hasTrustedDependency(this: *const Lockfile, name: []const u8, resolution: *const Resolution) bool {
     if (this.trusted_dependencies) |trusted_dependencies| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const hash = @as(u32, @truncate(String.Builder.stringHash(name)));
         return trusted_dependencies.contains(hash);
     }

@@ -516,7 +516,6 @@ pub fn computeCacheDirAndSubpath(
             if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                 cache_dir_subpath = ".";
             } else {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(folder_path_buf[0..folder.len], folder);
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
@@ -537,7 +536,6 @@ pub fn computeCacheDirAndSubpath(
             if (folder.len == 0 or (folder.len == 1 and folder[0] == '.')) {
                 cache_dir_subpath = ".";
             } else {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(folder_path_buf[0..folder.len], folder);
                 folder_path_buf[folder.len] = 0;
                 cache_dir_subpath = folder_path_buf[0..folder.len :0];
@@ -556,14 +554,14 @@ pub fn computeCacheDirAndSubpath(
                 const global_link_dir = manager.globalLinkDirPath();
                 var ptr = folder_path_buf;
                 var remain: []u8 = folder_path_buf[0..];
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(ptr[0..global_link_dir.len], global_link_dir);
                 remain = remain[global_link_dir.len..];
                 if (global_link_dir[global_link_dir.len - 1] != std.fs.path.sep) {
                     remain[0] = std.fs.path.sep;
                     remain = remain[1..];
                 }
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(remain[0..folder.len], folder);
                 remain = remain[folder.len..];
                 remain[0] = 0;
@@ -695,7 +693,6 @@ pub fn updateLockfileIfNeeded(
 ) !void {
     if (load_result == .ok and load_result.ok.serializer_result.packages_need_update) {
         const slice = manager.lockfile.packages.slice();
-// safe-transpile: for loop with pointer capture requires manual review
         for (slice.items(.meta)) |*meta| {
             // these are possibly updated later, but need to make sure non are zero
             meta.setHasInstallScript(false);
@@ -715,7 +712,7 @@ pub fn writeYarnLock(this: *PackageManager) !void {
     tmpname_buf[0..8].* = "tmplock-".*;
     var tmpfile = FileSystem.RealFS.Tmpfile{};
     var secret: [32]u8 = undefined;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     std.mem.writeInt(u64, secret[0..8], @as(u64, @intCast(@import("std-fs-compat").milliTimestamp())), .little);
     var base64_bytes: [64]u8 = undefined;
     var prng = std.Random.DefaultPrng.init(bun.fastRandom());

@@ -276,11 +276,11 @@ pub const Result = struct {
         if (strings.lastIndexOf(module, node_module_root)) |end_| {
             const end: usize = end_ + node_module_root.len;
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return @as(u32, @truncate(bun.hash(module[end..])));
         }
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return @as(u32, @truncate(bun.hash(this.path_pair.primary.text)));
     }
 };
@@ -377,7 +377,6 @@ pub const PendingResolution = struct {
         var list = list_;
         const dependencies = list.items(.dependency);
         const string_bufs = list.items(.string_buf);
-// safe-transpile: for loop with pointer capture requires manual review
         for (dependencies) |*dependency| {
             dependency.deinit();
         }
@@ -603,7 +602,6 @@ pub const Resolver = struct {
     }
 
     pub fn deinit(r: *ThisResolver) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (r.dir_cache.values()) |*di| di.deinit();
         r.dir_cache.deinit();
     }
@@ -1714,7 +1712,7 @@ pub const Resolver = struct {
     ///
     /// The helper function bun.strings.withoutTrailingSlashWindowsPath can be used
     /// to remove the trailing slash from a path
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn assertValidCacheKey(path: []const u8) void {
         if (Environment.allow_assert) {
             if (path.len > 1 and strings.charIsAnySlash(path[path.len - 1]) and !if (Environment.isWindows)
@@ -1739,7 +1737,7 @@ pub const Resolver = struct {
 
     /// bust both the named file and a parent directory, because `./hello` can resolve
     /// to `./hello.js` or `./hello/index.js`
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn bustDirCacheFromSpecifier(r: *ThisResolver, import_source_file: []const u8, specifier: []const u8) bool {
         if (std.fs.path.isAbsolute(specifier)) {
             const dir = bun.path.dirname(specifier, .auto);
@@ -2004,8 +2002,7 @@ pub const Resolver = struct {
                             string_buf = package_json.dependencies.source_buf;
                         }
 
-                        // safe-transpile: for with index access requires manual review
-    for (dependencies_list, 0..) |dependency, dependency_id| {
+                        for (dependencies_list, 0..) |dependency, dependency_id| {
                             if (!strings.eqlLong(dependency.name.slice(string_buf), esm.name, true)) {
                                 continue;
                             }
@@ -2355,7 +2352,7 @@ pub const Resolver = struct {
         resolution: Resolution,
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn enqueueDependencyToResolve(
         r: *ThisResolver,
         package_json_: ?*PackageJSON,
@@ -2790,9 +2787,9 @@ pub const Resolver = struct {
             // Path has more uncached components than our fixed queue can hold.
             // This only happens for user-controlled absolute import paths with
             // hundreds of short components — no real directory is this deep.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (@as(usize, @intCast(i)) >= bufs(.dir_entry_paths_to_resolve).len) return null;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))] = DirEntryResolveQueueItem{
                 .unsafe_path = top,
                 .result = result,
@@ -2802,9 +2799,9 @@ pub const Resolver = struct {
             if (rfs.entries.get(top)) |top_entry| {
                 switch (top_entry.*) {
                     .entries => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))].safe_path = top_entry.entries.dir;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))].fd = top_entry.entries.fd;
                     },
                     .err => |err| {
@@ -2821,7 +2818,7 @@ pub const Resolver = struct {
             if (result.status != .unknown) {
                 top_parent = result;
             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))] = DirEntryResolveQueueItem{
                     .unsafe_path = root_path,
                     .result = result,
@@ -2830,9 +2827,9 @@ pub const Resolver = struct {
                 if (rfs.entries.get(top)) |top_entry| {
                     switch (top_entry.*) {
                         .entries => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))].safe_path = top_entry.entries.dir;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             bufs(.dir_entry_paths_to_resolve)[@as(usize, @intCast(i))].fd = top_entry.entries.fd;
                         },
                         .err => |err| {
@@ -2846,7 +2843,7 @@ pub const Resolver = struct {
             }
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var queue_slice: []DirEntryResolveQueueItem = bufs(.dir_entry_paths_to_resolve)[0..@as(usize, @intCast(i))];
         if (Environment.allow_assert) assert(queue_slice.len > 0);
         var open_dir_count: usize = 0;
@@ -2981,14 +2978,14 @@ pub const Resolver = struct {
 
                 const safe_path = _safe_path.?;
 
-// zust: use zust.String or zust.GuardedSlice for slice operations
+                // zust: use zust.String or zust.GuardedSlice for slice operations
                 const dir_path_i = std.mem.indexOf(u8, safe_path, queue_top.unsafe_path) orelse unreachable;
                 var end = dir_path_i +
                     queue_top.unsafe_path.len;
 
                 // Directories must always end in a trailing slash or else various bugs can occur.
                 // This covers "what happens when the trailing"
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 end += @as(usize, @intCast(@intFromBool(safe_path.len > end and end > 0 and safe_path[end - 1] != std.fs.path.sep and safe_path[end] == std.fs.path.sep)));
                 break :brk safe_path[dir_path_i..end];
             };
@@ -3144,9 +3141,9 @@ pub const Resolver = struct {
                     (prefix.len > longest_match_prefix_length or
                         (prefix.len == longest_match_prefix_length and suffix.len > longest_match_suffix_length)))
                 {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     longest_match_prefix_length = @as(i32, @intCast(prefix.len));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     longest_match_suffix_length = @as(i32, @intCast(suffix.len));
                     longest_match = TSConfigMatch{ .prefix = prefix, .suffix = suffix, .original_paths = original_paths };
                 }
@@ -3924,7 +3921,7 @@ pub const Resolver = struct {
 
                 for (exts) |ext_to_replace| {
                     var buffer = tail[0 .. segment.len + ext_to_replace.len];
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(buffer[segment.len..buffer.len][0..ext_to_replace.len], ext_to_replace);
 
                     if (entries.get(buffer)) |query| {

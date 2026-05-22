@@ -193,8 +193,8 @@ pub fn openGlobalBinDir(opts_: ?*const Api.BunInstall) !@import("std-fs-compat")
     if (opts_) |opts| {
         if (opts.global_bin_dir) |home_dir| {
             if (home_dir.len > 0) {
-        var dir = @import("std-fs-compat").FsDir{ .fd = std.c.AT.FDCWD };
-        return try dir.makeOpenPath(home_dir, .{});
+                var dir = @import("std-fs-compat").FsDir{ .fd = std.c.AT.FDCWD };
+                return try dir.makeOpenPath(home_dir, .{});
             }
         }
     }
@@ -259,8 +259,7 @@ pub fn load(
         }
 
         if (config.scoped) |scoped| {
-            // safe-transpile: for with index access requires manual review
-    for (scoped.scopes.keys(), scoped.scopes.values()) |name, *registry_| {
+            for (scoped.scopes.keys(), scoped.scopes.values()) |name, *registry_| {
                 var registry = registry_.*;
                 if (registry.url.len == 0) registry.url = base.url;
                 try this.registries.put(allocator, Npm.Registry.Scope.hash(name), try Npm.Registry.Scope.fromAPI(name, registry, allocator, env));

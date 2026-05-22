@@ -37,12 +37,12 @@ pub fn skip(this: StackReader, count: isize) void {
             this.offset.* = 0;
             return;
         }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.offset.* -= @intCast(abs_count);
         return;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const ucount: usize = @intCast(count);
     if (this.offset.* + ucount > this.buffer.len) {
         this.offset.* = this.buffer.len;
@@ -58,7 +58,7 @@ pub fn read(this: StackReader, count: usize) AnyMySQLError.Error!Data {
         return AnyMySQLError.Error.ShortRead;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.skip(@intCast(count));
     return Data{
         .temporary = this.buffer[offset..this.offset.*],
@@ -68,7 +68,7 @@ pub fn read(this: StackReader, count: usize) AnyMySQLError.Error!Data {
 pub fn readZ(this: StackReader) AnyMySQLError.Error!Data {
     const remaining = this.peek();
     if (bun.strings.indexOfChar(remaining, 0)) |zero| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.skip(@intCast(zero + 1));
         return Data{
             .temporary = remaining[0..zero],

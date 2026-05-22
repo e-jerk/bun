@@ -47,7 +47,6 @@ fn onOpen(this: *HTTPClient) void {
             var hostname_needs_free = false;
             if (!strings.isIPAddress(_hostname)) {
                 if (_hostname.len < bun.http.temp_hostname.len) {
-// safe-transpile: @memcpy requires manual review
                     @memcpy(bun.http.temp_hostname[0.._hostname.len], _hostname);
                     bun.http.temp_hostname[_hostname.len] = 0;
                     hostname = bun.http.temp_hostname[0.._hostname.len :0];
@@ -222,7 +221,7 @@ pub fn writeEncrypted(this: *HTTPClient, encoded_data: []const u8) void {
             .tcp => |socket| socket.write(encoded_data),
             .none => 0,
         };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const pending = encoded_data[@intCast(written)..];
         if (pending.len > 0) {
             // lets flush when we are truly writable
@@ -354,7 +353,7 @@ pub fn onWritable(this: *ProxyTunnel, comptime is_ssl: bool, socket: NewHTTPCont
     if (written == encoded_data.len) {
         this.write_buffer.reset();
     } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.write_buffer.cursor += @intCast(written);
     }
 }

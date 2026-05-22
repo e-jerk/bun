@@ -161,13 +161,13 @@ pub fn decompress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_
     try in_with_trailer.appendSlice(&DEFLATE_TRAILER);
 
     self.decompress_stream.next_in = in_with_trailer.items.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.decompress_stream.avail_in = @intCast(in_with_trailer.items.len);
 
     while (true) {
         try out.ensureUnusedCapacity(COMPRESSION_BUFFER_SIZE);
         self.decompress_stream.next_out = out.unusedCapacitySlice().ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.decompress_stream.avail_out = @intCast(out.unusedCapacitySlice().len);
 
         const res = zlib.inflate(&self.decompress_stream, zlib.FlushValue.NoFlush);
@@ -202,13 +202,13 @@ pub fn decompress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn compress(self: *PerMessageDeflate, in_buf: []const u8, out: *std.array_list.Managed(u8)) error{ DeflateFailed, OutOfMemory }!void {
     self.compress_stream.next_in = in_buf.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.compress_stream.avail_in = @intCast(in_buf.len);
 
     while (true) {
         try out.ensureUnusedCapacity(COMPRESSION_BUFFER_SIZE);
         self.compress_stream.next_out = out.unusedCapacitySlice().ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.compress_stream.avail_out = @intCast(out.unusedCapacitySlice().len);
 
         const res = zlib.deflate(&self.compress_stream, zlib.FlushValue.SyncFlush);

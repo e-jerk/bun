@@ -434,7 +434,7 @@ pub const Number = struct {
     pub fn toStringFromF64(value: f64, allocator: std.mem.Allocator) ?string {
         if (value == @trunc(value) and (value < std.math.maxInt(i32) and value > std.math.minInt(i32))) {
             const int_value = @as(i64, @intFromFloat(value));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const abs = @as(u64, @intCast(@abs(int_value)));
 
             // do not allocate for a small set of constant numbers: -100 through 100
@@ -445,7 +445,7 @@ pub const Number = struct {
                     double_digit[abs];
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return std.fmt.allocPrint(allocator, "{d}", .{@as(i32, @intCast(int_value))}) catch return null;
         }
 
@@ -729,8 +729,7 @@ pub const Object = struct {
     }
 
     pub fn asProperty(obj: *const Object, name: string) ?Expr.Query {
-        // safe-transpile: for with index access requires manual review
-    for (obj.properties.slice(), 0..) |prop, i| {
+        for (obj.properties.slice(), 0..) |prop, i| {
             const value = prop.value orelse continue;
             const key = prop.key orelse continue;
             if (key.data != .e_string) continue;
@@ -739,7 +738,7 @@ pub const Object = struct {
                 return Expr.Query{
                     .expr = value,
                     .loc = key.loc,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .i = @as(u32, @truncate(i)),
                 };
             }
@@ -854,12 +853,12 @@ pub const String = struct {
         bun.assert(other.isUTF8());
 
         if (other.rope_len == 0) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             other.rope_len = @truncate(other.data.len);
         }
 
         if (this.rope_len == 0) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             this.rope_len = @truncate(this.data.len);
         }
 
@@ -907,7 +906,6 @@ pub const String = struct {
         const Value = @TypeOf(value);
         if (Value == []u16 or Value == []const u16) {
             return .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 .data = @as([*]const u8, @ptrCast(value.ptr))[0..value.len],
                 .is_utf16 = true,
             };
@@ -919,7 +917,7 @@ pub const String = struct {
     /// E.String containing non-ascii characters may not fully work.
     /// https://github.com/oven-sh/bun/issues/11963
     /// More investigation is needed.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn initReEncodeUTF8(utf8: []const u8, allocator: std.mem.Allocator) String {
         return if (bun.strings.isAllASCII(utf8))
             init(utf8)
@@ -927,7 +925,7 @@ pub const String = struct {
             init(bun.handleOom(bun.strings.toUTF16AllocForReal(allocator, utf8, false, false)));
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice8(this: *const String) []const u8 {
         bun.assert(!this.is_utf16);
         return this.data;
@@ -935,7 +933,6 @@ pub const String = struct {
 
     pub fn slice16(this: *const String) []const u16 {
         bun.assert(this.is_utf16);
-// safe-transpile: @alignCast requires manual review
         return @as([*]const u16, @ptrCast(@alignCast(this.data.ptr)))[0..this.data.len];
     }
 
@@ -952,7 +949,7 @@ pub const String = struct {
         this.next = null;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *String, allocator: std.mem.Allocator) []const u8 {
         this.resolveRopeIfNeeded(allocator);
         return bun.handleOom(this.string(allocator));
@@ -961,8 +958,7 @@ pub const String = struct {
     fn stringCompareForJavaScript(comptime T: type, a: []const T, b: []const T) std.math.Order {
         const a_slice = a[0..@min(a.len, b.len)];
         const b_slice = b[0..@min(a.len, b.len)];
-        // safe-transpile: for with index access requires manual review
-    for (a_slice, b_slice) |a_char, b_char| {
+        for (a_slice, b_slice) |a_char, b_char| {
             const delta: i32 = @as(i32, a_char) - @as(i32, b_char);
             if (delta != 0) {
                 return if (delta < 0) .lt else .gt;
@@ -997,7 +993,7 @@ pub const String = struct {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn cloneSliceIfNecessary(str: *const String, allocator: std.mem.Allocator) ![]const u8 {
         if (str.isUTF8()) {
             return allocator.dupe(u8, str.string(allocator) catch unreachable);
@@ -1016,11 +1012,11 @@ pub const String = struct {
             if (!strings.isAllASCII(s.data)) {
                 return null;
             }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(s.data.len);
         }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @truncate(s.slice16().len);
     }
 
@@ -1082,7 +1078,7 @@ pub const String = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn eqlComptime(s: *const String, comptime value: []const u8) bool {
         if (!s.isUTF8()) {
             bun.assertf(s.next == null, "transpiler: utf-16 string is a rope", .{}); // utf-16 strings are not ropes
@@ -1096,7 +1092,7 @@ pub const String = struct {
         // latin-1 or utf-8, rope
         return eql8Rope(s, value);
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn eql8Rope(s: *const String, value: []const u8) bool {
         bun.assertf(s.next != null and s.isUTF8(), "transpiler: bad call to eql8Rope", .{});
         if (s.rope_len != value.len) return false;
@@ -1153,7 +1149,7 @@ pub const String = struct {
             return bun.hash(s.data);
         } else {
             // hash utf-16
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return bun.hash(@as([*]const u8, @ptrCast(s.slice16().ptr))[0 .. s.slice16().len * 2]);
         }
     }
@@ -1198,7 +1194,7 @@ pub const String = struct {
         var buf = [_]u8{0} ** 4096;
         var i: usize = 0;
         for (s.slice16()) |char| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             buf[i] = @as(u8, @intCast(char));
             i += 1;
             if (i >= 4096) {

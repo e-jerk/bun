@@ -20,7 +20,10 @@ fn load_once() void {
 var loaded_once_done = false;
 
 pub fn load() void {
-    if (!loaded_once_done) { load_once(); loaded_once_done = true; }
+    if (!loaded_once_done) {
+        load_once();
+        loaded_once_done = true;
+    }
 }
 
 pub const Compressor = opaque {
@@ -37,13 +40,13 @@ pub const Compressor = opaque {
     }
 
     /// Compresses `input` into `output` and returns the number of bytes written.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn inflate(this: *Compressor, input: []const u8, output: []u8) Result {
         const written = libdeflate_deflate_compress(this, input.ptr, input.len, output.ptr, output.len);
         return Result{ .read = input.len, .written = written, .status = Status.success };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn maxBytesNeeded(this: *Compressor, input: []const u8, encoding: Encoding) usize {
         return switch (encoding) {
             Encoding.deflate => return libdeflate_deflate_compress_bound(this, input.len),
@@ -52,7 +55,7 @@ pub const Compressor = opaque {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn compress(this: *Compressor, input: []const u8, output: []u8, encoding: Encoding) Result {
         switch (encoding) {
             Encoding.deflate => return this.inflate(input, output),
@@ -61,13 +64,13 @@ pub const Compressor = opaque {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn zlib(this: *Compressor, input: []const u8, output: []u8) Result {
         const result = libdeflate_zlib_compress(this, input.ptr, input.len, output.ptr, output.len);
         return Result{ .read = input.len, .written = result, .status = Status.success };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn gzip(this: *Compressor, input: []const u8, output: []u8) Result {
         const result = libdeflate_gzip_compress(this, input.ptr, input.len, output.ptr, output.len);
         return Result{ .read = input.len, .written = result, .status = Status.success };
@@ -83,7 +86,7 @@ pub const Decompressor = opaque {
         return libdeflate_free_decompressor(this);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn deflate(this: *Decompressor, input: []const u8, output: []u8) Result {
         var actual_in_bytes_ret: usize = input.len;
         var actual_out_bytes_ret: usize = output.len;
@@ -91,7 +94,7 @@ pub const Decompressor = opaque {
         return Result{ .read = actual_in_bytes_ret, .written = actual_out_bytes_ret, .status = result };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn zlib(this: *Decompressor, input: []const u8, output: []u8) Result {
         var actual_in_bytes_ret: usize = input.len;
         var actual_out_bytes_ret: usize = output.len;
@@ -99,7 +102,7 @@ pub const Decompressor = opaque {
         return Result{ .read = actual_in_bytes_ret, .written = actual_out_bytes_ret, .status = result };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn gzip(this: *Decompressor, input: []const u8, output: []u8) Result {
         var actual_in_bytes_ret: usize = input.len;
         var actual_out_bytes_ret: usize = output.len;
@@ -107,7 +110,7 @@ pub const Decompressor = opaque {
         return Result{ .read = actual_in_bytes_ret, .written = actual_out_bytes_ret, .status = result };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decompress(this: *Decompressor, input: []const u8, output: []u8, encoding: Encoding) Result {
         switch (encoding) {
             Encoding.deflate => return this.deflate(input, output),

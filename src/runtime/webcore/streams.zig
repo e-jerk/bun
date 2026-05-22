@@ -1,5 +1,5 @@
 pub const Start = union(Tag) {
-const zust = @import("safe");
+    const zust = @import("safe");
     empty: void,
     err: Syscall.Error,
     chunk_size: Blob.SizeType,

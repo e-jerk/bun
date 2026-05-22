@@ -161,7 +161,7 @@ pub const ProxyEnvStorage = struct {
         ptr: *?*RefCountedEnvValue,
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn slot(self: *ProxyEnvStorage, name: []const u8) ?Slot {
         // On Windows the env.map is case-insensitive (CaseInsensitiveASCII-
         // StringArrayHashMap) — map.put("HTTP_PROXY", ...) and
@@ -239,7 +239,7 @@ pub const RefCountedEnvValue = struct {
     ref_count: RefCount,
     bytes: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn create(value: []const u8) *RefCountedEnvValue {
         return bun.new(RefCountedEnvValue, .{
             .ref_count = .init(),
@@ -265,7 +265,7 @@ pub const AWSSignatureCache = struct {
         this.cache.clearRetainingCapacity();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn get(this: *@This(), numeric_day: u64, key: []const u8) ?[]const u8 {
         this.lock.lock();
         defer this.lock.unlock();
@@ -280,7 +280,7 @@ pub const AWSSignatureCache = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn set(this: *@This(), numeric_day: u64, key: []const u8, value: [DIGESTED_HMAC_256_LEN]u8) void {
         this.lock.lock();
         defer this.lock.unlock();
@@ -414,18 +414,18 @@ pub const HotMap = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn get(this: *HotMap, key: []const u8, comptime Type: type) ?*Type {
         var entry = this._map.get(key) orelse return null;
         return entry.get(Type);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getEntry(this: *HotMap, key: []const u8) ?Entry {
         return this._map.get(key) orelse return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn insert(this: *HotMap, key: []const u8, ptr: anytype) void {
         const entry = bun.handleOom(this._map.getOrPut(key));
         if (entry.found_existing) {
@@ -436,7 +436,7 @@ pub const HotMap = struct {
         entry.value_ptr.* = Entry.init(ptr);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn remove(this: *HotMap, key: []const u8) void {
         const entry = this._map.getEntry(key) orelse return;
         const key_to_free = entry.key_ptr.*;
@@ -491,7 +491,6 @@ pub const EntropyCache = struct {
         this.index = 0;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *EntropyCache, len: usize) []u8 {
         if (len > this.cache.len) {
             return &[_]u8{};
@@ -567,7 +566,7 @@ pub fn stderr(rare: *RareData) *Blob.Store {
 
         switch (Syscall.fstat(fd)) {
             .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},
@@ -600,7 +599,7 @@ pub fn stdout(rare: *RareData) *Blob.Store {
 
         switch (Syscall.fstat(fd)) {
             .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},
@@ -631,7 +630,7 @@ pub fn stdin(rare: *RareData) *Blob.Store {
 
         switch (Syscall.fstat(fd)) {
             .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},

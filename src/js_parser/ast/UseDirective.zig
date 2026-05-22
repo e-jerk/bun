@@ -28,7 +28,7 @@ pub const UseDirective = enum(u2) {
         return @enumFromInt(@intFromEnum(other));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(contents: []const u8) ?UseDirective {
         const truncated = @import("std-fs-compat").trimLeft(u8, contents, " \t\n\r;");
 

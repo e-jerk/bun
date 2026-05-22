@@ -77,7 +77,7 @@ pub const CronRegisterJob = struct {
     pub const onReaderError = CronJobBase(CronRegisterJob).onReaderError;
     pub const onProcessExit = CronJobBase(CronRegisterJob).onProcessExit;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn setErr(this: *CronRegisterJob, comptime fmt: []const u8, args: anytype) void {
         if (this.err_msg == null)
             this.err_msg = std.fmt.allocPrint(bun.default_allocator, fmt, args) catch null;
@@ -106,7 +106,7 @@ pub const CronRegisterJob = struct {
                     // a clear message instead of the raw schtasks output.
                     if (comptime bun.Environment.isWindows) {
                         if (this.state == .installing_crontab and
-// zust: use zust.String or zust.GuardedSlice for slice operations
+                            // zust: use zust.String or zust.GuardedSlice for slice operations
                             std.mem.indexOf(u8, stderr_output, "No mapping between account names") != null)
                         {
                             this.setErr(
@@ -575,7 +575,7 @@ pub const CronRemoveJob = struct {
     pub const onReaderError = CronJobBase(CronRemoveJob).onReaderError;
     pub const onProcessExit = CronJobBase(CronRemoveJob).onProcessExit;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn setErr(this: *CronRemoveJob, comptime fmt: []const u8, args: anytype) void {
         if (this.err_msg == null)
             this.err_msg = std.fmt.allocPrint(bun.default_allocator, fmt, args) catch null;
@@ -1200,16 +1200,16 @@ fn spawnCmdGeneric(comptime Self: type, this: *Self, argv: anytype, stdin_opt: b
     var envp_arena = std.heap.ArenaAllocator.init(bun.default_allocator);
     defer envp_arena.deinit();
     const envp: [*:null]?[*:0]const u8 = if (comptime bun.Environment.isPosix)
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(@constCast(std.c.environ))
     else
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast((jsc.VirtualMachine.get().transpiler.env.map.createNullDelimitedEnvMap(envp_arena.allocator()) catch {
             this.setErr("Failed to create environment block", .{});
             this.finish();
             return;
         }).ptr);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     var spawned = (bun.spawn.spawnProcess(&spawn_options, @ptrCast(argv), envp) catch |e| {
         this.setErr("Failed to spawn process: {s}", .{@errorName(e)});
         this.finish();
@@ -1369,11 +1369,9 @@ fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
 
     // Parse each field into a list of integer values (or null for "*")
     var field_values: [5]?[]const i32 = .{ null, null, null, null, null };
-// safe-transpile: for loop with pointer capture requires manual review
     defer for (&field_values) |*fv| {
         if (fv.*) |v| bun.default_allocator.free(v);
     };
-    // safe-transpile: for with index access requires manual review
     for (fields[0..5], &field_values) |field, *fv| {
         if (bun.strings.eql(field, "*")) continue;
         var vals = std.array_list.Managed(i32).init(bun.default_allocator);
@@ -1410,8 +1408,7 @@ fn cronToCalendarInterval(schedule: []const u8) ![]const u8 {
         // Single dict, no product needed
         const plist_keys = [_][]const u8{ "Minute", "Hour", "Day", "Month", "Weekday" };
         try result.appendSlice("    <dict>\n");
-        // safe-transpile: for with index access requires manual review
-    for (field_values, plist_keys) |fv, key| {
+        for (field_values, plist_keys) |fv, key| {
             if (fv) |vals| {
                 if (vals.len == 1) {
                     try appendCalendarKey(&result, key, vals[0]);
@@ -1586,7 +1583,7 @@ fn cronToTaskXml(
                 mins_bits &= mins_bits - 1;
                 var sb_buf: [32]u8 = undefined;
                 const sb = std.fmt.bufPrint(&sb_buf, "2000-01-01T{d:0>2}:{d:0>2}:00", .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @as(u32, @intCast(h)), @as(u32, @intCast(m)),
                 }) catch return error.InvalidCron;
 
@@ -1662,7 +1659,7 @@ fn appendDaysOfMonthXml(xml: *std.array_list.Managed(u8), days: u32) !void {
     try xml.appendSlice("        <DaysOfMonth>\n");
     var buf: [32]u8 = undefined;
     for (1..32) |day| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (days & (@as(u32, 1) << @intCast(day)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <Day>{d}</Day>\n", .{day}) catch return error.InvalidCron;
             try xml.appendSlice(line);
@@ -1675,7 +1672,7 @@ fn appendMonthsXml(xml: *std.array_list.Managed(u8), months: u16) !void {
     try xml.appendSlice("        <Months>\n");
     var buf: [32]u8 = undefined;
     for (1..13) |mo| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (months & (@as(u16, 1) << @intCast(mo)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <{s}/>\n", .{month_names[mo]}) catch return error.InvalidCron;
             try xml.appendSlice(line);
@@ -1689,7 +1686,7 @@ fn appendDaysOfWeekXml(xml: *std.array_list.Managed(u8), weekdays: u8) !void {
     try xml.appendSlice("        <DaysOfWeek>\n");
     var buf: [32]u8 = undefined;
     for (0..7) |d| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         if (weekdays & (@as(u8, 1) << @intCast(d)) != 0) {
             const line = std.fmt.bufPrint(&buf, "          <{s}/>\n", .{day_names[d]}) catch return error.InvalidCron;
             try xml.appendSlice(line);

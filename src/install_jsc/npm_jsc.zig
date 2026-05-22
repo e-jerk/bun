@@ -103,8 +103,7 @@ pub const ManifestBindings = struct {
 
         try writer.print("{{\"name\":\"{s}\",\"versions\":[", .{package_manifest.name()});
 
-        // safe-transpile: for with index access requires manual review
-    for (package_manifest.versions, 0..) |version, i| {
+        for (package_manifest.versions, 0..) |version, i| {
             if (i == package_manifest.versions.len - 1)
                 try writer.print("\"{f}\"]}}", .{version.fmt(package_manifest.string_buf)})
             else

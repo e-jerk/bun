@@ -16,7 +16,7 @@ pub fn toHaveReturnedWith(this: *Expect, globalThis: *JSGlobalObject, callframe:
         return globalThis.throw("Expected value must be a mock function: {f}", .{value.toFmt(&formatter)});
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const calls_count = @as(u32, @intCast(try returns.getLength(globalThis)));
     var pass = false;
 
@@ -27,7 +27,7 @@ pub fn toHaveReturnedWith(this: *Expect, globalThis: *JSGlobalObject, callframe:
 
     // Check for a pass and collect info for error messages
     for (0..calls_count) |i| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const result = returns.getDirectIndex(globalThis, @truncate(i));
 
         if (result.isObject()) {

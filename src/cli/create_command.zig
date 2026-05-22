@@ -62,7 +62,7 @@ fn execTask(allocator: std.mem.Allocator, task_: string, cwd: string, _: string,
         count += 1;
     }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const npm_args = 2 * @as(usize, @intCast(@intFromBool(npm_client != null)));
     const total = count + npm_args;
     var argv = allocator.alloc(string, total) catch return;
@@ -87,7 +87,6 @@ fn execTask(allocator: std.mem.Allocator, task_: string, cwd: string, _: string,
     }
 
     Output.pretty("\n<r><d>$<b>", .{});
-    // safe-transpile: for with index access requires manual review
     for (argv, 0..) |arg, i| {
         if (i > argv.len - 1) {
             Output.print(" {s} ", .{arg});
@@ -195,7 +194,7 @@ const CreateOptions = struct {
 const BUN_CREATE_DIR = ".bun-create";
 var home_dir_buf: bun.PathBuffer = undefined;
 pub const CreateCommand = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn exec(ctx: Command.Context, example_tag: Example.Tag, template: []const u8) !void {
         @branchHint(.cold);
 
@@ -346,7 +345,7 @@ pub const CreateCommand = struct {
                     [1]Archiver.Plucker{undefined};
 
                 var archive_context = Archiver.Context{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .pluckers = pluckers[0..@as(usize, @intCast(@intFromBool(!create_options.skip_package_json)))],
                     .all_files = undefined,
                     .overwrite_list = bun.StringArrayHashMap(void).init(ctx.allocator),
@@ -453,7 +452,10 @@ pub const CreateCommand = struct {
                     template_path_buf[src_without_trailing_slash.len] = std.fs.path.sep;
                 }
 
-                const destination_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), destination) catch |err| { Output.err(err, "failed to open destination", .{}); Global.crash(); }).fd };
+                const destination_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), destination) catch |err| {
+                    Output.err(err, "failed to open destination", .{});
+                    Global.crash();
+                }).fd };
                 const Walker = @import("../sys/walker_skippable.zig");
                 var walker_ = try Walker.walk(.fromStdDir(template_dir), ctx.allocator, skip_files, skip_dirs);
                 defer walker_.deinit();
@@ -473,12 +475,10 @@ pub const CreateCommand = struct {
                             if (comptime Environment.isWindows) {
                                 if (entry.kind != .file and entry.kind != .directory) continue;
 
-// safe-transpile: @memcpy requires manual review
                                 @memcpy(dst_buf[dst_base_len..][0..entry.path.len], entry.path);
                                 dst_buf[dst_base_len + entry.path.len] = 0;
                                 const dst = dst_buf[0 .. dst_base_len + entry.path.len :0];
 
-// safe-transpile: @memcpy requires manual review
                                 @memcpy(src_buf[src_base_len..][0..entry.path.len], entry.path);
                                 src_buf[src_base_len + entry.path.len] = 0;
                                 const src = src_buf[0 .. src_base_len + entry.path.len :0];
@@ -541,7 +541,7 @@ pub const CreateCommand = struct {
                             switch (infile.stat()) {
                                 .err => {},
                                 .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     _ = outfile.chmod(@intCast(stat.mode));
                                 },
                             }
@@ -643,8 +643,7 @@ pub const CreateCommand = struct {
             }
 
             if (std.c.unlinkat(parent_dir.fd, "gitignore", 0) != 0) {} // ignore error
-            if (std.c.unlinkat(
-                parent_dir.fd, ".npmignore", 0) != 0) {} // ignore error
+            if (std.c.unlinkat(parent_dir.fd, ".npmignore", 0) != 0) {} // ignore error
         }
 
         var start_command: string = "bun dev";
@@ -1413,7 +1412,7 @@ pub const CreateCommand = struct {
                     package_json_file = null;
                     break :process_package_json;
                 };
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 file.truncate(@intCast(written.len)).unwrap() catch |err| {
                     Output.prettyErrorln("package.json failed to write due to error {s}", .{@errorName(err)});
                     package_json_file = null;
@@ -1653,7 +1652,7 @@ pub const CreateCommand = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn runOnEntryPoint(ctx: Command.Context, example_tag: Example.Tag, entry_point: []const u8, progress: *Progress, node: *Progress.Node) !void {
         const Analyzer = struct {
             ctx: Command.Context,
@@ -1679,7 +1678,7 @@ pub const CreateCommand = struct {
         var fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
             .ctx = &analyzer,
             .entry_points = &[_]string{analyzer.entry_point},
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
         try bun.cli.BuildCommand.exec(bun.cli.Command.get(), &fetcher);
@@ -1891,19 +1890,28 @@ pub const Example = struct {
             if (env_loader.map.get("BUN_CREATE_DIR")) |home_dir| {
                 var parts = [_]string{home_dir};
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[0] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open BUN_CREATE_DIR", .{}); Global.crash(); }).fd };
+                folders[0] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                    Output.err(err, "failed to open BUN_CREATE_DIR", .{});
+                    Global.crash();
+                }).fd };
             }
 
             {
                 var parts = [_]string{ filesystem.top_level_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[1] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open BUN_CREATE_DIR", .{}); Global.crash(); }).fd };
+                folders[1] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                    Output.err(err, "failed to open BUN_CREATE_DIR", .{});
+                    Global.crash();
+                }).fd };
             }
 
             if (env_loader.map.get(bun.env_var.HOME.key())) |home_dir| {
                 var parts = [_]string{ home_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[2] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| { Output.err(err, "failed to open HOME dir", .{}); Global.crash(); }).fd };
+                folders[2] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                    Output.err(err, "failed to open HOME dir", .{});
+                    Global.crash();
+                }).fd };
             }
 
             // subfolders with package.json
@@ -1996,13 +2004,13 @@ pub const Example = struct {
                     .{
                         .name = .{
                             .offset = 0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast("Authorization".len),
                         },
                         .value = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .offset = @intCast("Authorization".len),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast(headers_buf.len - "Authorization".len),
                         },
                     },
@@ -2274,8 +2282,7 @@ pub const Example = struct {
                 const count = q.expr.data.e_object.properties.len;
 
                 var list = try ctx.allocator.alloc(Example, count);
-                // safe-transpile: for with index access requires manual review
-    for (q.expr.data.e_object.properties.slice(), 0..) |property, i| {
+                for (q.expr.data.e_object.properties.slice(), 0..) |property, i| {
                     const name = property.key.?.data.e_string.data;
                     list[i] = Example{
                         .name = if (std.mem.indexOfScalar(u8, name, '/')) |slash|

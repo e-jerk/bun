@@ -14,11 +14,10 @@ pub fn decodeInternal(
         .version = version,
     };
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const unrecognized_options_count: u32 = @intCast(@max(try reader.int4(), 0));
     try this.unrecognized_options.ensureTotalCapacity(bun.default_allocator, unrecognized_options_count);
     errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.unrecognized_options.items) |*option| {
             option.deinit();
         }

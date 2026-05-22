@@ -129,7 +129,7 @@ pub fn LinearFifo(
                 if (self.count > 0) {
                     var new_bytes = std.mem.sliceAsBytes(buf);
                     const old_bytes = std.mem.sliceAsBytes(self.readableSlice(0));
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(new_bytes[0..old_bytes.len], old_bytes);
                 }
                 self.allocator.free(self.buf);
@@ -228,7 +228,7 @@ pub fn LinearFifo(
 
         /// Same as `read` except it returns an error union
         /// The purpose of this function existing is to match `std.io.Reader` API.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn readFn(self: *Self, dest: []u8) error{}!usize {
             return self.read(dest);
         }
@@ -321,7 +321,7 @@ pub fn LinearFifo(
 
         /// Same as `write` except it returns the number of bytes written, which is always the same
         /// as `bytes.len`. The purpose of this function existing is to match `std.io.Writer` API.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn appendWrite(self: *Self, bytes: []const u8) error{OutOfMemory}!usize {
             try self.write(bytes);
             return bytes.len;
@@ -429,7 +429,7 @@ pub fn LinearFifo(
         pub fn pump(self: *Self, src_reader: anytype, dest_writer: *std.Io.Writer) !void {
             assert(self.buf.len > 0);
             while (true) {
-var loop_limit: usize = 0;
+                var loop_limit: usize = 0;
                 loop_limit += 1;
                 std.debug.assert(loop_limit <= 1_000_000);
                 if (self.writableLength() > 0) {

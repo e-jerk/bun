@@ -156,7 +156,7 @@ pub fn NewZlibReader(comptime Writer: type, comptime buffer_size: usize) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(writer: Writer, input: []const u8, allocator: std.mem.Allocator) !*ZlibReader {
             var zlib_reader = try zust.Box(ZlibReader).init(allocator, undefined);
             zlib_reader.ptr.* = ZlibReader{
@@ -169,9 +169,9 @@ pub fn NewZlibReader(comptime Writer: type, comptime buffer_size: usize) type {
 
             zlib_reader.ptr.zlib = zStream_struct{
                 .next_in = input.ptr,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .avail_in = @as(uInt, @intCast(input.len)),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .total_in = @as(uInt, @intCast(input.len)),
 
                 .next_out = &zlib_reader.ptr.buf,
@@ -363,7 +363,7 @@ pub const ZlibReaderArrayList = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),
@@ -376,12 +376,12 @@ pub const ZlibReaderArrayList = struct {
         return initWithOptions(input, list, allocator, options);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithOptions(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibReader {
         return initWithOptionsAndListAllocator(input, list, allocator, allocator, options);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithOptionsAndListAllocator(input: []const u8, list: *std.ArrayListUnmanaged(u8), list_allocator: std.mem.Allocator, allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibReader {
         var zlib_reader = try zust.Box(ZlibReader).init(allocator, undefined);
         zlib_reader.ptr.* = ZlibReader{
@@ -395,15 +395,15 @@ pub const ZlibReaderArrayList = struct {
 
         zlib_reader.ptr.zlib = zStream_struct{
             .next_in = input.ptr,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_in = @truncate(input.len),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_in = @truncate(input.len),
 
             .next_out = zlib_reader.ptr.list.items.ptr,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_out = @truncate(zlib_reader.ptr.list.items.len),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_out = @truncate(zlib_reader.ptr.list.items.len),
 
             .err_msg = null,
@@ -486,9 +486,9 @@ pub const ZlibReaderArrayList = struct {
                 const initial = this.list.items.len;
                 try this.list.ensureUnusedCapacity(this.list_allocator, 4096);
                 this.list.expandToCapacity();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 this.zlib.next_out = @ptrCast(&this.list.items[initial]);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.zlib.avail_out = @truncate(this.list.items.len -| initial);
             }
 
@@ -809,12 +809,12 @@ pub const ZlibCompressorArrayList = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibCompressor {
         return initWithListAllocator(input, list, allocator, allocator, options);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithListAllocator(input: []const u8, list: *std.ArrayListUnmanaged(u8), allocator: std.mem.Allocator, list_allocator: std.mem.Allocator, options: Options) ZlibError!*ZlibCompressor {
         var zlib_reader = try zust.Box(ZlibCompressor).init(allocator, undefined);
         zlib_reader.ptr.* = ZlibCompressor{
@@ -828,15 +828,15 @@ pub const ZlibCompressorArrayList = struct {
 
         zlib_reader.ptr.zlib = zStream_struct{
             .next_in = input.ptr,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_in = @truncate(input.len),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_in = @truncate(input.len),
 
             .next_out = zlib_reader.ptr.list.items.ptr,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .avail_out = @truncate(zlib_reader.ptr.list.items.len),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .total_out = @truncate(zlib_reader.ptr.list.items.len),
 
             .err_msg = null,
@@ -862,13 +862,13 @@ pub const ZlibCompressorArrayList = struct {
             @sizeOf(zStream_struct),
         )) {
             ReturnCode.Ok => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 zlib_reader.ptr.list.ensureTotalCapacityPrecise(list_allocator, deflateBound(&zlib_reader.ptr.zlib, @intCast(input.len))) catch {
                     zlib_reader.ptr.deinit();
                     return error.OutOfMemory;
                 };
                 zlib_reader.ptr.list_ptr.* = zlib_reader.ptr.list;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 zlib_reader.ptr.zlib.avail_out = @truncate(zlib_reader.ptr.list.capacity);
                 zlib_reader.ptr.zlib.next_out = zlib_reader.ptr.list.items.ptr;
 
@@ -936,9 +936,9 @@ pub const ZlibCompressorArrayList = struct {
                 const initial = this.list.items.len;
                 try this.list.ensureUnusedCapacity(this.list_allocator, 4096);
                 this.list.expandToCapacity();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 this.zlib.next_out = @ptrCast(&this.list.items[initial]);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.zlib.avail_out = @truncate(this.list.items.len -| initial);
             }
 

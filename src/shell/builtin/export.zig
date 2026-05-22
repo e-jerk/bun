@@ -120,7 +120,6 @@ pub fn deinit(this: *Export) void {
 }
 
 pub inline fn bltn(this: *Export) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("export", this));
     return @fieldParentPtr("impl", impl);
 }

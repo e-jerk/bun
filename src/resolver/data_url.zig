@@ -15,7 +15,7 @@ pub const PercentEncoding = struct {
     }
 
     /// returns true if str starts with a valid path character or a percent encoded octet
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn isPchar(str: []const u8) bool {
         if (comptime Environment.allow_assert) bun.assert(str.len > 0);
         return switch (str[0]) {
@@ -26,18 +26,18 @@ pub const PercentEncoding = struct {
     }
 
     /// decode path if it is percent encoded, returns EncodeError if URL unsafe characters are present and not percent encoded
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decode(allocator: Allocator, path: []const u8) EncodeError!?[]u8 {
         return _decode(allocator, path, true);
     }
 
     /// Replaces percent encoded entities within `path` without throwing an error if other URL unsafe characters are present
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decodeUnstrict(allocator: Allocator, path: []const u8) EncodeError!?[]u8 {
         return _decode(allocator, path, false);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn _decode(allocator: Allocator, path: []const u8, strict: bool) EncodeError!?[]u8 {
         var ret: ?[]u8 = null;
         errdefer if (ret) |some| allocator.free(some);
@@ -106,7 +106,7 @@ pub const DataURL = struct {
     }
 
     /// Decodes the data from the data URL. Always returns an owned slice.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn decodeData(url: DataURL, allocator: Allocator) ![]u8 {
         const percent_decoded_owned: ?[]u8 = try PercentEncoding.decodeUnstrict(allocator, url.data);
         defer if (percent_decoded_owned) |owned| allocator.free(owned);
@@ -127,7 +127,7 @@ pub const DataURL = struct {
     }
 
     /// Returns the shorter of either a base64-encoded or percent-escaped data URL
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encodeStringAsShortestDataURL(allocator: Allocator, mime_type: []const u8, text: []const u8) []u8 {
         // Calculate base64 version
         const base64_encode_len = bun.base64.encodeLen(text);
@@ -160,7 +160,7 @@ pub const DataURL = struct {
     const CountingBuf = struct {
         len: usize = 0,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn appendSlice(self: *CountingBuf, slice: []const u8) Allocator.Error!void {
             self.len += slice.len;
         }
@@ -174,7 +174,7 @@ pub const DataURL = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encodeStringAsPercentEscapedDataURL(buf: anytype, mime_type: []const u8, text: []const u8) !bool {
         const hex = "0123456789ABCDEF";
 

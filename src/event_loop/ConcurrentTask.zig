@@ -43,7 +43,7 @@ pub const PackedNextPtr = enum(usize) {
     }
 
     pub inline fn atomicLoadPtr(self: *const PackedNextPtr, ordering: std.builtin.AtomicOrder) ?*ConcurrentTask {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const value = @atomicLoad(usize, @as(*const usize, @ptrCast(self)), ordering);
         const addr = value & ~@as(usize, 1);
         return if (addr == 0) null else @ptrFromInt(addr);
@@ -53,7 +53,7 @@ pub const PackedNextPtr = enum(usize) {
         const ptr_bits = if (ptr) |p| @intFromPtr(p) else 0;
         // auto_delete is immutable after construction, so we can safely read it
         // with a relaxed load and preserve it in the new value.
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const self_ptr: *usize = @ptrCast(self);
         const auto_del_bit = @atomicLoad(usize, self_ptr, .monotonic) & 1;
         @atomicStore(usize, self_ptr, ptr_bits | auto_del_bit, ordering);

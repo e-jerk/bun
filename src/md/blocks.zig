@@ -188,7 +188,6 @@ pub fn analyzeLine(self: *Parser, off_start: OFF, p_end: *OFF, pivot_line: *cons
                     const align_mask_: usize = @alignOf(BlockHeader) - 1;
                     const top_off = (self.block_bytes.items.len - @sizeOf(BlockHeader) + align_mask_) & ~align_mask_;
                     if (top_off + @sizeOf(BlockHeader) <= self.block_bytes.items.len) {
-// safe-transpile: @alignCast requires manual review
                         const top_hdr: *const BlockHeader = @ptrCast(@alignCast(self.block_bytes.items.ptr + (self.block_bytes.items.len - @sizeOf(BlockHeader))));
                         if (top_hdr.block_type == .li) {
                             self.last_list_item_starts_with_two_blank_lines = true;
@@ -206,7 +205,6 @@ pub fn analyzeLine(self: *Parser, off_start: OFF, p_end: *OFF, pivot_line: *cons
                     n_brothers + n_children == 0 and self.current_block == null and
                     self.block_bytes.items.len > @sizeOf(BlockHeader))
                 {
-// safe-transpile: @alignCast requires manual review
                     const top_hdr: *const BlockHeader = @ptrCast(@alignCast(self.block_bytes.items.ptr + (self.block_bytes.items.len - @sizeOf(BlockHeader))));
                     if (top_hdr.block_type == .li) {
                         n_parents -= 1;
@@ -489,9 +487,9 @@ pub fn analyzeLine(self: *Parser, off_start: OFF, p_end: *OFF, pivot_line: *cons
             {
                 const task_container = if (n_children > 0) &self.containers.items[self.n_containers - 1] else &container;
                 task_container.is_task = true;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 task_container.task_mark_off = @intCast(tmp + 1);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 off = @intCast(tmp + 3);
                 while (off < self.size and helpers.isWhitespace(self.text[off]))
                     off += 1;
@@ -846,7 +844,6 @@ pub fn consumeRefDefsFromCurrentBlock(self: *Parser) void {
 }
 
 pub fn getBlockHeaderAt(self: *Parser, off: usize) *BlockHeader {
-// safe-transpile: @alignCast requires manual review
     return @ptrCast(@alignCast(self.block_bytes.items.ptr + off));
 }
 

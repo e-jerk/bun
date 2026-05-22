@@ -75,14 +75,14 @@ pub const BunSocketContextOptions = extern struct {
             fn f(hp: *bun.sha.Hashers.SHA256, s: [*c]const u8) void {
                 hp.update(&.{@intFromBool(s != null)});
                 if (s) |p| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const path = std.mem.span(@as([*:0]const u8, @ptrCast(p)));
                     hp.update(path);
                     var meta: [3]i64 = @splat(0);
                     if (path.len > 0) switch (bun.sys.stat(path)) {
                         .result => |st| {
                             const mt = st.mtime();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             meta = .{ @intCast(mt.sec), @intCast(mt.nsec), @intCast(st.size) };
                         },
                         .err => {},

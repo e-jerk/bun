@@ -159,8 +159,7 @@ pub fn childDone(this: *Assigns, child: ChildPtr, exit_code: ExitCode) Yield {
             const size = brk: {
                 var total: usize = 0;
                 const last = expanding.current_expansion_result.items.len -| 1;
-                // safe-transpile: for with index access requires manual review
-    for (expanding.current_expansion_result.items, 0..) |slice, i| {
+                for (expanding.current_expansion_result.items, 0..) |slice, i| {
                     total += slice.len;
                     if (i != last) {
                         // Let's not forget to count the space in between the
@@ -176,9 +175,7 @@ pub fn childDone(this: *Assigns, child: ChildPtr, exit_code: ExitCode) Yield {
                 var merged = bun.handleOom(this.base.allocator().alloc(u8, size));
                 var i: usize = 0;
                 const last = expanding.current_expansion_result.items.len -| 1;
-                // safe-transpile: for with index access requires manual review
-    for (expanding.current_expansion_result.items, 0..) |slice, j| {
-// safe-transpile: @memcpy requires manual review
+                for (expanding.current_expansion_result.items, 0..) |slice, j| {
                     @memcpy(merged[i .. i + slice.len], slice[0..slice.len]);
                     i += slice.len;
                     if (j != last) {

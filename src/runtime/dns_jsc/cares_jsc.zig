@@ -415,7 +415,6 @@ fn anyReplyAppend(globalThis: *jsc.JSGlobalObject, array: jsc.JSValue, i: *u32, 
     };
 
     var upper = comptime lookup_name[0..lookup_name.len].*;
-// safe-transpile: for loop with pointer capture requires manual review
     inline for (&upper) |*char| {
         char.* = std.ascii.toUpper(char.*);
     }
@@ -476,7 +475,7 @@ pub const ErrorDeferred = struct {
 
     pub const new = bun.TrivialNew(@This());
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(errno: c_ares.Error, syscall: []const u8, hostname: ?bun.String, promise: jsc.JSPromise.Strong) *ErrorDeferred {
         return ErrorDeferred.new(.{
             .errno = errno,

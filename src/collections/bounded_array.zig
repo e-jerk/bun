@@ -50,7 +50,7 @@ pub fn BoundedArrayAligned(
         /// Returns error.Overflow if it exceeds the length of the backing array.
         pub fn init(len: usize) error{Overflow}!Self {
             if (len > buffer_capacity) return error.Overflow;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return Self{ .len = @intCast(len) };
         }
 
@@ -83,7 +83,7 @@ pub fn BoundedArrayAligned(
         /// Copy the content of an existing slice.
         pub fn fromSlice(m: []const T) error{Overflow}!Self {
             var list = try init(m.len);
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(list.slice(), m);
             return list;
         }
@@ -176,10 +176,10 @@ pub fn BoundedArrayAligned(
         /// This operation is O(N).
         pub fn insertSlice(self: *Self, i: usize, items: []const T) error{Overflow}!void {
             try self.ensureUnusedCapacity(items.len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             self.len += @intCast(items.len);
             mem.copyBackwards(T, self.slice()[i + items.len .. self.len], self.constSlice()[i .. self.len - items.len]);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(self.slice()[i..][0..items.len], items);
         }
 
@@ -196,23 +196,20 @@ pub fn BoundedArrayAligned(
             var range = self.slice()[start..after_range];
 
             if (range.len == new_items.len) {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(range[0..new_items.len], new_items);
             } else if (range.len < new_items.len) {
                 const first = new_items[0..range.len];
                 const rest = new_items[range.len..];
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(range[0..first.len], first);
                 try self.insertSlice(after_range, rest);
             } else {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(range[0..new_items.len], new_items);
                 const after_subrange = start + new_items.len;
-                // safe-transpile: for with index access requires manual review
-    for (self.constSlice()[after_range..], 0..) |item, i| {
+                for (self.constSlice()[after_range..], 0..) |item, i| {
                     self.slice()[after_subrange..][i] = item;
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.len = @intCast(@as(usize, self.len) - @as(usize, len) - @as(usize, new_items.len));
             }
         }
@@ -238,8 +235,7 @@ pub fn BoundedArrayAligned(
             const newlen = self.len - 1;
             if (newlen == i) return self.pop().?;
             const old_item = self.get(i);
-            // safe-transpile: for with index access requires manual review
-    for (self.slice()[i..newlen], 0..) |*b, j| b.* = self.get(i + 1 + j);
+            for (self.slice()[i..newlen], 0..) |*b, j| b.* = self.get(i + 1 + j);
             self.set(newlen, undefined);
             self.len = newlen;
             return old_item;
@@ -266,9 +262,9 @@ pub fn BoundedArrayAligned(
         pub fn appendSliceAssumeCapacity(self: *Self, items: []const T) void {
             const old_len = self.len;
             const new_len: usize = old_len + @as(usize, items.len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             self.len = @intCast(new_len);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(self.slice()[old_len..][0..items.len], items);
         }
 
@@ -285,7 +281,7 @@ pub fn BoundedArrayAligned(
         pub fn appendNTimesAssumeCapacity(self: *Self, value: T, n: usize) void {
             const old_len: usize = self.len;
             const new_len: usize = old_len + @as(usize, n);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             self.len = @intCast(new_len);
             assert(self.len <= buffer_capacity);
             @memset(self.slice()[old_len..self.len], value);
@@ -304,7 +300,7 @@ pub fn BoundedArrayAligned(
 
         /// Same as `appendSlice` except it returns the number of bytes written, which is always the same
         /// as `m.len`. The purpose of this function existing is to match `@import("std-io-compat").GenericWriter` API.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn appendWrite(self: *Self, m: []const u8) error{Overflow}!usize {
             try self.appendSlice(m);
             return m.len;

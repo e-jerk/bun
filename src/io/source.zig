@@ -78,7 +78,6 @@ pub const Source = union(enum) {
         pub fn stop(this: *File) void {
             if (this.state != .operating) return;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const cancel_result = uv.uv_cancel(@ptrCast(&this.fs));
             if (cancel_result == 0) {
                 this.state = .canceling;
@@ -148,9 +147,9 @@ pub const Source = union(enum) {
 
     pub fn getHandle(this: Source) *uv.Handle {
         return switch (this) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .pipe => @ptrCast(this.pipe),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .tty => @ptrCast(this.tty),
             .sync_file, .file => unreachable,
         };
@@ -158,7 +157,7 @@ pub const Source = union(enum) {
     pub fn toStream(this: Source) *uv.uv_stream_t {
         return switch (this) {
             .pipe => this.pipe.asStream(),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             .tty => @ptrCast(this.tty),
             .sync_file, .file => unreachable,
         };

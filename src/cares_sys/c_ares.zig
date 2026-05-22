@@ -214,7 +214,7 @@ pub const struct_hostent = extern struct {
         }.handle;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime lookup_name: []const u8,
         comptime Type: type,
@@ -291,7 +291,7 @@ pub const hostent_with_ttls = struct {
         }.handle;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime lookup_name: []const u8,
         comptime Type: type,
@@ -313,7 +313,7 @@ pub const hostent_with_ttls = struct {
         }.handle;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(comptime lookup_name: []const u8, buffer: [*c]u8, buffer_length: c_int) jsc.Node.Maybe(*hostent_with_ttls, Error) {
         var start: ?*struct_hostent = null;
 
@@ -327,9 +327,8 @@ pub const hostent_with_ttls = struct {
             }
             var with_ttls = bun.handleOom(safe.Box(hostent_with_ttls).init(bun.default_allocator, undefined));
             with_ttls.ptr.hostent = start.?;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-            // safe-transpile: for with index access requires manual review
-    for (addrttls[0..@intCast(naddrttls)], 0..) |ttl, i| {
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            for (addrttls[0..@intCast(naddrttls)], 0..) |ttl, i| {
                 with_ttls.ptr.ttls[i] = ttl.ttl;
             }
             return .{ .result = with_ttls.ptr };
@@ -345,9 +344,8 @@ pub const hostent_with_ttls = struct {
             }
             var with_ttls = bun.handleOom(safe.Box(hostent_with_ttls).init(bun.default_allocator, undefined));
             with_ttls.ptr.hostent = start.?;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-            // safe-transpile: for with index access requires manual review
-    for (addr6ttls[0..@intCast(naddr6ttls)], 0..) |ttl, i| {
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            for (addr6ttls[0..@intCast(naddr6ttls)], 0..) |ttl, i| {
                 with_ttls.ptr.ttls[i] = ttl.ttl;
             }
             return .{ .result = with_ttls.ptr };
@@ -425,7 +423,6 @@ pub const AddrInfo = extern struct {
 
     pub const toJSArray = @import("../runtime/dns_jsc/cares_jsc.zig").addrInfoToJSArray;
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub inline fn name(this: *const AddrInfo) []const u8 {
         const name_ = this.name_ orelse return "";
         return bun.span(name_);
@@ -496,7 +493,7 @@ pub const Channel = opaque {
         // default stand means setServers() works as the documented workaround.
         opts.flags = ARES_FLAG_NOCHECKRESP;
         opts.sock_state_cb = &SockStateWrap.onSockState;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         opts.sock_state_cb_data = @as(*anyopaque, @ptrCast(this));
         opts.timeout = options.timeout orelse -1;
         opts.tries = options.tries orelse 4;
@@ -573,13 +570,13 @@ pub const Channel = opaque {
     ///
     ///Please note that the function will attempt a connection on each of the resolved addresses as per RFC 6724.
     ///
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getAddrInfo(this: *Channel, host: []const u8, port: u16, hints: []const AddrInfo_hints, comptime Type: type, ctx: *Type, comptime callback: AddrInfo.Callback(Type)) void {
         var host_buf: [1024]u8 = undefined;
         var port_buf: [52]u8 = undefined;
         const host_ptr: ?[*:0]const u8 = brk: {
             const len = @min(host.len, host_buf.len - 1);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(host_buf[0..len], host[0..len]);
             host_buf[len] = 0;
             break :brk host_buf[0..len :0].ptr;
@@ -594,15 +591,14 @@ pub const Channel = opaque {
         };
 
         var hints_buf: [3]AddrInfo_hints = bun.zero([3]AddrInfo_hints);
-        // safe-transpile: for with index access requires manual review
-    for (hints[0..@min(hints.len, 2)], 0..) |hint, i| {
+        for (hints[0..@min(hints.len, 2)], 0..) |hint, i| {
             hints_buf[i] = hint;
         }
         const hints_: [*c]const AddrInfo_hints = if (hints.len > 0) &hints_buf else null;
         ares_getaddrinfo(this, host_ptr, port_ptr, hints_, AddrInfo.callbackWrapper(Type, callback), ctx);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn resolve(this: *Channel, name: []const u8, comptime lookup_name: []const u8, comptime Type: type, ctx: *Type, comptime cares_type: type, comptime callback: cares_type.Callback(Type)) void {
         if (name.len >= 1023 or (name.len == 0 and !(bun.strings.eqlComptime(lookup_name, "ns") or bun.strings.eqlComptime(lookup_name, "soa")))) {
             return cares_type.callbackWrapper(lookup_name, Type, callback).?(ctx, ARES_EBADNAME, 0, null, 0);
@@ -611,7 +607,7 @@ pub const Channel = opaque {
         var name_buf: [1024]u8 = undefined;
         const name_ptr: [*:0]const u8 = brk: {
             const len = @min(name.len, name_buf.len - 1);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(name_buf[0..len], name[0..len]);
 
             name_buf[len] = 0;
@@ -622,7 +618,7 @@ pub const Channel = opaque {
         ares_query(this, name_ptr, NSClass.ns_c_in, @field(NSType, field_name), cares_type.callbackWrapper(lookup_name, Type, callback), ctx);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getHostByAddr(this: *Channel, ip_addr: []const u8, comptime Type: type, ctx: *Type, comptime callback: struct_hostent.Callback(Type)) void {
         // "0000:0000:0000:0000:0000:ffff:192.168.100.228".length = 45
         const buf_size = 46;
@@ -632,7 +628,7 @@ pub const Channel = opaque {
                 break :brk null;
             }
             const len = @min(ip_addr.len, addr_buf.len - 1);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(addr_buf[0..len], ip_addr[0..len]);
 
             addr_buf[len] = 0;
@@ -776,7 +772,7 @@ pub const struct_ares_caa_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_caa_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -820,7 +816,7 @@ pub const struct_ares_srv_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_srv_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -862,7 +858,7 @@ pub const struct_ares_mx_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_mx_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -906,7 +902,7 @@ pub const struct_ares_txt_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_txt_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -958,7 +954,7 @@ pub const struct_ares_naptr_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_naptr_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -1004,7 +1000,7 @@ pub const struct_ares_soa_reply = extern struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_ares_soa_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -1062,7 +1058,7 @@ pub const struct_any_reply = struct {
         return fn (*Type, status: ?Error, timeouts: i32, results: ?*struct_any_reply) void;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn callbackWrapper(
         comptime _: []const u8,
         comptime Type: type,
@@ -1535,7 +1531,7 @@ pub fn getSockaddr(addr: []const u8, port: u16, sa: *std.posix.sockaddr) c_int {
             return -1;
         }
         const len = @min(addr.len, buf.len - 1);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buf[0..len], addr[0..len]);
 
         buf[len] = 0;
@@ -1543,7 +1539,6 @@ pub fn getSockaddr(addr: []const u8, port: u16, sa: *std.posix.sockaddr) c_int {
     };
 
     {
-// safe-transpile: @alignCast requires manual review
         const in: *std.posix.sockaddr.in = @ptrCast(@alignCast(sa));
         if (ares_inet_pton(AF.INET, addr_ptr, &in.addr) == 1) {
             in.*.family = AF.INET;
@@ -1552,7 +1547,6 @@ pub fn getSockaddr(addr: []const u8, port: u16, sa: *std.posix.sockaddr) c_int {
         }
     }
     {
-// safe-transpile: @alignCast requires manual review
         const in6: *std.posix.sockaddr.in6 = @ptrCast(@alignCast(sa));
         if (ares_inet_pton(AF.INET6, addr_ptr, &in6.addr) == 1) {
             in6.*.family = AF.INET6;

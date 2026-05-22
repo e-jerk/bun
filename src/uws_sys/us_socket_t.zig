@@ -25,7 +25,7 @@ pub const us_socket_t = opaque {
         debug("us_socket_open({p}, is_client: {})", .{ this, is_client });
         if (ip_addr) |ip| {
             bun.assert(ip.len < max_i32);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             _ = c.us_socket_open(this, @intFromBool(is_client), ip.ptr, @intCast(@min(ip.len, max_i32)));
         } else {
             _ = c.us_socket_open(this, @intFromBool(is_client), null, 0);
@@ -77,9 +77,9 @@ pub const us_socket_t = opaque {
     }
 
     /// Returned slice is a view into `buf`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn localAddress(this: *us_socket_t, buf: []u8) ![]const u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var length: i32 = @intCast(@min(buf.len, max_i32));
         c.us_socket_local_address(this, buf.ptr, &length);
         if (length < 0) {
@@ -88,14 +88,14 @@ pub const us_socket_t = opaque {
             return bun.errnoToZigErr(errno);
         }
         bun.unsafeAssert(buf.len >= length);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return buf[0..@intCast(length)];
     }
 
     /// Returned slice is a view into `buf`. On error, `errno` should be set.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn remoteAddress(this: *us_socket_t, buf: []u8) ![]const u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         var length: i32 = @intCast(@min(buf.len, max_i32));
         c.us_socket_remote_address(this, buf.ptr, &length);
         if (length < 0) {
@@ -104,7 +104,7 @@ pub const us_socket_t = opaque {
             return bun.errnoToZigErr(errno);
         }
         bun.unsafeAssert(buf.len >= length);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return buf[0..@intCast(length)];
     }
 
@@ -127,7 +127,7 @@ pub const us_socket_t = opaque {
     /// `SSL*` if TLS, else null. Use `getFd()` for the descriptor.
     pub fn ssl(this: *us_socket_t) ?*BoringSSL.SSL {
         if (!this.isTLS()) return null;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(c.us_socket_get_native_handle(this));
     }
 
@@ -140,14 +140,12 @@ pub const us_socket_t = opaque {
 
     pub fn ext(this: *us_socket_t, comptime T: type) *T {
         @setRuntimeSafety(true);
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(c.us_socket_ext(this)));
     }
 
     /// Type-erased ext storage — `LIBUS_EXT_ALIGNMENT`-aligned bytes
     /// immediately after the C struct. Prefer `ext(T)`.
     pub fn extPtr(this: *us_socket_t) [*]align(16) u8 {
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(c.us_socket_ext(this)));
     }
 
@@ -204,24 +202,24 @@ pub const us_socket_t = opaque {
         c.us_socket_set_ssl_raw_tap(this, @intFromBool(enabled));
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(this: *us_socket_t, data: []const u8) i32 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = c.us_socket_write(this, data.ptr, @intCast(@min(data.len, max_i32)));
         debug("us_socket_write({p}, {d}) = {d}", .{ this, data.len, rc });
         return rc;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeFd(this: *us_socket_t, data: []const u8, file_descriptor: bun.FD) i32 {
         if (bun.Environment.isWindows) @compileError("TODO: implement writeFd on Windows");
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const rc = c.us_socket_ipc_write_fd(this, data.ptr, @intCast(@min(data.len, max_i32)), file_descriptor.native());
         debug("us_socket_ipc_write_fd({p}, {d}, {d}) = {d}", .{ this, data.len, file_descriptor.native(), rc });
         return rc;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write2(this: *us_socket_t, first: []const u8, second: []const u8) i32 {
         const rc = c.us_socket_write2(this, first.ptr, first.len, second.ptr, second.len);
         debug("us_socket_write2({p}, {d}, {d}) = {d}", .{ this, first.len, second.len, rc });
@@ -229,10 +227,10 @@ pub const us_socket_t = opaque {
     }
 
     /// Bypass TLS — raw bytes to the fd even if `isTLS()`.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn rawWrite(this: *us_socket_t, data: []const u8) i32 {
         debug("us_socket_raw_write({p}, {d})", .{ this, data.len });
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return c.us_socket_raw_write(this, data.ptr, @intCast(@min(data.len, max_i32)));
     }
 

@@ -118,7 +118,7 @@ pub const Value = union(Kind) {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn asSlice(v: Value) []const u8 {
         return switch (v) {
             .buffer => |buf| buf.bytes,
@@ -136,7 +136,7 @@ pub const Value = union(Kind) {
                     allocator: std.mem.Allocator,
 
                     fn onFree(ctx: *@This(), buffer: *anyopaque, len: u32) callconv(.c) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                         ctx.allocator.free(@as([*]u8, @ptrCast(buffer))[0..len]);
                         bun.destroy(ctx);
                     }

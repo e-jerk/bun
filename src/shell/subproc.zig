@@ -499,7 +499,7 @@ pub const ShellSubprocess = struct {
             return .success;
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return this.process.kill(@intCast(sig));
     }
 
@@ -647,7 +647,7 @@ pub const ShellSubprocess = struct {
                     try writer.writeAll(self.val);
                 }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                // safe-transpile: function uses raw slice parameter — consider zust.String
                 pub fn eqlComptime(this: Key, comptime str: []const u8) bool {
                     return bun.strings.eqlComptime(this.val, str);
                 }
@@ -676,7 +676,7 @@ pub const ShellSubprocess = struct {
             pub fn next(this: *@This()) !?@This().Entry {
                 const entry = this.iter.next() orelse return null;
                 var value = try this.alloc.allocSentinel(u8, entry.value_ptr.value.len, 0);
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(value[0..entry.value_ptr.value.len], entry.value_ptr.value);
                 value[entry.value_ptr.value.len] = 0;
                 return .{
@@ -815,7 +815,6 @@ pub const ShellSubprocess = struct {
         // aren't leaked.
         var stdio_consumed = false;
         defer if (!stdio_consumed) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (&spawn_args.stdio) |*s| s.deinit();
         };
 
@@ -871,9 +870,9 @@ pub const ShellSubprocess = struct {
 
         var spawn_result = switch (bun.spawn.spawnProcess(
             &spawn_options,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @ptrCast(spawn_args.cmd_parent.args.items.ptr),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @ptrCast(spawn_args.env_array.items.ptr),
         ) catch |err| {
             spawn_options.deinit();
@@ -1034,7 +1033,7 @@ pub const PipeReader = struct {
             };
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn slice(this: *BufferedOutput) []const u8 {
             return switch (this.*) {
                 .bytelist => this.bytelist.slice(),
@@ -1042,7 +1041,7 @@ pub const PipeReader = struct {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn append(this: *BufferedOutput, bytes: []const u8) void {
             switch (this.*) {
                 .bytelist => {
@@ -1053,9 +1052,9 @@ pub const PipeReader = struct {
                     // TODO: We should probably throw error here?
                     if (this.array_buffer.i >= array_buf_slice.len) return;
                     const length = @min(array_buf_slice.len - this.array_buffer.i, bytes.len);
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(array_buf_slice[this.array_buffer.i .. this.array_buffer.i + length], bytes[0..length]);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     this.array_buffer.i += @intCast(length);
                 },
             }
@@ -1080,7 +1079,7 @@ pub const PipeReader = struct {
         written: usize = 0,
         err: ?jsc.SystemError = null,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn doWrite(this: *CapturedWriter, chunk: []const u8) void {
             if (this.dead or this.err != null) return;
 
@@ -1088,7 +1087,6 @@ pub const PipeReader = struct {
             this.writer.enqueue(this, null, chunk).run();
         }
 
-// safe-transpile: function returns small constant slice — consider zust.String
         pub fn getBuffer(this: *CapturedWriter) []const u8 {
             const p = this.parent();
             if (this.written >= p.reader.buffer().items.len) return "";
@@ -1230,9 +1228,8 @@ pub const PipeReader = struct {
 
     pub const toJS = toReadableStream;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onReadChunk(ptr: *anyopaque, chunk: []const u8, has_more: bun.io.ReadState) bool {
-// safe-transpile: @alignCast requires manual review
         var this: *PipeReader = @ptrCast(@alignCast(ptr));
         this.buffered_output.append(chunk);
         log("PipeReader(0x{x}, {s}) onReadChunk(chunk_len={d}, has_more={s})", .{ @intFromPtr(this), @tagName(this.out_type), chunk.len, @tagName(has_more) });
@@ -1318,12 +1315,12 @@ pub const PipeReader = struct {
         return this.reader.takeBuffer();
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *PipeReader) []const u8 {
         return this.buffered_output.slice();
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn toOwnedSlice(this: *PipeReader) []u8 {
         if (this.state == .done) {
             return this.state.done;

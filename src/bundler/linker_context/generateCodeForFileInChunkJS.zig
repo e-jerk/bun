@@ -165,9 +165,8 @@ pub fn generateCodeForFileInChunkJS(
     }
 
     // Add all other parts in this chunk
-    // safe-transpile: for with index access requires manual review
     for (parts, 0..) |part, index_| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const index = part_range.part_index_begin + @as(u32, @truncate(index_));
         if (!part.is_live) {
             // Skip the part if it's not in this chunk
@@ -234,7 +233,6 @@ pub fn generateCodeForFileInChunkJS(
 
                 // If any top-level properties ended up being imported directly, change
                 // the property to just reference the corresponding variable instead
-// safe-transpile: for loop with pointer capture requires manual review
                 for (new_properties.slice()) |*prop| {
                     if (prop.key == null or prop.key.?.data != .e_string or prop.value == null) continue;
                     const name = prop.key.?.data.e_string.slice(temp_allocator);
@@ -453,7 +451,6 @@ pub fn generateCodeForFileInChunkJS(
 
                                 // Convert the declarations to assignments
                                 var value = Expr.empty;
-// safe-transpile: for loop with pointer capture requires manual review
                                 for (local.decls.slice()) |*decl| {
                                     if (decl.value) |initializer| {
                                         const can_be_moved = initializer.canBeMoved();

@@ -47,7 +47,6 @@ pub fn VisitStmt(
                 }
 
                 if (data.items.len > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.items) |*item| {
                         try p.recordDeclaredSymbol(item.name.ref.?);
                     }
@@ -60,7 +59,6 @@ pub fn VisitStmt(
                 var end: usize = 0;
                 var any_replaced = false;
                 if (p.options.features.replace_exports.count() > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.items) |*item| {
                         const name = p.loadNameFromRef(item.name.ref.?);
 
@@ -90,7 +88,6 @@ pub fn VisitStmt(
                         end += 1;
                     }
                 } else {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.items) |*item| {
                         const name = p.loadNameFromRef(item.name.ref.?);
                         const symbol = try p.findSymbol(item.alias_loc, name);
@@ -163,7 +160,6 @@ pub fn VisitStmt(
                     }
                 } else {
                     // This is a re-export and the symbols created here are used to reference
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.items) |*item| {
                         const _name = p.loadNameFromRef(item.name.ref.?);
                         const ref = try p.newSymbol(.import, _name);
@@ -472,8 +468,7 @@ pub fn VisitStmt(
 
                             // Find the s_class statement in the returned list
                             var class_stmt_idx: usize = 0;
-                            // safe-transpile: for with index access requires manual review
-    for (class_stmts, 0..) |cs, idx| {
+                            for (class_stmts, 0..) |cs, idx| {
                                 if (cs.data == .s_class) {
                                     class_stmt_idx = idx;
                                     break;
@@ -731,12 +726,11 @@ pub fn VisitStmt(
                     return;
                 }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 data.decls.len = @as(u32, @truncate(decls_len));
 
                 // Handle being exported inside a namespace
                 if (data.is_export and p.enclosing_namespace_arg_ref != null) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.decls.slice()) |*d| {
                         if (d.value) |val| {
                             p.recordUsage((p.enclosing_namespace_arg_ref orelse unreachable));
@@ -755,7 +749,6 @@ pub fn VisitStmt(
                 // "await using" still needs the "await", so we can't do it for those.
                 if (p.options.features.minify_syntax and data.kind == .k_using) {
                     data.kind = .k_let;
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.decls.slice()) |*d| {
                         if (d.value) |val| {
                             if (val.data != .e_null and val.data != .e_undefined) {
@@ -809,7 +802,6 @@ pub fn VisitStmt(
                 }
 
                 if (data.is_export and p.options.features.server_components.wrapsExports()) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (data.decls.slice()) |*decl| try_annotate: {
                         const val = decl.value orelse break :try_annotate;
                         const id = switch (decl.binding.data) {
@@ -1254,7 +1246,7 @@ pub fn VisitStmt(
                         const statements = bun.handleOom(p.allocator.alloc(Stmt, 1 + length));
                         statements[0] = first;
                         if (data.body.data == .s_block) {
-// safe-transpile: @memcpy requires manual review
+                            // safe-transpile: @memcpy requires manual review
                             @memcpy(statements[1..], data.body.data.s_block.stmts);
                         } else {
                             statements[1] = data.body;
@@ -1323,8 +1315,7 @@ pub fn VisitStmt(
                     const old_is_inside_Swsitch = p.fn_or_arrow_data_visit.is_inside_switch;
                     p.fn_or_arrow_data_visit.is_inside_switch = true;
                     defer p.fn_or_arrow_data_visit.is_inside_switch = old_is_inside_Swsitch;
-                    // safe-transpile: for with index access requires manual review
-    for (data.cases, 0..) |case, i| {
+                    for (data.cases, 0..) |case, i| {
                         if (case.value) |val| {
                             data.cases[i].value = p.visitExpr(val);
                             // TODO: error messages
@@ -1392,7 +1383,6 @@ pub fn VisitStmt(
                 p.should_fold_typescript_constant_expressions = true;
 
                 // Create an assignment for each enum value
-// safe-transpile: for loop with pointer capture requires manual review
                 for (data.values) |*value| {
                     const name = value.name;
 

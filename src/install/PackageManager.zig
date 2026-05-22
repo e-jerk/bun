@@ -207,7 +207,7 @@ pub const WorkspaceFilter = union(enum) {
     name: []const u8,
     path: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, input: string, cwd: string, path_buf: []u8) OOM!WorkspaceFilter {
         if ((input.len == 1 and input[0] == '*') or strings.eqlComptime(input, "**")) {
             return .all;
@@ -627,7 +627,7 @@ pub fn init(
                 package_json_path_buf[this_cwd.len + "/package.json".len] = 0;
                 const package_json_path = package_json_path_buf[0 .. this_cwd.len + "/package.json".len :0];
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const flags: i32 = if (need_write) @intCast(bun.O.RDWR) else @intCast(bun.O.RDONLY);
                 break :child switch (bun.sys.openA(package_json_path, flags, 0)) {
                     .result => |fd| @import("std-fs-compat").File{ .handle = fd.value.as_system, .flags = .{ .nonblocking = false } },
@@ -736,8 +736,7 @@ pub fn init(
                             null,
                         ) catch break;
 
-                        // safe-transpile: for with index access requires manual review
-    for (workspace_names.keys(), workspace_names.values()) |path, entry| {
+                        for (workspace_names.keys(), workspace_names.values()) |path, entry| {
                             const child_path = if (std.fs.path.isAbsolute(path))
                                 child_cwd
                             else
@@ -923,8 +922,7 @@ pub fn init(
     var ca: []stringZ = &.{};
     if (manager.options.ca.len > 0) {
         ca = try manager.allocator.alloc(stringZ, manager.options.ca.len);
-        // safe-transpile: for with index access requires manual review
-    for (ca, manager.options.ca) |*z, s| {
+        for (ca, manager.options.ca) |*z, s| {
             z.* = try manager.allocator.dupeZ(u8, s);
         }
     }
@@ -935,7 +933,7 @@ pub fn init(
         if (std.fs.path.isAbsolute(manager.options.ca_file_name)) {
             abs_ca_file_name = try manager.allocator.dupeZ(u8, manager.options.ca_file_name);
         } else {
-        var path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+            var path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
             abs_ca_file_name = try manager.allocator.dupeZ(u8, bun.path.joinAbsStringBuf(
                 original_cwd_clone,
                 &path_buf,
@@ -973,7 +971,7 @@ pub fn init(
             }
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         break :brk @truncate(@as(u64, @intCast(@max(@import("std-fs-compat").timestamp(), 0))));
     };
     return .{
@@ -1101,10 +1099,10 @@ pub fn initWithRuntimeOnce(
 
     manager.timestamp_for_manifest_cache_control = @as(
         u32,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @truncate(@as(
             u64,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(@max(
                 @import("std-fs-compat").timestamp(),
                 0,
@@ -1128,8 +1126,8 @@ pub fn initWithRuntimeOnce(
         manager.lockfile.initEmpty(allocator);
     }
 }
-    var cwd_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
-    var root_package_json_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+var cwd_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
+var root_package_json_path_buf: bun.PathBuffer = std.mem.zeroes(bun.PathBuffer);
 pub var root_package_json_path: [:0]const u8 = "";
 
 // Default to a maximum of 64 simultaneous HTTP requests for bun install if no proxy is specified

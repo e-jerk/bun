@@ -1,6 +1,6 @@
 // blocking, but off the main thread
 pub const CopyFile = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     destination_file_store: Store.File,
     source_file_store: Store.File,
     store: ?*Store = null,
@@ -175,9 +175,9 @@ const zust = @import("safe");
         }
 
         if (which == .both or which == .destination) {
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+            var __loop_limit_1: usize = 0;
+            while (true) : (__loop_limit_1 += 1) {
+                if (__loop_limit_1 > 1_000_000) break;
                 const dest = this.destination_file_store.pathlike.path.sliceZ(&path_buf1);
                 const mode = this.destination_mode orelse jsc.Node.fs.default_permission;
                 this.destination_fd = switch (bun.sys.open(
@@ -271,9 +271,9 @@ while (true) : (__loop_limit_1 += 1) {
             }
         }
 
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+        var __loop_limit_2: usize = 0;
+        while (true) : (__loop_limit_2 += 1) {
+            if (__loop_limit_2 > 1_000_000) break;
             // TODO: this should use non-blocking I/O.
             const written = switch (comptime use) {
                 .copy_file_range => linux.copy_file_range(src_fd.cast(), null, dest_fd.cast(), null, remain, 0),
@@ -394,9 +394,9 @@ while (true) : (__loop_limit_2 += 1) {
         var source_buf: bun.PathBuffer = undefined;
         var dest_buf: bun.PathBuffer = undefined;
 
-var __loop_limit_3: usize = 0;
-while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) break;
+        var __loop_limit_3: usize = 0;
+        while (true) : (__loop_limit_3 += 1) {
+            if (__loop_limit_3 > 1_000_000) break;
             const dest = this.destination_file_store.pathlike.path.sliceZ(
                 &dest_buf,
             );

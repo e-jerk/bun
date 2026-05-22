@@ -44,7 +44,6 @@ pub fn getWithPath(
     const path = if (comptime !Environment.isWindows)
         abs_package_json_path
     else brk: {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..abs_package_json_path.len], abs_package_json_path);
         bun.path.dangerouslyConvertPathToPosixInPlace(u8, buf[0..abs_package_json_path.len]);
         break :brk buf[0..abs_package_json_path.len];
@@ -106,7 +105,6 @@ pub fn getWithSource(
     const path = if (comptime !Environment.isWindows)
         source.path.text
     else brk: {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..source.path.text.len], source.path.text);
         bun.path.dangerouslyConvertPathToPosixInPlace(u8, buf[0..source.path.text.len]);
         break :brk buf[0..source.path.text.len];

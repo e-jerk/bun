@@ -295,7 +295,6 @@ pub const SupportsCondition = union(enum) {
             },
             .@"and" => |conditions| {
                 var first = true;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (conditions.items) |*cond| {
                     if (first) {
                         first = false;
@@ -307,7 +306,6 @@ pub const SupportsCondition = union(enum) {
             },
             .@"or" => |conditions| {
                 var first = true;
-// safe-transpile: for loop with pointer capture requires manual review
                 for (conditions.items) |*cond| {
                     if (first) {
                         first = false;

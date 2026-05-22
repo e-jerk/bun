@@ -71,7 +71,7 @@ pub const Format = enum(u8) {
     /// backend tried first (handles disposal/animation we don't).
     gif,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn sniff(bytes: []const u8) ?Format {
         if (bytes.len >= 3 and bytes[0] == 0xFF and bytes[1] == 0xD8 and bytes[2] == 0xFF)
             return .jpeg;
@@ -113,7 +113,7 @@ pub const Format = enum(u8) {
     /// Best-effort extension → format for `.write(path)`'s default. Only the
     /// final dotted segment is considered; case-insensitive. Returns `null`
     /// when there's no extension or it's not one we recognise.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromExtension(path: []const u8) ?Format {
         const dot = std.mem.lastIndexOfScalar(u8, path, '.') orelse return null;
         var buf: [5]u8 = undefined;
@@ -260,9 +260,9 @@ pub fn probe(bytes: []const u8, max_pixels: u64) Error!struct { format: Format, 
             const rw = jpeg.tj3Get(handle, jpeg.TJPARAM_JPEGWIDTH);
             const rh = jpeg.tj3Get(handle, jpeg.TJPARAM_JPEGHEIGHT);
             if (rw <= 0 or rh <= 0) return error.DecodeFailed;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             w = @intCast(rw);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             h = @intCast(rh);
         },
         .webp => {
@@ -270,9 +270,9 @@ pub fn probe(bytes: []const u8, max_pixels: u64) Error!struct { format: Format, 
             var ch: c_int = 0;
             if (webp.WebPGetInfo(bytes.ptr, bytes.len, &cw, &ch) == 0 or cw <= 0 or ch <= 0)
                 return error.DecodeFailed;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             w = @intCast(cw);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             h = @intCast(ch);
         },
         .bmp => {
@@ -356,7 +356,7 @@ pub const Encoded = struct {
         }.call;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromOwned(bytes: []u8) Encoded {
         return .{ .bytes = bytes, .free = wrap(bun.mimalloc.mi_free) };
     }
@@ -460,11 +460,11 @@ pub fn resize(src: []const u8, sw: u32, sh: u32, dw: u32, dh: u32, f: Filter) Er
     // C++; mimalloc here is faster than libc, and the over-allocation rounds
     // into the same size class as the row buffer alone.
     const out_sz: usize = @as(usize, dw) * dh * 4;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const scratch_sz = bun_image_resize_scratch_size(@intCast(sw), @intCast(sh), @intCast(dw), @intCast(dh), @intFromEnum(f));
     const block = try bun.default_allocator.alloc(u8, out_sz + scratch_sz);
     errdefer bun.default_allocator.free(block);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     if (bun_image_resize_rgba8(src.ptr, @intCast(sw), @intCast(sh), block.ptr, @intCast(dw), @intCast(dh), @intFromEnum(f), block.ptr + out_sz) != 0)
         return error.OutOfMemory;
     // Drop the scratch tail; mimalloc's shrink is in-place when the new size
@@ -484,7 +484,7 @@ pub fn rotate(src: []const u8, w: u32, h: u32, degrees: u32) Error!Decoded {
         }
     };
     const out = try bun.default_allocator.alloc(u8, @as(usize, dw) * dh * 4);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun_image_rotate_rgba8(src.ptr, @intCast(w), @intCast(h), out.ptr, @intCast(degrees));
     return .{ .rgba = out, .width = dw, .height = dh };
 }
@@ -498,7 +498,7 @@ pub fn flip(src: []const u8, w: u32, h: u32, horizontal: bool) Error![]u8 {
         }
     };
     const out = try bun.default_allocator.alloc(u8, @as(usize, w) * h * 4);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     bun_image_flip_rgba8(src.ptr, @intCast(w), @intCast(h), out.ptr, @intFromBool(horizontal));
     return out;
 }

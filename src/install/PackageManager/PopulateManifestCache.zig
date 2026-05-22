@@ -41,9 +41,8 @@ pub fn populateManifestCache(manager: *PackageManager, packages: Packages) !void
             var seen_pkg_ids: std.AutoHashMap(PackageID, void) = .init(manager.allocator);
             defer seen_pkg_ids.deinit();
 
-            // safe-transpile: for with index access requires manual review
-    for (dependencies, 0..) |*dep, _dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            for (dependencies, 0..) |*dep, _dep_id| {
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const dep_id: DependencyID = @intCast(_dep_id);
 
                 const pkg_id = resolutions[dep_id];

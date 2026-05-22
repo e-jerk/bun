@@ -248,7 +248,7 @@ pub fn stderr(this: *MiniEventLoop) *jsc.WebCore.Blob.Store {
 
         switch (bun.sys.fstat(fd)) {
             .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},
@@ -280,7 +280,7 @@ pub fn stdout(this: *MiniEventLoop) *jsc.WebCore.Blob.Store {
 
         switch (bun.sys.fstat(fd)) {
             .result => |stat| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 mode = @intCast(stat.mode);
             },
             .err => {},

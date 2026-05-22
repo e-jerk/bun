@@ -51,16 +51,16 @@ pub fn uv_getrusage(process: *uv.uv_process_t) win_rusage {
     if (bun.windows.GetProcessTimes(process_pid, &starttime, &exittime, &kerneltime, &usertime) == 1) {
         var temp: u64 = (@as(u64, kerneltime.dwHighDateTime) << 32) | kerneltime.dwLowDateTime;
         if (temp > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             usage_info.stime.sec = @intCast(temp / 10000000);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             usage_info.stime.usec = @intCast(temp % 1000000);
         }
         temp = (@as(u64, usertime.dwHighDateTime) << 32) | usertime.dwLowDateTime;
         if (temp > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             usage_info.utime.sec = @intCast(temp / 10000000);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             usage_info.utime.usec = @intCast(temp % 1000000);
         }
     }
@@ -471,7 +471,7 @@ pub const Process = struct {
     fn onExitUV(process: *uv.uv_process_t, exit_status: i64, term_signal: c_int) callconv(.c) void {
         const poller: *PollerWindows = @fieldParentPtr("uv", process);
         var this: *Process = @fieldParentPtr("poller", poller);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const exit_code: u8 = if (exit_status >= 0) @as(u8, @truncate(@as(u64, @intCast(exit_status)))) else 0;
         const signal_code: ?bun.SignalCode = if (term_signal > 0 and term_signal < @intFromEnum(bun.SignalCode.SIGSYS)) @enumFromInt(term_signal) else null;
         const rusage = uv_getrusage(process);
@@ -496,7 +496,7 @@ pub const Process = struct {
         } else {
             this.onExit(
                 .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .err = bun.sys.Error.fromCode(@intCast(exit_status), .waitpid),
                 },
                 &rusage,
@@ -584,7 +584,7 @@ pub const Process = struct {
         if (comptime Environment.isPosix) {
             switch (this.poller) {
                 .waiter_thread, .fd => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const err = std.c.kill(this.pid, @intCast(signal));
                     if (err != 0) {
                         const errno_ = bun.sys.getErrno(err);
@@ -654,7 +654,7 @@ pub const Status = union(enum) {
                 }
 
                 if (std.posix.W.IFSIGNALED(result.status)) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     signal = @as(u8, @truncate(std.posix.W.TERMSIG(result.status)));
                 }
 
@@ -664,7 +664,7 @@ pub const Status = union(enum) {
                 // ified the WUNTRACED option or if the child process is being
                 // traced (see ptrace(2)).
                 else if (std.posix.W.IFSTOPPED(result.status)) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     signal = @as(u8, @truncate(std.posix.W.STOPSIG(result.status)));
                 }
             },
@@ -979,7 +979,7 @@ const WaiterThreadPosix = struct {
         init() catch @panic("Failed to start WaiterThread");
 
         if (comptime Environment.isLinux) {
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             const one = @as([8]u8, @bitCast(@as(usize, 1)));
             _ = std.posix.write(instance.eventfd.cast(), &one) catch @panic("Failed to write to eventfd");
         }
@@ -1006,7 +1006,7 @@ const WaiterThreadPosix = struct {
     }
 
     fn wakeup(_: c_int) callconv(.c) void {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const one = @as([8]u8, @bitCast(@as(usize, 1)));
         _ = bun.sys.write(instance.eventfd, &one).unwrap() catch 0;
     }
@@ -1033,9 +1033,9 @@ const WaiterThreadPosix = struct {
         reloadHandlers();
         var this = &instance;
 
-var __loop_limit_1: usize = 0;
-outer: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        outer: while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             this.js_process.loop();
 
             if (comptime Environment.isLinux) {
@@ -1288,19 +1288,19 @@ pub const PosixSpawnResult = struct {
 
         const pidfd_flags = pidfdFlagsForLinux();
 
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+        var __loop_limit_2: usize = 0;
+        while (true) : (__loop_limit_2 += 1) {
+            if (__loop_limit_2 > 1_000_000) break;
             switch (brk: {
                 const rc = bun.sys.pidfd_open(
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(this.pid),
                     pidfd_flags,
                 );
                 if (rc == .err and rc.getErrno() == .INVAL) {
                     // Retry once, incase they don't support PIDFD_NONBLOCK.
                     break :brk bun.sys.pidfd_open(
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         @intCast(this.pid),
                         0,
                     );
@@ -1324,9 +1324,9 @@ while (true) : (__loop_limit_2 += 1) {
                         // For all other cases, ensure we don't leak the child process on error
                         // That would cause Zombie processes to accumulate.
                         else => {
-var __loop_limit_3: usize = 0;
-while (true) : (__loop_limit_3 += 1) {
-    if (__loop_limit_3 > 1_000_000) break;
+                            var __loop_limit_3: usize = 0;
+                            while (true) : (__loop_limit_3 += 1) {
+                                if (__loop_limit_3 > 1_000_000) break;
                                 var status: u32 = 0;
                                 const rc = std.os.linux.wait4(this.pid, &status, 0, null);
 
@@ -1419,7 +1419,7 @@ pub fn spawnProcessPosix(
         // covered without relying on env-var inheritance, and the prctl happens
         // in the vfork child before exec so there's no startup race.
         attr.linux_pdeathsig = if (options.linux_pdeathsig) |sig|
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(sig)
         else if (bun.ParentDeathWatchdog.shouldDefaultSpawnPdeathsig())
             std.posix.SIG.KILL
@@ -1458,7 +1458,7 @@ pub fn spawnProcessPosix(
     }
     defer to_close_on_error.clearAndFree();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     attr.set(@intCast(flags)) catch {};
     attr.resetSignals() catch {};
 
@@ -1474,7 +1474,7 @@ pub fn spawnProcessPosix(
 
     for (0..3) |i| {
         const stdio = stdios[i];
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const fileno = bun.FD.fromNative(@intCast(i));
         const flag = if (i == 0) @as(u32, bun.O.RDONLY) else @as(u32, bun.O.WRONLY);
 
@@ -1582,9 +1582,8 @@ pub fn spawnProcessPosix(
         try actions.dup2(stdio_options[1].dup2.to.toFd(), stdio_options[1].dup2.out.toFd());
     }
 
-    // safe-transpile: for with index access requires manual review
     for (options.extra_fds, 0..) |ipc, i| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const fileno = bun.FD.fromNative(@intCast(3 + i));
 
         switch (ipc) {
@@ -1712,7 +1711,7 @@ pub fn spawnProcessWindows(
     const loop = options.windows.loop.platformEventLoop().uv_loop;
 
     var cwd_buf: bun.PathBuffer = undefined;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(cwd_buf[0..options.cwd.len], options.cwd);
     cwd_buf[options.cwd.len] = 0;
     const cwd = cwd_buf[0..options.cwd.len :0];
@@ -1813,7 +1812,7 @@ pub fn spawnProcessWindows(
             .buffer => |my_pipe| {
                 try my_pipe.init(loop, false).unwrap();
                 stdio.flags = pipe_flags;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 stdio.data.stream = @ptrCast(my_pipe);
             },
             .pipe => |fd| {
@@ -1834,7 +1833,6 @@ pub fn spawnProcessWindows(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (options.extra_fds, 0..) |ipc, i| {
         const stdio: *uv.uv_stdio_container_t = &stdio_containers.items[3 + i];
 
@@ -1844,7 +1842,7 @@ pub fn spawnProcessWindows(
             .dup2 => @panic("TODO dup2 extra fd"),
             .inherit => {
                 stdio.flags = uv.StdioFlags.inherit_fd;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 stdio.data.fd = @intCast(3 + i);
             },
             .ignore => {
@@ -1867,13 +1865,13 @@ pub fn spawnProcessWindows(
             .ipc => |my_pipe| {
                 try my_pipe.init(loop, true).unwrap();
                 stdio.flags = uv.UV_CREATE_PIPE | uv.UV_WRITABLE_PIPE | uv.UV_READABLE_PIPE | uv.UV_OVERLAPPED_PIPE;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 stdio.data.stream = @ptrCast(my_pipe);
             },
             .buffer => |my_pipe| {
                 try my_pipe.init(loop, false).unwrap();
                 stdio.flags = uv.UV_CREATE_PIPE | uv.UV_WRITABLE_PIPE | uv.UV_READABLE_PIPE | uv.UV_OVERLAPPED_PIPE;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 stdio.data.stream = @ptrCast(my_pipe);
             },
             .pipe => |fd| {
@@ -1884,7 +1882,7 @@ pub fn spawnProcessWindows(
     }
 
     uv_process_options.stdio = stdio_containers.items.ptr;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     uv_process_options.stdio_count = @intCast(stdio_containers.items.len);
 
     uv_process_options.exit_cb = &Process.onExitUV;
@@ -1943,7 +1941,7 @@ pub fn spawnProcessWindows(
             result_stdio.* = .{ .buffer_fd = .fromUV(dup_fds[0]) };
         } else switch (stdio_options[i]) {
             .buffer => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 result_stdio.* = .{ .buffer = @ptrCast(stdio.data.stream) };
             },
             else => {
@@ -1952,11 +1950,10 @@ pub fn spawnProcessWindows(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (options.extra_fds, 0..) |*input, i| {
         switch (input.*) {
             .ipc, .buffer => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 result.extra_pipes.appendAssumeCapacity(.{ .buffer = @ptrCast(stdio_containers.items[3 + i].data.stream) });
             },
             else => {
@@ -2047,12 +2044,12 @@ pub const sync = struct {
 
         pub const new = bun.TrivialNew(@This());
 
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         fn onAlloc(_: *SyncWindowsPipeReader, suggested_size: usize) []u8 {
             return bun.handleOom(bun.default_allocator.alloc(u8, suggested_size));
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         fn onRead(this: *SyncWindowsPipeReader, data: []const u8) void {
             bun.handleOom(this.chunks.append(@constCast(data)));
         }
@@ -2118,7 +2115,7 @@ pub const sync = struct {
         }
     };
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn flattenOwnedChunks(total_allocator: std.mem.Allocator, chunks_allocator: std.mem.Allocator, chunks: []const []u8) ![]u8 {
         var total_size: usize = 0;
         for (chunks) |chunk| {
@@ -2127,7 +2124,6 @@ pub const sync = struct {
         const result = try total_allocator.alloc(u8, total_size);
         var remain = result;
         for (chunks) |chunk| {
-// safe-transpile: @memcpy requires manual review
             @memcpy(remain[0..chunk.len], chunk);
             remain = remain[chunk.len..];
             chunks_allocator.free(chunk);
@@ -2243,7 +2239,7 @@ pub const sync = struct {
     ) !Maybe(Result) {
         // [*:null]?[*:0]const u8
         // [*:null]?[*:0]u8
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const envp = options.envp orelse @as([*:null]?[*:0]const u8, @ptrCast(std.c.environ));
         const argv = options.argv;
         var string_builder = bun.StringBuilder{};
@@ -2262,7 +2258,6 @@ pub const sync = struct {
         }
         args.appendAssumeCapacity(null);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return spawnWithArgv(options, @ptrCast(args.items.ptr), @ptrCast(envp));
     }
 
@@ -2448,7 +2443,7 @@ pub const sync = struct {
         // Negative → kill() in the C++ signal forwarder targets the pgroup, so
         // a SIGTERM/SIGINT delivered to `bun run` reaches every descendant
         // that hasn't `setsid()`-escaped.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         Bun__currentSyncPID = if (no_orphans) -@as(i64, @intCast(process.pid)) else @intCast(process.pid);
 
         var jc: JobControl = .{};
@@ -2499,7 +2494,6 @@ pub const sync = struct {
             // let's make sure to clean up the output buffers
             // and kill the process
             if (!success) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (&out) |*array_list| {
                     array_list.clearAndFree();
                 }
@@ -2558,8 +2552,7 @@ pub const sync = struct {
                 // of being dropped (or deadlocking) in a blind `wait4()`.
             }
             while (out_fds_to_wait_for[0] != bun.invalid_fd or out_fds_to_wait_for[1] != bun.invalid_fd) {
-                // safe-transpile: for with index access requires manual review
-    for (&out_fds_to_wait_for, &out, &out_fds) |*fd, *bytes, *out_fd| {
+                for (&out_fds_to_wait_for, &out, &out_fds) |*fd, *bytes, *out_fd| {
                     if (drainFd(fd, out_fd, bytes)) |err| return .{ .err = err };
                 }
 
@@ -2569,7 +2562,7 @@ pub const sync = struct {
                     if (fd == bun.invalid_fd) continue;
                     poll_fds.len += 1;
                     poll_fds[poll_fds.len - 1] = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .fd = @intCast(fd.cast()),
                         .events = std.posix.POLL.IN | std.posix.POLL.ERR | std.posix.POLL.HUP,
                         .revents = 0,
@@ -2577,7 +2570,7 @@ pub const sync = struct {
                 }
                 if (poll_fds.len == 0) break;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const rc = std.c.poll(poll_fds.ptr, @intCast(poll_fds.len), -1);
                 switch (bun.sys.getErrno(rc)) {
                     .SUCCESS => {},
@@ -2589,8 +2582,7 @@ pub const sync = struct {
         };
 
         if (comptime Environment.isLinux) {
-            // safe-transpile: for with index access requires manual review
-    for (process.memfds[1..], &out, out_fds) |memfd, *bytes, out_fd| {
+            for (process.memfds[1..], &out, out_fds) |memfd, *bytes, out_fd| {
                 if (memfd) {
                     bytes.* = bun.sys.File.from(out_fd).readToEnd(bun.default_allocator).bytes;
                 }
@@ -2666,7 +2658,7 @@ pub const sync = struct {
             }
         }.f;
         if (ppid > 1)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             add(&changes, @intCast(ppid), std.c.EVFILT.PROC, std.c.NOTE.EXIT, TAG_PPID);
         // NOTE_FORK so the wait loop wakes to scan whenever the script (or
         // any registered descendant) forks. NOTE_TRACK would have let xnu
@@ -2675,7 +2667,7 @@ pub const sync = struct {
         // fail, the receipt loop below `return null`, and the caller fall
         // through to a plain `wait4()` that watches neither ppid nor
         // descendants (the `runDied=false` failure on darwin in CI).
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         add(&changes, @intCast(child), std.c.EVFILT.PROC, std.c.NOTE.FORK | std.c.NOTE.EXIT, 0);
         // TTY job-control: EVFILT_PROC has no "stopped" note, so wake on
         // SIGCHLD and `wait4(WUNTRACED|WNOHANG)` to catch Ctrl-Z. Only when
@@ -2684,11 +2676,10 @@ pub const sync = struct {
         // disposition; only direct children raise SIGCHLD, so this fires for
         // `child` alone.
         if (jc.isActive())
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             add(&changes, @intCast(std.c.SIG.CHLD), std.c.EVFILT.SIGNAL, 0, 0);
-        // safe-transpile: for with index access requires manual review
-    for (out_fds_to_wait_for, 0..) |fd, i| {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        for (out_fds_to_wait_for, 0..) |fd, i| {
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (fd != bun.invalid_fd) add(&changes, @intCast(fd.cast()), std.c.EVFILT.READ, 0, i);
         }
 
@@ -2732,9 +2723,9 @@ pub const sync = struct {
         var events: [16]std.c.Kevent = undefined;
         var child_exited = false;
         var child_status: ?Status = null;
-var __loop_limit_4: usize = 0;
-while (true) : (__loop_limit_4 += 1) {
-    if (__loop_limit_4 > 1_000_000) break;
+        var __loop_limit_4: usize = 0;
+        while (true) : (__loop_limit_4 += 1) {
+            if (__loop_limit_4 > 1_000_000) break;
             const got = switch (bun.sys.kevent(kq_fd, &.{}, events[0..], null)) {
                 .err => |err| return .{ .err = err },
                 .result => |c| c,
@@ -2757,9 +2748,9 @@ while (true) : (__loop_limit_4 += 1) {
                         // Drop from the live set (root included — `begin()`
                         // seeded it into `m_tracked`, and `reapChild()` is
                         // about to free its pid before `killTracked()` runs).
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         Bun__noOrphans_onExit(@intCast(ev.ident));
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         if (ev.ident == @as(usize, @intCast(child)))
                             child_exited = true;
                     }
@@ -2804,8 +2795,7 @@ while (true) : (__loop_limit_4 += 1) {
                 // no-orphans exists to kill, and the killTracked()/pgroup-kill
                 // defers can't run until we return. drainFd() loops to EAGAIN,
                 // so everything the script itself wrote is captured.
-                // safe-transpile: for with index access requires manual review
-    for (out_fds_to_wait_for, out_fds, out) |*fd, *ofd, *bytes| _ = drainFd(fd, ofd, bytes);
+                for (out_fds_to_wait_for, out_fds, out) |*fd, *ofd, *bytes| _ = drainFd(fd, ofd, bytes);
                 return .{ .result = child_status orelse reapChild(child) };
             }
         }
@@ -2840,7 +2830,7 @@ while (true) : (__loop_limit_4 += 1) {
             linux.sigaddset(&kmask, std.posix.SIG.CHLD);
             const rc = linux.signalfd(-1, &kmask, linux.SFD.CLOEXEC | linux.SFD.NONBLOCK);
             switch (linux.E.init(rc)) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .SUCCESS => break :blk bun.FD.fromNative(@intCast(rc)),
                 else => break :blk bun.invalid_fd,
             }
@@ -2878,9 +2868,9 @@ while (true) : (__loop_limit_4 += 1) {
         const timeout_ms: i32 = if (need_ppid_fallback or chld_fd == bun.invalid_fd) 100 else -1;
 
         var child_status: ?Status = null;
-var __loop_limit_5: usize = 0;
-while (true) : (__loop_limit_5 += 1) {
-    if (__loop_limit_5 > 1_000_000) break;
+        var __loop_limit_5: usize = 0;
+        while (true) : (__loop_limit_5 += 1) {
+            if (__loop_limit_5 > 1_000_000) break;
             // Reap *before* poll(). Covers (a) the SIGCHLD-before-block race —
             // child may have exited between spawnProcessPosix and the
             // sigprocmask above, in which case the kernel discarded SIGCHLD
@@ -2895,9 +2885,9 @@ while (true) : (__loop_limit_5 += 1) {
             // Non-TTY callers never see stops, matching plain `bun run`.
             const wopts = std.posix.W.NOHANG |
                 if (jc.isActive()) std.posix.W.UNTRACED else @as(u32, 0);
-var __loop_limit_6: usize = 0;
-while (true) : (__loop_limit_6 += 1) {
-    if (__loop_limit_6 > 1_000_000) break;
+            var __loop_limit_6: usize = 0;
+            while (true) : (__loop_limit_6 += 1) {
+                if (__loop_limit_6 > 1_000_000) break;
                 const r = PosixSpawn.wait4(-1, wopts, null);
                 const w = switch (r) {
                     .err => break,
@@ -2912,8 +2902,7 @@ while (true) : (__loop_limit_6 += 1) {
             }
             if (child_status != null) break;
 
-            // safe-transpile: for with index access requires manual review
-    for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| {
+            for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| {
                 if (drainFd(fd, out_fd, bytes)) |err| return .{ .err = err };
             }
 
@@ -2923,7 +2912,7 @@ while (true) : (__loop_limit_6 += 1) {
                 fn f(l: *[]std.c.pollfd, fd: bun.FD) void {
                     l.len += 1;
                     l.*[l.len - 1] = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .fd = @intCast(fd.cast()),
                         .events = std.posix.POLL.IN | std.posix.POLL.ERR | std.posix.POLL.HUP,
                         .revents = 0,
@@ -2936,7 +2925,7 @@ while (true) : (__loop_limit_6 += 1) {
             const chld_idx = pfds.len;
             if (chld_fd != bun.invalid_fd) push(&pfds, chld_fd);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const rc = std.c.poll(pfds.ptr, @intCast(pfds.len), timeout_ms);
             switch (bun.sys.getErrno(rc)) {
                 .SUCCESS => {},
@@ -2955,8 +2944,7 @@ while (true) : (__loop_limit_6 += 1) {
                 while (bun.sys.read(chld_fd, std.mem.asBytes(&si)).unwrapOr(0) == @sizeOf(linux.signalfd_siginfo)) {}
             }
         }
-        // safe-transpile: for with index access requires manual review
-    for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| _ = drainFd(fd, out_fd, bytes);
+        for (out_fds_to_wait_for, out, out_fds) |*fd, *bytes, *out_fd| _ = drainFd(fd, out_fd, bytes);
         return .{ .result = (child_status.?) };
     }
 
@@ -2966,9 +2954,9 @@ while (true) : (__loop_limit_6 += 1) {
     /// otherwise. Shared by the `poll()` path and the no-orphans wait loops.
     fn drainFd(fd: *bun.FD, out_fd: *bun.FD, bytes: *std.array_list.Managed(u8)) ?bun.sys.Error {
         if (fd.* == bun.invalid_fd) return null;
-var __loop_limit_7: usize = 0;
-while (true) : (__loop_limit_7 += 1) {
-    if (__loop_limit_7 > 1_000_000) break;
+        var __loop_limit_7: usize = 0;
+        while (true) : (__loop_limit_7 += 1) {
+            if (__loop_limit_7 > 1_000_000) break;
             bytes.ensureUnusedCapacity(16384) catch return bun.sys.Error.fromCode(.NOMEM, .recv);
             switch (bun.sys.recvNonBlock(fd.*, bytes.unusedCapacitySlice())) {
                 .err => |err| {
@@ -2992,9 +2980,9 @@ while (true) : (__loop_limit_7 += 1) {
     /// Blocking `wait4()` until `Status.from` returns a terminal status.
     /// Shared by the `poll()` path and the no-orphans wait loops.
     fn reapChild(child: std.c.pid_t) Status {
-var __loop_limit_8: usize = 0;
-while (true) : (__loop_limit_8 += 1) {
-    if (__loop_limit_8 > 1_000_000) break;
+        var __loop_limit_8: usize = 0;
+        while (true) : (__loop_limit_8 += 1) {
+            if (__loop_limit_8 > 1_000_000) break;
             if (Status.from(child, &PosixSpawn.wait4(child, 0, null))) |stat| return stat;
         }
         unreachable;

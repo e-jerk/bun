@@ -330,7 +330,6 @@ fn buildBuildConfig(
         extensions_9,
     };
 
-    // safe-transpile: for with index access requires manual review
     for (fields_lists, extensions_lists) |fields_opt, extensions_opt| {
         if (fields_opt) |fields| {
             writer.writeAll(

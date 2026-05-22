@@ -556,14 +556,14 @@ pub fn resolveEmphasisDelimiters(self: *Parser) void {
                 opener.remaining -= use;
                 opener.open_count += use;
                 if (opener.open_num < MAX_EMPH_MATCHES) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     opener.open_sizes[opener.open_num] = @intCast(use);
                     opener.open_num += 1;
                 }
                 delims[closer_idx].remaining -= use;
                 delims[closer_idx].close_count += use;
                 if (delims[closer_idx].close_num < MAX_EMPH_MATCHES) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     delims[closer_idx].close_sizes[delims[closer_idx].close_num] = @intCast(use);
                     delims[closer_idx].close_num += 1;
                 }

@@ -181,7 +181,7 @@ export fn Bun__addBakeSourceProviderSourceMap(vm: *VirtualMachine, opaque_source
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.putBakeSourceProvider(@as(*BakeSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -189,7 +189,7 @@ export fn Bun__addDevServerSourceProvider(vm: *VirtualMachine, opaque_source_pro
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.putDevServerSourceProvider(@as(*DevServerSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -197,7 +197,7 @@ export fn Bun__removeDevServerSourceProvider(vm: *VirtualMachine, opaque_source_
     var sfb = std.heap.stackFallback(4096, bun.default_allocator);
     const slice = specifier.toUTF8(sfb.get());
     defer slice.deinit();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     vm.source_mappings.removeDevServerSourceProvider(@as(*DevServerSourceProvider, @ptrCast(opaque_source_provider)), slice.slice());
 }
 
@@ -225,7 +225,7 @@ pub fn Bun__setSyntheticAllocationLimitForTesting(globalObject: *JSGlobalObject,
         return globalObject.throwInvalidArguments("setSyntheticAllocationLimitForTesting expects a number", .{});
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const limit: usize = @intCast(@max(try args[0].coerceToInt64(globalObject), 1024 * 1024));
     const prev = VirtualMachine.synthetic_allocation_limit;
     VirtualMachine.synthetic_allocation_limit = limit;

@@ -43,7 +43,7 @@ pub const ZigStackTrace = extern struct {
             const source_line_len = source_lines_iter.getLength();
 
             if (source_line_len > 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 var source_lines = try allocator.alloc(api.SourceLine, @as(usize, @intCast(@max(source_lines_iter.i + 1, 0))));
                 var source_line_buf = try allocator.alloc(u8, source_line_len);
                 source_lines_iter = this.sourceLineIterator();
@@ -71,8 +71,7 @@ pub const ZigStackTrace = extern struct {
                 var stack_frames = try allocator.alloc(api.StackFrame, _frames.len);
                 stack_trace.frames = stack_frames;
 
-                // safe-transpile: for with index access requires manual review
-    for (_frames, 0..) |frame, i| {
+                for (_frames, 0..) |frame, i| {
                     stack_frames[i] = try frame.toAPI(
                         root_path,
                         origin,
@@ -104,7 +103,7 @@ pub const ZigStackTrace = extern struct {
 
         pub fn getLength(this: *SourceLineIterator) usize {
             var count: usize = 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             for (this.trace.source_lines_ptr[0..@as(usize, @intCast(this.i + 1))]) |*line| {
                 count += line.length();
             }
@@ -120,10 +119,10 @@ pub const ZigStackTrace = extern struct {
         pub fn next(this: *SourceLineIterator) ?SourceLine {
             if (this.i < 0) return null;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const source_line = this.trace.source_lines_ptr[@as(usize, @intCast(this.i))];
             const result = SourceLine{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .line = this.trace.source_lines_numbers[@as(usize, @intCast(this.i))],
                 .text = source_line.toUTF8(bun.default_allocator),
             };
@@ -134,10 +133,9 @@ pub const ZigStackTrace = extern struct {
 
     pub fn sourceLineIterator(this: *const ZigStackTrace) SourceLineIterator {
         var i: i32 = -1;
-        // safe-transpile: for with index access requires manual review
-    for (this.source_lines_numbers[0..this.source_lines_len], 0..) |num, j| {
+        for (this.source_lines_numbers[0..this.source_lines_len], 0..) |num, j| {
             if (num >= 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 i = @max(@as(i32, @intCast(j)), i);
             }
         }

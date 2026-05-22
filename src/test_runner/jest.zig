@@ -161,12 +161,12 @@ pub const TestRunner = struct {
     }
 
     pub fn getOrPutFile(this: *TestRunner, file_path: string) struct { file_id: File.ID } {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const entry = this.index.getOrPut(this.allocator, @as(u32, @truncate(bun.hash(file_path)))) catch unreachable; // TODO: this is wrong. you can't put a hash as the key in a hashmap.
         if (entry.found_existing) {
             return .{ .file_id = entry.value_ptr.* };
         }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const file_id = @as(File.ID, @truncate(this.files.len));
         this.files.append(this.allocator, .{ .source = logger.Source.initEmptyFile(file_path) }) catch unreachable;
         entry.value_ptr.* = file_id;
@@ -304,7 +304,7 @@ pub const Jest = struct {
             return globalObject.throw("setTimeout() expects a number (milliseconds)", .{});
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const timeout_ms: u32 = @intCast(@max(try arguments[0].coerce(i32, globalObject), 0));
 
         if (Jest.runner) |test_runner| {

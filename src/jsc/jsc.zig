@@ -21,7 +21,7 @@ pub fn initialize(eval_mode: bool) void {
     const envp = std.c.environ;
     var env_len: usize = 0;
     while (envp[env_len] != null) : (env_len += 1) {}
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     JSCInitialize(@as([*]const [*:0]u8, @ptrCast(envp)), env_len, onJSCInvalidEnvVar, eval_mode);
 }
 
@@ -234,7 +234,6 @@ pub const OpaqueCallback = *const fn (current: ?*anyopaque) callconv(.c) void;
 pub fn OpaqueWrap(comptime Context: type, comptime Function: fn (this: *Context) void) OpaqueCallback {
     return struct {
         pub fn callback(ctx: ?*anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
             const context: *Context = @as(*Context, @ptrCast(@alignCast(ctx.?)));
             Function(context);
         }
@@ -248,9 +247,9 @@ pub const Error = @import("ErrorCode").Error;
 pub const init_timestamp = std.math.maxInt(JSTimeType);
 pub const JSTimeType = u52;
 pub fn toJSTime(sec: isize, nsec: isize) JSTimeType {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const millisec = @as(u64, @intCast(@divTrunc(nsec, std.time.ns_per_ms)));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @as(JSTimeType, @truncate(@as(u64, @intCast(sec * std.time.ms_per_s)) + millisec));
 }
 

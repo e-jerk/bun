@@ -30,7 +30,7 @@ pub fn watchEventFromKEvent(kevent: KEvent) Watcher.Event {
             .rename = (kevent.fflags & (std.c.NOTE.RENAME | std.c.NOTE.LINK)) > 0,
             .write = (kevent.fflags & std.c.NOTE.WRITE) > 0,
         },
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         .index = @truncate(kevent.udata),
     };
 }
@@ -60,10 +60,10 @@ pub fn watchLoopCycle(this: *Watcher) bun.sys.Maybe(void) {
         const remain = 128 - count;
         const extra = std.posix.system.kevent(
             fd.native(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             changelist[@intCast(count)..].ptr,
             0,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             changelist[@intCast(count)..].ptr,
             remain,
             &.{ .sec = 0, .nsec = 100_000 }, // 0.0001 seconds
@@ -72,7 +72,7 @@ pub fn watchLoopCycle(this: *Watcher) bun.sys.Maybe(void) {
         count += extra;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var changes = changelist[0..@intCast(@max(0, count))];
     var watchevents = this.watch_events[0..changes.len];
     var out_len: usize = 0;

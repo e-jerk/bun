@@ -11,7 +11,6 @@ pub fn onIOWriterChunk(_: *@This(), _: usize, _: ?jsc.SystemError) Yield {
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("true", this));
     return @fieldParentPtr("impl", impl);
 }

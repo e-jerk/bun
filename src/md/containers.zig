@@ -6,7 +6,7 @@ pub fn pushContainer(self: *Parser, c: *const Container) error{OutOfMemory}!void
     }
 
     // Record block_byte offset in the container
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const block_off: u32 = @intCast(self.block_bytes.items.len);
     self.containers.items[self.n_containers].block_byte_off = block_off;
 
@@ -43,7 +43,7 @@ pub fn enterChildContainers(self: *Parser, count: u32) error{OutOfMemory}!void {
         } else if (c.ch == '-' or c.ch == '+' or c.ch == '*') {
             // Save opener position for later loose-list patching
             const align_mask_: usize = @alignOf(BlockHeader) - 1;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             c.block_byte_off = @intCast((self.block_bytes.items.len + align_mask_) & ~align_mask_);
             // Unordered list + list item
             try self.pushContainerBytes(.ul, 0, types.BLOCK_CONTAINER_OPENER);
@@ -51,7 +51,7 @@ pub fn enterChildContainers(self: *Parser, count: u32) error{OutOfMemory}!void {
         } else if (c.ch == '.' or c.ch == ')') {
             // Save opener position for later loose-list patching
             const align_mask_: usize = @alignOf(BlockHeader) - 1;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             c.block_byte_off = @intCast((self.block_bytes.items.len + align_mask_) & ~align_mask_);
             // Ordered list + list item
             try self.pushContainerBytes(.ol, c.start, types.BLOCK_CONTAINER_OPENER);
@@ -114,7 +114,6 @@ pub fn processAllBlocks(self: *Parser) Parser.Error!void {
         off = (off + align_mask) & ~align_mask;
         if (off + @sizeOf(BlockHeader) > bytes.len) break;
 
-// safe-transpile: @alignCast requires manual review
         const hdr: *const BlockHeader = @ptrCast(@alignCast(bytes.ptr + off));
         off += @sizeOf(BlockHeader);
 
@@ -126,7 +125,6 @@ pub fn processAllBlocks(self: *Parser) Parser.Error!void {
         // Read lines after header
         const lines_size = n_lines * @sizeOf(VerbatimLine);
         if (off + lines_size > bytes.len) break;
-// safe-transpile: @alignCast requires manual review
         const line_data: [*]const VerbatimLine = @ptrCast(@alignCast(bytes.ptr + off));
         const block_lines = line_data[0..n_lines];
         off += lines_size;

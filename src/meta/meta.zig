@@ -61,7 +61,7 @@ pub fn typeName(comptime Type: type) []const u8 {
 pub inline fn typeBaseName(comptime fullname: [:0]const u8) [:0]const u8 {
     @setEvalBranchQuota(1_000_000);
     // leave type name like "namespace.WrapperType(namespace.MyType)" as it is
-// zust: use safe.String or safe.GuardedSlice for slice operations
+    // zust: use safe.String or safe.GuardedSlice for slice operations
     const baseidx = comptime std.mem.indexOf(u8, fullname, "(");
     if (baseidx != null) return comptime fullname;
 
@@ -125,7 +125,6 @@ pub fn ConcatArgs1(
     var args: std.meta.ArgsTuple(@TypeOf(func)) = undefined;
     args[0] = a;
 
-    // safe-transpile: for with index access requires manual review
     inline for (args_, 1..) |arg, i| {
         args[i] = arg;
     }
@@ -144,7 +143,6 @@ pub inline fn ConcatArgs2(
     args[0] = a;
     args[1] = b;
 
-    // safe-transpile: for with index access requires manual review
     inline for (args_, 2..) |arg, i| {
         args[i] = arg;
     }
@@ -167,7 +165,6 @@ pub inline fn ConcatArgs4(
     args[2] = c;
     args[3] = d;
 
-    // safe-transpile: for with index access requires manual review
     inline for (args_, 4..) |arg, i| {
         args[i] = arg;
     }
@@ -323,7 +320,6 @@ pub fn looksLikeListContainerType(comptime T: type) ?struct { list: ListContaine
 pub fn Tagged(comptime U: type, comptime T: type) type {
     const info = @typeInfo(U).@"union";
     var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
-    // safe-transpile: for with index access requires manual review
     for (info.fields, 0..) |field, i| {
         fields[i] = .{
             .name = field.name,
@@ -355,7 +351,6 @@ pub fn useAllFields(comptime T: type, _: VoidFields(T)) void {}
 fn VoidFields(comptime T: type) type {
     const fields = @typeInfo(T).@"struct".fields;
     var void_fields: [fields.len]std.builtin.Type.StructField = undefined;
-    // safe-transpile: for with index access requires manual review
     for (fields, 0..) |field, i| {
         void_fields[i] = .{
             .name = field.name,

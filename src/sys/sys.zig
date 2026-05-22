@@ -361,8 +361,7 @@ pub fn getcwdZ(buf: *bun.PathBuffer) Maybe([:0]const u8) {
     const rc: ?[*:0]u8 = @ptrCast(std.c.getcwd(buf, bun.MAX_PATH_BYTES));
     return if (rc) |p|
         Result{ .result = p[0..std.mem.len(p) :0] }
-    else
-        if (Result.errnoSysP(@as(c_int, 0), .getcwd, buf)) |err| err else unreachable;
+    else if (Result.errnoSysP(@as(c_int, 0), .getcwd, buf)) |err| err else unreachable;
 }
 
 const syscall_or_c = if (Environment.isLinux) syscall else bun.c;
@@ -4732,7 +4731,10 @@ pub fn dlsymWithHandle(comptime Type: type, comptime name: [:0]const u8, comptim
             });
         }
     };
-    if (!Wrapper.once_done) { Wrapper.loadOnce(); Wrapper.once_done = true; }
+    if (!Wrapper.once_done) {
+        Wrapper.loadOnce();
+        Wrapper.once_done = true;
+    }
     if (Wrapper.failed) {
         return null;
     }

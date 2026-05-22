@@ -5,7 +5,7 @@ buffered: struct {
     buf: [3]u8 = .{0} ** 3,
     len: u2 = 0,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(this: *@This()) []const u8 {
         return this.buf[0..this.len];
     }
@@ -121,7 +121,7 @@ pub fn decodeUTF16(
             try this.processCodeUnitUTF16(
                 &output,
                 &saw_error,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 codeUnitFromBytesUTF16(@intCast(lead_byte), @intCast(remain[0]), big_endian),
             );
             remain = remain[1..];
@@ -134,7 +134,7 @@ pub fn decodeUTF16(
         try this.processCodeUnitUTF16(
             &output,
             &saw_error,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             codeUnitFromBytesUTF16(@intCast(remain[i]), @intCast(remain[i + 1]), big_endian),
         );
         i += 2;
@@ -228,9 +228,9 @@ fn decodeSlice(this: *TextDecoder, globalThis: *jsc.JSGlobalObject, buffer_slice
                 if (this.buffered.len > 0) {
                     defer this.buffered.len = 0;
                     const joined = try bun.default_allocator.alloc(u8, maybe_without_bom.len + this.buffered.len);
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(joined[0..this.buffered.len], this.buffered.slice());
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(joined[this.buffered.len..][0..maybe_without_bom.len], maybe_without_bom);
                     break :input .{ joined, true };
                 }

@@ -130,7 +130,7 @@ pub const ShellMkdirOutputTask = OutputTask(Mkdir, .{
 });
 
 const ShellMkdirOutputTaskVTable = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeErr(this: *Mkdir, childptr: anytype, errbuf: []const u8) ?Yield {
         this.state.exec.output_waiting += 1;
         if (this.bltn().stderr.needsIO()) |safeguard| {
@@ -333,7 +333,7 @@ const Opts = struct {
         return Parse.parseFlags(opts, args);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseLong(this: *Opts, flag: []const u8) ?ParseFlagResult {
         if (bun.strings.eqlComptime(flag, "--mode")) {
             return .{ .unsupported = "--mode" };
@@ -348,7 +348,7 @@ const Opts = struct {
         return null;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseShort(this: *Opts, char: u8, smallflags: []const u8, i: usize) ?ParseFlagResult {
         switch (char) {
             'm' => {
@@ -370,7 +370,6 @@ const Opts = struct {
 };
 
 pub inline fn bltn(this: *Mkdir) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("mkdir", this));
     return @fieldParentPtr("impl", impl);
 }

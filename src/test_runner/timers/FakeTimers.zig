@@ -35,7 +35,7 @@ pub var current_time: struct {
         }
         bun.cpp.JSMock__setOverridenDateNow(globalObject, this.date_now_offset + timespec_ms);
 
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         vm.overridden_performance_now = @bitCast(v.offset.ns());
     }
     pub fn clear(this: *@This(), globalObject: *jsc.JSGlobalObject) void {

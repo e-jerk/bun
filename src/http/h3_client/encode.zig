@@ -89,7 +89,7 @@ pub fn drainSendBody(stream: *Stream, qs: *quic.Stream) void {
         while (written < data.len) {
             const w = qs.write(data[written..]);
             if (w <= 0) break;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             written += @intCast(w);
         }
         buffer.cursor += written;
@@ -112,7 +112,7 @@ pub fn drainSendBody(stream: *Stream, qs: *quic.Stream) void {
     while (stream.pending_body.len > 0) {
         const w = qs.write(stream.pending_body);
         if (w <= 0) break;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         stream.pending_body = stream.pending_body[@intCast(w)..];
     }
     if (stream.pending_body.len == 0) {

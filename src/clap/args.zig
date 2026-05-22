@@ -89,7 +89,7 @@ pub const ShellIterator = struct {
     arena: bun.ArenaAllocator,
     str: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(allocator: mem.Allocator, str: []const u8) ShellIterator {
         return .{
             .arena = bun.ArenaAllocator.init(allocator),
@@ -117,8 +117,7 @@ pub const ShellIterator = struct {
             after_quote,
         } = .skip_whitespace;
 
-        // safe-transpile: for with index access requires manual review
-    for (iter.str, 0..) |c, i| {
+        for (iter.str, 0..) |c, i| {
             switch (state) {
                 // The state that skips the initial whitespace.
                 .skip_whitespace => switch (c) {

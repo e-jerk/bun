@@ -47,7 +47,7 @@ pub fn createHashTable(allocator: std.mem.Allocator) !Map {
     @branchHint(.cold);
 
     var map = Map.init(allocator);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     try map.ensureTotalCapacity(@as(u32, @truncate(Table.all.len)));
     @setEvalBranchQuota(4000);
     for (Table.all) |entry| {

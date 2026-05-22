@@ -549,7 +549,7 @@ pub fn transpileSourceCode(
                 }
             }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const module_info_deserialized: ?*anyopaque = if (module_info) |mi| @ptrCast(mi.asDeserialized()) else null;
 
             if (jsc_vm.isWatcherEnabled()) {
@@ -641,7 +641,7 @@ pub fn transpileSourceCode(
                     if (globalObject) |globalThis| {
                         // attempt to avoid reading the WASM file twice.
                         const decoded: jsc.DecodedJSValue = .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                             .u = .{ .ptr = @ptrCast(globalThis) },
                         };
                         const globalValue = decoded.encode();
@@ -1169,7 +1169,7 @@ fn getHardcodedModule(jsc_vm: *VirtualMachine, specifier: bun.String, hardcoded:
             .specifier = specifier,
             .source_url = specifier,
         },
-        .bun => jsSyntheticModule(ResolvedSource.Tag.@"bun", specifier),
+        .bun => jsSyntheticModule(ResolvedSource.Tag.bun, specifier),
         inline else => |tag| {
             const tag_name = @tagName(tag);
             if (@hasField(ResolvedSource.Tag, tag_name)) {

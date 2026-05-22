@@ -126,7 +126,7 @@ const LibInfo = struct {
             this.vm.event_loop_handle.?,
             .machport,
             .one_shot,
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             .fromNative(@bitCast(request.backend.libinfo.machport)),
         );
         bun.assert(rc == .result);
@@ -181,7 +181,6 @@ const LibUVBackend = struct {
 
     fn onRawLibUVComplete(uv_info: *libuv.uv_getaddrinfo_t, _: c_int, _: ?*libuv.addrinfo) callconv(.c) void {
         //TODO: We schedule a task to run because otherwise the promise will not be solved, we need to investigate this
-// safe-transpile: @alignCast requires manual review
         const this: *GetAddrInfoRequest = @ptrCast(@alignCast(uv_info.data));
         const Holder = struct {
             uv_info: *libuv.uv_getaddrinfo_t,
@@ -306,7 +305,7 @@ pub fn ResolveInfoRequest(comptime cares_type: type, comptime type_name: []const
         head: CAresLookup(cares_type, type_name),
         tail: *CAresLookup(cares_type, type_name) = undefined,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(
             cache: Resolver.LookupCacheHit(@This()),
             resolver: ?*Resolver,
@@ -339,9 +338,9 @@ pub fn ResolveInfoRequest(comptime cares_type: type, comptime type_name: []const
                 request.cache = @This().CacheConfig{
                     .pending_cache = true,
                     .entry_cache = false,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else unreachable), cache_field).indexOf(cache.new).?)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     .name_len = @as(u9, @truncate(name.len)),
                 };
                 cache.new.lookup = request;
@@ -367,14 +366,14 @@ pub fn ResolveInfoRequest(comptime cares_type: type, comptime type_name: []const
                 this.lookup.tail = cares_lookup;
             }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn init(name: []const u8) PendingCacheKey {
                 var hasher = std.hash.Wyhash.init(0);
                 hasher.update(name);
                 const hash = hasher.final();
                 return PendingCacheKey{
                     .hash = hash,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     .len = @as(u16, @truncate(name.len)),
                     .lookup = undefined,
                 };
@@ -417,7 +416,7 @@ pub const GetHostByAddrInfoRequest = struct {
     head: CAresReverse,
     tail: *CAresReverse = undefined,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         cache: Resolver.LookupCacheHit(@This()),
         resolver: ?*Resolver,
@@ -450,9 +449,9 @@ pub const GetHostByAddrInfoRequest = struct {
             request.cache = @This().CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else unreachable), cache_field).indexOf(cache.new).?)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .name_len = @as(u9, @truncate(name.len)),
             };
             cache.new.lookup = request;
@@ -478,14 +477,14 @@ pub const GetHostByAddrInfoRequest = struct {
             this.lookup.tail = cares_lookup;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(name: []const u8) PendingCacheKey {
             var hasher = std.hash.Wyhash.init(0);
             hasher.update(name);
             const hash = hasher.final();
             return PendingCacheKey{
                 .hash = hash,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .len = @as(u16, @truncate(name.len)),
                 .lookup = undefined,
             };
@@ -522,7 +521,7 @@ pub const CAresNameInfo = struct {
     next: ?*@This() = null,
     name: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(globalThis: *jsc.JSGlobalObject, allocator: std.mem.Allocator, name: []const u8) !*@This() {
         const this = try zust.Box(@This()).init(allocator, undefined);
         var poll_ref = bun.Async.KeepAlive.init();
@@ -584,7 +583,7 @@ pub const GetNameInfoRequest = struct {
     head: CAresNameInfo,
     tail: *CAresNameInfo = undefined,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         cache: Resolver.LookupCacheHit(@This()),
         resolver: ?*Resolver,
@@ -609,9 +608,9 @@ pub const GetNameInfoRequest = struct {
             request.cache = @This().CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else unreachable), cache_field).indexOf(cache.new).?)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .name_len = @as(u9, @truncate(name.len)),
             };
             cache.new.lookup = request;
@@ -637,14 +636,14 @@ pub const GetNameInfoRequest = struct {
             this.lookup.tail = cares_lookup;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(name: []const u8) PendingCacheKey {
             var hasher = std.hash.Wyhash.init(0);
             hasher.update(name);
             const hash = hasher.final();
             return PendingCacheKey{
                 .hash = hash,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .len = @as(u16, @truncate(name.len)),
                 .lookup = undefined,
             };
@@ -683,7 +682,7 @@ pub const GetAddrInfoRequest = struct {
     tail: *DNSLookup = undefined,
     task: bun.ThreadPool.Task = undefined,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         cache: Resolver.CacheHit,
         backend: Backend,
@@ -715,9 +714,9 @@ pub const GetAddrInfoRequest = struct {
             request.cache = CacheConfig{
                 .pending_cache = true,
                 .entry_cache = false,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .pos_in_pending = @as(u5, @truncate(@field((if (resolver) |v| v else unreachable), cache_field).indexOf(cache.new).?)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .name_len = @as(u9, @truncate(query.name.len)),
             };
             cache.new.lookup = request;
@@ -752,7 +751,7 @@ pub const GetAddrInfoRequest = struct {
         pub fn init(query: GetAddrInfo) PendingCacheKey {
             return PendingCacheKey{
                 .hash = query.hash(),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .len = @as(u16, @truncate(query.name.len)),
                 .lookup = undefined,
             };
@@ -764,7 +763,6 @@ pub const GetAddrInfoRequest = struct {
         addr_info: ?*std.c.addrinfo,
         arg: ?*anyopaque,
     ) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
         const this = @as(*GetAddrInfoRequest, @ptrCast(@alignCast(arg)));
         log("getAddrInfoAsyncCallback: status={d}", .{status});
 
@@ -921,7 +919,6 @@ pub const GetAddrInfoRequest = struct {
 
     pub fn onLibUVComplete(uv_info: *libuv.uv_getaddrinfo_t) void {
         log("onLibUVComplete: status={d}", .{uv_info.retcode.int()});
-// safe-transpile: @alignCast requires manual review
         const this: *GetAddrInfoRequest = @ptrCast(@alignCast(uv_info.data));
         bun.assert(uv_info == &this.backend.libc.uv);
         if (this.backend == .libinfo) {
@@ -952,7 +949,7 @@ pub const CAresReverse = struct {
     next: ?*@This() = null,
     name: []const u8,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(resolver: ?*Resolver, globalThis: *jsc.JSGlobalObject, allocator: std.mem.Allocator, name: []const u8) !*@This() {
         if (resolver) |resolver_| {
             resolver_.ref();
@@ -1032,7 +1029,7 @@ pub fn CAresLookup(comptime cares_type: type, comptime type_name: []const u8) ty
             return bun.new(@This(), data);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn init(resolver: ?*Resolver, globalThis: *jsc.JSGlobalObject, _: std.mem.Allocator, name: []const u8) !*@This() {
             if (resolver) |resolver_| {
                 resolver_.ref();
@@ -1222,7 +1219,7 @@ pub const internal = struct {
         // This is racy, but it's okay because the number won't be invalid, just stale.
         return __max_dns_time_to_live_seconds orelse {
             const value = bun.env_var.BUN_CONFIG_DNS_TIME_TO_LIVE_SECONDS.get();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             __max_dns_time_to_live_seconds = @truncate(@as(u64, @intCast(value)));
             return (if (__max_dns_time_to_live_seconds) |v| v else unreachable);
         };
@@ -1378,7 +1375,7 @@ pub const internal = struct {
         // However, we're almost out of time to use 32 bit timestamps for anything
         // So we set the epoch to January 1st, 2024 instead.
         pub fn getCacheTimestamp() u32 {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             return @truncate(bun.getRoughTickCountMs(.allow_mocked_time) / 1000);
         }
 
@@ -1415,7 +1412,6 @@ pub const internal = struct {
             // is the cache full?
             if (this.len >= this.cache.len) {
                 // check if there is an element to evict
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.cache[0..this.len]) |*e| {
                     if (e.*.refcount == 0) {
                         e.*.deinit();
@@ -1540,14 +1536,10 @@ pub const internal = struct {
             results[i].info = ai.*;
             if (ai.addr) |addr| {
                 if (ai.family == std.c.AF.INET) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const addr_in: *std.c.sockaddr.in = @ptrCast(&results[i].addr);
-// safe-transpile: @alignCast requires manual review
                     addr_in.* = @as(*std.c.sockaddr.in, @ptrCast(@alignCast(addr))).*;
                 } else if (ai.family == std.c.AF.INET6) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const addr_in: *std.c.sockaddr.in6 = @ptrCast(&results[i].addr);
-// safe-transpile: @alignCast requires manual review
                     addr_in.* = @as(*std.c.sockaddr.in6, @ptrCast(@alignCast(addr))).*;
                 }
             } else {
@@ -1573,8 +1565,7 @@ pub const internal = struct {
         }
 
         // set up pointers
-        // safe-transpile: for with index access requires manual review
-    for (results, 0..) |*entry, idx| {
+        for (results, 0..) |*entry, idx| {
             entry.info.canonname = null;
             if (idx + 1 < count) {
                 entry.info.next = &results[idx + 1].info;
@@ -1582,7 +1573,6 @@ pub const internal = struct {
                 entry.info.next = null;
             }
             if (entry.info.addr != null) {
-// safe-transpile: @alignCast requires manual review
                 entry.info.addr = @ptrCast(@alignCast(&entry.addr));
             }
         }
@@ -1643,7 +1633,7 @@ pub const internal = struct {
                 &wsa_hints,
                 &addrinfo,
             );
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             afterResult(req, @ptrCast(addrinfo), err);
         } else {
             var addrinfo: ?*std.c.addrinfo = null;
@@ -1696,7 +1686,7 @@ pub const internal = struct {
             return false;
         }
 
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         var poll = bun.Async.FilePoll.init(loop, .fromNative(@bitCast(machport)), .{}, InternalDNSRequest, req);
         const rc = poll.register(loop.loop(), .machport, true);
 
@@ -1719,7 +1709,7 @@ pub const internal = struct {
         arg: ?*anyopaque,
     ) callconv(.c) void {
         const req: *Request = bun.cast(*Request, arg);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const status_int: c_int = @intCast(status);
         if (status == @intFromEnum(std.c.EAI.NONAME) and req.can_retry_for_addrconfig) retry: {
             req.can_retry_for_addrconfig = false;
@@ -1763,7 +1753,7 @@ pub const internal = struct {
             // otherwise we'd never see the retry's reply.
             req.libinfo.machport = machport;
             const poll = req.libinfo.file_poll.?;
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             poll.fd = .fromNative(@bitCast(machport));
             switch (poll.register(bun.uws.Loop.get(), .machport, true)) {
                 .err => {
@@ -1773,7 +1763,7 @@ pub const internal = struct {
                 .result => return,
             }
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         afterResult(req, addr_info, @intCast(status_int));
     }
 
@@ -1927,8 +1917,7 @@ pub const internal = struct {
         // lock, so once result is non-null the socket is no longer cancellable
         // (the callback has fired or is about to fire on the worker thread).
         if (request.result != null) return 0;
-        // safe-transpile: for with index access requires manual review
-    for (request.notify.items, 0..) |item, i| {
+        for (request.notify.items, 0..) |item, i| {
             switch (item) {
                 .socket => |s| if (s == socket) {
                     _ = request.notify.swapRemove(i);
@@ -2107,12 +2096,12 @@ pub const Resolver = struct {
             return jsc.ZigString.init(@tagName(this)).toJS(globalThis);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromString(order: []const u8) ?Order {
             return Order.map.get(order);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn fromStringOrDie(order: []const u8) Order {
             return fromString(order) orelse {
                 Output.prettyErrorln("<r><red>error<r><d>:<r> Invalid DNS result order.", .{});
@@ -2203,7 +2192,7 @@ pub const Resolver = struct {
         this.vm.timer.remove(&this.event_loop_timer);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn getKey(this: *Resolver, index: u8, comptime cache_name: []const u8, comptime request_type: type) request_type.PendingCacheKey {
         var cache = &@field(this, cache_name);
         bun.assert(cache.used.isSet(index));
@@ -2217,7 +2206,7 @@ pub const Resolver = struct {
         return entry;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn drainPendingCares(this: *Resolver, index: u8, err: ?c_ares.Error, timeout: i32, comptime request_type: type, comptime cares_type: type, comptime lookup_name: []const u8, result: ?*cares_type) void {
         const cache_name = comptime std.fmt.comptimePrint("pending_{s}_cache_cares", .{lookup_name});
 
@@ -2461,7 +2450,7 @@ pub const Resolver = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn getOrPutIntoResolvePendingCache(
         this: *Resolver,
         comptime request_type: type,
@@ -2577,7 +2566,6 @@ pub const Resolver = struct {
     }
 
     pub fn onCloseUv(watcher: *anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
         const poll = UvDnsPoll.fromPoll(@ptrCast(@alignCast(watcher)));
         poll.destroy();
     }
@@ -2616,7 +2604,6 @@ pub const Resolver = struct {
             if (!readable and !writable) {
                 // cleanup
                 if (this.polls.fetchOrderedRemove(fd)) |entry| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     uv.uv_close(@ptrCast(&entry.value.poll), onCloseUv);
                 }
                 return;
@@ -2629,7 +2616,7 @@ pub const Resolver = struct {
                     .socket = fd,
                     .poll = undefined,
                 });
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (uv.uv_poll_init_socket(bun.uws.Loop.get().uv_loop, &poll.poll, @ptrCast(fd)) < 0) {
                     poll.destroy();
                     _ = this.polls.swapRemove(fd);
@@ -2643,7 +2630,7 @@ pub const Resolver = struct {
             const uv_events = (if (readable) uv.UV_READABLE else 0) | (if (writable) uv.UV_WRITABLE else 0);
             if (uv.uv_poll_start(&poll.poll, uv_events, onDNSPollUv) < 0) {
                 _ = this.polls.swapRemove(fd);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
                 uv.uv_close(@ptrCast(&poll.poll), onCloseUv);
             }
         } else {
@@ -2946,7 +2933,7 @@ pub const Resolver = struct {
         return resolver.doLookup(name.slice(), port, options, globalThis);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn doLookup(this: *Resolver, name: []const u8, port: u16, options: GetAddrInfo.Options, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         // The system backends copy the hostname into a fixed `bun.PathBuffer` on the
         // stack before null-terminating it. Reject anything that cannot fit so we never
@@ -3244,7 +3231,7 @@ pub const Resolver = struct {
         return this.doResolveCAres(c_ares.struct_any_reply, "any", name.slice(), globalThis);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn doResolveCAres(this: *Resolver, comptime cares_type: type, comptime type_name: []const u8, name: []const u8, globalThis: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         var channel: *c_ares.Channel = switch (this.getChannel()) {
             .result => |res| res,
@@ -3600,7 +3587,7 @@ pub const Resolver = struct {
         const port: u16 = try port_value.toPortNumber(globalThis);
 
         var sa: std.posix.sockaddr.storage = std.mem.zeroes(std.posix.sockaddr.storage);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         if (c_ares.getSockaddr(addr_s, port, @as(*std.posix.sockaddr, @ptrCast(&sa))) != 0) {
             return globalThis.throwInvalidArgumentValue("address", addr_value);
         }
@@ -3635,7 +3622,6 @@ pub const Resolver = struct {
 
         const promise = request.tail.promise.value();
         channel.getNameInfo(
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             @as(*std.posix.sockaddr, @ptrCast(&sa)),
             GetNameInfoRequest,
             request,

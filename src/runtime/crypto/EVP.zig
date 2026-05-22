@@ -141,7 +141,7 @@ pub fn reset(this: *EVP, engine: *BoringSSL.ENGINE) void {
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn hash(this: *EVP, engine: *BoringSSL.ENGINE, input: []const u8, output: []u8) ?u32 {
     BoringSSL.ERR_clear_error();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var outsize: c_uint = @min(@as(u16, @truncate(output.len)), this.size());
     if (BoringSSL.EVP_Digest(input.ptr, input.len, output.ptr, &outsize, this.md, engine) != 1) {
         return null;
@@ -153,7 +153,7 @@ pub fn hash(this: *EVP, engine: *BoringSSL.ENGINE, input: []const u8, output: []
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn final(this: *EVP, engine: *BoringSSL.ENGINE, output: []u8) []u8 {
     BoringSSL.ERR_clear_error();
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     var outsize: u32 = @min(@as(u16, @truncate(output.len)), this.size());
     if (BoringSSL.EVP_DigestFinal_ex(
         &this.ctx,
@@ -175,7 +175,7 @@ pub fn update(this: *EVP, input: []const u8) void {
 }
 
 pub fn size(this: *const EVP) u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     return @as(u16, @truncate(BoringSSL.EVP_MD_CTX_size(&this.ctx)));
 }
 

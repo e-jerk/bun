@@ -60,7 +60,7 @@ const State = struct {
         self.brace_depth = self.wildcard.brace_depth;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn skipToSeparator(self: *State, path: []const u8, is_end_invalid: bool) void {
         if (self.path_index == path.len) {
             self.wildcard.path_index += 1;
@@ -371,7 +371,7 @@ fn matchBraceBranch(state: *State, glob: []const u8, path: []const u8, open_brac
     // Clone state
     var branch_state = state.*;
     branch_state.glob_index = branch_index;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     branch_state.brace_depth = @intCast(brace_stack.len);
 
     const matched = globMatchImpl(&branch_state, glob, branch_index, path, brace_stack);
@@ -471,7 +471,7 @@ inline fn getUnicode(c: *u32, clen: *u8, glob: []const u8, glob_index: *u32) boo
         },
         // multi-byte sequences
         else => {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const len = bun.strings.wtf8ByteSequenceLength(@truncate(c.*));
             clen.* = len;
 

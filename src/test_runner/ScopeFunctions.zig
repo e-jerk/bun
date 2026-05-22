@@ -111,7 +111,6 @@ pub fn callAsFunction(globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JS
 
             var args_list: std.array_list.Managed(Strong) = .init(bunTest.gpa);
             defer args_list.deinit();
-// safe-transpile: for loop with pointer capture requires manual review
             defer for (args_list.items) |*arg| arg.deinit();
 
             if (item.isArray()) {
@@ -146,20 +145,20 @@ pub fn callAsFunction(globalThis: *JSGlobalObject, callFrame: *CallFrame) bun.JS
 
 const Measure = struct {
     len: usize,
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEnd(this: *Measure, write: []const u8) void {
         this.len += write.len;
     }
 };
 const Write = struct {
     buf: []u8,
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn writeEnd(this: *Write, write: []const u8) void {
         if (this.buf.len < write.len) {
             bun.debugAssert(false);
             return;
         }
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(this.buf[this.buf.len - write.len ..], write);
         this.buf = this.buf[0 .. this.buf.len - write.len];
     }

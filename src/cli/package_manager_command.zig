@@ -48,14 +48,14 @@ pub const PackageManagerCommand = struct {
 
         handleLoadLockfileErrors(load_lockfile, pm);
 
-            Output.flush();
-            Output.disableBuffering();
-            Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
-            Output.enableBuffering();
+        Output.flush();
+        Output.disableBuffering();
+        Output.print("{f}", .{load_lockfile.ok.lockfile.fmtMetaHash()});
+        Output.enableBuffering();
         Global.exit(0);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn getSubcommand(args_ptr: *[]const string) []const u8 {
         var args = args_ptr.*;
         defer args_ptr.* = args;
@@ -377,9 +377,8 @@ pub const PackageManagerCommand = struct {
                 const string_bytes = lockfile.buffers.string_bytes.items;
                 const sorted_dependencies = try ctx.allocator.alloc(DependencyID, root_deps.len);
                 defer ctx.allocator.free(sorted_dependencies);
-                // safe-transpile: for with index access requires manual review
-    for (sorted_dependencies, 0..) |*dep, i| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                for (sorted_dependencies, 0..) |*dep, i| {
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     dep.* = @as(DependencyID, @truncate(root_deps.off + i));
                 }
                 std.sort.pdq(DependencyID, sorted_dependencies, ByName{
@@ -387,8 +386,7 @@ pub const PackageManagerCommand = struct {
                     .buf = string_bytes,
                 }, ByName.isLessThan);
 
-                // safe-transpile: for with index access requires manual review
-    for (sorted_dependencies, 0..) |dependency_id, index| {
+                for (sorted_dependencies, 0..) |dependency_id, index| {
                     const package_id = lockfile.buffers.resolutions.items[dependency_id];
                     if (package_id >= lockfile.packages.len) continue;
                     const name = dependencies[dependency_id].name.slice(string_bytes);
@@ -501,14 +499,14 @@ fn printNodeModulesFolderStructure(
                 Output.pretty(" ", .{});
                 var temp_depth = depth;
                 while (temp_depth > 0) : (temp_depth -= 1) {
-// zust: use safe.String or safe.GuardedSlice for slice operations
+                    // zust: use safe.String or safe.GuardedSlice for slice operations
                     if (std.mem.indexOf(u8, path, "node_modules")) |j| {
                         path = path[j + "node_modules".len + 1 ..];
                     }
                 }
             }
             const directory_version = try std.fmt.bufPrint(&resolution_buf, "{f}", .{resolutions[id].fmt(string_bytes, .auto)});
-// zust: use safe.String or safe.GuardedSlice for slice operations
+            // zust: use safe.String or safe.GuardedSlice for slice operations
             if (std.mem.indexOf(u8, path, "node_modules")) |j| {
                 Output.prettyln("{s}<d>@{s}<r>", .{ path[0 .. j - 1], directory_version });
             } else {
@@ -533,7 +531,6 @@ fn printNodeModulesFolderStructure(
         .buf = string_bytes,
     }, ByName.isLessThan);
 
-    // safe-transpile: for with index access requires manual review
     for (sorted_dependencies, 0..) |dependency_id, index| {
         const package_name = dependencies[dependency_id].name.slice(string_bytes);
         const fmt = "{s}" ++ std.fs.path.sep_str ++ "{s}" ++ std.fs.path.sep_str ++ "node_modules";
@@ -562,7 +559,7 @@ fn printNodeModulesFolderStructure(
 
                 var new_depth: usize = 0;
                 var temp_path = possible_path;
-// zust: use safe.String or safe.GuardedSlice for slice operations
+                // zust: use safe.String or safe.GuardedSlice for slice operations
                 while (std.mem.indexOf(u8, temp_path["node_modules".len..], "node_modules")) |j| {
                     new_depth += 1;
                     temp_path = temp_path[j + "node_modules".len ..];

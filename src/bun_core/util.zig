@@ -200,7 +200,7 @@ pub fn fromSlice(
                 map.items.len = default.len;
                 slice = map.items;
             } else if (comptime @hasField(Array, "len")) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 map.len = @as(u32, @intCast(default.len));
                 slice = map.slice();
             } else {
@@ -212,16 +212,16 @@ pub fn fromSlice(
             slice = try allocator.alloc(Of(Array), default.len);
             map = .{
                 .ptr = slice.ptr,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(u32, @truncate(default.len)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .cap = @as(u32, @truncate(default.len)),
             };
         }
 
         const in = std.mem.sliceAsBytes(default);
         var out = std.mem.sliceAsBytes(slice);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(out[0..in.len], in);
 
         if (bun.trait.isSlice(Array)) {

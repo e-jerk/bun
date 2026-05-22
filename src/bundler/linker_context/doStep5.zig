@@ -85,7 +85,6 @@ pub fn doStep5(c: *LinkerContext, source_index_: Index, _: usize) void {
     const named_imports: *js_ast.Ast.NamedImports = &c.graph.ast.items(.named_imports)[id];
 
     const our_imports_to_bind = imports_to_bind[id];
-    // safe-transpile: for with index access requires manual review
     outer: for (parts_slice, 0..) |*part, part_index| {
         // Previously owned by `c.allocator()`, which is a `MimallocArena` (from
         // `BundleV2.graph.heap`).
@@ -94,8 +93,7 @@ pub fn doStep5(c: *LinkerContext, source_index_: Index, _: usize) void {
         // Now that all files have been parsed, determine which property
         // accesses off of imported symbols are inlined enum values and
         // which ones aren't
-        // safe-transpile: for with index access requires manual review
-    for (
+        for (
             part.import_symbol_property_uses.keys(),
             part.import_symbol_property_uses.values(),
         ) |ref, properties| {
@@ -182,8 +180,7 @@ pub fn doStep5(c: *LinkerContext, source_index_: Index, _: usize) void {
         //                          block label from the above commented code.
 
         // Now that we know this, we can determine cross-part dependencies
-        // safe-transpile: for with index access requires manual review
-    for (part.symbol_uses.keys(), 0..) |ref, j| {
+        for (part.symbol_uses.keys(), 0..) |ref, j| {
             if (comptime Environment.allow_assert) {
                 bun.assert(part.symbol_uses.values()[j].count_estimate > 0);
             }
@@ -193,7 +190,7 @@ pub fn doStep5(c: *LinkerContext, source_index_: Index, _: usize) void {
             for (other_parts) |other_part_index| {
                 const local = local_dependencies.getOrPut(other_part_index) catch unreachable;
                 if (!local.found_existing or local.value_ptr.* != part_index) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     local.value_ptr.* = @as(u32, @intCast(part_index));
                     // note: if we crash on append, it is due to threadlocal heaps in mimalloc
                     part.dependencies.append(
@@ -208,7 +205,7 @@ pub fn doStep5(c: *LinkerContext, source_index_: Index, _: usize) void {
 
             // Also map from imports to parts that use them
             if (named_imports.getPtr(ref)) |existing| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 bun.handleOom(existing.local_parts_with_uses.append(allocator, @intCast(part_index)));
             }
         }
@@ -332,8 +329,7 @@ pub fn createExportsForFile(
         // Make sure the part that declares the export is included
         const parts = c.topLevelSymbolsToParts(exp.data.source_index.get(), exp.data.import_ref);
         ns_export_dependencies.ensureUnusedCapacity(parts.len) catch unreachable;
-        // safe-transpile: for with index access requires manual review
-    for (parts, ns_export_dependencies.unusedCapacitySlice()[0..parts.len]) |part_id, *dest| {
+        for (parts, ns_export_dependencies.unusedCapacitySlice()[0..parts.len]) |part_id, *dest| {
             // Use a non-local dependency since this is likely from a different
             // file if it came in through an export star
             dest.* = .{

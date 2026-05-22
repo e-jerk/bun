@@ -254,7 +254,6 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
         off = (off + align_mask) & ~align_mask;
         if (off + @sizeOf(BlockHeader) > bytes.len) break;
 
-// safe-transpile: @alignCast requires manual review
         const hdr: *BlockHeader = @ptrCast(@alignCast(bytes.ptr + off));
         const hdr_off = off;
         off += @sizeOf(BlockHeader);
@@ -263,7 +262,6 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
         const lines_size = n_lines * @sizeOf(VerbatimLine);
         if (off + lines_size > bytes.len) break;
 
-// safe-transpile: @alignCast requires manual review
         const line_ptr: [*]VerbatimLine = @ptrCast(@alignCast(bytes.ptr + off));
         const block_lines = line_ptr[0..n_lines];
         off += lines_size;
@@ -334,7 +332,6 @@ pub fn buildRefDefHashtable(self: *Parser) error{OutOfMemory}!void {
                 hdr.flags |= types.BLOCK_REF_DEF_ONLY;
             } else {
                 // Mark consumed lines as invalid (beg > end triggers skip in processLeafBlock)
-// safe-transpile: @alignCast requires manual review
                 const line_base: [*]VerbatimLine = @ptrCast(@alignCast(bytes.ptr + hdr_off + @sizeOf(BlockHeader)));
                 var i: u32 = 0;
                 while (i < lines_consumed) : (i += 1) {

@@ -61,7 +61,7 @@ pub fn computeServerSignature(this: *SASL, auth_string: []const u8) !void {
 
     const server_key = hmac(this.saltedPassword(), "Server Key") orelse return error.InvalidServerKey;
     const server_signature_bytes = hmac(&server_key, auth_string) orelse return error.InvalidServerSignature;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.server_signature_len = @intCast(bun.base64.encode(&this.server_signature_base64_bytes, &server_signature_bytes));
 }
 
@@ -81,7 +81,7 @@ pub fn nonce(this: *SASL) []const u8 {
     if (this.nonce_len == 0) {
         var bytes: [nonce_byte_len]u8 = .{0} ** nonce_byte_len;
         bun.csprng(&bytes);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.nonce_len = @intCast(bun.base64.encode(&this.nonce_base64_bytes, &bytes));
     }
     return this.nonce_base64_bytes[0..this.nonce_len];

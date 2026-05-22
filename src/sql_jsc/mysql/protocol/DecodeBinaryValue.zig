@@ -16,7 +16,7 @@ pub fn decodeBinaryValue(globalObject: *jsc.JSGlobalObject, field_type: types.Fi
             if (unsigned) {
                 return SQLDataCell{ .tag = .uint4, .value = .{ .uint4 = val } };
             }
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             const ival: i8 = @bitCast(val);
             return SQLDataCell{ .tag = .int4, .value = .{ .int4 = ival } };
         },
@@ -60,7 +60,7 @@ pub fn decodeBinaryValue(globalObject: *jsc.JSGlobalObject, field_type: types.Fi
             if (unsigned) {
                 const val = try reader.int(u64);
                 if (val <= std.math.maxInt(u32)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     return SQLDataCell{ .tag = .uint4, .value = .{ .uint4 = @intCast(val) } };
                 }
                 if (bigint) {
@@ -72,7 +72,7 @@ pub fn decodeBinaryValue(globalObject: *jsc.JSGlobalObject, field_type: types.Fi
             }
             const val = try reader.int(i64);
             if (val >= std.math.minInt(i32) and val <= std.math.maxInt(i32)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 return SQLDataCell{ .tag = .int4, .value = .{ .int4 = @intCast(val) } };
             }
             if (bigint) {
@@ -88,7 +88,6 @@ pub fn decodeBinaryValue(globalObject: *jsc.JSGlobalObject, field_type: types.Fi
                 defer data.deinit();
                 return SQLDataCell.raw(&data);
             }
-// safe-transpile: @bitCast requires manual review
             return SQLDataCell{ .tag = .float8, .value = .{ .float8 = @as(f32, @bitCast(try reader.int(u32))) } };
         },
         .MYSQL_TYPE_DOUBLE => {
@@ -97,7 +96,7 @@ pub fn decodeBinaryValue(globalObject: *jsc.JSGlobalObject, field_type: types.Fi
                 defer data.deinit();
                 return SQLDataCell.raw(&data);
             }
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             return SQLDataCell{ .tag = .float8, .value = .{ .float8 = @bitCast(try reader.int(u64)) } };
         },
         .MYSQL_TYPE_TIME => {

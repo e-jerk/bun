@@ -30,10 +30,10 @@ fn printInstalledWorkspaceSection(
 
     // find the updated packages
     for (resolutions_list[workspace_package_id].begin()..resolutions_list[workspace_package_id].end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const dep_id: DependencyID = @intCast(_dep_id);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         switch (shouldPrintPackageInstall(this, manager, @intCast(dep_id), installed, id_map, pkg_metas)) {
             .yes, .no, .@"return" => {},
             .update => |update_info| {
@@ -56,10 +56,10 @@ fn printInstalledWorkspaceSection(
     }
 
     for (resolutions_list[workspace_package_id].begin()..resolutions_list[workspace_package_id].end()) |_dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const dep_id: DependencyID = @intCast(_dep_id);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         switch (shouldPrintPackageInstall(this, manager, @intCast(dep_id), installed, id_map, pkg_metas)) {
             .@"return" => return,
             .yes => {},
@@ -123,8 +123,7 @@ fn shouldPrintPackageInstall(
     if (dependency.behavior.isWorkspace() or package_id >= this.lockfile.packages.len) return .no;
 
     if (id_map) |map| {
-        // safe-transpile: for with index access requires manual review
-    for (this.updates, map) |update, *update_dependency_id| {
+        for (this.updates, map) |update, *update_dependency_id| {
             if (update.failed) return .@"return";
             if (update.matches(dependency, this.lockfile.buffers.string_bytes.items)) {
                 if (update_dependency_id.* == invalid_package_id) {
@@ -278,7 +277,7 @@ pub fn print(
     @memset(id_map, invalid_package_id);
     defer if (id_map.len > 0) default_allocator.free(id_map);
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const end = @as(PackageID, @truncate(resolved.len));
 
     var had_printed_new_install = false;
@@ -290,7 +289,7 @@ pub fn print(
             for (resolutions_list[0].begin()..resolutions_list[0].end()) |dep_id| {
                 const dep = dependencies_buffer[dep_id];
                 if (dep.behavior.isWorkspace()) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     bun.handleOom(workspaces_to_print.append(allocator, @intCast(dep_id)));
                 }
             }
@@ -299,7 +298,7 @@ pub fn print(
             for (workspaces_to_print.items) |workspace_dep_id| {
                 const workspace_package_id = resolutions_buffer[workspace_dep_id];
                 for (resolutions_list[workspace_package_id].begin()..resolutions_list[workspace_package_id].end()) |dep_id| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     switch (shouldPrintPackageInstall(this, manager, @intCast(dep_id), installed, id_map, pkg_metas)) {
                         .yes => found_workspace_to_print = true,
                         else => {},
@@ -361,19 +360,17 @@ pub fn print(
             );
         }
     } else {
-        // safe-transpile: for with index access requires manual review
-    outer: for (dependencies_buffer, resolutions_buffer, 0..) |dependency, package_id, dep_id| {
+        outer: for (dependencies_buffer, resolutions_buffer, 0..) |dependency, package_id, dep_id| {
             if (package_id >= end) continue;
             if (dependency.behavior.isPeer()) continue;
             const package_name = dependency.name.slice(string_buf);
 
             if (this.updates.len > 0) {
-                // safe-transpile: for with index access requires manual review
-    for (this.updates, id_map) |update, *dependency_id| {
+                for (this.updates, id_map) |update, *dependency_id| {
                     if (update.failed) return;
                     if (update.matches(dependency, string_buf)) {
                         if (dependency_id.* == invalid_package_id) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             dependency_id.* = @as(DependencyID, @truncate(dep_id));
                         }
 

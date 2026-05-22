@@ -45,7 +45,7 @@ fn install(ctx: Command.Context) !void {
         const fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
             .ctx = &analyzer,
             .entry_points = cli.positionals[1..],
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
 

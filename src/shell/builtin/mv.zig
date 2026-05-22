@@ -299,7 +299,6 @@ pub fn next(this: *Mv) Yield {
                     },
                 };
 
-// safe-transpile: for loop with pointer capture requires manual review
                 for (this.state.executing.tasks) |*t| {
                     t.error_signal = &this.state.executing.error_signal;
                     t.task.schedule();
@@ -499,7 +498,6 @@ pub fn parseFlag(this: *Mv, flag: []const u8) union(enum) { continue_parsing, do
 }
 
 pub inline fn bltn(this: *Mv) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("mv", this));
     return @fieldParentPtr("impl", impl);
 }

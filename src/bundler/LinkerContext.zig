@@ -155,7 +155,7 @@ pub const LinkerContext = struct {
                 source.contents,
 
                 // We don't support sourcemaps for source files with more than 2^31 lines
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 @as(i32, @intCast(@as(u31, @truncate(approximate_line_count)))),
             );
         }
@@ -275,8 +275,7 @@ pub const LinkerContext = struct {
 
         var batch = ThreadPoolLib.Batch{};
         var second_batch = ThreadPoolLib.Batch{};
-        // safe-transpile: for with index access requires manual review
-    for (reachable, this.source_maps.line_offset_tasks, this.source_maps.quoted_contents_tasks) |source_index, *line_offset, *quoted| {
+        for (reachable, this.source_maps.line_offset_tasks, this.source_maps.quoted_contents_tasks) |source_index, *line_offset, *quoted| {
             line_offset.* = .{
                 .ctx = this,
                 .source_index = source_index,
@@ -298,7 +297,7 @@ pub const LinkerContext = struct {
     }
 
     pub fn scheduleTasks(this: *LinkerContext, batch: ThreadPoolLib.Batch) void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = this.pending_task_count.fetchAdd(@as(u32, @intCast(batch.len)), .monotonic);
         this.parse_graph.pool.worker_pool.schedule(batch);
     }
@@ -371,7 +370,7 @@ pub const LinkerContext = struct {
         );
 
         if (this.options.source_maps != .none) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             this.computeDataForSourceMap(@as([]Index.Int, @ptrCast(reachable)));
         }
 
@@ -463,7 +462,7 @@ pub const LinkerContext = struct {
     pub const findImportedFilesInCSSOrder = @import("./linker_context/findImportedFilesInCSSOrder.zig").findImportedFilesInCSSOrder;
     pub const findImportedCSSFilesInJSOrder = @import("./linker_context/findImportedCSSFilesInJSOrder.zig").findImportedCSSFilesInJSOrder;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn generateNamedExportInFile(this: *LinkerContext, source_index: Index.Int, module_ref: Ref, name: []const u8, alias: []const u8) bun.OOM!struct { Ref, u32 } {
         const ref = this.graph.generateNewSymbol(source_index, .other, name);
         const part_index = try this.graph.addPartToFile(source_index, .{
@@ -508,7 +507,6 @@ pub const LinkerContext = struct {
         loaders: []const Loader,
         log: *Logger.Log,
     ) enum { ok, errors } {
-// safe-transpile: for loop with pointer capture requires manual review
         for (file_import_records) |*record| {
             if (record.source_index.isValid()) {
                 // Other file is not CSS
@@ -608,7 +606,6 @@ pub const LinkerContext = struct {
             const file_entry_bits: []AutoBitSet = c.graph.files.items(.entry_bits);
             // AutoBitSet needs to be initialized if it is dynamic
             if (AutoBitSet.needsDynamic(entry_points.len)) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (file_entry_bits) |*bits| {
                     bits.* = try AutoBitSet.initEmpty(c.allocator(), entry_points.len);
                 }
@@ -621,8 +618,7 @@ pub const LinkerContext = struct {
             // has to happen after tree shaking because there is an implicit dependency
             // between live parts within the same file. All liveness has to be computed
             // first before determining which entry points can reach which files.
-            // safe-transpile: for with index access requires manual review
-    for (entry_points, 0..) |entry_point, i| {
+            for (entry_points, 0..) |entry_point, i| {
                 c.markFileReachableForCodeSplitting(
                     entry_point,
                     i,
@@ -796,8 +792,7 @@ pub const LinkerContext = struct {
         var prev_column_offset: i32 = 0;
         const source_map_chunks = results.items(.source_map_chunk);
         const offsets = results.items(.generated_offset);
-        // safe-transpile: for with index access requires manual review
-    for (source_map_chunks, offsets, source_indices) |chunk, offset, current_source_index| {
+        for (source_map_chunks, offsets, source_indices) |chunk, offset, current_source_index| {
             const mapping_source_index = source_id_map.get(current_source_index) orelse
                 unreachable; // the pass above during printing of "sources" must add the index
 
@@ -971,8 +966,7 @@ pub const LinkerContext = struct {
                 result_tla_check.parent = source_index;
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (import_records, 0..) |record, import_record_index| {
+            for (import_records, 0..) |record, import_record_index| {
                 if (Index.isValid(record.source_index) and (record.kind == .require or record.kind == .stmt)) {
                     const parent = try c.validateTLA(
                         record.source_index.get(),
@@ -991,7 +985,7 @@ pub const LinkerContext = struct {
                     if (record.kind == .stmt and (Index.isInvalid(Index.init(result_tla_check.parent)) or parent.depth < result_tla_check.depth)) {
                         result_tla_check.depth = parent.depth + 1;
                         result_tla_check.parent = record.source_index.get();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         result_tla_check.import_record_index = @intCast(import_record_index);
                         continue;
                     }
@@ -1306,7 +1300,7 @@ pub const LinkerContext = struct {
     pub const convertStmtsForChunk = @import("./linker_context/convertStmtsForChunk.zig").convertStmtsForChunk;
     pub const convertStmtsForChunkForDevServer = @import("./linker_context/convertStmtsForChunkForDevServer.zig").convertStmtsForChunkForDevServer;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn runtimeFunction(c: *LinkerContext, name: []const u8) Ref {
         return c.graph.runtimeFunction(name);
     }
@@ -1451,17 +1445,15 @@ pub const LinkerContext = struct {
         var local_css_names = std.AutoHashMap(bun.bundle_v2.Ref, void).init(alloc);
         defer local_css_names.deinit();
 
-        // safe-transpile: for with index access requires manual review
-    for (all_css_asts, 0..) |maybe_css_ast, source_index| {
+        for (all_css_asts, 0..) |maybe_css_ast, source_index| {
             if (maybe_css_ast) |css_ast| {
                 if (css_ast.local_scope.count() == 0) continue;
                 const symbols = all_symbols[source_index];
-                // safe-transpile: for with index access requires manual review
-    for (symbols.sliceConst(), 0..) |*symbol_, inner_index| {
+                for (symbols.sliceConst(), 0..) |*symbol_, inner_index| {
                     var symbol = symbol_;
                     if (symbol.kind == .local_css) {
                         const ref = ref: {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             var ref = Ref.init(@intCast(inner_index), @intCast(source_index), false);
                             ref.tag = .symbol;
                             while (symbol.hasLink()) {
@@ -1571,8 +1563,7 @@ pub const LinkerContext = struct {
         result.clearRetainingCapacity();
         result.ensureTotalCapacity(export_refs.count()) catch unreachable;
         result.items.len = export_refs.count();
-        // safe-transpile: for with index access requires manual review
-    for (export_refs.keys(), result.items) |export_ref, *item| {
+        for (export_refs.keys(), result.items) |export_ref, *item| {
             if (comptime Environment.allow_assert)
                 debugTreeShake("Export name: {s} (in {s})", .{
                     c.graph.symbols.get(export_ref).?.original_name,
@@ -1627,7 +1618,6 @@ pub const LinkerContext = struct {
             );
 
         if (css_reprs[source_index] != null) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (import_records[source_index].slice()) |*record| {
                 if (record.source_index.isValid() and !c.isExternalDynamicImport(record, source_index)) {
                     c.markFileReachableForCodeSplitting(
@@ -1645,7 +1635,6 @@ pub const LinkerContext = struct {
             return;
         }
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (import_records[source_index].slice()) |*record| {
             if (record.source_index.isValid() and !c.isExternalDynamicImport(record, source_index)) {
                 c.markFileReachableForCodeSplitting(
@@ -1711,7 +1700,6 @@ pub const LinkerContext = struct {
         }
 
         if (css_reprs[source_index] != null) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (import_records[source_index].slice()) |*record| {
                 const other_source_index = record.source_index.get();
                 if (record.source_index.isValid()) {
@@ -1732,7 +1720,6 @@ pub const LinkerContext = struct {
         // via .url kind import records. Follow all import records for HTML files
         // so these assets are marked live and included in the manifest.
         if (c.parse_graph.input_files.items(.loader)[source_index] == .html) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (import_records[source_index].slice()) |*record| {
                 if (record.source_index.isValid()) {
                     c.markFileLiveForTreeShaking(
@@ -1748,8 +1735,7 @@ pub const LinkerContext = struct {
             return;
         }
 
-        // safe-transpile: for with index access requires manual review
-    for (parts[source_index].slice(), 0..) |part, part_index| {
+        for (parts[source_index].slice(), 0..) |part, part_index| {
             var can_be_removed_if_unused = part.can_be_removed_if_unused;
 
             if (can_be_removed_if_unused and part.tag == .commonjs_named_export) {
@@ -1805,7 +1791,7 @@ pub const LinkerContext = struct {
                     entry_point_kinds[source_index].isEntryPoint()))
             {
                 c.markPartLiveForTreeShaking(
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     @intCast(part_index),
                     source_index,
                     side_effects,
@@ -2090,7 +2076,6 @@ pub const LinkerContext = struct {
 
                     // If there are multiple ambiguous results due to use of "export * from"
                     // statements, trace them all to see if they point to different things.
-// safe-transpile: for loop with pointer capture requires manual review
                     for (potentially_ambiguous_export_star_refs) |*ambiguous_tracker| {
                         // If this is a re-export of another import, follow the import
                         if (named_imports[ambiguous_tracker.data.source_index.get()].contains(ambiguous_tracker.data.import_ref)) {
@@ -2215,8 +2200,7 @@ pub const LinkerContext = struct {
                 // Generate a dummy part that depends on the "__commonJS" symbol.
                 const dependencies: []js_ast.Dependency = if (c.options.output_format != .internal_bake_dev) brk: {
                     const dependencies = bun.handleOom(c.allocator().alloc(js_ast.Dependency, common_js_parts.len));
-                    // safe-transpile: for with index access requires manual review
-    for (common_js_parts, dependencies) |part, *cjs| {
+                    for (common_js_parts, dependencies) |part, *cjs| {
                         cjs.* = .{
                             .part_index = part,
                             .source_index = Index.runtime,
@@ -2516,8 +2500,7 @@ pub const LinkerContext = struct {
         };
         named_imports.sort(sorter);
 
-        // safe-transpile: for with index access requires manual review
-    for (named_imports.keys(), named_imports.values()) |ref, named_import| {
+        for (named_imports.keys(), named_imports.values()) |ref, named_import| {
             // Re-use memory for the cycle detector
             c.cycle_detector.clearRetainingCapacity();
 
@@ -2709,7 +2692,7 @@ pub const LinkerContext = struct {
 
             try pieces.append(OutputPiece.init(output[0..boundary], .{
                 .kind = kind,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .index = @intCast(index),
             }));
             output = output[boundary + prefix.len + 9 ..];

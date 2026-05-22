@@ -322,7 +322,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             .client => ClientFile,
         };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn freeFileContent(
             g: *Self,
             key: []const u8,
@@ -382,8 +382,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             const alloc = g.allocator();
             useAllFields(Self, .{
                 .bundled_files = {
-                    // safe-transpile: for with index access requires manual review
-    for (g.bundled_files.keys(), g.bundled_files.values()) |k, v| {
+                    for (g.bundled_files.keys(), g.bundled_files.values()) |k, v| {
                         alloc.free(k);
                         if (comptime side == .client) {
                             var file = v.unpack();
@@ -400,14 +399,12 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                 .current_chunk_len = {},
                 .current_chunk_parts = {
                     if (comptime side == .server) {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (g.current_chunk_parts.items) |*part| part.deinit();
                     }
                     g.current_chunk_parts.deinit(alloc);
                 },
                 .current_css_files = if (comptime side == .client) g.current_css_files.deinit(alloc),
                 .current_chunk_source_maps = if (side == .server) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (g.current_chunk_source_maps.items) |*source_map| {
                         source_map.deinit();
                     }
@@ -457,9 +454,9 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getFileIndex(g: *const Self, path: []const u8) ?FileIndex {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return if (g.bundled_files.getIndex(path)) |i| FileIndex.init(@intCast(i)) else null;
         }
 
@@ -528,7 +525,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             };
 
             const gop = try g.bundled_files.getOrPut(dev.allocator(), key);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const file_index = FileIndex.init(@intCast(gop.index));
 
             if (!gop.found_existing) {
@@ -541,7 +538,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                 g.stale_files.unset(gop.index);
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             ctx.getCachedIndex(side, index).* = .init(FileIndex.init(@intCast(gop.index)));
 
             switch (side) {
@@ -600,7 +597,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
 
                                 // Must precompute this. Otherwise, source maps won't have
                                 // the info needed to concatenate VLQ mappings.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 const count: u32 = @intCast(bun.strings.countChar(js.code, '\n'));
                                 break :blk .{ .line_count = .init(count) };
                             },
@@ -711,7 +708,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
 
                             // Must precompute this. Otherwise, source maps won't have
                             // the info needed to concatenate VLQ mappings.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             const count: u32 = @intCast(bun.strings.countChar(content.js.code, '\n'));
                             try g.current_chunk_source_maps.append(dev.allocator(), .{
                                 .file_index = file_index,
@@ -1304,20 +1301,20 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
 
         /// Never takes ownership of `abs_path`
         /// Marks a chunk but without any content. Used to track dependencies to files that don't exist.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn insertStale(g: *Self, abs_path: []const u8, is_ssr_graph: bool) bun.OOM!FileIndex {
             return g.insertStaleExtra(abs_path, is_ssr_graph, false);
         }
 
         // TODO: `is_route` is unused in client graph
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn insertStaleExtra(g: *Self, abs_path: []const u8, is_ssr_graph: bool, is_route: bool) bun.OOM!FileIndex {
             g.owner().graph_safety_lock.assertLocked();
             const dev_alloc = g.allocator();
 
             debug.log("Insert stale: {s}", .{abs_path});
             const gop = try g.bundled_files.getOrPut(dev_alloc, abs_path);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const file_index = FileIndex.init(@intCast(gop.index));
 
             if (gop.found_existing) {
@@ -1366,7 +1363,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
         }
 
         /// Returns the key that was inserted.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn insertEmpty(g: *Self, abs_path: []const u8, kind: FileKind) bun.OOM!struct {
             index: FileIndex,
             key: []const u8,
@@ -1398,20 +1395,20 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                 try g.first_import.append(dev_alloc, .none);
                 try g.ensureStaleBitCapacity(true);
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .index = .init(@intCast(gop.index)), .key = gop.key_ptr.* };
         }
 
         /// Server CSS files are just used to be targets for graph traversal.
         /// Its content lives only on the client.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn insertCssFileOnServer(g: *Self, ctx: *HotUpdateContext, index: bun.ast.Index, abs_path: []const u8) bun.OOM!void {
             g.owner().graph_safety_lock.assertLocked();
             const dev_alloc = g.allocator();
 
             debug.log("Insert stale: {s}", .{abs_path});
             const gop = try g.bundled_files.getOrPut(dev_alloc, abs_path);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const file_index: FileIndex = .init(@intCast(gop.index));
 
             if (!gop.found_existing) {
@@ -1455,7 +1452,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             const gop: Gop, const found_existing, const file_index = switch (mode) {
                 .abs_path => brk: {
                     const gop = try g.bundled_files.getOrPut(dev_alloc, key);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :brk .{ gop, gop.found_existing, FileIndex.init(@intCast(gop.index)) };
                 },
                 // When given an index, no fetch is needed.
@@ -1545,7 +1542,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn onFileDeleted(g: *Self, abs_path: []const u8, bv2: *bun.BundleV2) void {
             const index = g.getFileIndex(abs_path) orelse return;
 
@@ -1586,7 +1583,6 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
 
             // Additionally, clear the cached entry of the file from the path to
             // source index map.
-// safe-transpile: for loop with pointer capture requires manual review
             for (&bv2.graph.build_graphs.values) |*map| {
                 _ = map.remove(abs_path);
             }
@@ -1699,10 +1695,8 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             if (comptime side == .client) {
                 g.current_css_files.clearRetainingCapacity();
             } else if (comptime side == .server) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (g.current_chunk_parts.items) |*part| part.deinit();
 
-// safe-transpile: for loop with pointer capture requires manual review
                 for (g.current_chunk_source_maps.items) |*sourcemap| sourcemap.deinit();
                 g.current_chunk_source_maps.clearRetainingCapacity();
             }
@@ -1724,7 +1718,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
             },
         };
 
-// safe-transpile: function returns small constant slice — consider safe.String
+        // safe-transpile: function returns small constant slice — consider safe.String
         pub fn takeJSBundle(
             g: *Self,
             options: *const TakeJSBundleOptions,
@@ -1782,7 +1776,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                         }
                         try w.writeAll(",\n  bun: \"" ++ bun.Global.package_json_version_with_canary ++ "\"");
                         try w.writeAll(",\n  generation: \"");
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const generation: u32 = @intCast(options.script_id.get() >> 32);
                         try w.print("{x}", .{std.mem.asBytes(&generation)});
                         try w.writeAll("\",\n  version: \"");
@@ -1901,7 +1895,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                         .ref_count = ref_count,
                         .paths = file_paths.items,
                         .files = contained_maps,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .overlapping_memory_cost = @intCast(overlapping_memory_cost),
                     };
                 },
@@ -1918,11 +1912,11 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                     for (g.current_chunk_source_maps.items) |item| {
                         file_paths.appendAssumeCapacity(paths[item.file_index.get()]);
                         contained_maps.appendAssumeCapacity(item.source_map.clone());
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         overlapping_memory_cost += @intCast(item.source_map.memoryCost());
                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     overlapping_memory_cost += @intCast(contained_maps.memoryCost() + DevServer.memoryCostSlice(file_paths.items));
 
                     out.* = .{
@@ -1982,7 +1976,7 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
                 return index;
             }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const index = EdgeIndex.init(@intCast(g.edges.items.len));
             try g.edges.append(g.allocator(), edge);
             return index;
@@ -2051,7 +2045,6 @@ pub fn IncrementalGraph(comptime side: bake.Side) type {
         }
 
         pub fn owner(g: *Self) *DevServer {
-// safe-transpile: @alignCast requires manual review
             return @alignCast(@fieldParentPtr(@tagName(side) ++ "_graph", g));
         }
 

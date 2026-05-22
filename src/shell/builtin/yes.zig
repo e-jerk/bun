@@ -16,8 +16,7 @@ pub fn start(this: *@This()) Yield {
         bufalloc = 2; // "y\n"
     } else {
         // Sum all args + spaces between + newline
-        // safe-transpile: for with index access requires manual review
-    for (args, 0..) |arg, i| {
+        for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
             bufalloc += arg_slice.len;
             if (i < args.len - 1) bufalloc += 1; // space
@@ -36,15 +35,13 @@ pub fn start(this: *@This()) Yield {
     // Fill buffer with one copy of the output
     this.buffer_used = 0;
     if (args.len == 0) {
-// safe-transpile: @memcpy requires manual review
         @memcpy(this.buffer[0..1], "y");
         this.buffer[1] = '\n';
         this.buffer_used = 2;
     } else {
-        // safe-transpile: for with index access requires manual review
-    for (args, 0..) |arg, i| {
+        for (args, 0..) |arg, i| {
             const arg_slice = std.mem.sliceTo(arg, 0);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.buffer[this.buffer_used .. this.buffer_used + arg_slice.len], arg_slice);
             this.buffer_used += arg_slice.len;
             if (i < args.len - 1) {
@@ -63,7 +60,7 @@ pub fn start(this: *@This()) Yield {
     while (copies > 1) : (copies -= 1) {
         const remaining = bufalloc - filled;
         const to_copy = @min(copysize, remaining);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(this.buffer[filled .. filled + to_copy], this.buffer[0..to_copy]);
         filled += to_copy;
     }
@@ -136,7 +133,6 @@ pub fn onIOWriterChunk(this: *@This(), _: usize, maybe_e: ?jsc.SystemError) Yiel
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("yes", this));
     return @fieldParentPtr("impl", impl);
 }

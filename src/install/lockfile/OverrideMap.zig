@@ -58,7 +58,6 @@ pub fn clone(this: *OverrideMap, pm: *PackageManager, old_lockfile: *Lockfile, n
     var new = OverrideMap{};
     try new.map.ensureTotalCapacity(new_lockfile.allocator, this.map.entries.len);
 
-    // safe-transpile: for with index access requires manual review
     for (this.map.keys(), this.map.values()) |k, v| {
         new.map.putAssumeCapacity(
             k,

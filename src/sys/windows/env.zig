@@ -42,14 +42,14 @@ pub fn convertEnvToWTF8() bun.OOM!void {
         const str_len = std.mem.indexOfScalar(u8, wtf8_buf[len..], 0).?;
         defer len += str_len + 1; // each string is null-terminated
         if (str_len == 0) break; // array ends with empty null-terminated string
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const str_ptr: [*:0]u8 = @ptrCast(wtf8_buf[len..].ptr);
         try envp.append(str_ptr);
     }
     try envp.append(null);
 
     const envp_slice: []?[*:0]u8 = try envp.toOwnedSlice();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const envp_nonnull_slice: [][*:0]u8 = @ptrCast(envp_slice[0 .. envp_slice.len - 1]);
     wtf8_env_buf = wtf8_buf;
     orig_environ = std.os.environ;

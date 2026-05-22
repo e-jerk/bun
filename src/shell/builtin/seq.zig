@@ -134,7 +134,6 @@ pub fn deinit(this: *@This()) void {
 }
 
 pub inline fn bltn(this: *@This()) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("seq", this));
     return @fieldParentPtr("impl", impl);
 }

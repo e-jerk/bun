@@ -178,7 +178,6 @@ pub fn matchesPathIgnorePattern(this: *Scanner, abs_path: []const u8) bool {
         rel_path.len + 1 <= buf.len and
         rel_path[rel_path.len - 1] != '/')
     blk: {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..rel_path.len], rel_path);
         buf[rel_path.len] = '/';
         break :blk buf[0 .. rel_path.len + 1];

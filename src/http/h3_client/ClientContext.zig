@@ -57,7 +57,7 @@ pub fn connect(this: *ClientContext, client: *HTTPClient, hostname: []const u8, 
         .reject_unauthorized = reject,
     });
     _ = H3.live_sessions.fetchAdd(1, .monotonic);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     session.registry_index = @intCast(this.sessions.items.len);
     bun.handleOom(this.sessions.append(bun.default_allocator, session));
     session.enqueue(client);

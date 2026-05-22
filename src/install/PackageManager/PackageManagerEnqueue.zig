@@ -291,11 +291,10 @@ pub fn enqueueDependencyToRoot(
     version_buf: []const u8,
     behavior: Dependency.Behavior,
 ) DependencyToEnqueue {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const dep_id = @as(DependencyID, @truncate(brk: {
         const str_buf = this.lockfile.buffers.string_bytes.items;
-        // safe-transpile: for with index access requires manual review
-    for (this.lockfile.buffers.dependencies.items, 0..) |dep, id| {
+        for (this.lockfile.buffers.dependencies.items, 0..) |dep, id| {
             if (!strings.eqlLong(dep.name.slice(str_buf), name, true)) continue;
             if (!dep.version.eql(version, str_buf, version_buf)) continue;
             break :brk id;
@@ -1716,8 +1715,7 @@ fn getOrPutResolvedPackage(
                         const root_dependencies = root_package.dependencies.get(this.lockfile.buffers.dependencies.items);
                         const root_resolutions = root_package.resolutions.get(this.lockfile.buffers.resolutions.items);
 
-                        // safe-transpile: for with index access requires manual review
-    for (root_dependencies, root_resolutions) |root_dep, workspace_package_id| {
+                        for (root_dependencies, root_resolutions) |root_dep, workspace_package_id| {
                             if (workspace_package_id != invalid_package_id and root_dep.version.tag == .workspace and root_dep.name_hash == name_hash) {
                                 // make sure verifyResolutions sees this resolution as a valid package id
                                 successFn(this, dependency_id, workspace_package_id);
@@ -1797,8 +1795,7 @@ fn getOrPutResolvedPackage(
                             const root_dependencies = root_package.dependencies.get(this.lockfile.buffers.dependencies.items);
                             const root_resolutions = root_package.resolutions.get(this.lockfile.buffers.resolutions.items);
 
-                            // safe-transpile: for with index access requires manual review
-    for (root_dependencies, root_resolutions) |root_dep, workspace_package_id| {
+                            for (root_dependencies, root_resolutions) |root_dep, workspace_package_id| {
                                 if (workspace_package_id != invalid_package_id and root_dep.version.tag == .workspace and root_dep.name_hash == name_hash) {
                                     // make sure verifyResolutions sees this resolution as a valid package id
                                     successFn(this, dependency_id, workspace_package_id);

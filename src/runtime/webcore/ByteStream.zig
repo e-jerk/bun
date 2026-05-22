@@ -55,7 +55,7 @@ pub fn onStart(this: *@This()) streams.Start {
     // #define LIBUS_RECV_BUFFER_LENGTH 524288
     // For HTTPS, the size is probably quite a bit lower like 64 KB due to TLS transmission.
     // We add 1 extra page size so that if there's a little bit of excess buffered data, we avoid extra allocations.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const page_size: Blob.SizeType = @intCast(std.heap.pageSize());
     return .{ .chunk_size = @min(512 * 1024 + page_size, @max(this.highWaterMark, page_size)) };
 }
@@ -166,7 +166,7 @@ pub fn onData(
         const to_copy = this.pending_buffer[0..@min(chunk.len, this.pending_buffer.len)];
         const pending_buffer_len = this.pending_buffer.len;
         bun.assert(to_copy.ptr != chunk.ptr);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(to_copy, chunk[0..to_copy.len]);
         this.pending_buffer = &.{};
 
@@ -189,7 +189,7 @@ pub fn onData(
                 this.pending.result = .{
                     .into_array_and_done = .{
                         .value = this.value(),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         .len = @as(Blob.SizeType, @truncate(to_copy.len)),
                     },
                 };
@@ -198,7 +198,7 @@ pub fn onData(
             this.pending.result = .{
                 .into_array = .{
                     .value = this.value(),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .len = @as(Blob.SizeType, @truncate(to_copy.len)),
                 },
             };
@@ -300,7 +300,6 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
         );
         const remaining_in_buffer = this.buffer.items[this.offset..][0..to_write];
 
-// safe-transpile: @memcpy requires manual review
         @memcpy(buffer[0..to_write], this.buffer.items[this.offset..][0..to_write]);
 
         if (this.offset + to_write == this.buffer.items.len) {
@@ -317,7 +316,7 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
             return .{
                 .into_array_and_done = .{
                     .value = view,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     .len = @as(Blob.SizeType, @truncate(to_write)),
                 },
             };
@@ -326,7 +325,7 @@ pub fn onPull(this: *@This(), buffer: []u8, view: jsc.JSValue) streams.Result {
         return .{
             .into_array = .{
                 .value = view,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @as(Blob.SizeType, @truncate(to_write)),
             },
         };

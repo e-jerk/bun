@@ -90,7 +90,7 @@ pub const S3HttpSimpleTask = struct {
         commit: *const fn (S3CommitResult, *anyopaque) bun.JSTerminated!void,
         part: *const fn (S3PartResult, *anyopaque) bun.JSTerminated!void,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn fail(this: @This(), code: []const u8, message: []const u8, context: *anyopaque) bun.JSTerminated!void {
             switch (this) {
                 inline .upload,
@@ -108,7 +108,7 @@ pub const S3HttpSimpleTask = struct {
                 }, context),
             }
         }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn notFound(this: @This(), code: []const u8, message: []const u8, context: *anyopaque) bun.JSTerminated!void {
             switch (this) {
                 inline .download,

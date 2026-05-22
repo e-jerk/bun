@@ -145,7 +145,7 @@ pub fn writeDataWindowed(session: *ClientSession, stream: *Stream, data: []const
     var consumed: usize = 0;
     var __loop_limit: u64 = 0;
     while (__loop_limit < 10_000_000) : (__loop_limit += 1) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const window: usize = @intCast(@max(0, @min(stream.send_window, session.conn_send_window)));
         if (remaining.len > 0 and window == 0) break;
         // Socket-side backpressure: don't keep memcpy'ing into write_buffer
@@ -156,9 +156,9 @@ pub fn writeDataWindowed(session: *ClientSession, stream: *Stream, data: []const
         const last = chunk_len == remaining.len;
         const flags: u8 = if (last and end_stream) @intFromEnum(wire.DataFrameFlags.END_STREAM) else 0;
         session.writeFrame(.HTTP_FRAME_DATA, flags, stream.id, remaining[0..chunk_len]);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         stream.send_window -= @intCast(chunk_len);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         session.conn_send_window -= @intCast(chunk_len);
         consumed += chunk_len;
         remaining = remaining[chunk_len..];
@@ -236,17 +236,17 @@ pub fn encodeHeader(session: *ClientSession, encoded: *std.ArrayListUnmanaged(u8
 /// at least 6 bytes of capacity (max for a u32).
 pub fn encodeHpackTableSizeUpdate(encoded: *std.ArrayListUnmanaged(u8), value: u32) void {
     if (value < 31) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         encoded.appendAssumeCapacity(0x20 | @as(u8, @intCast(value)));
         return;
     }
     encoded.appendAssumeCapacity(0x20 | 31);
     var rest = value - 31;
     while (rest >= 128) : (rest >>= 7) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         encoded.appendAssumeCapacity(@as(u8, @truncate(rest)) | 0x80);
     }
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
     encoded.appendAssumeCapacity(@as(u8, @truncate(rest)));
 }
 

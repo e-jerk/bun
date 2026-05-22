@@ -220,7 +220,7 @@ pub fn writeFrame(this: *ClientSession, frame_type: wire.FrameType, flags: u8, s
         .type = @intFromEnum(frame_type),
         .flags = flags,
         .streamIdentifier = stream_id,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .length = @intCast(payload.len),
     };
     std.mem.byteSwapAllFields(wire.FrameHeader, &header);
@@ -237,7 +237,7 @@ pub fn attach(this: *ClientSession, client: *HTTPClient) void {
         .id = this.next_stream_id,
         .session = this,
         .client = client,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .send_window = @intCast(@min(this.remote_initial_window_size, @as(u32, wire.MAX_WINDOW_SIZE))),
     });
     _ = H2.live_streams.fetchAdd(1, .monotonic);
@@ -377,7 +377,7 @@ pub fn writeWindowUpdate(this: *ClientSession, stream_id: u32, increment: u31) v
 fn replenishWindow(this: *ClientSession) void {
     const threshold = local_initial_window_size / 2;
     if (this.conn_unacked_bytes >= threshold) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.writeWindowUpdate(0, @intCast(this.conn_unacked_bytes));
         this.conn_unacked_bytes = 0;
     }
@@ -385,7 +385,7 @@ fn replenishWindow(this: *ClientSession) void {
     while (it.next()) |e| {
         const s = e.value_ptr.*;
         if (s.unacked_bytes >= threshold and !s.remoteClosed()) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.writeWindowUpdate(s.id, @intCast(s.unacked_bytes));
             s.unacked_bytes = 0;
         }
@@ -400,7 +400,7 @@ pub fn flush(this: *ClientSession) !bool {
     while (remaining.len > 0) {
         const wrote = this.socket.write(remaining);
         if (wrote < 0) return error.WriteFailed;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const n: usize = @intCast(wrote);
         total += n;
         remaining = remaining[n..];
@@ -565,7 +565,6 @@ fn failAll(this: *ClientSession, err: anyerror) void {
 /// Called from the HTTP thread's shutdown queue when a fetch on this
 /// session is aborted. RST_STREAMs that one request; siblings continue.
 pub fn abortByHttpId(this: *ClientSession, async_http_id: u32) void {
-    // safe-transpile: for with index access requires manual review
     for (this.pending_attach.items, 0..) |client, i| {
         if (client.async_http_id == async_http_id) {
             _ = this.pending_attach.swapRemove(i);

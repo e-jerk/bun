@@ -315,10 +315,10 @@ const Stringifier = struct {
     fn appendKey(this: *Stringifier, name: bun.String) void {
         const is_identifier = is_identifier: {
             if (name.length() == 0) break :is_identifier false;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (!bun.js_lexer.isIdentifierStart(@intCast(name.charAt(0)))) break :is_identifier false;
             for (1..name.length()) |i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 if (!bun.js_lexer.isIdentifierContinue(@intCast(name.charAt(i)))) break :is_identifier false;
             }
             break :is_identifier true;
@@ -360,7 +360,7 @@ const Stringifier = struct {
     }
 
     fn hexDigit(v: u16) u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const nibble: u8 = @intCast(v & 0x0f);
         return if (nibble < 10) '0' + nibble else 'a' + nibble - 10;
     }
@@ -398,9 +398,8 @@ fn exprToJS(expr: Expr, global: *jsc.JSGlobalObject) bun.JSError!jsc.JSValue {
         },
         .e_array => |arr| {
             var js_arr = try JSValue.createEmptyArray(global, arr.items.len);
-            // safe-transpile: for with index access requires manual review
-    for (arr.slice(), 0..) |item, _i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            for (arr.slice(), 0..) |item, _i| {
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const i: u32 = @intCast(_i);
                 const value = try exprToJS(item, global);
                 try js_arr.putIndex(global, i, value);

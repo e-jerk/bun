@@ -43,7 +43,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
     if (comptime Environment.enable_logs)
         Debugger.log("waitForDebugger: {f}", .{Output.ElapsedFormatter{
             .colors = Output.enable_ansi_colors_stderr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .duration_ns = @truncate(@as(u128, @intCast(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))),
         }});
 
@@ -65,12 +65,11 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                 fn call(handle: *uv.Timer) callconv(.c) void {
                     const vm = VirtualMachine.get();
                     vm.debugger.?.poll_ref.unref(vm);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     uv.uv_close(@ptrCast(handle), deinitTimer);
                 }
 
                 fn deinitTimer(handle: *anyopaque) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
                     bun.default_allocator.destroy(@as(*uv.Timer, @ptrCast(@alignCast(handle))));
                 }
             }.call;
@@ -86,7 +85,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                 this.eventLoop().autoTickActive();
 
                 if (comptime Environment.enable_logs)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     log("waited: {d}", .{@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))});
             },
             .shortly => {
@@ -102,7 +101,7 @@ pub fn waitForDebuggerIfNecessary(this: *VirtualMachine) void {
                 this.uwsLoop().tickWithTimeout(&deadline);
 
                 if (comptime Environment.enable_logs)
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     log("waited: {d}", .{@as(i64, @truncate(@import("std-fs-compat").nanoTimestamp() - bun.cli.start_time))});
 
                 const elapsed = bun.timespec.now(.force_real_time);
@@ -379,7 +378,6 @@ pub const TestReporterAgent = struct {
     }
 
     fn retroactivelyReportScope(agent: *Handle, scope: *bun_test.DescribeScope, parent_id: i32, max_id: *i32, source_url: *bun.String) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (scope.entries.items) |*entry| {
             switch (entry.*) {
                 .describe => |describe| {
@@ -396,7 +394,7 @@ pub const TestReporterAgent = struct {
                             .describe,
                             parent_id,
                             source_url,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @intCast(describe.base.line_no),
                         );
                         // Recursively report children with this describe as parent
@@ -420,7 +418,7 @@ pub const TestReporterAgent = struct {
                             .@"test",
                             parent_id,
                             source_url,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @intCast(test_entry.base.line_no),
                         );
                     }

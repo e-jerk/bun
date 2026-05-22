@@ -173,8 +173,7 @@ fn prepareCssAstsForChunkImpl(c: *LinkerContext, chunk: *Chunk, allocator: std.m
                         const original_rules = ast.rules.v.items;
                         var layer_count: usize = 0;
                         var prefix_end: usize = original_rules.len;
-                        // safe-transpile: for with index access requires manual review
-    prefix_scan: for (original_rules, 0..) |rule, idx| {
+                        prefix_scan: for (original_rules, 0..) |rule, idx| {
                             switch (rule) {
                                 .import, .ignored => {},
                                 .layer_statement => layer_count += 1,

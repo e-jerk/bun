@@ -48,13 +48,11 @@ pub const parser = @import("./parser.zig");
 pub fn isEquivalent(selectors: []const Selector, other: []const Selector) bool {
     if (selectors.len != other.len) return false;
 
-    // safe-transpile: for with index access requires manual review
     for (selectors, 0..) |*a, i| {
         const b = &other[i];
         if (a.len() != b.len()) return false;
 
-        // safe-transpile: for with index access requires manual review
-    for (a.components.items, b.components.items) |*a_comp, *b_comp| {
+        for (a.components.items, b.components.items) |*a_comp, *b_comp| {
             const is_equivalent = blk: {
                 if (a_comp.* == .non_ts_pseudo_class and b_comp.* == .non_ts_pseudo_class) {
                     break :blk a_comp.non_ts_pseudo_class.isEquivalent(&b_comp.non_ts_pseudo_class);
@@ -94,9 +92,7 @@ pub fn isEquivalent(selectors: []const Selector, other: []const Selector) bool {
 /// Returns the necessary vendor prefixes.
 pub fn downlevelSelectors(allocator: Allocator, selectors: []Selector, targets: css.targets.Targets) css.VendorPrefix {
     var necessary_prefixes = css.VendorPrefix{};
-// safe-transpile: for loop with pointer capture requires manual review
     for (selectors) |*selector| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (selector.components.items) |*component| {
             bun.bits.insert(css.VendorPrefix, &necessary_prefixes, downlevelComponent(allocator, component, targets));
         }
@@ -135,7 +131,6 @@ pub fn downlevelComponent(allocator: Allocator, component: *Component, targets: 
             // All selectors must be simple, no combinators are supported.
             if (targets.shouldCompileSame(.is_selector) and
                 !shouldUnwrapIs(selectors) and brk: {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (selectors) |*selector| {
                     if (selector.hasCombinator()) break :brk false;
                 }
@@ -155,14 +150,15 @@ pub fn downlevelComponent(allocator: Allocator, component: *Component, targets: 
             // We need to use :is() / :-webkit-any() rather than :not(.a):not(.b) to ensure the specificity is equivalent.
             // https://drafts.csswg.org/selectors/#specificity-rules
             if (selectors.len > 1 and css.targets.Targets.shouldCompileSame(&targets, .not_selector_list)) {
-                const is: Selector = Selector.fromComponent(allocator, Component{ .is = selectors: {
-                    const new_selectors = bun.handleOom(allocator.alloc(Selector, selectors.len));
-                    // safe-transpile: for with index access requires manual review
-    for (new_selectors, selectors) |*new, *sel| {
-                        new.* = sel.deepClone(allocator);
-                    }
-                    break :selectors new_selectors;
-                } });
+                const is: Selector = Selector.fromComponent(allocator, Component{
+                    .is = selectors: {
+                        const new_selectors = bun.handleOom(allocator.alloc(Selector, selectors.len));
+                        for (new_selectors, selectors) |*new, *sel| {
+                            new.* = sel.deepClone(allocator);
+                        }
+                        break :selectors new_selectors;
+                    },
+                });
                 var list = bun.handleOom(ArrayList(Selector).initCapacity(allocator, 1));
                 list.appendAssumeCapacity(is);
                 component.* = .{ .negation = list.items };
@@ -216,7 +212,6 @@ fn downlevelDir(allocator: Allocator, dir: parser.Direction, targets: css.target
 
 fn langListToSelectors(allocator: Allocator, langs: []const []const u8) []Selector {
     var selectors = bun.handleOom(allocator.alloc(Selector, langs.len));
-    // safe-transpile: for with index access requires manual review
     for (langs, selectors[0..]) |lang, *sel| {
         sel.* = Selector.fromComponent(allocator, Component{
             .non_ts_pseudo_class = PseudoClass{
@@ -235,9 +230,7 @@ fn langListToSelectors(allocator: Allocator, langs: []const []const u8) []Select
 /// If multiple vendor prefixes are seen, this is invalid, and an empty result is returned.
 pub fn getPrefix(selectors: *const SelectorList) css.VendorPrefix {
     var prefix = css.VendorPrefix{};
-// safe-transpile: for loop with pointer capture requires manual review
     for (selectors.v.slice()) |*selector| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (selector.components.items) |*component_| {
             const component: *const Component = component_;
             const p = switch (component.*) {
@@ -274,9 +267,7 @@ pub fn getPrefix(selectors: *const SelectorList) css.VendorPrefix {
 
 pub fn isCompatible(selectors: []const parser.Selector, targets: css.targets.Targets) bool {
     const F = css.compat.Feature;
-// safe-transpile: for loop with pointer capture requires manual review
     for (selectors) |*selector| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (selector.components.items) |*component| {
             const feature = switch (component.*) {
                 .id, .class, .local_name => continue,
@@ -455,7 +446,6 @@ pub fn isUnused(
 ) bool {
     if (unused_symbols.count() == 0) return false;
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (selectors) |*selector| {
         if (!isSelectorUnused(selector, unused_symbols, symbols, parent_is_unused)) return false;
     }
@@ -469,7 +459,6 @@ fn isSelectorUnused(
     symbols: *const css.SymbolList,
     parent_is_unused: bool,
 ) bool {
-// safe-transpile: for loop with pointer capture requires manual review
     for (selector.components.items) |*component| {
         switch (component.*) {
             .class, .id => |ident| {
@@ -504,7 +493,6 @@ pub const serialize = struct {
         is_relative: bool,
     ) PrintErr!void {
         var first = true;
-// safe-transpile: for loop with pointer capture requires manual review
         for (list) |*selector| {
             if (!first) {
                 try dest.delim(',', false);
@@ -524,7 +512,6 @@ pub const serialize = struct {
 
         if (comptime bun.Environment.isDebug) {
             debug("Selector components:\n", .{});
-// safe-transpile: for loop with pointer capture requires manual review
             for (selector.components.items) |*comp| {
                 debug(" {f}\n", .{comp});
             }
@@ -614,7 +601,6 @@ pub const serialize = struct {
                         break :brk compound[@min(1, compound.len)..];
                     } else compound;
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (slice) |*simple| {
                         try serializeComponent(simple, dest, context);
                     }
@@ -669,7 +655,6 @@ pub const serialize = struct {
                 }
 
                 if (i < compound.len) {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (iter[i..]) |*simple| {
                         if (simple.* == .explicit_universal_type) {
                             // Can't have a namespace followed by a pseudo-element
@@ -880,7 +865,7 @@ pub const serialize = struct {
         }
 
         const Helpers = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub inline fn writePrefixed(
                 d: *Printer,
                 prefix: css.VendorPrefix,
@@ -896,7 +881,7 @@ pub const serialize = struct {
                 try vp.toCss(d);
                 try d.writeStr(val);
             }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub inline fn pseudo(
                 d: *Printer,
                 comptime key: []const u8,
@@ -904,8 +889,7 @@ pub const serialize = struct {
             ) PrintErr!void {
                 const key_snake_case = comptime key_snake_case: {
                     var buf: [key.len]u8 = undefined;
-                    // safe-transpile: for with index access requires manual review
-    for (key, 0..) |c, i| {
+                    for (key, 0..) |c, i| {
                         buf[i] = if (c >= 'A' and c <= 'Z') c + 32 else if (c == '-') '_' else c;
                     }
                     const buf2 = buf;
@@ -1062,7 +1046,7 @@ pub const serialize = struct {
                 return vp;
             }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn writePrefixed(d: *Printer, prefix: css.VendorPrefix, comptime val: []const u8) PrintErr!void {
                 _ = try writePrefix(d, prefix);
                 try d.writeStr(val);
@@ -1216,7 +1200,6 @@ pub const tocss_servo = struct {
         try tocss_servo.toCss_Selector(&selectors[0], dest);
 
         if (selectors.len > 1) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (selectors[1..]) |*selector| {
                 try dest.writeStr(", ");
                 try tocss_servo.toCss_Selector(selector, dest);
@@ -1281,7 +1264,6 @@ pub const tocss_servo = struct {
                 } else if (compound[first_non_namespace] == .explicit_universal_type) {
                     // Iterate over everything so we serialize the namespace
                     // too.
-// safe-transpile: for loop with pointer capture requires manual review
                     for (compound) |*simple| {
                         try tocss_servo.toCss_Component(simple, dest);
                     }
@@ -1302,7 +1284,6 @@ pub const tocss_servo = struct {
             // in cssom/serialize-namespaced-type-selectors.html, which the
             // following code tries to match.
             if (perform_step_2) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (compound) |*simple| {
                     if (simple.* == .explicit_universal_type) {
                         // Can't have a namespace followed by a pseudo-element
@@ -1349,8 +1330,7 @@ pub const tocss_servo = struct {
             },
             .part => |part_names| {
                 try dest.writeStr("::part(");
-                // safe-transpile: for with index access requires manual review
-    for (part_names, 0..) |name, i| {
+                for (part_names, 0..) |name, i| {
                     if (i != 0) {
                         try dest.writeChar(' ');
                     }

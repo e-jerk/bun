@@ -87,7 +87,7 @@ pub const Kind = enum {
         _ = this;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn usageString(this: Kind) []const u8 {
         return switch (this) {
             .cat => "usage: cat [-belnstuv] [file ...]\n",
@@ -116,7 +116,7 @@ pub const Kind = enum {
         return bun.feature_flag.BUN_ENABLE_EXPERIMENTAL_SHELL_BUILTINS.get();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromStr(str: []const u8) ?Builtin.Kind {
         const result = std.meta.stringToEnum(Builtin.Kind, str) orelse return null;
         if (bun.Environment.isWindows) return result;
@@ -190,7 +190,7 @@ pub const BuiltinIO = struct {
         ///   this.bltn.stderr.enqueueFmtBltn(this, .cd, fmt, args, safeguard);
         /// }
         /// ```
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueueFmtBltn(
             this: *@This(),
             ptr: anytype,
@@ -202,12 +202,12 @@ pub const BuiltinIO = struct {
             return this.fd.writer.enqueueFmtBltn(ptr, this.fd.captured, kind, fmt_, args);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueue(this: *@This(), ptr: anytype, buf: []const u8, _: OutputNeedsIOSafeGuard) Yield {
             return this.fd.writer.enqueue(ptr, this.fd.captured, buf);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn enqueueFmt(this: *@This(), ptr: anytype, comptime fmt: []const u8, args: anytype, _: OutputNeedsIOSafeGuard) Yield {
             return this.fd.writer.enqueueFmt(ptr, this.fd.captured, fmt, args);
         }
@@ -288,7 +288,7 @@ pub fn argsSlice(this: *Builtin) []const [*:0]const u8 {
         return &[_][*:0]const u8{};
 
     const args_ptr = args_raw.ptr;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     return @as([*][*:0]const u8, @ptrCast(args_ptr))[0..args_len];
 }
 
@@ -758,9 +758,9 @@ pub fn writeNoIO(this: *Builtin, comptime io_kind: anytype, buf: []const u8) May
                 len;
 
             const slice = io.arraybuf.buf.slice()[io.arraybuf.i .. io.arraybuf.i + write_len];
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(slice, buf[0..write_len]);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             io.arraybuf.i +|= @truncate(write_len);
             log("{s} write to arraybuf {d}\n", .{ @tagName(this.kind), write_len });
             return Maybe(usize).initResult(write_len);

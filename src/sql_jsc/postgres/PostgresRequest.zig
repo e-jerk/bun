@@ -20,7 +20,7 @@ pub fn writeBind(
         return error.TooManyParameters;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const len: u16 = @intCast(parameter_fields.len);
 
     // The number of parameter format codes that follow (denoted C
@@ -35,11 +35,11 @@ pub fn writeBind(
     for (0..len) |i| {
         const parameter_field = parameter_fields[i];
         const is_custom_type = std.math.maxInt(short) < parameter_field;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const tag: types.Tag = if (is_custom_type) .text else @enumFromInt(@as(short, @intCast(parameter_field)));
 
         const force_text = is_custom_type or (tag.isBinaryFormatSupported() and brk: {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             iter.to(@truncate(i));
             if (try iter.next()) |value| {
                 break :brk value.isString();
@@ -86,14 +86,13 @@ pub fn writeBind(
             }
             const parameter_field = parameter_fields[i];
             const is_custom_type = std.math.maxInt(short) < parameter_field;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             break :brk if (is_custom_type) .text else @enumFromInt(@as(short, @intCast(parameter_field)));
         };
         if (value.isEmptyOrUndefinedOrNull()) {
             debug("  -> NULL", .{});
             //  As a special case, -1 indicates a
             // NULL parameter value. No value bytes follow in the NULL case.
-// safe-transpile: @bitCast requires manual review
             try writer.int4(@bitCast(@as(i32, -1)));
             continue;
         }
@@ -142,19 +141,19 @@ pub fn writeBind(
             },
             .int4 => {
                 const l = try writer.length();
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 try writer.int4(@bitCast(try value.coerceToInt32(globalObject)));
                 try l.writeExcludingSelf();
             },
             .int4_array => {
                 const l = try writer.length();
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 try writer.int4(@bitCast(try value.coerceToInt32(globalObject)));
                 try l.writeExcludingSelf();
             },
             .float8 => {
                 const l = try writer.length();
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 try writer.f64(@bitCast(try value.toNumber(globalObject)));
                 try l.writeExcludingSelf();
             },
@@ -396,7 +395,7 @@ pub fn onData(
                 debug("Unknown message: {c}", .{c});
                 const to_skip = try reader.length() -| 1;
                 debug("to_skip: {d}", .{to_skip});
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try reader.skip(@intCast(@max(to_skip, 0)));
             },
         }

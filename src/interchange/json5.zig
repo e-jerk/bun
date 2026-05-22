@@ -97,7 +97,7 @@ pub const JSON5Parser = struct {
             const loc: logger.Loc = switch (this.*) {
                 .oom => return error.OutOfMemory,
                 .stack_overflow => return error.StackOverflow,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 inline else => |e| .{ .start = @intCast(e.pos) },
             };
             const msg: []const u8 = switch (this.*) {
@@ -191,7 +191,7 @@ pub const JSON5Parser = struct {
     fn scan(self: *JSON5Parser) ParseError!void {
         self.token.data = next: switch (self.peek()) {
             0 => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 break :next .eof;
             },
@@ -202,62 +202,62 @@ pub const JSON5Parser = struct {
             },
             // Structural
             '{' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .left_brace;
             },
             '}' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .right_brace;
             },
             '[' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .left_bracket;
             },
             ']' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .right_bracket;
             },
             ':' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .colon;
             },
             ',' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .comma;
             },
             '+' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .{ .number = try self.scanSignedValue(false) };
             },
             '-' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 self.pos += 1;
                 break :next .{ .number = try self.scanSignedValue(true) };
             },
             // Strings
             '"', '\'' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 break :next .{ .string = try self.scanString() };
             },
             // Numbers
             '0'...'9', '.' => {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 self.token.loc = .{ .start = @intCast(self.pos) };
                 break :next .{ .number = try self.scanNumber() };
             },
@@ -277,19 +277,19 @@ pub const JSON5Parser = struct {
             },
             else => |c| {
                 if (c == 't') {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     self.token.loc = .{ .start = @intCast(self.pos) };
                     break :next if (self.scanKeyword("true")) .{ .boolean = true } else .{ .identifier = try self.scanIdentifier() };
                 } else if (c == 'f') {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     self.token.loc = .{ .start = @intCast(self.pos) };
                     break :next if (self.scanKeyword("false")) .{ .boolean = false } else .{ .identifier = try self.scanIdentifier() };
                 } else if (c == 'n') {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     self.token.loc = .{ .start = @intCast(self.pos) };
                     break :next if (self.scanKeyword("null")) .null else .{ .identifier = try self.scanIdentifier() };
                 } else if ((c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z') or c == '_' or c == '$' or c == '\\') {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     self.token.loc = .{ .start = @intCast(self.pos) };
                     break :next .{ .identifier = try self.scanIdentifier() };
                 } else if (c >= 0x80) {
@@ -299,7 +299,7 @@ pub const JSON5Parser = struct {
                         self.pos += mb;
                         continue :next self.peek();
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     self.token.loc = .{ .start = @intCast(self.pos) };
                     const cp = self.readCodepoint() orelse {
                         return error.UnexpectedCharacter;
@@ -316,7 +316,7 @@ pub const JSON5Parser = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn scanKeyword(self: *JSON5Parser, comptime keyword: []const u8) bool {
         if (self.pos + keyword.len > self.source.len) return false;
         if (!std.mem.eql(u8, self.source[self.pos..][0..keyword.len], keyword)) return false;
@@ -577,7 +577,7 @@ pub const JSON5Parser = struct {
                     return error.InvalidHexEscape;
                 };
                 const value: u8 = (@as(u8, hi) << 4) | lo;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try appendCodepointToUtf8(buf, @intCast(value));
             },
             'u' => {
@@ -750,11 +750,11 @@ pub const JSON5Parser = struct {
             if (!identifier.isIdentifierStart(escaped_cp)) {
                 return error.InvalidIdentifier;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try appendCodepointToUtf8(&buf, @intCast(escaped_cp));
         } else if (identifier.isIdentifierStart(start_cp.cp)) {
             self.pos += start_cp.len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try appendCodepointToUtf8(&buf, @intCast(start_cp.cp));
         } else {
             return error.InvalidIdentifier;
@@ -769,11 +769,11 @@ pub const JSON5Parser = struct {
                 if (!identifier.isIdentifierPart(escaped_cp)) {
                     break;
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try appendCodepointToUtf8(&buf, @intCast(escaped_cp));
             } else if (identifier.isIdentifierPart(cont_cp.cp)) {
                 self.pos += cont_cp.len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 try appendCodepointToUtf8(&buf, @intCast(cont_cp.cp));
             } else {
                 break;
@@ -865,11 +865,11 @@ pub const JSON5Parser = struct {
         if (self.pos >= self.source.len) return null;
         const c = self.source[self.pos];
         const result: u4 = switch (c) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             '0'...'9' => @intCast(c - '0'),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             'a'...'f' => @intCast(c - 'a' + 10),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             'A'...'F' => @intCast(c - 'A' + 10),
             else => return null,
         };
@@ -898,18 +898,18 @@ pub const JSON5Parser = struct {
         if (self.pos >= self.source.len) return null;
         const first = self.source[self.pos];
         if (first < 0x80) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .cp = @intCast(first), .len = 1 };
         }
         const seq_len = strings.wtf8ByteSequenceLength(first);
         if (self.pos + seq_len > self.source.len) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .cp = @intCast(first), .len = 1 };
         }
         const decoded = strings.decodeWTF8RuneT(self.source[self.pos..].ptr[0..4], seq_len, i32, -1);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if (decoded < 0) return .{ .cp = @intCast(first), .len = 1 };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return .{ .cp = decoded, .len = @intCast(seq_len) };
     }
 

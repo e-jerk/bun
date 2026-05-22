@@ -400,12 +400,12 @@ pub const HardcodedModule = enum {
         const bun_test_aliases = bun.ComptimeStringMap(Alias, common_alias_kvs ++ bun_extra_alias_kvs ++ bun_test_extra_alias_kvs);
 
         const Cfg = struct { rewrite_jest_for_tests: bool = false };
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn has(name: []const u8, target: options.Target, cfg: Cfg) bool {
             return get(name, target, cfg) != null;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(name: []const u8, target: options.Target, cfg: Cfg) ?Alias {
             if (target.isBun()) {
                 if (cfg.rewrite_jest_for_tests) {

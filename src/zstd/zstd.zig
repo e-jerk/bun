@@ -131,7 +131,7 @@ pub const ZstdReaderArrayList = struct {
 
     pub const new = bun.TrivialNew(ZstdReaderArrayList);
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn init(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),
@@ -140,7 +140,7 @@ pub const ZstdReaderArrayList = struct {
         return initWithListAllocator(input, list, allocator, allocator);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn initWithListAllocator(
         input: []const u8,
         list: *std.ArrayListUnmanaged(u8),

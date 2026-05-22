@@ -30,7 +30,7 @@ pub fn HiveArray(comptime T: type, comptime capacity: u16) type {
             const index = self.used.findFirstUnset() orelse return null;
             self.used.set(index);
             const ret = &self.buffer[index];
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.asan.unpoison(@ptrCast(ret), @sizeOf(T));
             return ret;
         }
@@ -38,16 +38,16 @@ pub fn HiveArray(comptime T: type, comptime capacity: u16) type {
         pub fn at(self: *Self, index: u16) *T {
             assert(index < capacity);
             const ret = &self.buffer[index];
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.asan.assertUnpoisoned(@ptrCast(ret));
             return ret;
         }
 
         pub fn indexOf(self: *const Self, value: *const T) ?u32 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.asan.assertUnpoisoned(@ptrCast(value));
             const start = &self.buffer;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const end = @as([*]const T, @ptrCast(start)) + capacity;
             if (!(@intFromPtr(value) >= @intFromPtr(start) and @intFromPtr(value) < @intFromPtr(end)))
                 return null;
@@ -56,15 +56,15 @@ pub fn HiveArray(comptime T: type, comptime capacity: u16) type {
             const index = (@intFromPtr(value) - @intFromPtr(start)) / @sizeOf(T);
             assert(index < capacity);
             assert(&self.buffer[index] == value);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(u32, @intCast(index));
         }
 
         pub fn in(self: *const Self, value: *const T) bool {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.asan.assertUnpoisoned(@ptrCast(value));
             const start = &self.buffer;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const end = @as([*]const T, @ptrCast(start)) + capacity;
             return (@intFromPtr(value) >= @intFromPtr(start) and @intFromPtr(value) < @intFromPtr(end));
         }

@@ -73,9 +73,9 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
                 .e_string => |pattern_expr| {
                     const size = pattern_expr.data.len + "/package.json".len;
                     var pattern = try allocator.alloc(u8, size);
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(pattern[0..pattern_expr.data.len], pattern_expr.data);
-// safe-transpile: @memcpy requires manual review
+                    // safe-transpile: @memcpy requires manual review
                     @memcpy(pattern[pattern_expr.data.len..size], "/package.json");
 
                     try out_patterns.append(pattern);
@@ -88,7 +88,7 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
         }
 
         const parent_trimmed = strings.withoutTrailingSlash(workdir);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(root_buf[0..parent_trimmed.len], parent_trimmed);
         return root_buf[0..parent_trimmed.len];
     }
@@ -96,7 +96,7 @@ pub fn getCandidatePackagePatterns(allocator: std.mem.Allocator, log: *bun.logge
     // if we were not able to find a workspace root, we simply glob for all package.json files
     try out_patterns.append(try allocator.dupe(u8, "**/package.json"));
     const root_dir = strings.withoutTrailingSlash(workdir_);
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(root_buf[0..root_dir.len], root_dir);
     return root_buf[0..root_dir.len];
 }
@@ -110,7 +110,7 @@ pub const FilterSet = struct {
     has_name_filters: bool = false,
     match_all: bool = false,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matches(this: *const FilterSet, path: []const u8, name: []const u8) bool {
         if (this.match_all) {
             // allow empty name if there are any filters which are a relative path
@@ -137,7 +137,7 @@ pub const FilterSet = struct {
         // negate: bool = false,
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, filters: []const []const u8, cwd_: []const u8) !FilterSet {
         const cwd = cwd_;
 
@@ -183,7 +183,7 @@ pub const FilterSet = struct {
         self.allocator.free(self.filters);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPath(self: *const FilterSet, path: []const u8) bool {
         for (self.filters) |filter| {
             if (glob.match(filter.pattern, path).matches()) {
@@ -193,7 +193,7 @@ pub const FilterSet = struct {
         return false;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn matchesPathName(self: *const FilterSet, path: []const u8, name: []const u8) bool {
         for (self.filters) |filter| {
             const target = switch (filter.kind) {
@@ -219,7 +219,7 @@ pub const PackageFilterIterator = struct {
 
     allocator: std.mem.Allocator,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn init(allocator: std.mem.Allocator, patterns: []const []const u8, root_dir: []const u8) !PackageFilterIterator {
         return PackageFilterIterator{
             .patterns = patterns,
@@ -235,9 +235,9 @@ pub const PackageFilterIterator = struct {
     }
 
     fn walkerNext(self: *PackageFilterIterator) !?[]const u8 {
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             switch (try self.iter.next()) {
                 .err => |err| {
                     Output.prettyErrorln("Error: {f}", .{err});
@@ -267,9 +267,9 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     pub fn next(self: *PackageFilterIterator) !?[]const u8 {
-var __loop_limit_2: usize = 0;
-while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
+        var __loop_limit_2: usize = 0;
+        while (true) : (__loop_limit_2 += 1) {
+            if (__loop_limit_2 > 1_000_000) break;
             if (!self.valid) {
                 if (self.pattern_idx < self.patterns.len) {
                     try self.initWalker();

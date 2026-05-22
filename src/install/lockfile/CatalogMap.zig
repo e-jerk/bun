@@ -377,7 +377,6 @@ pub fn sort(this: *CatalogMap, lockfile: *const Lockfile) void {
 
 pub fn deinit(this: *CatalogMap, allocator: std.mem.Allocator) void {
     this.default.deinit(allocator);
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.groups.values()) |*group| {
         group.deinit(allocator);
     }

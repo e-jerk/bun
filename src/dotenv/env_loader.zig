@@ -31,7 +31,7 @@ pub const Loader = struct {
         return this.map.iterator();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn has(this: *const Loader, input: []const u8) bool {
         const value = this.get(input) orelse return false;
         if (value.len == 0) return false;
@@ -53,7 +53,6 @@ pub const Loader = struct {
         // Check NODE or npm_node_execpath env var, but only use it if the file actually exists
         if (this.get("NODE") orelse this.get("npm_node_execpath")) |node| {
             if (node.len > 0 and node.len < bun.MAX_PATH_BYTES) {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(buf[0..node.len], node);
                 buf[node.len] = 0;
                 if (bun.sys.isExecutableFilePath(buf[0..node.len :0])) {
@@ -252,7 +251,7 @@ pub const Loader = struct {
             const has_port = blk: {
                 if (is_bracketed_ipv6) {
                     // Bracketed IPv6: check for "]:port" pattern
-// zust: use zust.String or zust.GuardedSlice for slice operations
+                    // zust: use zust.String or zust.GuardedSlice for slice operations
                     if (std.mem.indexOf(u8, no_proxy_entry, "]:")) |_| {
                         break :blk true;
                     }
@@ -332,7 +331,7 @@ pub const Loader = struct {
     }
 
     var node_path_to_use_set_once: []const u8 = "";
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn loadNodeJSConfig(this: *Loader, fs: *Fs.FileSystem, override_node: []const u8) !bool {
         var buf: bun.PathBuffer = undefined;
 
@@ -421,8 +420,7 @@ pub const Loader = struct {
         var key_buf: []u8 = "";
         // Frameworks determine an allowlist of values
 
-        // safe-transpile: for with index access requires manual review
-    for (framework_defaults.keys, 0..) |key, i| {
+        for (framework_defaults.keys, 0..) |key, i| {
             if (key.len > "process.env.".len and strings.eqlComptime(key[0.."process.env.".len], "process.env.")) {
                 const hashable_segment = key["process.env.".len..];
                 string_map_hashes[i] = bun.hash(hashable_segment);
@@ -555,8 +553,7 @@ pub const Loader = struct {
             }
         }
 
-        // safe-transpile: for with index access requires manual review
-    for (framework_defaults.keys, 0..) |key, i| {
+        for (framework_defaults.keys, 0..) |key, i| {
             const value = framework_defaults.values[i];
 
             if (!to_string.contains(key) and !to_json.contains(key)) {
@@ -733,21 +730,21 @@ pub const Loader = struct {
 
     pub fn printLoaded(this: *Loader, start: i128) void {
         const count =
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.development.local" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.production.local" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.test.local" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.local" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.development" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.production" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env.test" != null))) +
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @as(u8, @intCast(@intFromBool(this.@".env" != null))) +
             this.custom_files_loaded.count();
 
@@ -779,8 +776,7 @@ pub const Loader = struct {
         Output.printElapsed(elapsed);
         Output.prettyError(" <d>", .{});
 
-        // safe-transpile: for with index access requires manual review
-    for (loaded, 0..) |yes, i| {
+        for (loaded, 0..) |yes, i| {
             if (yes) {
                 loaded_i += 1;
                 if (count == 1 or (loaded_i >= count and count > 1)) {
@@ -892,7 +888,7 @@ pub const Loader = struct {
         @field(this, base) = source.*;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn loadEnvFileDynamic(
         this: *Loader,
         file_path: []const u8,

@@ -163,11 +163,11 @@ const Context = struct {
         this.err = .Ok;
         switch (this.mode) {
             .DEFLATE, .DEFLATERAW => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.err = c.deflateSetDictionary(&this.state, dict.ptr, @intCast(dict.len));
             },
             .INFLATERAW => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 this.err = c.inflateSetDictionary(&this.state, dict.ptr, @intCast(dict.len));
             },
             else => {},
@@ -230,10 +230,10 @@ const Context = struct {
     }
 
     pub fn setBuffers(this: *Context, in: ?[]const u8, out: ?[]u8) void {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.state.avail_in = if (in) |p| @intCast(p.len) else 0;
         this.state.next_in = if (in) |p| p.ptr else null;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.state.avail_out = if (out) |p| @intCast(p.len) else 0;
         this.state.next_out = if (out) |p| p.ptr else null;
     }
@@ -302,7 +302,7 @@ const Context = struct {
         this.err = c.inflate(&this.state, this.flush);
 
         if (this.mode != .INFLATERAW and this.err == .NeedDict and this.dictionary.len > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.err = c.inflateSetDictionary(&this.state, this.dictionary.ptr, @intCast(this.dictionary.len));
 
             if (this.err == .Ok) {

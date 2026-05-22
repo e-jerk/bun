@@ -62,7 +62,7 @@ pub const List = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fmt(this: *const List, buf: []const u8) @This().Formatter {
         return .{ .list = this, .buffer = buf };
     }

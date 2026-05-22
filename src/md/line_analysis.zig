@@ -84,7 +84,7 @@ pub fn isOpeningCodeFence(self: *const Parser, off: OFF) struct { is_fence: bool
 }
 
 pub fn isClosingCodeFence(self: *const Parser, off: OFF, fence_data: u32) bool {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const fence_char: u8 = @truncate(fence_data);
     const fence_count = fence_data >> 8;
 
@@ -198,7 +198,7 @@ pub fn matchHtmlTag(self: *const Parser, off: OFF, tag: []const u8) bool {
     if (pos < self.size and self.text[pos] == '/') pos += 1;
     if (pos + tag.len > self.size) return false;
     if (!helpers.asciiCaseEql(self.text[pos .. pos + tag.len], tag)) return false;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     pos += @intCast(tag.len);
     if (pos >= self.size) return true;
     const after = self.text[pos];
@@ -496,7 +496,7 @@ pub fn isContainerMark(self: *const Parser, indent: u32, off: OFF) struct {
                         .ch = delim,
                         .start = num,
                         .mark_indent = indent,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .contents_indent = indent + @as(u32, @intCast(mark_width)),
                     },
                     .off = pos,
@@ -511,7 +511,7 @@ pub fn isContainerMark(self: *const Parser, indent: u32, off: OFF) struct {
                         .ch = delim,
                         .start = num,
                         .mark_indent = indent,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .contents_indent = indent + @as(u32, @intCast(mark_width)),
                     },
                     .off = pos,

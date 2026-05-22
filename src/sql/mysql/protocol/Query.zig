@@ -6,7 +6,6 @@ pub const Execute = struct {
     param_types: []const Param,
 
     pub fn deinit(this: *Execute) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (this.params) |*param| {
             param.deinit();
         }
@@ -25,8 +24,7 @@ pub const Execute = struct {
             // if 22 chars = u64 + 2 for :p and this should be more than enough
             var param_name_buf: [22]u8 = undefined;
             // Write parameter types
-            // safe-transpile: for with index access requires manual review
-    for (this.param_types, 1..) |param_type, i| {
+            for (this.param_types, 1..) |param_type, i| {
                 debug("New params bind flag {s} unsigned? {}", .{ @tagName(param_type.type), param_type.flags.UNSIGNED });
                 try writer.int1(@intFromEnum(param_type.type));
                 try writer.int1(if (param_type.flags.UNSIGNED) 0x80 else 0);
@@ -35,8 +33,7 @@ pub const Execute = struct {
             }
 
             // Write parameter values
-            // safe-transpile: for with index access requires manual review
-    for (this.params, this.param_types) |*param, param_type| {
+            for (this.params, this.param_types) |*param, param_type| {
                 if (param.* == .empty or param_type.type == .MYSQL_TYPE_NULL) continue;
 
                 const value = param.slice();

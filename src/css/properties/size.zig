@@ -481,7 +481,7 @@ pub const SizeHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn propertyHelper(
         this: *@This(),
         comptime property: []const u8,
@@ -556,7 +556,7 @@ pub const SizeHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn flushPropertyHelper(
         this: *@This(),
         comptime property: PropertyIdTag,
@@ -586,7 +586,7 @@ pub const SizeHandler = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn flushLogicalHelper(
         this: *@This(),
         comptime property: PropertyIdTag,

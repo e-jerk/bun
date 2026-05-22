@@ -160,7 +160,7 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
 
                             const changed = new_len != dependencies.len;
                             if (changed) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 query.expr.data.e_object.properties.len = @as(u32, @truncate(new_len));
 
                                 // If the dependencies list is now empty, remove it from the package.json
@@ -274,9 +274,8 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
 
     var root_package_json_path_buf: bun.PathBuffer = undefined;
     const root_package_json_path = root_package_json_path: {
-// safe-transpile: @memcpy requires manual review
         @memcpy(root_package_json_path_buf[0..top_level_dir_without_trailing_slash.len], top_level_dir_without_trailing_slash);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(root_package_json_path_buf[top_level_dir_without_trailing_slash.len..][0.."/package.json".len], "/package.json");
         const root_package_json_path = root_package_json_path_buf[0 .. top_level_dir_without_trailing_slash.len + "/package.json".len];
         root_package_json_path_buf[root_package_json_path.len] = 0;
@@ -427,7 +426,7 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
         ).unwrap()).handle.stdFile();
 
         try workspace_package_json_file.pwriteAll(source, 0);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         _ = bun.sys.ftruncate(.fromStdFile(workspace_package_json_file), @intCast(source.len));
         workspace_package_json_file.close();
 
@@ -723,7 +722,7 @@ pub fn updatePackageJSONAndInstall(
         var fetcher = bun.bundle_v2.BundleV2.DependenciesScanner{
             .ctx = &analyzer,
             .entry_points = cli.positionals[1..],
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             .onFetch = @ptrCast(&Analyzer.onAnalyze),
         };
 

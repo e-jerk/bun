@@ -74,13 +74,13 @@ fn onData(socket: *uws.udp.Socket, buf: *uws.udp.PacketBuffer, packets: c_int) c
 
         switch (peer.family) {
             std.posix.AF.INET => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const peer4: *std.posix.sockaddr.in = @ptrCast(peer);
                 hostname = inet_ntop(peer.family, &peer4.addr, &addr_buf, addr_buf.len);
                 port = ntohs(peer4.port);
             },
             std.posix.AF.INET6 => {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 const peer6: *std.posix.sockaddr.in6 = @ptrCast(peer);
                 hostname = inet_ntop(peer.family, &peer6.addr, &addr_buf, addr_buf.len);
                 port = ntohs(peer6.port);
@@ -159,7 +159,7 @@ pub const UDPSocketConfig = struct {
                 if (number < 0 or number > 0xffff) {
                     return globalThis.throwInvalidArguments("Expected \"port\" to be an integer between 0 and 65535", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 break :brk @intCast(number);
             } else {
                 break :brk 0;
@@ -237,7 +237,7 @@ pub const UDPSocketConfig = struct {
             const connect_host = try connect_host_js.toBunString(globalThis);
 
             config.connect = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .port = if (connect_port < 1 or connect_port > 0xffff) 0 else @as(u16, @intCast(connect_port)),
                 .address = connect_host,
             };
@@ -334,7 +334,7 @@ pub const UDPSocket = struct {
         ) orelse {
             this.closed = true;
             if (err != 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const code = @tagName(bun.sys.SystemErrno.init(@as(c_int, @intCast(err))).?);
                 const sys_err = jsc.SystemError{
                     .errno = err,
@@ -398,7 +398,7 @@ pub const UDPSocket = struct {
 
     pub fn setBroadcast(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -419,7 +419,7 @@ pub const UDPSocket = struct {
 
     pub fn setMulticastLoopback(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -440,7 +440,7 @@ pub const UDPSocket = struct {
 
     fn setMembership(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame, drop: bool) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -451,7 +451,7 @@ pub const UDPSocket = struct {
 
         var addr = std.mem.zeroes(std.posix.sockaddr.storage);
         if (!try parseAddr(this, globalThis, .jsNumber(0), arguments[0], &addr)) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.INVAL))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -483,7 +483,7 @@ pub const UDPSocket = struct {
 
     fn setSourceSpecificMembership(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame, drop: bool) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -494,13 +494,13 @@ pub const UDPSocket = struct {
 
         var source_addr: std.posix.sockaddr.storage = undefined;
         if (!try parseAddr(this, globalThis, .jsNumber(0), arguments[0], &source_addr)) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.INVAL))), .setsockopt).?.toJS(globalThis));
         }
 
         var group_addr: std.posix.sockaddr.storage = undefined;
         if (!try parseAddr(this, globalThis, .jsNumber(0), arguments[1], &group_addr)) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.INVAL))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -536,7 +536,7 @@ pub const UDPSocket = struct {
 
     pub fn setMulticastInterface(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -595,7 +595,7 @@ pub const UDPSocket = struct {
 
     fn setAnyTTL(this: *This, globalThis: *JSGlobalObject, callframe: *CallFrame, comptime function: fn (*uws.udp.Socket, i32) c_int) bun.JSError!JSValue {
         if (this.closed) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             return globalThis.throwValue(try bun.sys.Maybe(void).errnoSys(@as(i32, @intCast(@intFromEnum(std.posix.E.BADF))), .setsockopt).?.toJS(globalThis));
         }
 
@@ -747,8 +747,7 @@ pub const UDPSocket = struct {
         // pointers stay valid. An ArrayBuffer detached during phase 1 now
         // reports a zero-length slice rather than a dangling pointer.
         const empty: []const u8 = "";
-        // safe-transpile: for with index access requires manual review
-    for (payload_vals, 0..) |val, slice_idx| {
+        for (payload_vals, 0..) |val, slice_idx| {
             const slice: []const u8 = brk: {
                 if (val.asArrayBuffer(globalThis)) |arrayBuffer| {
                     // `byteSlice()` returns `&.{}` for a detached view; its
@@ -851,7 +850,7 @@ pub const UDPSocket = struct {
     fn parseAddr(this: *This, globalThis: *JSGlobalObject, port_val: JSValue, address_val: JSValue, storage: *std.posix.sockaddr.storage) bun.JSError!bool {
         _ = this;
         const number = try port_val.coerceToInt32(globalThis);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const port: u16 = if (number < 1 or number > 0xffff) 0 else @intCast(number);
 
         const str = try address_val.toBunString(globalThis);
@@ -859,14 +858,14 @@ pub const UDPSocket = struct {
         const address_slice = try str.toOwnedSliceZ(default_allocator);
         defer default_allocator.free(address_slice);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         var addr4: *std.posix.sockaddr.in = @ptrCast(storage);
         if (inet_pton(std.posix.AF.INET, address_slice.ptr, &addr4.addr) == 1) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             addr4.port = htons(@truncate(port));
             addr4.family = std.posix.AF.INET;
         } else {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             var addr6: *std.posix.sockaddr.in6 = @ptrCast(storage);
             addr6.scope_id = 0;
 
@@ -898,7 +897,7 @@ pub const UDPSocket = struct {
             }
 
             if (inet_pton(std.posix.AF.INET6, address_slice.ptr, &addr6.addr) == 1) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 addr6.port = htons(@truncate(port));
                 addr6.family = std.posix.AF.INET6;
             } else {
@@ -974,7 +973,7 @@ pub const UDPSocket = struct {
         return JSValue.jsNumber(this.socket.?.boundPort());
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn createSockAddr(globalThis: *JSGlobalObject, address_bytes: []const u8, port: u16) JSValue {
         var sockaddr = SocketAddress.init(address_bytes, port) catch return .js_undefined;
         return sockaddr.intoDTO(globalThis) catch .js_undefined;
@@ -986,10 +985,10 @@ pub const UDPSocket = struct {
         var length: i32 = 64;
         this.socket.?.boundIp(&buf, &length);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const address_bytes = buf[0..@as(usize, @intCast(length))];
         const port = this.socket.?.boundPort();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         return createSockAddr(globalThis, address_bytes, @intCast(port));
     }
 
@@ -1000,7 +999,7 @@ pub const UDPSocket = struct {
         var length: i32 = 64;
         this.socket.?.remoteIp(&buf, &length);
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const address_bytes = buf[0..@as(usize, @intCast(length))];
         return createSockAddr(globalThis, address_bytes, connect_info.port);
     }
@@ -1062,7 +1061,7 @@ pub const UDPSocket = struct {
         }
 
         const connect_port = connect_port_js.asInt32();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const port: u16 = if (connect_port < 1 or connect_port > 0xffff) 0 else @as(u16, @intCast(connect_port));
 
         const socket = this.socket orelse return globalThis.throw("Socket is closed", .{});

@@ -15,7 +15,7 @@ pub const ScanCommand = struct {
         try execWithManager(ctx, manager, cwd);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn execWithManager(ctx: Command.Context, manager: *PackageManager, original_cwd: []const u8) !void {
         if (manager.options.security_scanner == null) {
             Output.prettyErrorln("<r><red>error<r>: no security scanner configured", .{});

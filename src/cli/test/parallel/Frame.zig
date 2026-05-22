@@ -51,13 +51,13 @@ pub fn str(self: *Frame, s: []const u8) void {
     const used: usize = (self.buf.items.len - 5) + 4; // current payload + str-len prefix
     const room: usize = if (max_payload > used + headroom) max_payload - used - headroom else 0;
     if (s.len <= room) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         self.u32_(@intCast(s.len));
         bun.handleOom(self.buf.appendSlice(bun.default_allocator, s));
         return;
     }
     const keep: usize = if (room > trunc.len) room - trunc.len else 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     self.u32_(@intCast(keep + trunc.len));
     bun.handleOom(self.buf.appendSlice(bun.default_allocator, s[0..keep]));
     bun.handleOom(self.buf.appendSlice(bun.default_allocator, trunc));
@@ -66,7 +66,7 @@ pub fn str(self: *Frame, s: []const u8) void {
 /// `Channel.send`. Valid until the next `begin()`.
 // safe-transpile: function returns small constant slice — consider safe.String
 pub fn finish(self: *Frame) []const u8 {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const payload_len: u32 = @intCast(self.buf.items.len - 5);
     bun.assert(payload_len <= max_payload);
     std.mem.writeInt(u32, self.buf.items[0..4], payload_len, .little);
@@ -85,7 +85,6 @@ pub const Reader = struct {
         self.p = self.p[4..];
         return v;
     }
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn str(self: *Reader) []const u8 {
         const n = self.u32_();
         if (self.p.len < n) return "";

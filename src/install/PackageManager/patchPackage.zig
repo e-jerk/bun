@@ -423,7 +423,6 @@ pub fn doPatchCommit(
         Global.crash();
     }
 
-// safe-transpile: @memcpy requires manual review
     @memcpy(resolution_buf[resolution_label.len .. resolution_label.len + ".patch".len], ".patch");
     var patch_filename: []const u8 = resolution_buf[0 .. resolution_label.len + ".patch".len];
     var deinit = false;
@@ -540,7 +539,7 @@ fn escapePatchFilename(allocator: std.mem.Allocator, name: []const u8) ?[]const 
     var i: usize = 0;
     for (name) |c| {
         const e = ESCAPE_TABLE[c].escaped() orelse &[_]u8{c};
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(buf[i..][0..e.len], e);
         i += e.len;
     }
@@ -757,7 +756,6 @@ fn detachModuleFolderFromSharedStore(module_folder: []const u8) void {
     // Windows and the lstat/getFileAttributes calls below see a native path.
     var native_buf: bun.PathBuffer = undefined;
     const native = if (comptime Environment.isWindows) native: {
-// safe-transpile: @memcpy requires manual review
         @memcpy(native_buf[0..module_folder.len], module_folder);
         const slice = native_buf[0..module_folder.len];
         bun.path.posixToPlatformInPlace(u8, slice);
@@ -775,7 +773,7 @@ fn detachModuleFolderFromSharedStore(module_folder: []const u8) void {
         const is_symlink = if (comptime Environment.isWindows)
             (bun.sys.getFileAttributes(path.sliceZ()) orelse return).is_reparse_point
         else if (bun.sys.lstat(path.sliceZ()).asValue()) |st|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             std.posix.S.ISLNK(@intCast(st.mode))
         else
             return;
@@ -898,7 +896,6 @@ fn pkgInfoForNameAndVersion(
     var buf: [1024]u8 = undefined;
     const dependencies = lockfile.buffers.dependencies.items;
 
-    // safe-transpile: for with index access requires manual review
     for (dependencies, 0..) |dep, dep_id| {
         if (dep.name_hash != name_hash) continue;
         const pkg_id = lockfile.buffers.resolutions.items[dep_id];
@@ -907,11 +904,11 @@ fn pkgInfoForNameAndVersion(
         if (version) |v| {
             const label = std.fmt.bufPrint(buf[0..], "{f}", .{pkg.resolution.fmt(strbuf, .posix)}) catch @panic("Resolution name too long");
             if (std.mem.eql(u8, label, v)) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 bun.handleOom(pairs.append(.{ @intCast(dep_id), pkg_id }));
             }
         } else {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             bun.handleOom(pairs.append(.{ @intCast(dep_id), pkg_id }));
         }
     }
@@ -1021,7 +1018,6 @@ fn pkgInfoForNameAndVersion(
         Output.prettyError("  {s}@<blue>{f}<r>\n", .{ pkg.name.slice(strbuf), pkg.resolution.fmt(strbuf, .posix) });
 
         if (i + 1 < pairs.items.len) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (pairs.items[i + 1 ..]) |*p| {
                 if (p[1] == pkgid) {
                     p[1] = invalid_package_id;
@@ -1045,7 +1041,7 @@ const PatchArgKind = enum {
     path,
     name_and_version,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fromArg(argument: []const u8) PatchArgKind {
         if (bun.strings.containsComptime(argument, "node_modules/")) return .path;
         if (bun.Environment.isWindows and bun.strings.hasPrefix(argument, "node_modules\\")) return .path;

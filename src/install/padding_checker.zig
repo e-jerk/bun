@@ -72,7 +72,6 @@ pub fn assertNoUninitializedPadding(comptime T: type) void {
     }
 
     var i = 0;
-    // safe-transpile: for with index access requires manual review
     for (info.fields, 0..) |field, j| {
         const offset = @offsetOf(T, field.name);
         if (offset != i) {

@@ -21,7 +21,7 @@ pub fn toBeArrayOfSize(this: *Expect, globalThis: *JSGlobalObject, callFrame: *C
     this.incrementExpectCallCounter();
 
     const not = this.flags.not;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var pass = value.jsType().isArray() and @as(i32, @intCast(try value.getLength(globalThis))) == size.toInt32();
 
     if (not) pass = !pass;

@@ -174,7 +174,7 @@ pub const ShellLsOutputTask = OutputTask(Ls, .{
 });
 
 const ShellLsOutputTaskVTable = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writeErr(this: *Ls, childptr: anytype, errbuf: []const u8) ?Yield {
         log("ShellLsOutputTaskVTable.writeErr(0x{x}, {s})", .{ @intFromPtr(this), errbuf });
         this.state.exec.output_waiting += 1;
@@ -300,7 +300,7 @@ pub const ShellLsTask = struct {
     pub fn run(this: *@This()) void {
         // Cache current time once per task for timestamp formatting
         if (this.opts.long_listing) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this._now_secs = @intCast(@import("std-fs-compat").timestamp());
         }
 
@@ -408,28 +408,28 @@ pub const ShellLsTask = struct {
         const writer = @import("std-io-compat").arrayListWriter(&this.output);
 
         // File type and permissions
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const mode: u32 = @intCast(stat.mode);
         const file_type = getFileTypeChar(mode);
         const perms = formatPermissions(mode);
 
         // Number of hard links
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const nlink: u64 = @intCast(stat.nlink);
 
         // Owner and group (numeric)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const uid: u64 = @intCast(stat.uid);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const gid: u64 = @intCast(stat.gid);
 
         // File size
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const size: i64 = @intCast(stat.size);
 
         // Modification time
         const mtime = stat.mtime();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const time_str = formatTime(@intCast(mtime.sec), this._now_secs);
 
         bun.handleOom(writer.print("{c}{s} {d: >3} {d: >5} {d: >5} {d: >8} {s} {s}\n", .{
@@ -499,7 +499,7 @@ pub const ShellLsTask = struct {
         var buf: [12]u8 = undefined;
         // Format as "Mon DD HH:MM" for recent files (within 6 months)
         // or "Mon DD  YYYY" for older files
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const epoch_secs: u64 = if (timestamp < 0) 0 else @intCast(timestamp);
         const epoch = std.time.epoch.EpochSeconds{ .secs = epoch_secs };
         const day_seconds = epoch.getDaySeconds();
@@ -523,7 +523,7 @@ pub const ShellLsTask = struct {
                 hours,
                 minutes,
             }) catch {
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(&buf, "??? ?? ??:??");
             };
         } else {
@@ -535,7 +535,7 @@ pub const ShellLsTask = struct {
                 month_day.day_index + 1,
                 year,
             }) catch {
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(&buf, "??? ??  ????");
             };
         }
@@ -1010,7 +1010,6 @@ pub fn parseFlag(this: *Ls, flag: []const u8) union(enum) { continue_parsing, do
 }
 
 pub inline fn bltn(this: *Ls) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("ls", this));
     return @fieldParentPtr("impl", impl);
 }

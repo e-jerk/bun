@@ -53,7 +53,7 @@ pub const FetchHeaders = opaque {
         return bun.jsc.fromJSHostCallGeneric(global, @src(), WebCore__FetchHeaders__createFromJS, .{ global, value });
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn putDefault(this: *FetchHeaders, name_: HTTPHeaderName, value: []const u8, global: *JSGlobalObject) bun.JSError!void {
         if (this.fastHas(name_)) {
             return;
@@ -167,7 +167,7 @@ pub const FetchHeaders = opaque {
 
     extern fn WebCore__FetchHeaders__put(this: *FetchHeaders, name_: HTTPHeaderName, value: *const ZigString, global: *JSGlobalObject) void;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn put(
         this: *FetchHeaders,
         name_: HTTPHeaderName,
@@ -191,7 +191,7 @@ pub const FetchHeaders = opaque {
         );
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn get(
         this: *FetchHeaders,
         name_: []const u8,

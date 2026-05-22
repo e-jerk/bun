@@ -16,7 +16,6 @@ pub fn matches(this: *const @This(), hostname: []const u8, port: u16, ssl_config
 
 pub fn unregisterFrom(this: *@This(), ctx: *NewHTTPContext(true)) void {
     const list = &ctx.pending_h2_connects;
-    // safe-transpile: for with index access requires manual review
     for (list.items, 0..) |p, i| {
         if (p == this) {
             _ = list.swapRemove(i);

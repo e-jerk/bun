@@ -22,7 +22,6 @@ pub const empty: DirectoryWatchStore = .{
 };
 
 pub fn owner(store: *DirectoryWatchStore) *DevServer {
-// safe-transpile: @alignCast requires manual review
     return @alignCast(@fieldParentPtr("directory_watchers", store));
 }
 
@@ -272,7 +271,7 @@ fn appendDepAssumeCapacity(store: *DirectoryWatchStore, dep: Dep) Dep.Index {
         return index;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const index = Dep.Index.init(@intCast(store.dependencies.items.len));
     store.dependencies.appendAssumeCapacity(dep);
     return index;

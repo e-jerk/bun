@@ -1,5 +1,5 @@
 pub const PublishCommand = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     pub fn Context(comptime directory_publish: bool) type {
         return struct {
             manager: *PackageManager,
@@ -847,9 +847,9 @@ const zust = @import("safe");
                 ctx.manager.options.publish_config.auth_type,
             );
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+            var __loop_limit_1: usize = 0;
+            while (true) : (__loop_limit_1 += 1) {
+                if (__loop_limit_1 > 1_000_000) break;
                 response_buf.reset();
 
                 var req = http.AsyncHTTP.initSync(

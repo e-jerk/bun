@@ -1,5 +1,5 @@
 pub const FieldMessage = union(FieldType) {
-const zust = @import("safe");
+    const zust = @import("safe");
     severity: String,
     localized_severity: String,
     code: String,
@@ -37,9 +37,9 @@ const zust = @import("safe");
 
     pub fn decodeList(comptime Context: type, reader: NewReader(Context)) !std.ArrayListUnmanaged(FieldMessage) {
         var messages = std.ArrayListUnmanaged(FieldMessage).empty;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             const field_int = try reader.int(u8);
             if (field_int == 0) break;
             const field: FieldType = @enumFromInt(field_int);

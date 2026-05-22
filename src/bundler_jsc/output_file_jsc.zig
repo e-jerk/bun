@@ -2,7 +2,7 @@
 //! call sites stay `output.toJS(global)`.
 
 pub const SavedFile = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toJS(
         globalThis: *jsc.JSGlobalObject,
         path: []const u8,
@@ -24,7 +24,7 @@ pub const SavedFile = struct {
         if (mime_type) |mime| {
             blob.ptr.content_type = mime.value;
         }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         blob.ptr.size = @as(jsc.WebCore.Blob.SizeType, @truncate(byte_size));
         blob.ptr.allocator = bun.default_allocator;
         return blob.ptr.toJS(globalThis);
@@ -112,7 +112,7 @@ pub fn toJS(
                 blob.content_type = this.loader.toMimeType(&.{owned_pathname orelse ""}).value;
             }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             blob.size = @as(jsc.WebCore.Blob.SizeType, @truncate(buffer.bytes.len));
 
             var build_output = safe.Box(jsc.API.BuildArtifact).init(bun.default_allocator, undefined) catch @panic("Unable to allocate Artifact");
@@ -201,7 +201,7 @@ pub fn toBlob(
                 },
             };
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             blob.size = @as(jsc.WebCore.Blob.SizeType, @truncate(buffer.bytes.len));
             break :brk blob;
         },

@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 const Config = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     /// Number of milliseconds to map a diff before giving up (0 for infinity).
     diff_timeout: u64 = 1000,
     /// Cost of an empty edit operation in terms of edit characters.
@@ -1524,9 +1524,9 @@ pub fn DMP(comptime Unit: type) type {
             // Performance analysis: https://neil.fraser.name/news/2010/11/04/
             var best: usize = 0;
             var length: usize = 1;
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+            var __loop_limit_1: usize = 0;
+            while (true) : (__loop_limit_1 += 1) {
+                if (__loop_limit_1 > 1_000_000) break;
                 const pattern = text1[text_length - length ..];
                 const found = std.mem.indexOf(Unit, text2, pattern) orelse
                     return best;

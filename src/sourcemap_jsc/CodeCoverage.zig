@@ -59,7 +59,7 @@ pub const Report = struct {
     }
 
     pub const Text = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeFormatWithValues(
             filename: []const u8,
             max_filename_length: usize,
@@ -117,7 +117,7 @@ pub const Report = struct {
             try writer.print("{d: >7.2}", .{vals.lines * 100.0});
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeFormat(
             report: *const Report,
             max_filename_length: usize,
@@ -210,7 +210,7 @@ pub const Report = struct {
     };
 
     pub const Lcov = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn writeFormat(
             report: *const Report,
             base_path: []const u8,
@@ -440,7 +440,7 @@ pub const ByteRangeMapping = struct {
         var line_count: u32 = 0;
 
         if (ignore_sourcemap or parsed_mappings_ == null) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             line_count = @truncate(line_starts.len);
             executable_lines = try Bitset.initEmpty(allocator, line_count);
             lines_which_have_executed = try Bitset.initEmpty(allocator, line_count);
@@ -451,13 +451,12 @@ pub const ByteRangeMapping = struct {
 
             errdefer line_hits.deinit(allocator);
 
-            // safe-transpile: for with index access requires manual review
-    for (blocks, 0..) |block, i| {
+            for (blocks, 0..) |block, i| {
                 if (block.endOffset < 0 or block.startOffset < 0) continue; // does not map to anything
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const min: usize = @intCast(@min(block.startOffset, block.endOffset));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const max: usize = @intCast(@max(block.startOffset, block.endOffset));
                 var min_line: u32 = std.math.maxInt(u32);
                 var max_line: u32 = 0;
@@ -465,14 +464,14 @@ pub const ByteRangeMapping = struct {
                 const has_executed = block.hasExecuted or block.executionCount > 0;
 
                 for (min..max) |byte_offset| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const new_line_index = LineOffsetTable.findIndex(line_starts, .{ .start = @intCast(byte_offset) }) orelse continue;
                     const line_start_byte_offset = line_starts[new_line_index];
                     if (line_start_byte_offset >= byte_offset) {
                         continue;
                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const line: u32 = @intCast(new_line_index);
                     min_line = @min(min_line, line);
                     max_line = @max(max_line, line);
@@ -495,26 +494,25 @@ pub const ByteRangeMapping = struct {
                 }
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (function_blocks, 0..) |function, i| {
+            for (function_blocks, 0..) |function, i| {
                 if (function.endOffset < 0 or function.startOffset < 0) continue; // does not map to anything
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const min: usize = @intCast(@min(function.startOffset, function.endOffset));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const max: usize = @intCast(@max(function.startOffset, function.endOffset));
                 var min_line: u32 = std.math.maxInt(u32);
                 var max_line: u32 = 0;
 
                 for (min..max) |byte_offset| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const new_line_index = LineOffsetTable.findIndex(line_starts, .{ .start = @intCast(byte_offset) }) orelse continue;
                     const line_start_byte_offset = line_starts[new_line_index];
                     if (line_start_byte_offset >= byte_offset) {
                         continue;
                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const line: u32 = @intCast(new_line_index);
                     min_line = @min(min_line, line);
                     max_line = @max(max_line, line);
@@ -542,7 +540,7 @@ pub const ByteRangeMapping = struct {
                     functions_which_have_executed.set(i);
             }
         } else if (parsed_mappings_) |parsed_mapping| {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             line_count = @as(u32, @truncate(parsed_mapping.input_line_count)) + 1;
             executable_lines = try Bitset.initEmpty(allocator, line_count);
             lines_which_have_executed = try Bitset.initEmpty(allocator, line_count);
@@ -554,20 +552,19 @@ pub const ByteRangeMapping = struct {
 
             var cur_: ?bun.SourceMap.InternalSourceMap.Cursor = parsed_mapping.internalCursor();
 
-            // safe-transpile: for with index access requires manual review
-    for (blocks, 0..) |block, i| {
+            for (blocks, 0..) |block, i| {
                 if (block.endOffset < 0 or block.startOffset < 0) continue; // does not map to anything
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const min: usize = @intCast(@min(block.startOffset, block.endOffset));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const max: usize = @intCast(@max(block.startOffset, block.endOffset));
                 var min_line: u32 = std.math.maxInt(u32);
                 var max_line: u32 = 0;
                 const has_executed = block.hasExecuted or block.executionCount > 0;
 
                 for (min..max) |byte_offset| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const new_line_index = LineOffsetTable.findIndex(line_starts, .{ .start = @intCast(byte_offset) }) orelse continue;
                     const line_start_byte_offset = line_starts[new_line_index];
                     if (line_start_byte_offset >= byte_offset) {
@@ -576,15 +573,15 @@ pub const ByteRangeMapping = struct {
                     const column_position = byte_offset -| line_start_byte_offset;
 
                     const found = if (cur_) |*c|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         c.moveTo(.fromZeroBased(@intCast(new_line_index)), .fromZeroBased(@intCast(column_position)))
                     else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         parsed_mapping.findMapping(.fromZeroBased(@intCast(new_line_index)), .fromZeroBased(@intCast(column_position)));
                     if (found) |*point| {
                         if (point.original.lines.zeroBased() < 0) continue;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const line: u32 = @as(u32, @intCast(point.original.lines.zeroBased()));
 
                         executable_lines.set(line);
@@ -609,19 +606,18 @@ pub const ByteRangeMapping = struct {
                 }
             }
 
-            // safe-transpile: for with index access requires manual review
-    for (function_blocks, 0..) |function, i| {
+            for (function_blocks, 0..) |function, i| {
                 if (function.endOffset < 0 or function.startOffset < 0) continue; // does not map to anything
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const min: usize = @intCast(@min(function.startOffset, function.endOffset));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const max: usize = @intCast(@max(function.startOffset, function.endOffset));
                 var min_line: u32 = std.math.maxInt(u32);
                 var max_line: u32 = 0;
 
                 for (min..max) |byte_offset| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const new_line_index = LineOffsetTable.findIndex(line_starts, .{ .start = @intCast(byte_offset) }) orelse continue;
                     const line_start_byte_offset = line_starts[new_line_index];
                     if (line_start_byte_offset >= byte_offset) {
@@ -631,15 +627,15 @@ pub const ByteRangeMapping = struct {
                     const column_position = byte_offset -| line_start_byte_offset;
 
                     const found = if (cur_) |*c|
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         c.moveTo(.fromZeroBased(@intCast(new_line_index)), .fromZeroBased(@intCast(column_position)))
                     else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         parsed_mapping.findMapping(.fromZeroBased(@intCast(new_line_index)), .fromZeroBased(@intCast(column_position)));
                     if (found) |point| {
                         if (point.original.lines.zeroBased() < 0) continue;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const line: u32 = @as(u32, @intCast(point.original.lines.zeroBased()));
                         min_line = @min(min_line, line);
                         max_line = @max(max_line, line);
@@ -727,7 +723,7 @@ pub const ByteRangeMapping = struct {
         return bun.String.createUTF8ForJS(globalThis, allocating_writer.written()) catch return .zero;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn compute(source_contents: []const u8, source_id: i32, source_url: bun.jsc.ZigString.Slice) ByteRangeMapping {
         return ByteRangeMapping{
             .line_offset_table = LineOffsetTable.generate(bun.jsc.VirtualMachine.get().allocator, source_contents, 0),

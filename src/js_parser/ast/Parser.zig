@@ -136,7 +136,6 @@ pub const Parser = struct {
 
         //
         if (comptime ParserType.parser_features.typescript) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (scan_pass.import_records.items) |*import_record| {
                 // Mark everything as unused
                 // Except:
@@ -181,7 +180,7 @@ pub const Parser = struct {
         scan_pass.approximate_newline_count = p.lexer.approximate_newline_count;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn toLazyExportAST(this: *Parser, expr: Expr, comptime runtime_api_call: []const u8, symbols: Symbol.List) !js_ast.Result {
         var p: JavaScriptParser = undefined;
         try JavaScriptParser.init(this.allocator, this.log, this.source, this.define, this.lexer, this.options, &p);
@@ -296,7 +295,7 @@ pub const Parser = struct {
                 // If the logger is backed by console.log, every print appends a newline.
                 // so buffering is kind of mandatory here
                 const fakeWriter = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                    // safe-transpile: function uses raw slice parameter — consider safe.String
                     fn writeAll(_: @This(), data: []const u8) anyerror!usize {
                         if (data.len == 0) return 0;
 
@@ -370,9 +369,9 @@ pub const Parser = struct {
         defer p.binary_expression_simplify_stack.clearAndFree();
 
         if (Environment.allow_assert) {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.assert(binary_expression_stack_heap.fixed_buffer_allocator.ownsPtr(@ptrCast(p.binary_expression_stack.items)));
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             bun.assert(binary_expression_simplify_stack_heap.fixed_buffer_allocator.ownsPtr(@ptrCast(p.binary_expression_simplify_stack.items)));
         }
 
@@ -540,7 +539,6 @@ pub const Parser = struct {
             var preprocessed_enums: std.ArrayListUnmanaged([]js_ast.Part) = .empty;
             var preprocessed_enum_i: usize = 0;
             if (p.scopes_in_order_for_enum.count() > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (stmts) |*stmt| {
                     if (stmt.data == .s_enum) {
                         const old_scopes_in_order = p.scope_order_to_visit;
@@ -759,7 +757,6 @@ pub const Parser = struct {
                 break_optimize: {
                     if (!p.commonjs_named_exports_deoptimized) {
                         var needs_decl_count: usize = 0;
-// safe-transpile: for loop with pointer capture requires manual review
                         for (export_refs) |*export_ref| {
                             needs_decl_count += @as(usize, @intFromBool(export_ref.needs_decl));
                         }
@@ -777,7 +774,7 @@ pub const Parser = struct {
                         }
 
                         if (needs_decl_count > 0) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             p.symbols.items[p.exports_ref.innerIndex()].use_count_estimate += @as(u32, @truncate(export_refs.len));
                             p.deoptimizeCommonJSNamedExports();
                         }
@@ -817,8 +814,7 @@ pub const Parser = struct {
             const StmtAndPart = struct { stmt: Stmt, part_idx: usize };
             const stmt_and_part: ?StmtAndPart = brk: {
                 var found: ?StmtAndPart = null;
-                // safe-transpile: for with index access requires manual review
-    for (parts.items, 0..) |part, part_idx| {
+                for (parts.items, 0..) |part, part_idx| {
                     for (part.stmts) |s| {
                         switch (s.data) {
                             .s_comment, .s_directive, .s_empty => continue,
@@ -903,7 +899,6 @@ pub const Parser = struct {
                 p.import_records.items.len == 1 and
                 p.symbols.items[p.module_ref.innerIndex()].use_count_estimate == 1)
             {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (parts.items) |*part| {
                     // Specially handle modules shaped like this:
                     //
@@ -913,8 +908,7 @@ pub const Parser = struct {
                     // An example is react-dom/index.js, which does a DCE check.
                     if (part.stmts.len > 1) break;
 
-                    // safe-transpile: for with index access requires manual review
-    for (part.stmts, 0..) |*stmt, j| {
+                    for (part.stmts, 0..) |*stmt, j| {
                         if (stmt.data == .s_expr) {
                             const value: Expr = stmt.data.s_expr.value;
 
@@ -963,8 +957,7 @@ pub const Parser = struct {
                                         p.symbols.items[namespace_ref.innerIndex()].use_count_estimate -|= 1;
                                         _ = part.symbol_uses.swapRemove(namespace_ref);
 
-                                        // safe-transpile: for with index access requires manual review
-    for (before.items, 0..) |before_part, i| {
+                                        for (before.items, 0..) |before_part, i| {
                                             if (before_part.tag == .import_to_convert_from_require) {
                                                 _ = before.swapRemove(i);
                                                 break;
@@ -1074,7 +1067,6 @@ pub const Parser = struct {
                 wrap_mode = .bun_commonjs;
 
                 const import_record: ?*const ImportRecord = brk: {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (p.import_records.items) |*import_record| {
                         if (import_record.flags.is_internal or import_record.flags.is_unused) continue;
                         if (import_record.kind == .stmt) break :brk import_record;
@@ -1146,7 +1138,6 @@ pub const Parser = struct {
                     //
                     // If they use an import statement, we say it's ESM because that's not allowed in CommonJS files.
                     const uses_any_import_statements = brk: {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (p.import_records.items) |*import_record| {
                             if (import_record.flags.is_internal or import_record.flags.is_unused) continue;
                             if (import_record.kind == .stmt) break :brk true;
@@ -1238,7 +1229,6 @@ pub const Parser = struct {
         if (p.options.features.inject_jest_globals) outer: {
             var jest: *Jest = &p.jest;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (p.import_records.items) |*item| {
                 // skip if they did import it
                 if (strings.eqlComptime(item.path.text, "bun:test") or strings.eqlComptime(item.path.text, "@jest/globals") or strings.eqlComptime(item.path.text, "vitest")) {
@@ -1364,7 +1354,7 @@ pub const Parser = struct {
             var iter = p.runtime_imports.iter();
             var i: usize = 0;
             while (iter.next()) |entry| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 runtime_imports[i] = @as(u8, @intCast(entry.key));
                 i += 1;
             }

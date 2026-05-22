@@ -60,7 +60,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
 
                     const maybe_value = if (eql_index) |i| arg[i + 1 ..] else null;
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (parser.params) |*param| {
                         if (!param.names.matchesLong(name))
                             continue;
@@ -130,7 +129,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
             const index = state.index;
             const next_index = index + 1;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (parser.params) |*param| {
                 const short = param.names.short orelse continue;
                 if (short != arg[index])
@@ -177,7 +175,6 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
             if (parser.positional) |p|
                 return p;
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (parser.params) |*param| {
                 if (param.names.long) |_|
                     continue;
@@ -212,7 +209,7 @@ pub fn StreamingClap(comptime Id: type, comptime ArgIterator: type) type {
             return ArgInfo{ .arg = full_arg, .kind = .positional };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn err(parser: @This(), arg: []const u8, names: clap.Names, _err: anytype) @TypeOf(_err) {
             if (parser.diagnostic) |d|
                 d.* = .{ .arg = arg, .name = names };

@@ -139,7 +139,7 @@ pub const Run = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn bootBunShell(ctx: Command.Context, entry_path: []const u8) !bun.shell.ExitCode {
         @branchHint(.cold);
 
@@ -234,9 +234,9 @@ pub const Run = struct {
                 .err => return error.SystemResources,
             };
             var eval_path_buf: [bun.MAX_PATH_BYTES + trigger.len]u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(eval_path_buf[0..cwd_slice.len], cwd_slice);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(eval_path_buf[cwd_slice.len..][0..trigger.len], trigger);
             const eval_entry_path = eval_path_buf[0 .. cwd_slice.len + trigger.len];
             // Heap-allocate the path so it outlives this stack frame

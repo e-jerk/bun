@@ -106,9 +106,9 @@ pub const UpgradeCommand = struct {
 
         var header_entries: Headers.Entry.List = .empty;
         const accept = Headers.Entry{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .name = .{ .offset = 0, .length = @intCast("Accept".len) },
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .value = .{ .offset = @intCast("Accept".len), .length = @intCast("application/vnd.github.v3+json".len) },
         };
         try header_entries.append(allocator, accept);
@@ -140,13 +140,13 @@ pub const UpgradeCommand = struct {
                     .{
                         .name = .{
                             .offset = accept.value.offset + accept.value.length,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast("Authorization".len),
                         },
                         .value = .{
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .offset = @intCast(accept.value.offset + accept.value.length + "Authorization".len),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                             .length = @intCast("Bearer ".len + access_token.len),
                         },
                     },
@@ -287,7 +287,7 @@ pub const UpgradeCommand = struct {
 
                         if (asset.asProperty("size")) |size_| {
                             if (size_.expr.data == .e_number) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 version.size = @as(u32, @intCast(@max(@as(i32, @intFromFloat(std.math.ceil(size_.expr.data.e_number.value))), 0)));
                             }
                         }
@@ -702,7 +702,7 @@ pub const UpgradeCommand = struct {
             }
 
             const destination_executable = bun.selfExePath() catch return error.UpgradeFailedMissingExecutable;
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy((&current_executable_buf).ptr, destination_executable);
             current_executable_buf[destination_executable.len] = 0;
 
@@ -734,7 +734,7 @@ pub const UpgradeCommand = struct {
                 };
 
                 if (target_stat.size == dest_stat.size and target_stat.size > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const input_buf = try ctx.allocator.alloc(u8, @intCast(target_stat.size));
 
                     const target_hash = bun.hash(target_dir.readFile(target_filename, input_buf) catch |err| {
@@ -926,7 +926,7 @@ pub const upgrade_js_bindings = struct {
             .result => |norm| norm,
         };
 
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         const path_len_bytes: u16 = @truncate(path.len * 2);
         var nt_name = std.os.windows.UNICODE_STRING{
             .Length = path_len_bytes,

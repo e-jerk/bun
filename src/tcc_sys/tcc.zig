@@ -118,7 +118,7 @@ pub const State = opaque {
 
     /// Set error/warning display callback
     pub fn setErrorFunc(s: *State, Context: type, errorOpaque: ?*Context, errorFunc: *const ErrorFunc(Context)) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         tcc_set_error_func(s, errorOpaque, @ptrCast(errorFunc));
     }
 
@@ -311,7 +311,7 @@ pub const State = opaque {
 
     /// Return symbol value or NULL if not found
     pub fn getSymbol(s: *State, name: [:0]const u8) ?*Symbol {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         return @ptrCast(tcc_get_symbol(s, name.ptr));
     }
 

@@ -62,7 +62,7 @@ pub fn renderToAnsi(
         if (try theme_value.get(globalThis, "columns")) |cols| {
             if (cols.isNumber()) {
                 const n = cols.toInt32();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 theme.columns = if (n <= 0) 0 else @intCast(@min(n, std.math.maxInt(u16)));
             }
         }
@@ -378,7 +378,7 @@ const ParseRenderer = struct {
         detail: md.SpanDetail = .{},
     };
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(
         globalObject: *jsc.JSGlobalObject,
         src_text: []const u8,
@@ -502,7 +502,6 @@ const ParseRenderer = struct {
     // ========================================
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: md.BlockType, data: u32, flags: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
@@ -522,7 +521,6 @@ const ParseRenderer = struct {
     }
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: md.BlockType, _: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
@@ -623,7 +621,6 @@ const ParseRenderer = struct {
     // ========================================
 
     fn enterSpanImpl(ptr: *anyopaque, _: md.SpanType, detail: md.SpanDetail) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
@@ -633,7 +630,6 @@ const ParseRenderer = struct {
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: md.SpanType) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
@@ -691,7 +687,7 @@ const ParseRenderer = struct {
 
         if (span_type == .img) {
             // img is a void element — convert children to alt prop
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const len: u32 = @truncate(try entry.children.getLength(g));
             if (len == 1) {
                 const child = try entry.children.getIndex(g, 0);
@@ -703,7 +699,7 @@ const ParseRenderer = struct {
                 var alt_buf = std.ArrayListUnmanaged(u8).empty;
                 defer alt_buf.deinit(bun.default_allocator);
                 for (0..len) |i| {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     const child = try entry.children.getIndex(g, @truncate(i));
                     if (child.isString()) {
                         const str = try child.toSlice(g, bun.default_allocator);
@@ -731,9 +727,8 @@ const ParseRenderer = struct {
     // Text callback
     // ========================================
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn textImpl(ptr: *anyopaque, text_type: md.TextType, content: []const u8) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *ParseRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
@@ -794,7 +789,7 @@ const JsCallbackRenderer = struct {
     _heading_tracker: md.helpers.HeadingIdTracker = md.helpers.HeadingIdTracker.init(false),
     _stack_check: bun.StackCheck,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(globalObject: *jsc.JSGlobalObject, src_text: []const u8, heading_ids: bool) error{OutOfMemory}!JsCallbackRenderer {
         var self = JsCallbackRenderer{
             ._globalObject = globalObject,
@@ -854,7 +849,6 @@ const JsCallbackRenderer = struct {
     }
 
     fn deinit(self: *JsCallbackRenderer) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (self._stack.items) |*entry| {
             entry.buffer.deinit(self._allocator);
         }
@@ -878,7 +872,7 @@ const JsCallbackRenderer = struct {
     // Content stack operations
     // ========================================
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn appendToTop(self: *JsCallbackRenderer, data: []const u8) error{OutOfMemory}!void {
         if (self._stack.items.len == 0) return;
         const top = &self._stack.items[self._stack.items.len - 1];
@@ -917,7 +911,7 @@ const JsCallbackRenderer = struct {
         try self.appendToTop(slice.slice());
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     fn getResult(self: *JsCallbackRenderer) []const u8 {
         if (self._stack.items.len == 0) return "";
         return self._stack.items[0].buffer.items;
@@ -928,7 +922,6 @@ const JsCallbackRenderer = struct {
     // ========================================
 
     fn enterBlockImpl(ptr: *anyopaque, block_type: md.BlockType, data: u32, flags: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
@@ -954,7 +947,6 @@ const JsCallbackRenderer = struct {
     }
 
     fn leaveBlockImpl(ptr: *anyopaque, block_type: md.BlockType, _: u32) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         if (block_type == .doc) return;
@@ -973,14 +965,12 @@ const JsCallbackRenderer = struct {
     }
 
     fn enterSpanImpl(ptr: *anyopaque, _: md.SpanType, detail: md.SpanDetail) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
         try self._stack.append(self._allocator, .{ .detail = detail });
     }
 
     fn leaveSpanImpl(ptr: *anyopaque, span_type: md.SpanType) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
@@ -993,9 +983,8 @@ const JsCallbackRenderer = struct {
         try self.popAndCallback(callback, meta);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn textImpl(ptr: *anyopaque, text_type: md.TextType, content: []const u8) bun.JSError!void {
-// safe-transpile: @alignCast requires manual review
         const self: *JsCallbackRenderer = @ptrCast(@alignCast(ptr));
         if (!self._stack_check.isSafeToRecurse()) return self._globalObject.throwStackOverflow();
 
@@ -1021,7 +1010,7 @@ const JsCallbackRenderer = struct {
     // Text helpers
     // ========================================
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn callTextCallback(self: *JsCallbackRenderer, content: []const u8) bun.JSError!void {
         if (!self._stack_check.isSafeToRecurse()) {
             return self._globalObject.throwStackOverflow();
@@ -1035,14 +1024,14 @@ const JsCallbackRenderer = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn decodeAndAppendEntity(self: *JsCallbackRenderer, entity_text: []const u8) bun.JSError!void {
         var buf: [8]u8 = undefined;
         try self.appendTextOrRaw(md.helpers.decodeEntityToUtf8(entity_text, &buf) orelse entity_text);
     }
 
     /// Append text through the text callback if one is set, otherwise raw append.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn appendTextOrRaw(self: *JsCallbackRenderer, content: []const u8) bun.JSError!void {
         if (self._callbacks.text != .zero) {
             try self.callTextCallback(content);

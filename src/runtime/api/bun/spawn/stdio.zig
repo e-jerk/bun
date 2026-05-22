@@ -35,7 +35,7 @@ pub const Stdio = union(enum) {
         blob_used_as_out,
         uv_pipe: bun.sys.E,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+        // safe-transpile: function returns small constant slice — consider safe.String
         pub fn toStr(this: *const @This()) []const u8 {
             return switch (this.*) {
                 .stdin_used_as_out => "Stdin cannot be used for stdout or stderr",
@@ -50,7 +50,7 @@ pub const Stdio = union(enum) {
         }
     };
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn byteSlice(this: *const Stdio) []const u8 {
         return switch (this.*) {
             .capture => this.capture.buf.slice(),
@@ -109,7 +109,7 @@ pub const Stdio = union(enum) {
 
         if (remain.len > 0)
             // Hint at the size of the file
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             _ = bun.sys.ftruncate(fd, @intCast(remain.len));
 
         // Dump all the bytes in there
@@ -131,7 +131,7 @@ pub const Stdio = union(enum) {
                         fd.close();
                         return false;
                     }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     written += @intCast(result);
                     remain = remain[result..];
                 },

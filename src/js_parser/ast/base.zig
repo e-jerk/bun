@@ -44,12 +44,12 @@ pub const Index = packed struct(u32) {
     pub const Int = u32;
 
     pub inline fn source(num: anytype) Index {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .{ .value = @as(Int, @truncate(num)) };
     }
 
     pub inline fn part(num: anytype) Index {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return .{ .value = @as(Int, @truncate(num)) };
     }
 
@@ -61,13 +61,13 @@ pub const Index = packed struct(u32) {
 
         if (comptime bun.Environment.allow_assert) {
             return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .value = @as(Int, @intCast(num)),
             };
         }
 
         return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .value = @as(Int, @intCast(num)),
         };
     }
@@ -185,7 +185,7 @@ pub const Ref = packed struct(u64) {
     pub fn init(inner_index: Int, source_index: u32, is_source_contents_slice: bool) Ref {
         return .{
             .inner_index = inner_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .source_index = @intCast(source_index),
             .tag = if (is_source_contents_slice) .source_contents_slice else .allocated_name,
         };
@@ -197,17 +197,17 @@ pub const Ref = packed struct(u64) {
     }
 
     pub fn hash(key: Ref) u32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @truncate(key.hash64());
     }
 
     pub inline fn asU64(key: Ref) u64 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @bitCast(key);
     }
 
     pub inline fn hash64(key: Ref) u64 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return bun.hash(&@as([8]u8, @bitCast(key.asU64())));
     }
 

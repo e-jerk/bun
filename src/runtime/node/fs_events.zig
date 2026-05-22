@@ -238,7 +238,6 @@ pub const FSEventsLoop = struct {
                 }
 
                 pub fn wrap(this: ?*anyopaque) void {
-// safe-transpile: @alignCast requires manual review
                     @call(bun.callmod_inline, Callback, .{@as(*Type, @ptrCast(@alignCast((this.?))))});
                 }
             };
@@ -350,8 +349,7 @@ pub const FSEventsLoop = struct {
             if (watcher) |handle| {
                 const handle_path = handle.path;
 
-                // safe-transpile: for with index access requires manual review
-    for (paths, 0..) |path_ptr, i| {
+                for (paths, 0..) |path_ptr, i| {
                     var flags = event_flags[i];
                     var path = path_ptr[0..bun.len(path_ptr)];
                     // Filter out paths that are outside handle's request
@@ -509,8 +507,7 @@ pub const FSEventsLoop = struct {
             bun.handleOom(this.watchers.append(bun.default_allocator, watcher));
         } else {
             var watchers = this.watchers.slice();
-            // safe-transpile: for with index access requires manual review
-    for (watchers, 0..) |w, i| {
+            for (watchers, 0..) |w, i| {
                 if (w == null) {
                     watchers[i] = watcher;
                     this.watcher_count += 1;
@@ -529,8 +526,7 @@ pub const FSEventsLoop = struct {
         this.mutex.lock();
         defer this.mutex.unlock();
         var watchers = this.watchers.slice();
-        // safe-transpile: for with index access requires manual review
-    for (watchers, 0..) |w, i| {
+        for (watchers, 0..) |w, i| {
             if (w) |item| {
                 if (item == watcher) {
                     watchers[i] = null;

@@ -84,7 +84,6 @@ pub fn filter(
     // Convert PathString list to []const []const u8 for the bundler.
     const entry_points = try allocator.alloc([]const u8, test_files.len);
     defer allocator.free(entry_points);
-    // safe-transpile: for with index access requires manual review
     for (test_files, entry_points) |p, *out| out.* = p.slice();
 
     // Build a dedicated transpiler for scanning. We do not reuse the VM's
@@ -140,7 +139,7 @@ pub fn filter(
     // the graph. This lets us look up changed-file paths quickly.
     var path_to_index = bun.StringHashMap(u32).init(allocator);
     defer path_to_index.deinit();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     try path_to_index.ensureTotalCapacity(@intCast(sources.len));
 
     // Reverse graph: for each source index, the list of source indexes that
@@ -148,11 +147,9 @@ pub fn filter(
     // file.
     const importers = try allocator.alloc(std.ArrayListUnmanaged(u32), sources.len);
     defer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (importers) |*list| list.deinit(allocator);
         allocator.free(importers);
     }
-// safe-transpile: for loop with pointer capture requires manual review
     for (importers) |*list| list.* = .empty;
 
     var graph_files: std.ArrayListUnmanaged([]const u8) = .empty;
@@ -164,9 +161,8 @@ pub fn filter(
     // list ever needed to grow and failed.
     try graph_files.ensureTotalCapacityPrecise(allocator, sources.len);
 
-    // safe-transpile: for with index access requires manual review
     for (sources, 0..) |*source, idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const index = Index.init(@as(u32, @intCast(idx)));
         if (index.isRuntime()) continue;
         const path_text = source.path.text;
@@ -176,18 +172,16 @@ pub fn filter(
         if (!source.path.isFile()) continue;
         // All scanned entry points are absolute, and the resolver emits
         // absolute file paths as well.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         path_to_index.putAssumeCapacity(path_text, @intCast(idx));
         // Copy out of the bundler's arena so the caller can use these paths
         // after the BundleV2 heap is gone.
         graph_files.appendAssumeCapacity(try allocator.dupe(u8, path_text));
     }
 
-    // safe-transpile: for with index access requires manual review
     for (import_records, 0..) |records, idx| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const importer: u32 = @intCast(idx);
-// safe-transpile: for loop with pointer capture requires manual review
         for (records.slice()) |*record| {
             const dep = record.source_index;
             if (!dep.isValid() or dep.isRuntime()) continue;
@@ -201,7 +195,6 @@ pub fn filter(
     // match by absolute path via path_to_index rather than by position.
     const slot_to_source = try allocator.alloc(?u32, test_files.len);
     defer allocator.free(slot_to_source);
-    // safe-transpile: for with index access requires manual review
     for (test_files, slot_to_source) |tf, *out| {
         out.* = path_to_index.get(tf.slice());
     }
@@ -237,7 +230,6 @@ pub fn filter(
     // affected, or (b) the test file itself is in the changed set (covers
     // test files that failed to enter the graph for any reason).
     var write: usize = 0;
-    // safe-transpile: for with index access requires manual review
     for (test_files, slot_to_source) |tf, maybe_source| {
         const keep = changed_files.contains(tf.slice()) or
             (if (maybe_source) |src| affected.isSet(src) else false);
@@ -280,9 +272,8 @@ pub fn initWatchTrigger(allocator: std.mem.Allocator) void {
     const path: [:0]const u8 = if (bun.getenvZ(trigger_file_env_var)) |existing|
         bun.handleOom(allocator.dupeZ(u8, existing))
     else brk: {
-// safe-transpile: @bitCast requires manual review
         var rng = std.Random.DefaultPrng.init(@as(u64, @bitCast(@import("std-fs-compat").milliTimestamp())) ^
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @as(u64, @intCast(std.c.getpid())));
         const tmpdir = bun.fs.FileSystem.RealFS.tmpdirPath();
         const fresh = bun.handleOom(std.fmt.allocPrintSentinel(

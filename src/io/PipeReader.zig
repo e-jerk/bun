@@ -19,25 +19,20 @@ const BufferedReaderVTable = struct {
 
         pub fn init(comptime Type: type) *const BufferedReaderVTable.Fn {
             const fns = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+                // safe-transpile: function uses raw slice parameter — consider zust.String
                 fn onReadChunk(this: *anyopaque, chunk: []const u8, hasMore: ReadState) bool {
-// safe-transpile: @alignCast requires manual review
                     return Type.onReadChunk(@as(*Type, @ptrCast(@alignCast(this))), chunk, hasMore);
                 }
                 fn onReaderDone(this: *anyopaque) void {
-// safe-transpile: @alignCast requires manual review
                     return Type.onReaderDone(@as(*Type, @ptrCast(@alignCast(this))));
                 }
                 fn onReaderError(this: *anyopaque, err: bun.sys.Error) void {
-// safe-transpile: @alignCast requires manual review
                     return Type.onReaderError(@as(*Type, @ptrCast(@alignCast(this))), err);
                 }
                 fn eventLoop(this: *anyopaque) jsc.EventLoopHandle {
-// safe-transpile: @alignCast requires manual review
                     return jsc.EventLoopHandle.init(Type.eventLoop(@as(*Type, @ptrCast(@alignCast(this)))));
                 }
                 fn loop(this: *anyopaque) *Async.Loop {
-// safe-transpile: @alignCast requires manual review
                     return Type.loop(@as(*Type, @ptrCast(@alignCast(this))));
                 }
             };
@@ -67,7 +62,7 @@ const BufferedReaderVTable = struct {
     /// and hasMore is true, it means that there might be more data to read.
     ///
     /// Returning false prevents the reader from reading more data.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onReadChunk(this: @This(), chunk: []const u8, hasMore: ReadState) bool {
         return this.fns.onReadChunk.?(this.parent, chunk, hasMore);
     }
@@ -414,7 +409,7 @@ const PosixBufferedReader = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     inline fn drainChunk(parent: *PosixBufferedReader, chunk: []const u8, hasMore: ReadState) bool {
         if (parent.vtable.isStreamingEnabled()) {
             if (chunk.len > 0) {
@@ -427,7 +422,7 @@ const PosixBufferedReader = struct {
 
     fn wrapReadFn(comptime func: *const fn (bun.FD, []u8) bun.sys.Maybe(usize)) *const fn (bun.FD, []u8, usize) bun.sys.Maybe(usize) {
         return struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn call(fd: bun.FD, buf: []u8, offset: usize) bun.sys.Maybe(usize) {
                 _ = offset;
                 return func(fd, buf);
@@ -437,9 +432,9 @@ const PosixBufferedReader = struct {
 
     fn readFile(parent: *PosixBufferedReader, resizable_buffer: *std.array_list.Managed(u8), fd: bun.FD, size_hint: isize, received_hup: bool) void {
         const preadFn = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             pub fn call(fd1: bun.FD, buf: []u8, offset: usize) bun.sys.Maybe(usize) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return bun.sys.pread(fd1, buf, @intCast(offset));
             }
         }.call;
@@ -807,21 +802,17 @@ pub const WindowsBufferedReader = struct {
 
     pub fn init(comptime Type: type) WindowsBufferedReader {
         const fns = struct {
-// safe-transpile: function uses raw slice parameter — consider zust.String
+            // safe-transpile: function uses raw slice parameter — consider zust.String
             fn onReadChunk(this: *anyopaque, chunk: []const u8, hasMore: ReadState) bool {
-// safe-transpile: @alignCast requires manual review
                 return Type.onReadChunk(@as(*Type, @ptrCast(@alignCast(this))), chunk, hasMore);
             }
             fn onReaderDone(this: *anyopaque) void {
-// safe-transpile: @alignCast requires manual review
                 return Type.onReaderDone(@as(*Type, @ptrCast(@alignCast(this))));
             }
             fn onReaderError(this: *anyopaque, err: bun.sys.Error) void {
-// safe-transpile: @alignCast requires manual review
                 return Type.onReaderError(@as(*Type, @ptrCast(@alignCast(this))), err);
             }
             fn loop(this: *anyopaque) *Async.Loop {
-// safe-transpile: @alignCast requires manual review
                 return Type.loop(@as(*Type, @ptrCast(@alignCast(this))));
             }
         };
@@ -918,7 +909,7 @@ pub const WindowsBufferedReader = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn _onReadChunk(this: *WindowsBufferedReader, buf: []u8, hasMore: ReadState) bool {
         if (this.maxbuf) |m| m.onReadBytes(buf.len);
 
@@ -956,7 +947,7 @@ pub const WindowsBufferedReader = struct {
         this.vtable.onReaderError(this.parent, err);
     }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn getReadBufferWithStableMemoryAddress(this: *WindowsBufferedReader, suggested_size: usize) []u8 {
         this.flags.has_inflight_read = true;
         bun.handleOom(this._buffer.ensureUnusedCapacity(suggested_size));
@@ -1054,7 +1045,7 @@ pub const WindowsBufferedReader = struct {
                     return;
                 }
                 // we got some data we can slice the buffer!
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const len: usize = @intCast(nread_int);
                 var slice = buf.slice();
                 this.onRead(.{ .result = len }, slice[0..len], .progress);
@@ -1132,7 +1123,6 @@ pub const WindowsBufferedReader = struct {
                                     file_ptr.iov = uv.uv_buf_t.init(buf);
                                     this.flags.has_inflight_read = true;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                                     if (uv.uv_fs_read(this.vtable.loop(this.parent), &file_ptr.fs, file_ptr.file, @ptrCast(&file_ptr.iov), 1, if (this.flags.use_pread) @intCast(this._offset) else -1, onFileRead).toError(.write)) |err| {
                                         file_ptr.complete(false);
                                         this.flags.has_inflight_read = false;
@@ -1146,7 +1136,7 @@ pub const WindowsBufferedReader = struct {
                     }
                 }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const len: usize = @intCast(nread_int);
                 this._offset += len;
                 // we got some data lets get the current iov
@@ -1184,7 +1174,6 @@ pub const WindowsBufferedReader = struct {
                 file.iov = uv.uv_buf_t.init(buf);
                 this.flags.has_inflight_read = true;
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 if (uv.uv_fs_read(this.vtable.loop(this.parent), &file.fs, file.file, @ptrCast(&file.iov), 1, if (this.flags.use_pread) @intCast(this._offset) else -1, onFileRead).toError(.write)) |err| {
                     file.complete(false);
                     this.flags.has_inflight_read = false;
@@ -1276,7 +1265,7 @@ pub const WindowsBufferedReader = struct {
         _ = this.deinit();
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onRead(this: *WindowsBufferedReader, amount: bun.sys.Maybe(usize), slice: []u8, hasMore: ReadState) void {
         if (amount == .err) {
             this.onError(amount.err);

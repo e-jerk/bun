@@ -40,7 +40,7 @@ pub const YarnLock = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getNameFromSpec(spec: []const u8) []const u8 {
             const unquoted = if (spec[0] == '"' and spec[spec.len - 1] == '"')
                 spec[1 .. spec.len - 1]
@@ -71,7 +71,7 @@ pub const YarnLock = struct {
             return unquoted;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getVersionFromSpec(spec: []const u8) ?[]const u8 {
             const unquoted = if (spec[0] == '"' and spec[spec.len - 1] == '"')
                 spec[1 .. spec.len - 1]
@@ -129,7 +129,7 @@ pub const YarnLock = struct {
             return null;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isGitDependency(version: []const u8) bool {
             return strings.hasPrefixComptime(version, "git+") or
                 strings.hasPrefixComptime(version, "git://") or
@@ -137,30 +137,30 @@ pub const YarnLock = struct {
                 strings.hasPrefixComptime(version, "https://github.com/");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isNpmAlias(version: []const u8) bool {
             return strings.hasPrefixComptime(version, "npm:");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isRemoteTarball(version: []const u8) bool {
             return strings.hasPrefixComptime(version, "https://") and strings.endsWithComptime(version, ".tgz");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isWorkspaceDependency(version: []const u8) bool {
             return strings.hasPrefixComptime(version, "workspace:") or
                 strings.eqlComptime(version, "*");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn isFileDependency(version: []const u8) bool {
             return strings.hasPrefixComptime(version, "file:") or
                 strings.hasPrefixComptime(version, "./") or
                 strings.hasPrefixComptime(version, "../");
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseGitUrl(self: *const YarnLock, version: []const u8) !struct { url: []const u8, commit: ?[]const u8, owner: ?[]const u8, repo: ?[]const u8 } {
             var url = version;
             var commit: ?[]const u8 = null;
@@ -208,7 +208,7 @@ pub const YarnLock = struct {
             return .{ .url = url, .commit = commit, .owner = owner, .repo = repo };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseNpmAlias(version: []const u8) struct { package: []const u8, version: []const u8 } {
             if (version.len <= 4) {
                 return .{ .package = "", .version = "*" };
@@ -224,7 +224,7 @@ pub const YarnLock = struct {
             return .{ .package = npm_part, .version = "*" };
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getPackageNameFromResolvedUrl(url: []const u8) ?[]const u8 {
             if (strings.indexOf(url, "/-/")) |dash_idx| {
                 var slash_count: usize = 0;
@@ -266,14 +266,13 @@ pub const YarnLock = struct {
     }
 
     pub fn deinit(self: *YarnLock) void {
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.entries.items) |*entry| {
             entry.deinit(self.allocator);
         }
         self.entries.deinit();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(self: *YarnLock, content: []const u8) !void {
         var lines = strings.split(content, "\n");
         var current_entry: ?Entry = null;
@@ -442,9 +441,8 @@ pub const YarnLock = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn findEntryBySpec(self: *YarnLock, spec: []const u8) ?*Entry {
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.entries.items) |*entry| {
             for (entry.specs) |entry_spec| {
                 if (strings.eql(entry_spec, spec)) {
@@ -459,7 +457,6 @@ pub const YarnLock = struct {
         if (new_entry.specs.len == 0) return;
         const package_name = Entry.getNameFromSpec(new_entry.specs[0]);
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.entries.items) |*existing_entry| {
             if (existing_entry.specs.len == 0) continue;
             const existing_name = Entry.getNameFromSpec(existing_entry.specs[0]);
@@ -469,9 +466,9 @@ pub const YarnLock = struct {
             {
                 const old_specs = existing_entry.specs;
                 const combined_specs = try self.allocator.alloc([]const u8, old_specs.len + new_entry.specs.len);
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(combined_specs[0..old_specs.len], old_specs);
-// safe-transpile: @memcpy requires manual review
+                // safe-transpile: @memcpy requires manual review
                 @memcpy(combined_specs[old_specs.len..], new_entry.specs);
 
                 self.allocator.free(old_specs);
@@ -548,8 +545,7 @@ fn processDeps(
                 },
             };
             var found_package_id: ?Install.PackageID = null;
-            // safe-transpile: for with index access requires manual review
-    outer: for (yarn_lock_.entries.items, 0..) |entry_, yarn_idx| {
+            outer: for (yarn_lock_.entries.items, 0..) |entry_, yarn_idx| {
                 for (entry_.specs) |entry_spec| {
                     if (strings.eql(entry_spec, dep_spec)) {
                         found_package_id = yarn_entry_to_package_id[yarn_idx];
@@ -681,24 +677,24 @@ pub fn migrateYarnLockfile(
 
         for (yarn_lock.entries.items) |entry| {
             if (entry.dependencies) |deps| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 num_deps += @intCast(deps.count());
             }
             if (entry.optionalDependencies) |deps| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 num_deps += @intCast(deps.count());
             }
             if (entry.peerDependencies) |deps| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 num_deps += @intCast(deps.count());
             }
             if (entry.devDependencies) |deps| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 num_deps += @intCast(deps.count());
             }
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const num_packages = @as(u32, @intCast(yarn_lock.entries.items.len + 1));
 
         try this.buffers.dependencies.ensureTotalCapacity(allocator, num_deps);
@@ -768,7 +764,6 @@ pub fn migrateYarnLockfile(
 
     var next_package_id: Install.PackageID = 1; // 0 is root
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         var is_npm_alias = false;
         var is_direct_url = false;
@@ -852,7 +847,6 @@ pub fn migrateYarnLockfile(
     var created_packages = bun.StringHashMap(bool).init(allocator);
     defer created_packages.deinit();
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         var is_npm_alias = false;
         for (entry.specs) |spec| {
@@ -1043,8 +1037,7 @@ pub fn migrateYarnLockfile(
             defer allocator.free(dep_spec);
 
             var found_idx: ?usize = null;
-            // safe-transpile: for with index access requires manual review
-    for (yarn_lock.entries.items, 0..) |entry, idx| {
+            for (yarn_lock.entries.items, 0..) |entry, idx| {
                 for (entry.specs) |spec| {
                     if (strings.eql(spec, dep_spec)) {
                         found_idx = idx;
@@ -1098,7 +1091,6 @@ pub fn migrateYarnLockfile(
     dependencies_buf = dependencies_buf[actual_root_dep_count..];
     resolutions_buf = resolutions_buf[actual_root_dep_count..];
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const package_id = yarn_entry_to_package_id[yarn_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1132,20 +1124,20 @@ pub fn migrateYarnLockfile(
         const deps_len = @intFromPtr(dependencies_buf.ptr) - @intFromPtr(dependencies_start);
         const deps_off = @intFromPtr(dependencies_start) - @intFromPtr(this.buffers.dependencies.items.ptr);
         dependencies_list[package_id] = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .off = @intCast(deps_off / @sizeOf(Dependency)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .len = @intCast(deps_len / @sizeOf(Dependency)),
         };
         resolution_list[package_id] = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .off = @intCast((@intFromPtr(resolutions_start) - @intFromPtr(this.buffers.resolutions.items.ptr)) / @sizeOf(Install.PackageID)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .len = @intCast((@intFromPtr(resolutions_buf.ptr) - @intFromPtr(resolutions_start)) / @sizeOf(Install.PackageID)),
         };
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     this.buffers.dependencies.items.len = @intCast((@intFromPtr(dependencies_buf.ptr) - @intFromPtr(this.buffers.dependencies.items.ptr)) / @sizeOf(Dependency));
     this.buffers.resolutions.items.len = this.buffers.dependencies.items.len;
 
@@ -1163,18 +1155,15 @@ pub fn migrateYarnLockfile(
 
     var package_dependents = try allocator.alloc(std.array_list.Managed(Install.PackageID), next_package_id);
     defer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (package_dependents) |*list| {
             list.deinit();
         }
         allocator.free(package_dependents);
     }
-// safe-transpile: for loop with pointer capture requires manual review
     for (package_dependents) |*list| {
         list.* = std.array_list.Managed(Install.PackageID).init(allocator);
     }
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const parent_package_id = yarn_entry_to_package_id[yarn_idx];
 
@@ -1195,8 +1184,7 @@ pub fn migrateYarnLockfile(
                     defer allocator.free(dep_spec);
 
                     if (yarn_lock.findEntryBySpec(dep_spec)) |dep_entry| {
-                        // safe-transpile: for with index access requires manual review
-    for (yarn_lock.entries.items, 0..) |*e, idx| {
+                        for (yarn_lock.entries.items, 0..) |*e, idx| {
                             var found = false;
                             for (e.specs) |spec| {
                                 for (dep_entry.specs) |dep_spec_item| {
@@ -1224,8 +1212,7 @@ pub fn migrateYarnLockfile(
         const dep_spec = try std.fmt.allocPrint(allocator, "{s}@{s}", .{ dep.name, dep.version });
         defer allocator.free(dep_spec);
 
-        // safe-transpile: for with index access requires manual review
-    for (yarn_lock.entries.items, 0..) |entry, idx| {
+        for (yarn_lock.entries.items, 0..) |entry, idx| {
             for (entry.specs) |spec| {
                 if (strings.eql(spec, dep_spec)) {
                     const dep_package_id = yarn_entry_to_package_id[idx];
@@ -1307,7 +1294,6 @@ pub fn migrateYarnLockfile(
     defer allocator.free(package_names);
     @memset(package_names, "");
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const package_id = yarn_entry_to_package_id[yarn_idx];
         if (package_names[package_id].len == 0) {
@@ -1320,7 +1306,6 @@ pub fn migrateYarnLockfile(
 
     var usage_count = bun.StringHashMap(u32).init(allocator);
     defer usage_count.deinit();
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |_, entry_idx| {
         const package_id = yarn_entry_to_package_id[entry_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1339,7 +1324,6 @@ pub fn migrateYarnLockfile(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |_, entry_idx| {
         const package_id = yarn_entry_to_package_id[entry_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1355,7 +1339,6 @@ pub fn migrateYarnLockfile(
     var scoped_names = std.AutoHashMap(PackageID, []const u8).init(allocator);
     defer scoped_names.deinit();
     var scoped_count: u32 = 0;
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |_, entry_idx| {
         const package_id = yarn_entry_to_package_id[entry_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1370,8 +1353,7 @@ pub fn migrateYarnLockfile(
         }
 
         var scoped_name: ?[]const u8 = null;
-        // safe-transpile: for with index access requires manual review
-    for (yarn_lock.entries.items, 0..) |dep_entry, dep_entry_idx| {
+        for (yarn_lock.entries.items, 0..) |dep_entry, dep_entry_idx| {
             const dep_package_id = yarn_entry_to_package_id[dep_entry_idx];
             if (dep_package_id == Install.invalid_package_id) continue;
 
@@ -1426,7 +1408,6 @@ pub fn migrateYarnLockfile(
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const package_id = yarn_entry_to_package_id[yarn_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1450,7 +1431,6 @@ pub fn migrateYarnLockfile(
     var spec_to_package_id = bun.StringHashMap(Install.PackageID).init(allocator);
     defer spec_to_package_id.deinit();
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const package_id = yarn_entry_to_package_id[yarn_idx];
         if (package_id == Install.invalid_package_id) continue;
@@ -1460,14 +1440,14 @@ pub fn migrateYarnLockfile(
         }
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const root_deps_off = @as(u32, @intCast(this.buffers.dependencies.items.len));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const root_resolutions_off = @as(u32, @intCast(this.buffers.resolutions.items.len));
 
     if (root_dependencies.items.len > 0) {
         for (root_dependencies.items) |root_dep| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             _ = @as(DependencyID, @intCast(this.buffers.dependencies.items.len));
 
             const name_hash = stringHash(root_dep.name);
@@ -1515,24 +1495,23 @@ pub fn migrateYarnLockfile(
 
     packages_slice.items(.dependencies)[0] = .{
         .off = root_deps_off,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .len = @as(u32, @intCast(root_dependencies.items.len)),
     };
     packages_slice.items(.resolutions)[0] = .{
         .off = root_resolutions_off,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .len = @as(u32, @intCast(root_dependencies.items.len)),
     };
 
-    // safe-transpile: for with index access requires manual review
     for (yarn_lock.entries.items, 0..) |entry, yarn_idx| {
         const package_id = yarn_entry_to_package_id[yarn_idx];
         if (package_id == Install.invalid_package_id) continue;
 
         var dep_count: u32 = 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const deps_off = @as(u32, @intCast(this.buffers.dependencies.items.len));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const resolutions_off = @as(u32, @intCast(this.buffers.resolutions.items.len));
 
         if (entry.dependencies) |deps| {

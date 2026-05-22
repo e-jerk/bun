@@ -2,10 +2,10 @@
 const Error = @This();
 
 const retry_errno = if (Environment.isWindows)
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     @as(Int, @intCast(@intFromEnum(E.INTR)))
 else
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     @as(Int, @intCast(@intFromEnum(E.AGAIN)));
 
 const todo_errno = std.math.maxInt(Int) - 1;
@@ -31,7 +31,7 @@ pub fn clone(this: *const Error, allocator: std.mem.Allocator) Error {
 
 pub fn fromCode(errno: E, syscall_tag: sys.Tag) Error {
     return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .errno = @as(Int, @intCast(@intFromEnum(errno))),
         .syscall = syscall_tag,
     };
@@ -39,7 +39,7 @@ pub fn fromCode(errno: E, syscall_tag: sys.Tag) Error {
 
 pub fn fromCodeInt(errno: anytype, syscall_tag: sys.Tag) Error {
     return .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .errno = @as(Int, @intCast(if (Environment.isWindows) @abs(errno) else errno)),
         .syscall = syscall_tag,
     };

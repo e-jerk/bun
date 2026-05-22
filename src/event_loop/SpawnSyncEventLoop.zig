@@ -81,7 +81,6 @@ pub fn deinit(this: *SpawnSyncEventLoop) void {
             timer.stop();
             timer.unref();
             this.uv_timer = null;
-// safe-transpile: @alignCast requires manual review
             libuv.uv_close(@ptrCast(@alignCast(timer)), @ptrCast(&onCloseUVTimer));
         }
     }
@@ -119,7 +118,6 @@ pub fn handle(this: *SpawnSyncEventLoop) jsc.EventLoopHandle {
 }
 
 fn onUVTimer(timer_: *bun.windows.libuv.Timer) callconv(.c) void {
-// safe-transpile: @alignCast requires manual review
     const this: *SpawnSyncEventLoop = @ptrCast(@alignCast(timer_.data));
     this.did_timeout = true;
     this.uws_loop.uv_loop.stop();

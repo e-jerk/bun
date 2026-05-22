@@ -12,7 +12,7 @@ pub const CallFrame = opaque {
         const slice = call_frame.arguments();
         var value: [count]JSValue = @splat(.js_undefined);
         const n = @min(call_frame.argumentsCount(), count);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(value[0..n], slice[0..n]);
         return value;
     }
@@ -74,7 +74,6 @@ pub const CallFrame = opaque {
     ///
     /// The proper return type of this should be []Register, but
     inline fn asUnsafeJSValueArray(self: *const CallFrame) [*]const jsc.JSValue {
-// safe-transpile: @alignCast requires manual review
         return @ptrCast(@alignCast(self));
     }
 
@@ -104,14 +103,13 @@ pub const CallFrame = opaque {
             number: f64, // double
             integer: i64, // integer
         };
-// safe-transpile: @alignCast requires manual review
         const registers: [*]const Register = @ptrCast(@alignCast(self));
         // argumentCountIncludingThis takes the register at the defined offset, then
         // calls 'ALWAYS_INLINE int32_t Register::unboxedInt32() const',
         // which in turn calls 'ALWAYS_INLINE int32_t Register::payload() const'
         // which accesses `.encodedValue.asBits.payload`
         // JSC stores and works with value as signed, but it is always 1 or more.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @intCast(registers[offset_argument_count_including_this].encoded_value.as_bits.payload);
     }
 
@@ -248,7 +246,6 @@ pub const CallFrame = opaque {
         }
 
         pub fn from(vm: *jsc.VirtualMachine, slice: []const jsc.JSValueRef) ArgumentsSlice {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return init(vm, @as([*]const jsc.JSValue, @ptrCast(slice.ptr))[0..slice.len]);
         }
         pub fn init(vm: *jsc.VirtualMachine, slice: []const jsc.JSValue) ArgumentsSlice {
@@ -270,7 +267,7 @@ pub const CallFrame = opaque {
         }
 
         pub inline fn len(slice: *const ArgumentsSlice) u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(u16, @truncate(slice.remaining.len));
         }
 

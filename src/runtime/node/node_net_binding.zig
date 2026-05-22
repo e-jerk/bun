@@ -60,7 +60,7 @@ pub fn setDefaultAutoSelectFamilyAttemptTimeout(global: *jsc.JSGlobalObject) jsc
             const arg = arguments.slice()[0];
             var value = try validators.validateInt32(globalThis, arg, "value", .{}, 1, null);
             if (value < 10) value = 10;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             autoSelectFamilyAttemptTimeoutDefault = @intCast(value);
             return .jsNumber(value);
         }

@@ -286,7 +286,7 @@ pub const FontFamily = union(enum) {
             pub fn hash(_: @This(), key: FontFamily) u32 {
                 var hasher = std.hash.Wyhash.init(0);
                 key.hash(&hasher);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 return @truncate(hasher.final());
             }
 
@@ -731,8 +731,7 @@ pub const Font = struct {
         try dest.writeChar(' ');
 
         const len = this.family.len;
-        // safe-transpile: for with index access requires manual review
-    for (this.family.sliceConst(), 0..) |*val, idx| {
+        for (this.family.sliceConst(), 0..) |*val, idx| {
             try val.toCss(dest);
             if (idx < len - 1) {
                 try dest.delim(',', false);
@@ -881,14 +880,14 @@ pub const FontHandler = struct {
         return true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     inline fn propertyHelper(this: *FontHandler, dest: *css.DeclarationList, context: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype) void {
         this.flushHelper(dest, context, prop, val);
         @field(this, prop) = css.generic.deepClone(@TypeOf(val.*), val, context.allocator);
         this.has_any = true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     inline fn flushHelper(
         this: *FontHandler,
         dest: *css.DeclarationList,
@@ -910,7 +909,7 @@ pub const FontHandler = struct {
         this.flushed_properties = .{};
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn push(self: *FontHandler, d: *css.DeclarationList, ctx: *css.PropertyHandlerContext, comptime prop: []const u8, val: anytype) void {
         bun.handleOom(d.append(ctx.allocator, @unionInit(css.Property, prop, val)));
         var insertion: FontProperty = .{};
@@ -1032,11 +1031,9 @@ inline fn compatibleFontFamily(allocator: std.mem.Allocator, _family: ?bun.BabyL
     }
 
     if (family) |*families| {
-        // safe-transpile: for with index access requires manual review
-    for (families.sliceConst(), 0..) |v, i| {
+        for (families.sliceConst(), 0..) |v, i| {
             if (v.eql(&SYSTEM_UI)) {
-                // safe-transpile: for with index access requires manual review
-    for (DEFAULT_SYSTEM_FONTS, 0..) |name, j| {
+                for (DEFAULT_SYSTEM_FONTS, 0..) |name, j| {
                     bun.handleOom(families.insert(allocator, i + j + 1, .{ .family_name = name }));
                 }
                 break;

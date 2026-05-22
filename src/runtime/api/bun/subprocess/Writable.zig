@@ -1,5 +1,5 @@
 pub const Writable = union(enum) {
-const zust = @import("safe");
+    const zust = @import("safe");
     pipe: *jsc.WebCore.FileSink,
     fd: bun.FD,
     buffer: *StaticPipeWriter,

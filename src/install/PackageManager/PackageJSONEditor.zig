@@ -61,7 +61,6 @@ pub fn editTrustedDependencies(allocator: std.mem.Allocator, package_json: *Expr
         break :brk E.Array{};
     };
 
-    // safe-transpile: for with index access requires manual review
     for (names_to_add, 0..) |name, i| {
         for (original_trusted_dependencies.items.slice()) |item| {
             if (item.data == .e_string) {
@@ -86,7 +85,7 @@ pub fn editTrustedDependencies(allocator: std.mem.Allocator, package_json: *Expr
     const trusted_dependencies_to_add = len;
     const new_trusted_deps: JSAst.ExprNodeList = brk: {
         const deps = try allocator.alloc(Expr, trusted_dependencies.len + trusted_dependencies_to_add);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(deps[0..trusted_dependencies.len], trusted_dependencies);
         @memset(deps[trusted_dependencies.len..], Expr.empty);
 
@@ -165,7 +164,7 @@ pub fn editTrustedDependencies(allocator: std.mem.Allocator, package_json: *Expr
         );
     } else if (needs_new_trusted_dependencies_list) {
         const root_properties = try allocator.alloc(G.Property, package_json.data.e_object.properties.len + 1);
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(root_properties[0..package_json.data.e_object.properties.len], package_json.data.e_object.properties.slice());
         root_properties[root_properties.len - 1] = .{
             .key = Expr.init(
@@ -210,7 +209,6 @@ pub fn editUpdateNoArgs(
             if (root.expr.data == .e_object) {
                 if (options.before_install) {
                     // set each npm dependency to latest
-// safe-transpile: for loop with pointer capture requires manual review
                     for (root.expr.data.e_object.properties.slice()) |*dep| {
                         const key = dep.key orelse continue;
                         if (key.data != .e_string) continue;
@@ -271,7 +269,6 @@ pub fn editUpdateNoArgs(
                     const workspace_deps: []const Dependency = deps.get(lockfile.buffers.dependencies.items);
                     const workspace_resolution_ids = resolution_ids.get(lockfile.buffers.resolutions.items);
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (root.expr.data.e_object.properties.slice()) |*dep| {
                         const key = dep.key orelse continue;
                         if (key.data != .e_string) continue;
@@ -286,8 +283,7 @@ pub fn editUpdateNoArgs(
                             if (manager.updating_packages.fetchSwapRemove(key_str)) |entry| {
                                 const is_alias = entry.value.is_alias;
                                 const dep_name = entry.key;
-                                // safe-transpile: for with index access requires manual review
-    for (workspace_deps, workspace_resolution_ids) |*workspace_dep, package_id| {
+                                for (workspace_deps, workspace_resolution_ids) |*workspace_dep, package_id| {
                                     if (package_id == invalid_package_id) continue;
 
                                     const resolution = resolutions[package_id];
@@ -516,7 +512,7 @@ pub fn edit(
             if (!options.add_trusted_dependencies or trusted_dependencies_to_add == 0) break :brk .empty;
 
             const deps = try allocator.alloc(Expr, trusted_dependencies.len + trusted_dependencies_to_add);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(deps[0..trusted_dependencies.len], trusted_dependencies);
             @memset(deps[trusted_dependencies.len..], Expr.empty);
 
@@ -548,7 +544,6 @@ pub fn edit(
             break :brk .fromOwnedSlice(deps);
         };
 
-// safe-transpile: for loop with pointer capture requires manual review
         for (updates.*) |*request| {
             if (request.e_string != null) continue;
             defer if (comptime Environment.allow_assert) bun.assert(request.e_string != null);
@@ -651,7 +646,7 @@ pub fn edit(
         } else {
             if (needs_new_dependency_list and needs_new_trusted_dependencies_list) {
                 const root_properties = try allocator.alloc(G.Property, current_package_json.data.e_object.properties.len + 2);
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(root_properties[0..current_package_json.data.e_object.properties.len], current_package_json.data.e_object.properties.slice());
                 root_properties[root_properties.len - 2] = .{
                     .key = Expr.allocate(allocator, E.String, E.String{
@@ -670,7 +665,7 @@ pub fn edit(
                 }, logger.Loc.Empty);
             } else if (needs_new_dependency_list or needs_new_trusted_dependencies_list) {
                 const root_properties = try allocator.alloc(JSAst.G.Property, current_package_json.data.e_object.properties.len + 1);
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(root_properties[0..current_package_json.data.e_object.properties.len], current_package_json.data.e_object.properties.slice());
                 root_properties[root_properties.len - 1] = .{
                     .key = JSAst.Expr.allocate(allocator, JSAst.E.String, .{
@@ -686,7 +681,6 @@ pub fn edit(
     }
 
     const resolutions = if (!options.before_install) manager.lockfile.packages.items(.resolution) else &.{};
-// safe-transpile: for loop with pointer capture requires manual review
     for (updates.*) |*request| {
         if (request.e_string) |e_string| {
             if (request.package_id >= resolutions.len or resolutions[request.package_id].tag == .uninitialized) {

@@ -120,7 +120,7 @@ const UInt31WithReserved = packed struct(u32) {
     const log = Output.scoped(.UInt31WithReserved, .visible);
 
     pub inline fn from(value: u32) UInt31WithReserved {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return .{ .uint31 = @truncate(value & 0x7fffffff), .reserved = value & 0x80000000 != 0 };
     }
 
@@ -129,14 +129,14 @@ const UInt31WithReserved = packed struct(u32) {
     }
 
     pub inline fn toUInt32(value: UInt31WithReserved) u32 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return @bitCast(value);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn fromBytes(src: []const u8) UInt31WithReserved {
         const value: u32 = u32FromBytes(src);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         return .{ .uint31 = @truncate(value & 0x7fffffff), .reserved = value & 0x80000000 != 0 };
     }
 
@@ -164,9 +164,9 @@ const StreamPriority = packed struct(u40) {
         return (writer.write(std.mem.asBytes(&swap)[0..StreamPriority.byteSize]) catch 0) != 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn from(dst: *StreamPriority, src: []const u8) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[StreamPriority.byteSize]u8, @ptrCast(dst)), src);
         std.mem.byteSwapAllFields(StreamPriority, dst);
     }
@@ -186,9 +186,9 @@ const FrameHeader = packed struct(u72) {
         return (writer.write(std.mem.asBytes(&swap)[0..FrameHeader.byteSize]) catch 0) != 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn from(dst: *FrameHeader, src: []const u8, offset: usize, comptime end: bool) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[FrameHeader.byteSize]u8, @ptrCast(dst))[offset .. src.len + offset], src);
         if (comptime end) {
             std.mem.byteSwapAllFields(FrameHeader, dst);
@@ -200,9 +200,9 @@ const SettingsPayloadUnit = packed struct(u48) {
     type: u16,
     value: u32,
     pub const byteSize: usize = 6;
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub inline fn from(dst: *SettingsPayloadUnit, src: []const u8, offset: usize, comptime end: bool) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @memcpy(@as(*[SettingsPayloadUnit.byteSize]u8, @ptrCast(dst))[offset .. src.len + offset], src);
         if (comptime end) {
             std.mem.byteSwapAllFields(SettingsPayloadUnit, dst);
@@ -451,7 +451,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (headerTableSizeValue > MAX_HEADER_TABLE_SIZE or headerTableSizeValue < 0) {
                     return globalObject.throw("Expected headerTableSize to be a number between 0 and 2^32-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.headerTableSize = @intCast(headerTableSizeValue);
             } else if (!headerTableSize.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected headerTableSize to be a number", .{});
@@ -472,7 +472,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (initialWindowSizeValue > MAX_HEADER_TABLE_SIZE or initialWindowSizeValue < 0) {
                     return globalObject.throw("Expected initialWindowSize to be a number between 0 and 2^32-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.initialWindowSize = @intCast(initialWindowSizeValue);
             } else if (!initialWindowSize.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected initialWindowSize to be a number", .{});
@@ -485,7 +485,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (maxFrameSizeValue > MAX_FRAME_SIZE or maxFrameSizeValue < 16384) {
                     return globalObject.throw("Expected maxFrameSize to be a number between 16,384 and 2^24-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.maxFrameSize = @intCast(maxFrameSizeValue);
             } else if (!maxFrameSize.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected maxFrameSize to be a number", .{});
@@ -498,7 +498,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (maxConcurrentStreamsValue > MAX_HEADER_TABLE_SIZE or maxConcurrentStreamsValue < 0) {
                     return globalObject.throw("Expected maxConcurrentStreams to be a number between 0 and 2^32-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.maxConcurrentStreams = @intCast(maxConcurrentStreamsValue);
             } else if (!maxConcurrentStreams.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected maxConcurrentStreams to be a number", .{});
@@ -511,7 +511,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (maxHeaderListSizeValue > MAX_HEADER_TABLE_SIZE or maxHeaderListSizeValue < 0) {
                     return globalObject.throw("Expected maxHeaderListSize to be a number between 0 and 2^32-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.maxHeaderListSize = @intCast(maxHeaderListSizeValue);
             } else if (!maxHeaderListSize.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected maxHeaderListSize to be a number", .{});
@@ -524,7 +524,7 @@ pub fn jsGetPackedSettings(globalObject: *jsc.JSGlobalObject, callframe: *jsc.Ca
                 if (maxHeaderSizeValue > MAX_HEADER_TABLE_SIZE or maxHeaderSizeValue < 0) {
                     return globalObject.throw("Expected maxHeaderSize to be a number between 0 and 2^32-1", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 settings.maxHeaderListSize = @intCast(maxHeaderSizeValue);
             } else if (!maxHeaderSize.isEmptyOrUndefinedOrNull()) {
                 return globalObject.throw("Expected maxHeaderSize to be a number", .{});
@@ -729,7 +729,7 @@ pub const H2FrameParser = struct {
     /// Using HPACK_ENTRY_OVERHEAD (32 bytes, from RFC 7541 Section 4.1) is a
     /// conservative estimate that accounts for worst-case variable integer
     /// encoding and ensures we never underallocate, even with very large headers.
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn encodeHeaderIntoList(
         this: *H2FrameParser,
         encoded_headers: *std.ArrayListUnmanaged(u8),
@@ -920,7 +920,7 @@ pub const H2FrameParser = struct {
                 this.callback.deinit();
             }
 
-// safe-transpile: function returns small constant slice — consider zust.String
+            // safe-transpile: function returns small constant slice — consider zust.String
             pub fn slice(this: *const PendingFrame) []u8 {
                 return this.buffer[this.offset..this.len];
             }
@@ -987,7 +987,7 @@ pub const H2FrameParser = struct {
                             var dataHeader: FrameHeader = .{
                                 .type = @intFromEnum(FrameType.HTTP_FRAME_DATA),
                                 .flags = if (frame.end_stream and !this.waitForTrailers) @intFromEnum(DataFrameFlags.END_STREAM) else 0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 .streamIdentifier = @intCast(this.id),
                                 .length = 0,
                             };
@@ -1004,14 +1004,14 @@ pub const H2FrameParser = struct {
                             if (max_size < frame_slice.len) {
                                 is_flow_control_limited = true;
                                 // we need to break the frame into smaller chunks
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 frame.offset += @intCast(max_size);
                                 const able_to_send = frame_slice[0..max_size];
                                 client.queuedDataSize -= able_to_send.len;
                                 written.* += able_to_send.len;
 
                                 const padding = this.getPadding(able_to_send.len, max_size - 1);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 const payload_size = able_to_send.len + (if (padding != 0) @as(usize, @intCast(padding)) + 1 else 0);
                                 log("padding: {d} size: {d} max_size: {d} payload_size: {d}", .{ padding, able_to_send.len, max_size, payload_size });
                                 this.remoteUsedWindowSize += payload_size;
@@ -1024,9 +1024,9 @@ pub const H2FrameParser = struct {
                                 var dataHeader: FrameHeader = .{
                                     .type = @intFromEnum(FrameType.HTTP_FRAME_DATA),
                                     .flags = flags,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     .streamIdentifier = @intCast(this.id),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     .length = @intCast(payload_size),
                                 };
                                 _ = dataHeader.write(@TypeOf(writer), writer);
@@ -1045,7 +1045,7 @@ pub const H2FrameParser = struct {
                                 written.* += frame_slice.len;
 
                                 const padding = this.getPadding(frame_slice.len, max_size - 1);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 const payload_size = frame_slice.len + (if (padding != 0) @as(usize, @intCast(padding)) + 1 else 0);
                                 log("padding: {d} size: {d} max_size: {d} payload_size: {d}", .{ padding, frame_slice.len, max_size, payload_size });
                                 this.remoteUsedWindowSize += payload_size;
@@ -1057,9 +1057,9 @@ pub const H2FrameParser = struct {
                                 var dataHeader: FrameHeader = .{
                                     .type = @intFromEnum(FrameType.HTTP_FRAME_DATA),
                                     .flags = flags,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     .streamIdentifier = @intCast(this.id),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                     .length = @intCast(payload_size),
                                 };
                                 _ = dataHeader.write(@TypeOf(writer), writer);
@@ -1082,7 +1082,7 @@ pub const H2FrameParser = struct {
             return .no_action;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn queueFrame(this: *Stream, client: *H2FrameParser, bytes: []const u8, callback: jsc.JSValue, end_stream: bool) void {
             const globalThis = client.globalThis;
 
@@ -1109,9 +1109,9 @@ pub const H2FrameParser = struct {
                     // ok we can cork frames
                     const consumed_len = @min(remaining, bytes.len);
                     const merge = bytes[0..consumed_len];
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(last_frame.buffer[last_frame.len .. last_frame.len + consumed_len], merge);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     last_frame.len += @intCast(consumed_len);
                     log("dataFrame merged {}", .{consumed_len});
 
@@ -1137,14 +1137,13 @@ pub const H2FrameParser = struct {
 
             const frame: PendingFrame = .{
                 .end_stream = end_stream,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .len = @intCast(bytes.len),
                 // we need to clone this data to send it later
                 .buffer = if (bytes.len == 0) "" else bun.handleOom(client.allocator.alloc(u8, MAX_PAYLOAD_SIZE_WITHOUT_FRAME)),
                 .callback = if (callback.isCallable()) jsc.Strong.Optional.create(callback, globalThis) else .empty,
             };
             if (bytes.len > 0) {
-// safe-transpile: @memcpy requires manual review
                 @memcpy(frame.buffer[0..bytes.len], bytes);
                 client.globalThis.vm().reportExtraMemory(bytes.len);
             }
@@ -1252,7 +1251,7 @@ pub const H2FrameParser = struct {
 
     const HeaderValue = lshpack.HPACK.DecodeResult;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn decode(this: *H2FrameParser, src_buffer: []const u8) !HeaderValue {
         if (this.hpack) |hpack| {
             return try hpack.decode(src_buffer);
@@ -1260,7 +1259,7 @@ pub const H2FrameParser = struct {
         return error.UnableToDecode;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn encode(this: *H2FrameParser, dst_buffer: []u8, dst_offset: usize, name: []const u8, value: []const u8, never_index: bool) !usize {
         if (this.hpack) |hpack| {
             // lets make sure the name is lowercase
@@ -1299,7 +1298,7 @@ pub const H2FrameParser = struct {
                 const consumed = stream.usedWindowSize;
                 stream.usedWindowSize = 0;
                 log("incrementWindowSizeIfNeeded stream {} {} {}", .{ stream.id, stream.windowSize, this.isServer });
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 this.sendWindowUpdate(stream.id, UInt31WithReserved.init(@truncate(consumed), false));
             }
         }
@@ -1307,7 +1306,7 @@ pub const H2FrameParser = struct {
         if (this.usedWindowSize >= this.windowSize / 2 and this.usedWindowSize > 0) {
             const consumed = this.usedWindowSize;
             this.usedWindowSize = 0;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             this.sendWindowUpdate(0, UInt31WithReserved.init(@truncate(consumed), false));
         }
     }
@@ -1404,7 +1403,7 @@ pub const H2FrameParser = struct {
         _ = this.write(&buffer);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn sendGoAway(this: *H2FrameParser, streamIdentifier: u32, rstCode: ErrorCode, debug_data: []const u8, lastStreamID: u32, emitError: bool) void {
         log("HTTP_FRAME_GOAWAY {} code {} debug_data {s} emitError {}", .{ streamIdentifier, rstCode, debug_data, emitError });
         var buffer: [FrameHeader.byteSize + 8]u8 = undefined;
@@ -1416,11 +1415,11 @@ pub const H2FrameParser = struct {
             .type = @intFromEnum(FrameType.HTTP_FRAME_GOAWAY),
             .flags = 0,
             .streamIdentifier = streamIdentifier,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .length = @intCast(8 + debug_data.len),
         };
         _ = frame.write(@TypeOf(writer), writer);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         var last_id = UInt31WithReserved.init(@truncate(lastStreamID), false);
         _ = last_id.write(@TypeOf(writer), writer);
         var value: u32 = @intFromEnum(rstCode);
@@ -1444,7 +1443,7 @@ pub const H2FrameParser = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn sendAltSvc(this: *H2FrameParser, streamIdentifier: u32, origin_str: []const u8, alt: []const u8) void {
         log("HTTP_FRAME_ALTSVC stream {} origin {s} alt {s}", .{ streamIdentifier, origin_str, alt });
 
@@ -1457,11 +1456,11 @@ pub const H2FrameParser = struct {
             .type = @intFromEnum(FrameType.HTTP_FRAME_ALTSVC),
             .flags = 0,
             .streamIdentifier = streamIdentifier,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             .length = @intCast(origin_str.len + alt.len + 2),
         };
         _ = frame.write(@TypeOf(writer), writer);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         _ = writer.writeInt(u16, @intCast(origin_str.len), .big) catch 0;
         _ = this.write(&buffer);
         if (origin_str.len > 0) {
@@ -1472,7 +1471,7 @@ pub const H2FrameParser = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn sendPing(this: *H2FrameParser, ack: bool, payload: []const u8) void {
         log("HTTP_FRAME_PING ack {} payload {s}", .{ ack, payload });
 
@@ -1625,7 +1624,7 @@ pub const H2FrameParser = struct {
         const buffer = this.writeBuffer.slice()[this.writeBufferOffset..];
         if (buffer.len > 0) {
             const result: i32 = socket.writeMaybeCorked(buffer);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const written: u32 = if (result < 0) 0 else @intCast(result);
 
             if (written < buffer.len) {
@@ -1650,7 +1649,7 @@ pub const H2FrameParser = struct {
         return buffer.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn _genericWrite(this: *H2FrameParser, comptime T: type, socket: T, bytes: []const u8) bool {
         log("_genericWrite {}", .{bytes.len});
 
@@ -1658,7 +1657,7 @@ pub const H2FrameParser = struct {
         if (buffer.len > 0) {
             {
                 const result: i32 = socket.writeMaybeCorked(buffer);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const written: u32 = if (result < 0) 0 else @intCast(result);
                 if (written < buffer.len) {
                     this.writeBufferOffset += written;
@@ -1676,7 +1675,7 @@ pub const H2FrameParser = struct {
             this.writeBuffer.len = 0;
             {
                 const result: i32 = socket.writeMaybeCorked(bytes);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const written: u32 = if (result < 0) 0 else @intCast(result);
                 if (written < bytes.len) {
                     const pending = bytes[written..];
@@ -1697,7 +1696,7 @@ pub const H2FrameParser = struct {
             return true;
         }
         const result: i32 = socket.writeMaybeCorked(bytes);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const written: u32 = if (result < 0) 0 else @intCast(result);
         if (written < bytes.len) {
             const pending = bytes[written..];
@@ -1775,7 +1774,7 @@ pub const H2FrameParser = struct {
         return written;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn _write(this: *H2FrameParser, bytes: []const u8) bool {
         this.ref();
         defer this.deref();
@@ -1855,7 +1854,7 @@ pub const H2FrameParser = struct {
         return true;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn write(this: *H2FrameParser, bytes: []const u8) bool {
         jsc.markBinding(@src());
         log("write {}", .{bytes.len});
@@ -1871,9 +1870,9 @@ pub const H2FrameParser = struct {
                 return this._write(bytes);
             } else {
                 // write at the cork buffer
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 CORK_OFFSET += @truncate(bytes.len);
-// safe-transpile: @memcpy requires manual review
+
                 @memcpy(available[0..bytes.len], bytes);
                 return true;
             }
@@ -1889,12 +1888,12 @@ pub const H2FrameParser = struct {
 
     // Default handling for payload is buffering it
     // for data frames we use another strategy
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleIncommingPayload(this: *H2FrameParser, data: []const u8, streamIdentifier: u32) ?Payload {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const end: usize = @min(@as(usize, @intCast(this.remainingLength)), data.len);
         const payload = data[0..end];
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.remainingLength -= @intCast(end);
         if (this.remainingLength > 0) {
             // buffer more data
@@ -1926,7 +1925,7 @@ pub const H2FrameParser = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleWindowUpdateFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream: ?*Stream) usize {
         log("handleWindowUpdateFrame {}", .{frame.streamIdentifier});
         // must be always 4 bytes (https://datatracker.ietf.org/doc/html/rfc7540#section-6.9)
@@ -1953,7 +1952,7 @@ pub const H2FrameParser = struct {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn decodeHeaderBlock(this: *H2FrameParser, payload: []const u8, stream: *Stream, flags: u8) bun.JSError!?*Stream {
         log("decodeHeaderBlock isSever: {}", .{this.isServer});
 
@@ -1972,9 +1971,9 @@ pub const H2FrameParser = struct {
         // RFC 7540 Section 6.5.2: Track cumulative header list size
         var headerListSize: usize = 0;
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             const header = this.decode(payload[offset..]) catch break;
             offset += header.next;
             log("header {s} {s}", .{ header.name, header.value });
@@ -2048,7 +2047,7 @@ while (true) : (__loop_limit_1 += 1) {
         return this.streams.get(stream_id);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleDataFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) usize {
         log("handleDataFrame {s} data.len: {d}", .{ if (this.isServer) "server" else "client", data.len });
         this.readBuffer.reset();
@@ -2067,15 +2066,15 @@ while (true) : (__loop_limit_1 += 1) {
             return data.len;
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const end: usize = @min(@as(usize, @intCast(this.remainingLength)), data.len);
         var payload = data[0..end];
         // window size considering the full frame.length received so far
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
         this.adjustWindowSize(stream, @truncate(payload.len));
         const previous_remaining_length: isize = this.remainingLength;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         this.remainingLength -= @intCast(end);
         var padding: u8 = 0;
         const padded = frame.flags & @intFromEnum(DataFrameFlags.PADDED) != 0;
@@ -2110,7 +2109,7 @@ while (true) : (__loop_limit_1 += 1) {
         }
         var emitted = false;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const start_idx = frame.length - @as(usize, @intCast(previous_remaining_length));
         if (start_idx < 1 and padded and payload.len > 0) {
             // Skip the Pad Length octet. Keyed on the PADDED flag rather than
@@ -2169,7 +2168,7 @@ while (true) : (__loop_limit_1 += 1) {
         return end;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleGoAwayFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) usize {
         log("handleGoAwayFrame {} {s}", .{ frame.streamIdentifier, data });
         if (stream_ != null) {
@@ -2194,7 +2193,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn stringOrEmptyToJS(this: *H2FrameParser, payload: []const u8) bun.JSError!jsc.JSValue {
         if (payload.len == 0) {
             return bun.String.empty.toJS(this.handlers.globalObject);
@@ -2202,7 +2201,7 @@ while (true) : (__loop_limit_1 += 1) {
         return bun.String.createUTF8ForJS(this.handlers.globalObject, payload);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleOriginFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, _: ?*Stream) bun.JSError!usize {
         log("handleOriginFrame {s}", .{data});
         if (this.isServer) {
@@ -2257,7 +2256,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleAltsvcFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) bun.JSError!usize {
         log("handleAltsvcFrame {s}", .{data});
         if (this.isServer) {
@@ -2293,7 +2292,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleRSTStreamFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) usize {
         log("handleRSTStreamFrame {s}", .{data});
         var stream = stream_ orelse {
@@ -2330,7 +2329,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handlePingFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) usize {
         if (stream_ != null) {
             this.sendGoAway(frame.streamIdentifier, ErrorCode.PROTOCOL_ERROR, "Ping frame on stream", this.lastStreamID, true);
@@ -2360,7 +2359,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handlePriorityFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) usize {
         var stream = stream_ orelse {
             this.sendGoAway(frame.streamIdentifier, ErrorCode.PROTOCOL_ERROR, "Priority frame on connection stream", this.lastStreamID, true);
@@ -2398,7 +2397,7 @@ while (true) : (__loop_limit_1 += 1) {
     /// - Must follow a HEADERS, PUSH_PROMISE, or CONTINUATION frame without END_HEADERS flag
     /// - No padding allowed (unlike HEADERS frames)
     /// - Must have same stream identifier as the initiating frame
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleContinuationFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) bun.JSError!usize {
         log("handleContinuationFrame", .{});
         var stream = stream_ orelse {
@@ -2440,7 +2439,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleHeadersFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8, stream_: ?*Stream) bun.JSError!usize {
         log("handleHeadersFrame {s}", .{if (this.isServer) "server" else "client"});
         var stream = stream_ orelse {
@@ -2524,7 +2523,7 @@ while (true) : (__loop_limit_1 += 1) {
         return data.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn handleSettingsFrame(this: *H2FrameParser, frame: FrameHeader, data: []const u8) usize {
         const isACK = frame.flags & @intFromEnum(SettingsFlags.ACK) != 0;
 
@@ -2563,10 +2562,10 @@ while (true) : (__loop_limit_1 += 1) {
                             const stream = item.*;
                             // Adjust the stream's local window size by the delta
                             if (delta >= 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 stream.windowSize +|= @intCast(@as(u64, @intCast(delta)));
                             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 stream.windowSize -|= @intCast(@as(u64, @intCast(-delta)));
                             }
                         }
@@ -2677,7 +2676,7 @@ while (true) : (__loop_limit_1 += 1) {
         return stream;
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn readBytes(this: *H2FrameParser, bytes: []const u8) bun.JSError!usize {
         log("read {}", .{bytes.len});
         if (this.isServer and this.prefaceReceivedLen < 24) {
@@ -2690,7 +2689,7 @@ while (true) : (__loop_limit_1 += 1) {
                 this.sendGoAway(0, ErrorCode.PROTOCOL_ERROR, "Invalid preface", this.lastStreamID, true);
                 return preface_available;
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.prefaceReceivedLen += @intCast(preface_available);
             return preface_available;
         }
@@ -2738,7 +2737,7 @@ while (true) : (__loop_limit_1 += 1) {
             FrameHeader.from(&header, bytes[0..needed], buffered_data, true);
             // ignore the reserved bit
             const id = UInt31WithReserved.from(header.streamIdentifier);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             header.streamIdentifier = @intCast(id.uint31);
             // reset for later use
             this.readBuffer.reset();
@@ -2802,7 +2801,7 @@ while (true) : (__loop_limit_1 += 1) {
 
     const DirectWriterStruct = struct {
         writer: *H2FrameParser,
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *const DirectWriterStruct, data: []const u8) !usize {
             return if (this.writer.write(data)) data.len else 0;
         }
@@ -2996,7 +2995,7 @@ while (true) : (__loop_limit_1 += 1) {
         // INITIAL_WINDOW_SIZE setting only applies to stream-level windows;
         // the connection-level window must be updated explicitly.
         if (windowSizeValue > oldWindowSize) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             const increment: u31 = @truncate(windowSizeValue - oldWindowSize);
             this.sendWindowUpdate(0, UInt31WithReserved.init(increment, false));
         }
@@ -3056,7 +3055,7 @@ while (true) : (__loop_limit_1 += 1) {
                 if (id < 0 and id > MAX_STREAM_ID) {
                     return globalObject.throw("Expected lastStreamId to be a number between 1 and 2147483647", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 lastStreamID = @intCast(id);
             }
             if (args_list.len >= 3) {
@@ -3135,11 +3134,11 @@ while (true) : (__loop_limit_1 += 1) {
                 .type = @intFromEnum(FrameType.HTTP_FRAME_ORIGIN),
                 .flags = 0,
                 .streamIdentifier = 0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(slice.len + 2),
             };
             _ = frame.write(@TypeOf(writer), writer);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             _ = writer.writeInt(u16, @intCast(slice.len), .big) catch 0;
             _ = this.write(&buffer);
             if (slice.len > 0) {
@@ -3160,7 +3159,7 @@ while (true) : (__loop_limit_1 += 1) {
                 const origin_string = try item.toSlice(globalObject, bun.default_allocator);
                 defer origin_string.deinit();
                 const slice = origin_string.slice();
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 _ = writer.writeInt(u16, @intCast(slice.len), .big) catch {
                     const exception = globalObject.toTypeError(.HTTP2_ORIGIN_LENGTH, "HTTP/2 ORIGIN frames are limited to 16382 bytes", .{});
                     return globalObject.throwValue(exception);
@@ -3172,13 +3171,13 @@ while (true) : (__loop_limit_1 += 1) {
                 };
             }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const total_length: u32 = @intCast(stream.getPos() catch FrameHeader.byteSize);
             var frame: FrameHeader = .{
                 .type = @intFromEnum(FrameType.HTTP_FRAME_ORIGIN),
                 .flags = 0,
                 .streamIdentifier = 0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(total_length - FrameHeader.byteSize), // payload length
             };
             stream.reset();
@@ -3365,7 +3364,7 @@ while (true) : (__loop_limit_1 += 1) {
                 if (weight_u32 > 255) {
                     return globalObject.throw("Invalid weight", .{});
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 weight = @intCast(weight_u32);
             }
         }
@@ -3397,26 +3396,26 @@ while (true) : (__loop_limit_1 += 1) {
 
         stream.streamDependency = parent_id;
         stream.exclusive = exclusive;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         stream.weight = @intCast(weight);
 
         if (!silent) {
             var stream_identifier: UInt31WithReserved = .{
                 .reserved = stream.exclusive,
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .uint31 = @truncate(stream.streamDependency),
             };
 
             var priority: StreamPriority = .{
                 .streamIdentifier = stream_identifier.toUInt32(),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                 .weight = @truncate(stream.weight),
             };
             var frame: FrameHeader = .{
                 .type = @intFromEnum(FrameType.HTTP_FRAME_PRIORITY),
                 .flags = 0,
                 .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(StreamPriority.byteSize),
             };
 
@@ -3463,15 +3462,15 @@ while (true) : (__loop_limit_1 += 1) {
     const MemoryWriter = struct {
         buffer: []u8,
         offset: usize = 0,
-// safe-transpile: function returns small constant slice — consider zust.String
+        // safe-transpile: function returns small constant slice — consider zust.String
         pub fn slice(this: *MemoryWriter) []const u8 {
             return this.buffer[0..this.offset];
         }
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *MemoryWriter, data: []const u8) !usize {
             const pending = this.buffer[this.offset..];
             bun.debugAssert(pending.len >= data.len);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(pending[0..data.len], data);
             this.offset += data.len;
             return data.len;
@@ -3489,7 +3488,7 @@ while (true) : (__loop_limit_1 += 1) {
         return jsc.JSValue.jsNumber(this.writeBuffer.len + this.queuedDataSize);
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn sendData(this: *H2FrameParser, stream: *Stream, payload: []const u8, close: bool, callback: jsc.JSValue) void {
         log("HTTP_FRAME_DATA {s} sendData({}, {}, {})", .{ if (this.isServer) "server" else "client", stream.id, payload.len, close });
 
@@ -3525,7 +3524,7 @@ while (true) : (__loop_limit_1 += 1) {
             var dataHeader: FrameHeader = .{
                 .type = @intFromEnum(FrameType.HTTP_FRAME_DATA),
                 .flags = if (can_close) @intFromEnum(DataFrameFlags.END_STREAM) else 0,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .streamIdentifier = @intCast(stream_id),
                 .length = 0,
             };
@@ -3560,7 +3559,7 @@ while (true) : (__loop_limit_1 += 1) {
                     stream.queueFrame(this, slice, if (offset >= payload.len) callback else .js_undefined, offset >= payload.len and close);
                 } else {
                     const padding = stream.getPadding(size, max_size - 1);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const payload_size = size + (if (padding != 0) @as(usize, @intCast(padding)) + 1 else 0);
                     log("padding: {d} size: {d} max_size: {d} payload_size: {d}", .{ padding, size, max_size, payload_size });
                     stream.remoteUsedWindowSize += payload_size;
@@ -3572,9 +3571,9 @@ while (true) : (__loop_limit_1 += 1) {
                     var dataHeader: FrameHeader = .{
                         .type = @intFromEnum(FrameType.HTTP_FRAME_DATA),
                         .flags = flags,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         .streamIdentifier = @intCast(stream_id),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         .length = @truncate(payload_size),
                     };
                     _ = dataHeader.write(@TypeOf(writer), writer);
@@ -3609,7 +3608,7 @@ while (true) : (__loop_limit_1 += 1) {
             return globalObject.throw("Invalid stream id", .{});
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var stream = this.streams.get(@intCast(stream_id)) orelse {
             return globalObject.throw("Invalid stream id", .{});
         };
@@ -3627,7 +3626,7 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     /// validate header name and convert to lowecase if needed
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn toValidHeaderName(in: []const u8, out: []u8) ![]const u8 {
         var in_slice = in;
         var out_slice = out;
@@ -3635,11 +3634,10 @@ while (true) : (__loop_limit_1 += 1) {
         if (in.len > 4096) return error.InvalidHeaderName;
         bun.assert(out.len >= in.len);
         // lets validate and convert to lowercase in one pass
-var __loop_limit_2: usize = 0;
-begin: while (true) : (__loop_limit_2 += 1) {
-    if (__loop_limit_2 > 1_000_000) break;
-            // safe-transpile: for with index access requires manual review
-    for (in_slice, 0..) |c, i| {
+        var __loop_limit_2: usize = 0;
+        begin: while (true) : (__loop_limit_2 += 1) {
+            if (__loop_limit_2 > 1_000_000) break;
+            for (in_slice, 0..) |c, i| {
                 switch (c) {
                     'A'...'Z' => {
                         bun.copy(u8, out_slice, in_slice[0..i]);
@@ -3689,7 +3687,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
             return globalObject.throw("Invalid stream id", .{});
         }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var stream = this.streams.get(@intCast(stream_id)) orelse {
             return globalObject.throw("Invalid stream id", .{});
         };
@@ -3862,7 +3860,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 .type = @intFromEnum(FrameType.HTTP_FRAME_HEADERS),
                 .flags = base_flags | @intFromEnum(HeadersFrameFlags.END_HEADERS),
                 .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(encoded_size),
             };
             _ = frame.write(@TypeOf(writer), writer);
@@ -3882,7 +3880,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 .type = @intFromEnum(FrameType.HTTP_FRAME_HEADERS),
                 .flags = base_flags, // END_STREAM but NOT END_HEADERS
                 .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(first_chunk_size),
             };
             _ = headers_frame.write(@TypeOf(writer), writer);
@@ -3901,7 +3899,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                     .type = @intFromEnum(FrameType.HTTP_FRAME_CONTINUATION),
                     .flags = if (is_last) @intFromEnum(HeadersFrameFlags.END_HEADERS) else 0,
                     .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .length = @intCast(chunk_size),
                 };
                 _ = cont_frame.write(@TypeOf(writer), writer);
@@ -3937,7 +3935,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
         }
         const close = close_arg.toBoolean();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var stream = this.streams.get(@intCast(stream_id)) orelse {
             return globalObject.throw("Invalid stream id", .{});
         };
@@ -4426,7 +4424,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                         this.dispatchWithExtra(.onStreamError, stream.getIdentifier(), jsc.JSValue.jsNumber(stream.rstCode));
                         return jsc.JSValue.jsNumber(stream.id);
                     }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     stream.streamDependency = @intCast(parent);
                 } else {
                     return globalObject.throwInvalidArgumentTypeValue("options.parent", "number", parent_js);
@@ -4443,7 +4441,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                         this.dispatchWithExtra(.onStreamError, stream.getIdentifier(), jsc.JSValue.jsNumber(stream.rstCode));
                         return jsc.JSValue.jsNumber(stream_id);
                     }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     stream.weight = @intCast(weight);
                 } else {
                     return globalObject.throwInvalidArgumentTypeValue("options.weight", "number", weight_js);
@@ -4456,7 +4454,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                     return jsc.JSValue.jsNumber(stream_id);
                 }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 stream.weight = @intCast(weight);
             }
 
@@ -4524,7 +4522,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
         // When we need CONTINUATION frames, disable padding to keep the logic simple.
         // Pass available_payload as maxLen so getPadding can apply padding when headers fit in one frame.
         const padding: u8 = if (encoded_size > available_payload) 0 else stream.getPadding(encoded_size, available_payload);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const padding_overhead: usize = if (padding != 0) @as(usize, @intCast(padding)) + 1 else 0;
 
         // Max payload for HEADERS frame (accounting for priority and padding overhead)
@@ -4546,7 +4544,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 .type = @intFromEnum(FrameType.HTTP_FRAME_HEADERS),
                 .flags = flags,
                 .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(payload_size),
             };
             _ = frame.write(@TypeOf(writer), writer);
@@ -4555,12 +4553,12 @@ begin: while (true) : (__loop_limit_2 += 1) {
             if (has_priority) {
                 var stream_identifier: UInt31WithReserved = .{
                     .reserved = exclusive,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .uint31 = @intCast(parent),
                 };
                 var priority_data: StreamPriority = .{
                     .streamIdentifier = stream_identifier.toUInt32(),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .weight = @intCast(weight),
                 };
                 _ = priority_data.write(@TypeOf(writer), writer);
@@ -4598,7 +4596,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 .type = @intFromEnum(FrameType.HTTP_FRAME_HEADERS),
                 .flags = headers_flags | (if (has_priority) @intFromEnum(HeadersFrameFlags.PRIORITY) else 0),
                 .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 .length = @intCast(first_chunk_size + priority_overhead),
             };
             _ = headers_frame.write(@TypeOf(writer), writer);
@@ -4607,12 +4605,12 @@ begin: while (true) : (__loop_limit_2 += 1) {
             if (has_priority) {
                 var stream_identifier: UInt31WithReserved = .{
                     .reserved = exclusive,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .uint31 = @intCast(parent),
                 };
                 var priority_data: StreamPriority = .{
                     .streamIdentifier = stream_identifier.toUInt32(),
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .weight = @intCast(weight),
                 };
                 _ = priority_data.write(@TypeOf(writer), writer);
@@ -4634,7 +4632,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                     .type = @intFromEnum(FrameType.HTTP_FRAME_CONTINUATION),
                     .flags = if (is_last) @intFromEnum(HeadersFrameFlags.END_HEADERS) else 0,
                     .streamIdentifier = stream.id,
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     .length = @intCast(chunk_size),
                 };
                 _ = cont_frame.write(@TypeOf(writer), writer);
@@ -4684,7 +4682,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
         return globalObject.throw("Expected data to be a Buffer or ArrayBuffer", .{});
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onNativeRead(this: *H2FrameParser, data: []const u8) bun.JSError!void {
         log("onNativeRead", .{});
         this.ref();
@@ -4857,7 +4855,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 }
                 if (try settings_js.get(globalObject, "maxSessionMemory")) |max_memory| {
                     if (max_memory.isNumber()) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.maxSessionMemory = @truncate(max_memory.to(u64));
                         if (this.maxSessionMemory < 1) {
                             this.maxSessionMemory = 1;
@@ -4866,7 +4864,7 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 }
                 if (try settings_js.get(globalObject, "maxHeaderListPairs")) |max_header_list_pairs| {
                     if (max_header_list_pairs.isNumber()) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.maxHeaderListPairs = @truncate(max_header_list_pairs.to(u64));
                         if (this.maxHeaderListPairs < 4) {
                             this.maxHeaderListPairs = 4;
@@ -4875,19 +4873,19 @@ begin: while (true) : (__loop_limit_2 += 1) {
                 }
                 if (try settings_js.get(globalObject, "maxSessionRejectedStreams")) |max_rejected_streams| {
                     if (max_rejected_streams.isNumber()) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.maxRejectedStreams = @truncate(max_rejected_streams.to(u64));
                     }
                 }
                 if (try settings_js.get(globalObject, "maxOutstandingSettings")) |max_outstanding_settings| {
                     if (max_outstanding_settings.isNumber()) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.maxOutstandingSettings = @max(1, @as(u32, @truncate(max_outstanding_settings.to(u64))));
                     }
                 }
                 if (try settings_js.get(globalObject, "maxSendHeaderBlockLength")) |max_send_header_block_length| {
                     if (max_send_header_block_length.isNumber()) {
-// safe-transpile: @bitCast requires manual review
+                        // safe-transpile: @bitCast requires manual review
                         this.maxSendHeaderBlockLength = @bitCast(max_send_header_block_length.toInt32());
                     }
                 }

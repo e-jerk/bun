@@ -373,7 +373,6 @@ pub fn loadConfig(allocator: std.mem.Allocator, user_config_path_: ?string, ctx:
     }
     var config_path: [:0]u8 = undefined;
     if (config_path_[0] == '/') {
-// safe-transpile: @memcpy requires manual review
         @memcpy(config_buf[0..config_path_.len], config_path_);
         config_buf[config_path_.len] = 0;
         config_path = config_buf[0..config_path_.len :0];
@@ -623,7 +622,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
                 );
                 Global.exit(1);
             };
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             ctx.test_options.test_filter_regex = @ptrCast(regex);
         }
         if (args.option("--changed")) |since| {
@@ -1122,8 +1121,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
 
         if (args.options("--external").len > 0) {
             var externals = try allocator.alloc([]const u8, args.options("--external").len);
-            // safe-transpile: for with index access requires manual review
-    for (args.options("--external"), 0..) |external, i| {
+            for (args.options("--external"), 0..) |external, i| {
                 externals[i] = external;
             }
             opts.external = externals;
@@ -1137,8 +1135,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
         } else if (args.options("--allow-unresolved").len > 0) {
             const raw = args.options("--allow-unresolved");
             var allow = try allocator.alloc([]const u8, raw.len);
-            // safe-transpile: for with index access requires manual review
-    for (raw, 0..) |val, i| {
+            for (raw, 0..) |val, i| {
                 // "<empty>" sentinel represents the empty-string pattern (for matching opaque specifiers)
                 allow[i] = if (strings.eqlComptime(val, "<empty>")) "" else val;
             }
@@ -1557,8 +1554,7 @@ pub fn parse(allocator: std.mem.Allocator, ctx: Command.Context, comptime cmd: C
                     "build",
                 ) or strings.eqlComptime(entry_points[0], "bun"))) {
                     var out_entry = entry_points[1..];
-                    // safe-transpile: for with index access requires manual review
-    for (entry_points, 0..) |entry, i| {
+                    for (entry_points, 0..) |entry, i| {
                         if (entry.len > 0) {
                             out_entry = out_entry[i..];
                             break;

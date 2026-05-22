@@ -72,13 +72,13 @@ pub const Ansi256 = struct {
 
     fn get(r: u32, g: u32, b: u32) u32 {
         const qr = to6Cube(r);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const cr = q2c[@intCast(qr)];
         const qg = to6Cube(g);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const cg = q2c[@intCast(qg)];
         const qb = to6Cube(b);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const cb = q2c[@intCast(qb)];
 
         if (cr == r and cg == g and cb == b) {
@@ -120,7 +120,7 @@ pub const Ansi256 = struct {
 
     pub const Buffer = [24]u8;
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn from(rgba: RGBA, buf: *Buffer) []u8 {
         const val = get(rgba.red, rgba.green, rgba.blue);
         // 0x1b is the escape character
@@ -173,9 +173,9 @@ pub fn jsFunctionColor(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFram
                 red: u8,
                 alpha: u8,
             };
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const int: u32 = @truncate(@abs(@mod(number, std.math.maxInt(u32))));
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             const rgba: Packed = @bitCast(int);
 
             break :brk .{ .result = css.CssColor{ .rgba = .{ .alpha = rgba.alpha, .red = rgba.red, .green = rgba.green, .blue = rgba.blue } } };
@@ -185,7 +185,7 @@ pub fn jsFunctionColor(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFram
                     const r = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 0), "[0]");
                     const g = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 1), "[1]");
                     const b = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 2), "[2]");
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :brk .{ .result = css.CssColor{ .rgba = .{ .alpha = 255, .red = @intCast(r), .green = @intCast(g), .blue = @intCast(b) } } };
                 },
                 4 => {
@@ -193,7 +193,7 @@ pub fn jsFunctionColor(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFram
                     const g = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 1), "[1]");
                     const b = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 2), "[2]");
                     const a = try colorIntFromJS(globalThis, try args[0].getIndex(globalThis, 3), "[3]");
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :brk .{ .result = css.CssColor{ .rgba = .{ .alpha = @intCast(a), .red = @intCast(r), .green = @intCast(g), .blue = @intCast(b) } } };
                 },
                 else => {
@@ -207,7 +207,7 @@ pub fn jsFunctionColor(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFram
 
             const a: ?u8 = if (try args[0].getTruthy(globalThis, "a")) |a_value| brk2: {
                 if (a_value.isNumber()) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     break :brk2 @intCast(@mod(@as(i64, bun.intFromFloat(i64, a_value.asNumber() * 255.0)), 256));
                 }
                 break :brk2 null;
@@ -219,13 +219,13 @@ pub fn jsFunctionColor(globalThis: *jsc.JSGlobalObject, callFrame: *jsc.CallFram
             break :brk .{
                 .result = css.CssColor{
                     .rgba = .{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .alpha = if (a != null) @intCast(a.?) else 255,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .red = @intCast(r),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .green = @intCast(g),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         .blue = @intCast(b),
                     },
                 },

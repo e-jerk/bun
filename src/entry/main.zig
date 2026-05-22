@@ -41,9 +41,9 @@ pub fn main() void {
             &_bun.mimalloc.mi_free,
         );
         _bun.handleOom(_bun.windows.env.convertEnvToWTF8());
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         environ = @ptrCast(std.c.environ);
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         _environ = @ptrCast(std.c.environ);
     }
 

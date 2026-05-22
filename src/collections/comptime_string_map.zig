@@ -27,8 +27,7 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
             }
         }).lenAsc;
         if (KeyType == u8) {
-            // safe-transpile: for with index access requires manual review
-    for (kvs_list, 0..) |kv, i| {
+            for (kvs_list, 0..) |kv, i| {
                 if (V != void) {
                     sorted_kvs[i] = .{ .key = kv.@"0", .value = kv.@"1" };
                 } else {
@@ -68,8 +67,7 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
 
         const keys_list: []const []const KeyType = blk: {
             var k: [kvs.len][]const KeyType = undefined;
-            // safe-transpile: for with index access requires manual review
-    for (kvs, 0..) |kv, i| {
+            for (kvs, 0..) |kv, i| {
                 k[i] = kv.key;
             }
             const final = k;
@@ -222,8 +220,7 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
                 if (length == i) {
                     const lowerbuf: [i]u8 = brk: {
                         var buf: [i]u8 = undefined;
-                        // safe-transpile: for with index access requires manual review
-    for (input, &buf) |c, *j| {
+                        for (input, &buf) |c, *j| {
                             j.* = std.ascii.toLower(c);
                         }
                         break :brk buf;
@@ -267,8 +264,7 @@ pub fn ComptimeStringMapWithKeyType(comptime KeyType: type, comptime V: type, co
                 if (length == i) {
                     const lowercased: [i]u8 = brk: {
                         var buf: [i]u8 = undefined;
-                        // safe-transpile: for with index access requires manual review
-    for (input[0..i], &buf) |c, *b| {
+                        for (input[0..i], &buf) |c, *b| {
                             b.* = switch (c) {
                                 'A'...'Z' => c + 32,
                                 else => c,

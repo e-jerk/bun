@@ -51,8 +51,7 @@ pub const FontPaletteValuesRule = struct {
         try dest.writeChar('{');
         dest.indent();
         const len = this.properties.items.len;
-        // safe-transpile: for with index access requires manual review
-    for (this.properties.items, 0..) |*prop, i| {
+        for (this.properties.items, 0..) |*prop, i| {
             try dest.newline();
             try prop.toCss(dest);
             if (i != len - 1 or !dest.minify) {
@@ -141,7 +140,7 @@ pub const OverrideColors = struct {
 
         return .{
             .result = OverrideColors{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .index = @intCast(index),
                 .color = color,
             },
@@ -149,7 +148,7 @@ pub const OverrideColors = struct {
     }
 
     pub fn toCss(this: *const OverrideColors, dest: *Printer) PrintErr!void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try css.CSSIntegerFns.toCss(&@as(i32, @intCast(this.index)), dest);
         try dest.writeChar(' ');
         try this.color.toCss(dest);
@@ -175,7 +174,7 @@ pub const BasePalette = union(enum) {
     pub fn parse(input: *css.Parser) Result(BasePalette) {
         if (input.tryParse(css.CSSIntegerFns.parse, .{}).asValue()) |i| {
             if (i < 0) return .{ .err = input.newCustomError(css.ParserError.invalid_value) };
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return .{ .result = .{ .integer = @intCast(i) } };
         }
 
@@ -195,7 +194,7 @@ pub const BasePalette = union(enum) {
         switch (this.*) {
             .light => try dest.writeStr("light"),
             .dark => try dest.writeStr("dark"),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             .integer => try css.CSSIntegerFns.toCss(&@as(i32, @intCast(this.integer)), dest),
         }
     }
@@ -211,7 +210,7 @@ pub const FontPaletteValuesDeclarationParser = struct {
     pub const DeclarationParser = struct {
         pub const Declaration = FontPaletteValuesProperty;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(this: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             _ = this; // autofix
             const state = input.state();
@@ -267,7 +266,7 @@ pub const FontPaletteValuesDeclarationParser = struct {
         pub const Prelude = void;
         pub const AtRule = FontPaletteValuesProperty;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             return .{ .err = input.newError(css.BasicParseErrorKind{ .at_rule_invalid = name }) };
         }

@@ -91,17 +91,17 @@ pub fn asUSockets(this: *const SSLConfig) uws.SocketContext.BunSocketContextOpti
 
     if (this.key) |key| {
         ctx_opts.key = key.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.key_count = @intCast(key.len);
     }
     if (this.cert) |cert| {
         ctx_opts.cert = cert.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.cert_count = @intCast(cert.len);
     }
     if (this.ca) |ca| {
         ctx_opts.ca = ca.ptr;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         ctx_opts.ca_count = @intCast(ca.len);
     }
 
@@ -154,8 +154,7 @@ pub fn isSame(this: *const SSLConfig, other: *const SSLConfig) bool {
                 if (first) |slice1| {
                     const slice2 = second orelse return false;
                     if (slice1.len != slice2.len) return false;
-                    // safe-transpile: for with index access requires manual review
-    for (slice1, slice2) |a, b| {
+                    for (slice1, slice2) |a, b| {
                         if (!stringsEqual(a, b)) return false;
                     }
                 } else {
@@ -225,7 +224,6 @@ pub fn deinit(this: *SSLConfig) void {
 fn cloneStrings(slice: ?[][*:0]const u8) ?[][*:0]const u8 {
     const inner = slice orelse return null;
     const result = bun.handleOom(bun.default_allocator.alloc([*:0]const u8, inner.len));
-    // safe-transpile: for with index access requires manual review
     for (inner, result) |string, *out| {
         out.* = bun.handleOom(bun.default_allocator.dupeZ(u8, std.mem.span(string)));
     }
@@ -302,7 +300,7 @@ pub fn contentHash(this: *SSLConfig) u64 {
 pub const GlobalRegistry = struct {
     const MapContext = struct {
         pub fn hash(_: @This(), key: *SSLConfig) u32 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @truncate(key.contentHash());
         }
         pub fn eql(_: @This(), a: *SSLConfig, b: *SSLConfig, _: usize) bool {
@@ -533,7 +531,6 @@ fn handleFileArray(
         }
         result.deinit();
     }
-// safe-transpile: for loop with pointer capture requires manual review
     for (elements) |*elem| {
         result.appendAssumeCapacity(try handleSingleFile(global, switch (elem.*) {
             .string => |*val| .{ .string = val.get() },

@@ -30,7 +30,6 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
         const Backend = if (Environment.isWindows) WindowsBackend else PosixBackend;
 
         inline fn owner(self: *Self) *Owner {
-// safe-transpile: @alignCast requires manual review
             return @alignCast(@fieldParentPtr(owner_field, self));
         }
 
@@ -140,7 +139,7 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
         /// Queue and write a complete encoded frame. If the kernel accepts only
         /// part of it (or there's already a backlog), the remainder lands in
         /// `out` and the writable callback finishes it.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn send(self: *Self, frame_bytes: []const u8) void {
             if (self.done) return;
             if (Environment.isWindows) return self.sendWindows(frame_bytes);
@@ -149,14 +148,14 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
                 return;
             }
             const wrote = self.backend.socket.write(frame_bytes);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const w: usize = if (wrote > 0) @intCast(wrote) else 0;
             if (w < frame_bytes.len) {
                 bun.handleOom(self.out.appendSlice(bun.default_allocator, frame_bytes[w..]));
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn sendWindows(self: *Self, frame_bytes: []const u8) void {
             if (comptime !Environment.isWindows) unreachable;
             // A uv_write is in flight — queue behind it.
@@ -216,7 +215,7 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
             while (self.out.items.len > 0 and !self.done) {
                 const wrote = self.backend.socket.write(self.out.items);
                 if (wrote <= 0) return;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const w: usize = @intCast(wrote);
                 std.mem.copyForwards(u8, self.out.items[0 .. self.out.items.len - w], self.out.items[w..]);
                 self.out.items.len -= w;
@@ -258,7 +257,7 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
 
         // -- frame decode (shared) -----------------------------------------
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn ingest(self: *Self, data: []const u8) void {
             if (self.done) return;
             bun.handleOom(self.in.appendSlice(bun.default_allocator, data));
@@ -293,7 +292,7 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
         /// `vtable.make()` shape: `(ext: **Self, *us_socket_t, …)`.
         const PosixHandlers = struct {
             pub const Ext = **Self;
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn onData(self: Ext, _: *uws.us_socket_t, data: []const u8) void {
                 self.*.ingest(data);
             }
@@ -310,12 +309,12 @@ pub fn Channel(comptime Owner: type, comptime owner_field: []const u8) type {
         };
 
         const WindowsHandlers = struct {
-// safe-transpile: function returns small constant slice — consider safe.String
+            // safe-transpile: function returns small constant slice — consider safe.String
             pub fn onAlloc(self: *Self, suggested: usize) []u8 {
                 _ = suggested;
                 return self.backend.read_chunk[0..];
             }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn onRead(self: *Self, data: []const u8) void {
                 self.ingest(data);
             }

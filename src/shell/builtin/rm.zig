@@ -328,7 +328,6 @@ pub fn deinit(this: *Rm) void {
 }
 
 pub inline fn bltn(this: *Rm) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("rm", this));
     return @fieldParentPtr("impl", impl);
 }
@@ -1064,9 +1063,9 @@ pub const ShellRmTask = struct {
             .task = this,
             .treat_as_dir = true,
         };
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return .{ .result = false };
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) return .{ .result = false };
             if (state.treat_as_dir) {
                 log("rmdirat({f}, {s})", .{ dirfd, dir_task.path });
                 switch (ShellSyscall.rmdirat(dirfd, dir_task.path)) {
@@ -1197,7 +1196,6 @@ while (true) : (__loop_limit_1 += 1) {
     }
 
     pub fn workPoolCallback(task: *jsc.WorkPoolTask) void {
-// safe-transpile: @alignCast requires manual review
         var this: *ShellRmTask = @alignCast(@fieldParentPtr("task", task));
         this.root_task.runFromThreadPoolImpl();
     }

@@ -385,11 +385,11 @@ pub const Value = union(Tag) {
 
     pub fn size(this: *Value) Blob.SizeType {
         return switch (this.*) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .Blob => @truncate(this.Blob.getSizeForBindings()),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .InternalBlob => @as(Blob.SizeType, @truncate(this.InternalBlob.sliceConst().len)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .WTFStringImpl => @as(Blob.SizeType, @truncate(this.WTFStringImpl.utf8ByteLength())),
             .Locked => this.Locked.sizeHint(),
             // .InlineBlob => @truncate(Blob.SizeType, this.InlineBlob.sliceConst().len),
@@ -399,9 +399,9 @@ pub const Value = union(Tag) {
 
     pub fn fastSize(this: *const Value) Blob.SizeType {
         return switch (this.*) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .InternalBlob => @as(Blob.SizeType, @truncate(this.InternalBlob.sliceConst().len)),
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             .WTFStringImpl => @as(Blob.SizeType, @truncate(this.WTFStringImpl.byteSlice().len)),
             .Locked => this.Locked.sizeHint(),
             // .InlineBlob => @truncate(Blob.SizeType, this.InlineBlob.sliceConst().len),
@@ -429,7 +429,7 @@ pub const Value = union(Tag) {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn createBlobValue(data: []u8, allocator: std.mem.Allocator, was_string: bool) Value {
         // if (data.len <= InlineBlob.available_bytes) {
         //     var _blob = InlineBlob{
@@ -531,13 +531,13 @@ pub const Value = union(Tag) {
                 reader.context.setup();
 
                 if (drain_result == .estimated_size) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     reader.context.highWaterMark = @as(Blob.SizeType, @truncate(drain_result.estimated_size));
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     reader.context.size_hint = @as(Blob.SizeType, @truncate(drain_result.estimated_size));
                 } else if (drain_result == .owned) {
                     reader.context.buffer = drain_result.owned.list;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                     reader.context.size_hint = @as(Blob.SizeType, @truncate(drain_result.owned.size_hint));
                 }
 
@@ -793,7 +793,7 @@ pub const Value = union(Tag) {
             }
         }
     }
-// safe-transpile: function returns small constant slice — consider zust.String
+    // safe-transpile: function returns small constant slice — consider zust.String
     pub fn slice(this: *const Value) []const u8 {
         return switch (this.*) {
             .Blob => this.Blob.sharedView(),
@@ -1065,13 +1065,13 @@ pub const Value = union(Tag) {
         reader.context.setup();
 
         if (drain_result == .estimated_size) {
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             reader.context.highWaterMark = @as(Blob.SizeType, @truncate(drain_result.estimated_size));
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             reader.context.size_hint = @as(Blob.SizeType, @truncate(drain_result.estimated_size));
         } else if (drain_result == .owned) {
             reader.context.buffer = drain_result.owned.list;
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
             reader.context.size_hint = @as(Blob.SizeType, @truncate(drain_result.owned.size_hint));
         }
 
@@ -1677,7 +1677,7 @@ pub const ValueBufferer = struct {
             globalThis,
             stream.value,
             buffer_stream.ptr,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as(**anyopaque, @ptrCast(&signal.ptr)),
         );
 
@@ -1789,7 +1789,7 @@ pub const ValueBufferer = struct {
             return try sink.bufferLockedBodyValue(value, null);
         }
         // is safe to wait it buffer
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         locked.task = @ptrCast(sink);
         locked.onReceiveValue = @This().onReceiveValue;
     }

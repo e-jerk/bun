@@ -7,7 +7,7 @@ pub const Socket = opaque {
 
     pub fn send(this: *udp.Socket, payloads: []const [*]const u8, lengths: []const usize, addresses: []const ?*const anyopaque) c_int {
         bun.assert(payloads.len == lengths.len and payloads.len == addresses.len);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_udp_socket_send(this, payloads.ptr, lengths.ptr, addresses.ptr, @intCast(payloads.len));
     }
 
@@ -45,22 +45,22 @@ pub const Socket = opaque {
     }
 
     pub fn setBroadcast(this: *udp.Socket, enabled: bool) c_int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_udp_socket_set_broadcast(this, @intCast(@intFromBool(enabled)));
     }
 
     pub fn setUnicastTTL(this: *udp.Socket, ttl: i32) c_int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_udp_socket_set_ttl_unicast(this, @intCast(ttl));
     }
 
     pub fn setMulticastTTL(this: *udp.Socket, ttl: i32) c_int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_udp_socket_set_ttl_multicast(this, @intCast(ttl));
     }
 
     pub fn setMulticastLoopback(this: *udp.Socket, enabled: bool) c_int {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return us_udp_socket_set_multicast_loopback(this, @intCast(@intFromBool(enabled)));
     }
 
@@ -100,11 +100,11 @@ pub const PacketBuffer = opaque {
         return us_udp_packet_buffer_peer(this, index);
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn getPayload(this: *PacketBuffer, index: c_int) []u8 {
         const payload = us_udp_packet_buffer_payload(this, index);
         const len = us_udp_packet_buffer_payload_length(this, index);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return payload[0..@as(usize, @intCast(len))];
     }
 

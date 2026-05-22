@@ -348,7 +348,7 @@ pub fn Maybe(comptime ReturnTypeT: type, comptime ErrorTypeT: type) type {
 fn translateToErrInt(err: anytype) bun.sys.Error.Int {
     return switch (@TypeOf(err)) {
         bun.windows.NTSTATUS => @intFromEnum(bun.windows.translateNTStatusToErrno(err)),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         else => @truncate(@intFromEnum(err)),
     };
 }

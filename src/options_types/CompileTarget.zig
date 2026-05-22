@@ -10,11 +10,11 @@ os: Environment.OperatingSystem = Environment.os,
 arch: Environment.Architecture = Environment.arch,
 baseline: bool = !Environment.enableSIMD,
 version: bun.Semver.Version = .{
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .major = @truncate(Environment.version.major),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .minor = @truncate(Environment.version.minor),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     .patch = @truncate(Environment.version.patch),
 },
 libc: Libc = if (Environment.isMusl) .musl else if (Environment.isAndroid) .android else .default,
@@ -29,7 +29,7 @@ const Libc = enum {
     android,
 
     /// npm package name, `@oven-sh/bun-{os}-{arch}`
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn npmName(this: Libc) []const u8 {
         return switch (this) {
             .default => "",
@@ -139,7 +139,7 @@ pub fn format(this: @This(), writer: *std.Io.Writer) std.Io.Writer.Error!void {
 pub fn exePath(this: *const CompileTarget, buf: *bun.PathBuffer, version_str: [:0]const u8, env: *bun.DotEnv.Loader, needs_download: *bool) [:0]const u8 {
     if (this.isDefault()) brk: {
         const self_exe_path = bun.selfExePath() catch break :brk;
-// safe-transpile: @memcpy requires manual review
+        // safe-transpile: @memcpy requires manual review
         @memcpy(buf, self_exe_path);
         buf[self_exe_path.len] = 0;
         needs_download.* = false;

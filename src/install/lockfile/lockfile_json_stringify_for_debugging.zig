@@ -179,7 +179,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         const resolutions = this.buffers.resolutions.items;
         var depth_buf: Tree.DepthBuf = undefined;
         var path_buf: bun.PathBuffer = undefined;
-// safe-transpile: @memcpy requires manual review
+
         @memcpy(path_buf[0.."node_modules".len], "node_modules");
 
         for (0..this.buffers.trees.items.len) |tree_id| {
@@ -193,7 +193,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
 
             const relative_path, const depth = Lockfile.Tree.relativePathAndDepth(
                 this,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(tree_id),
                 &path_buf,
                 &depth_buf,
@@ -242,7 +242,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         for (0..dependencies.len) |dep_id| {
             const dep = dependencies[dep_id];
             const res = resolutions[dep_id];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             try jsonStringifyDependency(this, w, @intCast(dep_id), dep, res);
         }
     }
@@ -389,8 +389,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         try w.beginObject();
         defer w.endObject() catch {};
 
-        // safe-transpile: for with index access requires manual review
-    for (this.workspace_paths.keys(), this.workspace_paths.values()) |k, v| {
+        for (this.workspace_paths.keys(), this.workspace_paths.values()) |k, v| {
             const len = std.fmt.printInt(&buf, k, 10, .lower, .{});
             try w.objectField(buf[0..len]);
             try w.write(v.slice(sb));
@@ -401,8 +400,7 @@ pub fn jsonStringify(this: *const Lockfile, w: anytype) !void {
         try w.beginObject();
         defer w.endObject() catch {};
 
-        // safe-transpile: for with index access requires manual review
-    for (this.workspace_versions.keys(), this.workspace_versions.values()) |k, v| {
+        for (this.workspace_versions.keys(), this.workspace_versions.values()) |k, v| {
             const len = std.fmt.printInt(&buf, k, 10, .lower, .{});
             try w.objectField(buf[0..len]);
             try w.print("\"{f}\"", .{v.fmt(sb)});

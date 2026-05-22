@@ -11,7 +11,6 @@ pub fn write(this: @This(), bytes: []const u8) AnyPostgresError!void {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn pwrite(this: @This(), bytes: []const u8, i: usize) AnyPostgresError!void {
-// safe-transpile: @memcpy requires manual review
     @memcpy(this.array.items[i..][0..bytes.len], bytes);
 }
 

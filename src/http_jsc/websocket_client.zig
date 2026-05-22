@@ -205,7 +205,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                     }
 
                     // Check server identity
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr = @as(*BoringSSL.c.SSL, @ptrCast(socket.getNativeHandle()));
                     if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername| {
                         const hostname = servername[0..bun.len(servername)];
@@ -257,7 +257,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn dispatchCompressedData(this: *WebSocket, data_: []const u8, kind: Opcode) void {
             const deflate = this.deflate orelse {
                 this.terminate(ErrorCode.compression_unsupported);
@@ -282,7 +282,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
         }
 
         /// Data will be cloned in C++.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn dispatchData(this: *WebSocket, data_: []const u8, kind: Opcode) void {
             var out = this.outgoing_websocket orelse {
                 this.clearData();
@@ -320,7 +320,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn consume(this: *WebSocket, data_: []const u8, left_in_fragment: usize, kind: Opcode, is_final: bool) usize {
             bun.assert(data_.len <= left_in_fragment);
 
@@ -332,7 +332,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                         this.terminate(ErrorCode.closed);
                         return 0;
                     };
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(writable[0..data_.len], data_);
                     this.receive_buffer.update(data_.len);
                 }
@@ -373,7 +373,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             if (data_.len == 0) return 0;
 
             var writable = this.receive_buffer.writableWithSize(data_.len) catch unreachable;
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(writable[0..data_.len], data_);
             this.receive_buffer.update(data_.len);
 
@@ -391,7 +391,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             return data_.len;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleData(this: *WebSocket, socket: Socket, data_: []const u8) void {
 
             // after receiving close we should ignore the data
@@ -601,9 +601,9 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
 
                         // copy available payload length bytes to a buffer held on this client instance
                         const total_received = @min(byte_size - this.payload_length_frame_len, data.len);
-// safe-transpile: @memcpy requires manual review
+
                         @memcpy(this.payload_length_frame_bytes[this.payload_length_frame_len..][0..total_received], data[0..total_received]);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         this.payload_length_frame_len += @intCast(total_received);
                         data = data[total_received..];
 
@@ -639,7 +639,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                                 terminated = true;
                                 break;
                             }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             this.ping_len = @truncate(receive_body_remain);
                             receive_body_remain = 0;
                             this.ping_received = true;
@@ -650,7 +650,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                             // copy the data to the ping frame
                             const total_received = @min(ping_len, receive_body_remain + data.len);
                             const slice = this.ping_frame_bytes[6..][receive_body_remain..total_received];
-// safe-transpile: @memcpy requires manual review
+
                             @memcpy(slice, data[0..slice.len]);
                             receive_body_remain = total_received;
                             data = data[slice.len..];
@@ -680,7 +680,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                                 terminated = true;
                                 break;
                             }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                             this.ping_len = @truncate(receive_body_remain);
                             receive_body_remain = 0;
                             this.pong_received = true;
@@ -690,7 +690,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                         if (data.len > 0) {
                             const total_received = @min(pong_len, receive_body_remain + data.len);
                             const slice = this.ping_frame_bytes[6..][receive_body_remain..total_received];
-// safe-transpile: @memcpy requires manual review
+
                             @memcpy(slice, data[0..slice.len]);
                             receive_body_remain = total_received;
                             data = data[slice.len..];
@@ -735,13 +735,13 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
 
                         if (receive_body_remain > 0) {
                             if (!this.close_frame_buffering) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                                 this.ping_len = @truncate(receive_body_remain);
                                 receive_body_remain = 0;
                                 this.close_frame_buffering = true;
                             }
                             const to_copy = @min(data.len, this.ping_len - receive_body_remain);
-// safe-transpile: @memcpy requires manual review
+
                             @memcpy(this.ping_frame_bytes[6 + receive_body_remain ..][0..to_copy], data[0..to_copy]);
                             receive_body_remain += to_copy;
                             data = data[to_copy..];
@@ -754,7 +754,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                                 if (code == 1001) code = 1000;
                                 if ((code < 1000) or (code >= 1004 and code < 1007) or (code >= 1016 and code <= 2999)) code = 1002;
                                 var buf: [125]u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
                                 @memcpy(buf[0 .. this.ping_len - 2], close_data[2..this.ping_len]);
                                 this.sendCloseWithBody(socket, code, &buf, this.ping_len - 2);
                             } else {
@@ -783,7 +783,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             this.sendCloseWithBody(this.tcp, 1000, null, 0);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn enqueueEncodedBytes(
             this: *WebSocket,
             socket: Socket,
@@ -806,7 +806,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             if (!this.hasBackpressure()) {
                 // Do not set MSG_MORE, see https://github.com/oven-sh/bun/issues/4010
                 const wrote = socket.write(bytes);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const expected = @as(c_int, @intCast(bytes.len));
                 if (wrote == expected) {
                     return true;
@@ -817,7 +817,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                     return false;
                 }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 _ = this.copyToSendBuffer(bytes[@as(usize, @intCast(wrote))..], false);
                 return true;
             }
@@ -825,7 +825,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             return this.copyToSendBuffer(bytes, true);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn copyToSendBuffer(this: *WebSocket, bytes: []const u8, do_write: bool) bool {
             return this.sendData(.{ .raw = bytes }, do_write, .Binary);
         }
@@ -924,7 +924,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             return true;
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn sendBuffer(
             this: *WebSocket,
             out_buf: []const u8,
@@ -947,7 +947,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                     this.terminate(ErrorCode.failed_to_write);
                     return false;
                 }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 break :blk @intCast(w);
             };
             const readable = this.send_buffer.readableSlice(0);
@@ -963,7 +963,6 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                 return false;
             }
 
-// safe-transpile: @bitCast requires manual review
             var header = @as(WebsocketHeader, @bitCast(@as(u16, 0)));
             header.final = true;
             header.opcode = .Pong;
@@ -971,7 +970,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             const to_mask = this.ping_frame_bytes[6..][0..this.ping_len];
 
             header.mask = true;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             header.len = @as(u7, @truncate(this.ping_len));
             this.ping_frame_bytes[0..2].* = header.slice();
 
@@ -1005,16 +1004,15 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                 }
             }
             var final_body_bytes: [128 + 8]u8 = undefined;
-// safe-transpile: @bitCast requires manual review
             var header = @as(WebsocketHeader, @bitCast(@as(u16, 0)));
             header.final = true;
             header.opcode = .Close;
             header.mask = true;
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             header.len = @as(u7, @truncate(body_len + 2));
             final_body_bytes[0..2].* = header.slice();
             const mask_buf: *[4]u8 = final_body_bytes[2..6];
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             final_body_bytes[6..8].* = @bitCast(@byteSwap(code));
 
             var reason = bun.String.empty;
@@ -1027,7 +1025,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                         return;
                     }
                     reason = bun.String.cloneUTF8(body_slice);
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(final_body_bytes[8..][0..body_len], body_slice);
                 }
             }
@@ -1179,7 +1177,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
 
             // Note: 0 is valid
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const opcode = @as(Opcode, @enumFromInt(@as(u4, @truncate(op))));
             {
                 var inline_buf: [stack_frame_size]u8 = undefined;
@@ -1302,7 +1300,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             deflate_params: ?*const WebSocketDeflate.Params,
             secure_ptr: ?*anyopaque,
         ) callconv(.c) ?*anyopaque {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             const tcp = @as(*uws.us_socket_t, @ptrCast(input_socket));
             const vm = globalThis.bunVM();
             var ws = bun.new(WebSocket, .{
@@ -1313,7 +1311,6 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
                 .send_buffer = bun.LinearFifo(u8, .Dynamic).init(bun.default_allocator),
                 .receive_buffer = bun.LinearFifo(u8, .Dynamic).init(bun.default_allocator),
                 .event_loop = vm.eventLoop(),
-// safe-transpile: @alignCast requires manual review
                 .secure = if (secure_ptr) |ptr| @ptrCast(@alignCast(ptr)) else null,
             });
 
@@ -1362,7 +1359,7 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
 
             return @as(
                 *anyopaque,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                 @ptrCast(ws),
             );
         }
@@ -1378,7 +1375,6 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
             buffered_data_len: usize,
             deflate_params: ?*const WebSocketDeflate.Params,
         ) callconv(.c) ?*anyopaque {
-// safe-transpile: @alignCast requires manual review
             const tunnel: *WebSocketProxyTunnel = @ptrCast(@alignCast(tunnel_ptr));
 
             // ref_count starts at 1: this is the I/O-layer ref, owned by the
@@ -1425,13 +1421,13 @@ pub fn NewWebSocketClient(comptime ssl: bool) type {
 
             ws.ref();
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+            // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
             return @as(*anyopaque, @ptrCast(ws));
         }
 
         /// Handle data received from the proxy tunnel (already decrypted).
         /// Called by the WebSocketProxyTunnel when it receives and decrypts data.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn handleTunnelData(this: *WebSocket, data: []const u8) void {
             // Process the decrypted data as if it came from the socket
             // hasTCP() now returns true for tunnel mode, so this will work correctly
@@ -1551,17 +1547,16 @@ pub const ErrorCode = enum(i32) {
 };
 
 pub const Mask = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn fill(globalThis: *jsc.JSGlobalObject, mask_buf: *[4]u8, output_: []u8, input_: []const u8) void {
         mask_buf.* = globalThis.bunVM().rareData().entropySlice(4)[0..4].*;
         const mask = mask_buf.*;
 
-// safe-transpile: @bitCast requires manual review
         const skip_mask = @as(u32, @bitCast(mask)) == 0;
         fillWithSkipMask(mask, output_, input_, skip_mask);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn fillWithSkipMask(mask: [4]u8, output_: []u8, input_: []const u8, skip_mask: bool) void {
         const input = input_;
         const output = output_;
@@ -1701,12 +1696,12 @@ const Copy = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn copy(this: @This(), globalThis: *jsc.JSGlobalObject, buf: []u8, content_byte_len: usize, opcode: Opcode) void {
         if (this == .raw) {
             bun.assert(buf.len >= this.raw.len);
             bun.assert(buf.ptr != this.raw.ptr);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buf[0..this.raw.len], this.raw);
             return;
         }
@@ -1721,15 +1716,14 @@ const Copy = union(enum) {
         // 0, 2, 8 byte length
         var to_mask = buf[content_offset..];
 
-// safe-transpile: @bitCast requires manual review
         var header = @as(WebsocketHeader, @bitCast(@as(u16, 0)));
 
         // Write extended length if needed
         switch (how_big_is_the_length_integer) {
             0 => {},
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             2 => std.mem.writeInt(u16, buf[2..][0..2], @as(u16, @truncate(content_byte_len)), .big),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             8 => std.mem.writeInt(u64, buf[2..][0..8], @as(u64, @truncate(content_byte_len)), .big),
             else => unreachable,
         }
@@ -1775,7 +1769,7 @@ const Copy = union(enum) {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn copyCompressed(globalThis: *jsc.JSGlobalObject, buf: []u8, compressed_data: []const u8, opcode: Opcode, is_first_fragment: bool) void {
         const content_byte_len = compressed_data.len;
         const how_big_is_the_length_integer = WebsocketHeader.lengthByteCount(content_byte_len);
@@ -1791,14 +1785,13 @@ const Copy = union(enum) {
         // Write extended length if needed
         switch (how_big_is_the_length_integer) {
             0 => {},
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             2 => std.mem.writeInt(u16, buf[2..][0..2], @as(u16, @truncate(content_byte_len)), .big),
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             8 => std.mem.writeInt(u64, buf[2..][0..8], @as(u64, @truncate(content_byte_len)), .big),
             else => unreachable,
         }
 
-// safe-transpile: @bitCast requires manual review
         var header = @as(WebsocketHeader, @bitCast(@as(u16, 0)));
 
         header.mask = true;

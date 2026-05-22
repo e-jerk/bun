@@ -13,7 +13,6 @@ pub fn fromCallbackAutoDeinit(ptr: anytype, comptime fieldName: [:0]const u8) *A
         any_task: AnyTaskWithExtraContext,
         wrapped: *Ptr,
         pub fn function(this: *anyopaque, extra: *anyopaque) void {
-// safe-transpile: @alignCast requires manual review
             const that: *@This() = @ptrCast(@alignCast(this));
             defer _ = that.deinit();
             const ctx = that.wrapped;
@@ -62,9 +61,7 @@ pub fn New(comptime Type: type, comptime ContextType: type, comptime Callback: a
                 bun.callmod_inline,
                 Callback,
                 .{
-// safe-transpile: @alignCast requires manual review
                     @as(*Type, @ptrCast(@alignCast(this.?))),
-// safe-transpile: @alignCast requires manual review
                     @as(*ContextType, @ptrCast(@alignCast(extra.?))),
                 },
             );

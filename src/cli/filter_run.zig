@@ -1,5 +1,5 @@
 const ScriptConfig = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     package_json_path: []u8,
     package_name: []const u8,
     script_name: []const u8,

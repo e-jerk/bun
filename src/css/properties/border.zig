@@ -126,8 +126,7 @@ pub fn GenericBorder(comptime S: type, comptime P: u8) type {
             var out = css.SmallList(@This(), 2).initCapacity(allocator, fallbacks.len());
             out.setLen(fallbacks.len());
 
-            // safe-transpile: for with index access requires manual review
-    for (fallbacks.slice(), out.slice_mut()) |color, *o| {
+            for (fallbacks.slice(), out.slice_mut()) |color, *o| {
                 o.* = .{
                     .color = color,
                     .width = this.width.deepClone(allocator),
@@ -670,7 +669,7 @@ pub const BorderHandler = struct {
         const allocator = context.allocator;
 
         const flushHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn flushHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, comptime prop: []const u8, val: anytype, category: PropertyCategory) void {
                 if (category != self.category) {
                     self.flush(d, c);
@@ -683,7 +682,7 @@ pub const BorderHandler = struct {
         }.flushHelper;
 
         const propertyHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn propertyHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, comptime prop: []const u8, val: anytype, category: PropertyCategory) void {
                 flushHelper(self, d, c, key, prop, val, category);
                 @field(@field(self, key), prop) = val.deepClone(c.allocator);
@@ -693,7 +692,7 @@ pub const BorderHandler = struct {
         }.propertyHelper;
 
         const setBorderHelper = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn setBorderHelper(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, comptime key: []const u8, val: anytype, category: PropertyCategory) void {
                 if (category != self.category) {
                     self.flush(d, c);
@@ -857,20 +856,20 @@ pub const BorderHandler = struct {
         logical_supported: bool,
         logical_shorthand_supported: bool,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn logicalProp(f: *FlushContext, comptime ltr: []const u8, comptime ltr_key: []const u8, comptime rtl: []const u8, comptime rtl_key: []const u8, val: anytype) void {
             _ = ltr_key; // autofix
             _ = rtl_key; // autofix
             f.ctx.addLogicalRule(f.ctx.allocator, @unionInit(css.Property, ltr, val.deepClone(f.ctx.allocator)), @unionInit(css.Property, rtl, val.deepClone(f.ctx.allocator)));
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn push(f: *FlushContext, comptime p: []const u8, val: anytype) void {
             bun.bits.insert(BorderProperty, &f.self.flushed_properties, @field(BorderProperty, p));
             bun.handleOom(f.dest.append(f.ctx.allocator, @unionInit(css.Property, p, val.deepClone(f.ctx.allocator))));
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn fallbacks(f: *FlushContext, comptime p: []const u8, _val: anytype) void {
             var val = _val;
             if (!bun.bits.contains(BorderProperty, f.self.flushed_properties, @field(BorderProperty, p))) {
@@ -882,7 +881,7 @@ pub const BorderHandler = struct {
             push(f, p, val);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         inline fn prop(f: *FlushContext, comptime prop_name: []const u8, val: anytype) void {
             @setEvalBranchQuota(10000);
             if (comptime std.mem.eql(u8, prop_name, "border-inline-start")) {
@@ -1006,7 +1005,7 @@ pub const BorderHandler = struct {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn flushCategory(
             f: *FlushContext,
             comptime block_start_prop: []const u8,
@@ -1038,7 +1037,7 @@ pub const BorderHandler = struct {
                 inline_start: *BorderShorthand,
                 inline_end: *BorderShorthand,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn shorthand(s: *@This(), comptime p: type, comptime prop_name: []const u8, comptime key: []const u8) void {
                     const has_prop = @field(s.block_start, key) != null and @field(s.block_end, key) != null and @field(s.inline_start, key) != null and @field(s.inline_end, key) != null;
                     if (has_prop) {
@@ -1057,7 +1056,7 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn logicalShorthand(
                     s: *@This(),
                     comptime P: type,
@@ -1076,7 +1075,7 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn is_eq(s: *@This(), comptime key: []const u8) bool {
                     return css.generic.eql(@TypeOf(@field(s.block_start, key)), &@field(s.block_start, key), &@field(s.block_end, key)) and
                         css.generic.eql(@TypeOf(@field(s.inline_start, key)), &@field(s.inline_start, key), &@field(s.inline_end, key)) and
@@ -1110,7 +1109,7 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn side_diff(s: *@This(), border: anytype, other: anytype, comptime prop_name: []const u8, width: anytype, style: anytype, comptime color: []const u8) void {
                     const eq_width = css.generic.eql(@TypeOf(border.width), &border.width, &other.width);
                     const eq_style = css.generic.eql(@TypeOf(border.style), &border.style, &other.style);
@@ -1129,7 +1128,7 @@ pub const BorderHandler = struct {
                     }
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn side(s: *@This(), val: anytype, comptime short: []const u8, comptime width: []const u8, comptime style: []const u8, comptime color: []const u8) void {
                     if (val.isValid()) {
                         s.f.prop(short, val.toBorder(s.f.ctx.allocator));
@@ -1149,7 +1148,7 @@ pub const BorderHandler = struct {
                 }
 
                 // If both values of an inline logical property are equal, then we can just convert them to physical properties.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 inline fn inlineProp(s: *@This(), comptime key: []const u8, comptime left: []const u8, comptime right: []const u8) void {
                     if (@field(s.inline_start, key) != null and css.generic.eql(@TypeOf(@field(s.inline_start, key)), &@field(s.inline_start, key), &@field(s.inline_end, key))) {
                         s.f.prop(left, bun.take(&@field(s.inline_start, key)).?);
@@ -1426,7 +1425,7 @@ pub const BorderHandler = struct {
         }
 
         const prop = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn prop(self: *BorderHandler, d: *css.DeclarationList, c: *css.PropertyHandlerContext, up: *const UnparsedProperty, comptime id: []const u8) void {
                 _ = d; // autofix
                 var upppppppppp = up.withPropertyId(c.allocator, @unionInit(css.PropertyId, id, {}));
@@ -1436,7 +1435,7 @@ pub const BorderHandler = struct {
         }.prop;
 
         const logical_prop = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             inline fn logical_prop(
                 c: *css.PropertyHandlerContext,
                 up: *const UnparsedProperty,

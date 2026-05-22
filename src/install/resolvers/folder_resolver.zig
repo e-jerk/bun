@@ -13,7 +13,7 @@ pub const FolderResolution = union(Tag) {
         pub fn format(this: PackageWorkspaceSearchPathFormatter, writer: *std.Io.Writer) std.Io.Writer.Error!void {
             var joined: [bun.MAX_PATH_BYTES + 2]u8 = undefined;
             const str_to_use = this.manager.lockfile.workspace_paths.getPtr(
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 @truncate(String.Builder.stringHash(this.manager.lockfile.str(&this.version.value.workspace))),
             ) orelse &this.version.value.workspace;
             var paths = normalizePackageJSONPath(.{ .relative = .workspace }, joined[2..], this.manager.lockfile.str(str_to_use));
@@ -121,7 +121,6 @@ pub const FolderResolution = union(Tag) {
                     if (path.len > 0) {
                         const offset = path.len -| @as(usize, @intFromBool(path[path.len -| 1] == std.fs.path.sep));
                         if (offset > 0)
-// safe-transpile: @memcpy requires manual review
                             @memcpy(remain[0..offset], path[0..offset]);
                         remain = remain[offset..];
                         if (normalized.len > 0) {

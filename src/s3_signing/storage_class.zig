@@ -11,7 +11,7 @@ pub const StorageClass = enum {
     DEEP_ARCHIVE,
     SNOW,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn toString(this: @This()) []const u8 {
         return switch (this) {
             .STANDARD => "STANDARD",

@@ -77,9 +77,9 @@ pub const Parser = struct {
 
     pub const Error = bun.JSError || bun.StackOverflow;
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn init(allocator: Allocator, text: []const u8, flags: Flags, rend: Renderer) Parser {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const size: OFF = @intCast(text.len);
         var p = Parser{
             .allocator = allocator,

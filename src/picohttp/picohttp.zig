@@ -97,7 +97,7 @@ pub const Request = struct {
         ignore_insecure: bool = false,
         body: []const u8 = "",
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn isPrintableBody(content_type: []const u8) bool {
             if (content_type.len == 0) return false;
 
@@ -127,7 +127,6 @@ pub const Request = struct {
 
             var content_type: []const u8 = "";
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (request.headers) |*header| {
                 _ = try writer.writeAll(" ");
                 if (content_type.len == 0) {
@@ -150,7 +149,7 @@ pub const Request = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn curl(self: *const Request, ignore_insecure: bool, body: []const u8) Request.CURLFormatter {
         return .{
             .request = self,
@@ -160,8 +159,7 @@ pub const Request = struct {
     }
 
     pub fn clone(this: *const Request, headers: []Header, builder: *StringBuilder) Request {
-        // safe-transpile: for with index access requires manual review
-    for (this.headers, 0..) |header, i| {
+        for (this.headers, 0..) |header, i| {
             headers[i] = header.clone(builder);
         }
 
@@ -188,7 +186,7 @@ pub const Request = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(buf: []const u8, src: []Header) !Request {
         var method: []const u8 = undefined;
         var path: []const u8 = undefined;
@@ -198,14 +196,14 @@ pub const Request = struct {
         const rc = c.phr_parse_request(
             buf.ptr,
             buf.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c][*c]const u8, @ptrCast(&method.ptr)),
             &method.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c][*c]const u8, @ptrCast(&path.ptr)),
             &path.len,
             &minor_version,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c]c.phr_header, @ptrCast(src.ptr)),
             &num_headers,
             0,
@@ -220,10 +218,10 @@ pub const Request = struct {
             else => Request{
                 .method = method,
                 .path = path,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .minor_version = @as(usize, @intCast(minor_version)),
                 .headers = src[0..num_headers],
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .bytes_read = @as(u32, @intCast(rc)),
             },
         };
@@ -289,8 +287,7 @@ pub const Response = struct {
         var that = this.*;
         that.status = builder.append(this.status);
 
-        // safe-transpile: for with index access requires manual review
-    for (this.headers.list, 0..) |header, i| {
+        for (this.headers.list, 0..) |header, i| {
             headers[i] = header.clone(builder);
         }
 
@@ -299,7 +296,7 @@ pub const Response = struct {
         return that;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parseParts(buf: []const u8, src: []Header, offset: ?*usize) !Response {
         var minor_version: c_int = 1;
         var status_code: c_int = 0;
@@ -311,10 +308,10 @@ pub const Response = struct {
             buf.len,
             &minor_version,
             &status_code,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c][*c]const u8, @ptrCast(&status.ptr)),
             &status.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c]c.phr_header, @ptrCast(src.ptr)),
             &num_headers,
             offset.?.*,
@@ -331,9 +328,9 @@ pub const Response = struct {
                 break :brk error.ShortRead;
             },
             else => Response{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .minor_version = @as(usize, @intCast(minor_version)),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 .status_code = @as(u32, @intCast(status_code)),
                 .status = status,
                 .headers = .{ .list = src[0..@min(num_headers, src.len)] },
@@ -342,7 +339,7 @@ pub const Response = struct {
         };
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(buf: []const u8, src: []Header) !Response {
         var offset: usize = 0;
         const response = try parseParts(buf, src, &offset);
@@ -359,16 +356,16 @@ pub const Headers = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(buf: []const u8, src: []Header) !Headers {
         var num_headers: usize = src.len;
 
         const rc = c.phr_parse_headers(
             buf.ptr,
             buf.len,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c]c.phr_header, @ptrCast(src.ptr)),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             @as([*c]usize, @ptrCast(&num_headers)),
             0,
         );

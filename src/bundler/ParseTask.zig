@@ -545,11 +545,10 @@ fn getAST(
                     // Generate a single part that depends on all the import records.
                     // This is to ensure that we generate a JavaScript bundle containing all the user's code.
                     var import_record_indices = try Part.ImportRecordIndices.initCapacity(allocator, scanner.import_records.len);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     import_record_indices.len = @truncate(scanner.import_records.len);
-                    // safe-transpile: for with index access requires manual review
-    for (import_record_indices.slice(), 0..) |*import_record, index| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    for (import_record_indices.slice(), 0..) |*import_record, index| {
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         import_record.* = @intCast(index);
                     }
                     break :brk2 import_record_indices;

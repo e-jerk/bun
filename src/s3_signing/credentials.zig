@@ -20,7 +20,7 @@ pub const S3Credentials = struct {
         return @sizeOf(S3Credentials) + this.accessKeyId.len + this.region.len + this.secretAccessKey.len + this.endpoint.len + this.bucket.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn hashConst(acl: []const u8) u64 {
         var hasher = std.hash.Wyhash.init(0);
         var remain = acl;
@@ -113,7 +113,7 @@ pub const S3Credentials = struct {
         // Date.now() ISO string via JS removed; uses libc gmtime_r
 
         // Create UTC timestamp
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const secs: u64 = @intCast(@divFloor(@import("std-fs-compat").milliTimestamp(), 1000));
         const utc_seconds = std.time.epoch.EpochSeconds{ .secs = secs };
         const utc_day = utc_seconds.getEpochDay();
@@ -182,8 +182,7 @@ pub const S3Credentials = struct {
         pub fn mixWithHeader(this: *const @This(), headers_buffer: []picohttp.Header, header: picohttp.Header) []const picohttp.Header {
             // copy the headers to buffer
             const len = this._headers_len;
-            // safe-transpile: for with index access requires manual review
-    for (this._headers[0..len], 0..len) |existing_header, i| {
+            for (this._headers[0..len], 0..len) |existing_header, i| {
                 headers_buffer[i] = existing_header;
             }
             headers_buffer[len] = header;
@@ -242,7 +241,7 @@ pub const S3Credentials = struct {
         request_payer: bool = false,
     };
     /// This is not used for signing but for console.log output, is just nice to have
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn guessBucket(endpoint: []const u8) ?[]const u8 {
         // check if is amazonaws.com
         if (strings.indexOf(endpoint, ".amazonaws.com")) |_| {
@@ -269,7 +268,7 @@ pub const S3Credentials = struct {
         }
         return null;
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn guessRegion(endpoint: []const u8) []const u8 {
         if (endpoint.len > 0) {
             if (strings.endsWith(endpoint, ".r2.cloudflarestorage.com")) return "auto";
@@ -292,7 +291,7 @@ pub const S3Credentials = struct {
             else => error.InvalidHexChar,
         };
     }
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn encodeURIComponent(input: []const u8, buffer: []u8, comptime encode_slash: bool) ![]const u8 {
         var written: usize = 0;
 
@@ -327,7 +326,7 @@ pub const S3Credentials = struct {
         return buffer[0..written];
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn normalizeName(name: []const u8) []const u8 {
         if (name.len == 0) return name;
         return std.mem.trim(u8, name, "/\\");
@@ -578,8 +577,7 @@ pub const S3Credentials = struct {
                     // Join query parameters with &
                     var query_string = std.array_list.Managed(u8).init(allocator);
                     defer query_string.deinit();
-                    // safe-transpile: for with index access requires manual review
-    for (query_parts.slice(), 0..) |part, i| {
+                    for (query_parts.slice(), 0..) |part, i| {
                         if (i > 0) try query_string.append('&');
                         try query_string.appendSlice(part);
                         allocator.free(part);
@@ -644,8 +642,7 @@ pub const S3Credentials = struct {
                 // Join URL query parameters with &
                 var url_query_string = std.array_list.Managed(u8).init(url_allocator);
                 defer url_query_string.deinit();
-                // safe-transpile: for with index access requires manual review
-    for (url_query_parts.slice(), 0..) |part, i| {
+                for (url_query_parts.slice(), 0..) |part, i| {
                     if (i > 0) try url_query_string.append('&');
                     try url_query_string.appendSlice(part);
                     url_allocator.free(part);
@@ -820,7 +817,7 @@ const SignedHeaders = struct {
         storage_class: bool,
     };
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn generate(comptime key: Key) []const u8 {
         return (if (key.content_disposition) "content-disposition;" else "") ++
             (if (key.content_encoding) "content-encoding;" else "") ++
@@ -836,15 +833,15 @@ const SignedHeaders = struct {
     const table = init: {
         var t: [128][]const u8 = undefined;
         for (0..128) |i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             t[i] = generate(@bitCast(@as(u7, @intCast(i))));
         }
         break :init t;
     };
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn get(key: Key) []const u8 {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return table[@as(u7, @bitCast(key))];
     }
 };
@@ -852,7 +849,7 @@ const SignedHeaders = struct {
 /// Comptime-generated format strings for canonical request.
 /// Uses the same key as SignedHeaders to select the right format.
 const CanonicalRequest = struct {
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     fn fmtString(comptime key: SignedHeaders.Key) []const u8 {
         return "{s}\n{s}\n{s}\n" ++ // method, path, query
             (if (key.content_disposition) "content-disposition:{s}\n" else "") ++
@@ -867,7 +864,7 @@ const CanonicalRequest = struct {
             "\n{s}\n{s}"; // signed_headers, hash
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     inline fn formatForKey(
         comptime key: SignedHeaders.Key,
         buf: []u8,
@@ -897,7 +894,7 @@ const CanonicalRequest = struct {
             .{ signed_headers, hash });
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn format(
         buf: []u8,
         key: SignedHeaders.Key,
@@ -916,10 +913,10 @@ const CanonicalRequest = struct {
         signed_headers: []const u8,
     ) error{NoSpaceLeft}![]u8 {
         // Dispatch to the right comptime-specialized function based on runtime key
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         return switch (@as(u7, @bitCast(key))) {
             inline 0...127 => |idx| formatForKey(
-// safe-transpile: @bitCast requires manual review
+                // safe-transpile: @bitCast requires manual review
                 @bitCast(idx),
                 buf,
                 method,

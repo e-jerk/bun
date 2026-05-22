@@ -12,7 +12,10 @@ pub fn printWarning() void {
 }
 
 pub fn addImportMetaDefines(allocator: std.mem.Allocator, define: anytype, mode: anytype, side: anytype) !void {
-    _ = allocator; _ = define; _ = mode; _ = side;
+    _ = allocator;
+    _ = define;
+    _ = mode;
+    _ = side;
 }
 
 pub const UserOptions = struct {
@@ -32,7 +35,9 @@ pub const UserOptions = struct {
     }
 };
 
-pub const Side = enum { client, server,
+pub const Side = enum {
+    client,
+    server,
 
     pub fn graph(self: Side) Graph {
         return switch (self) {
@@ -67,7 +72,6 @@ pub const SplitBundlerOptions = struct {
 pub const PatternBuffer = struct {
     pub var empty: PatternBuffer = .{};
     pub fn prependPart(_: *PatternBuffer, _: anytype) void {}
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn slice(_: PatternBuffer) []const u8 {
         return "";
     }
@@ -109,9 +113,9 @@ pub const StringRefList = struct {
     // Stub for StringRefList
     pub const empty: StringRefList = .{};
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn append(_: *StringRefList, _: []const u8) void {}
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn track(_: *StringRefList, str: []const u8) []const u8 {
         return str;
     }
@@ -138,7 +142,7 @@ pub const BuildConfigSubset = struct {
     root_dir: ?[]const u8 = null,
     jsx: bun.schema.api.Jsx = .{ .factory = "React.createElement", .runtime = .automatic, .fragment = "React.Fragment", .import_source = "react" },
     tsconfig_override: ?[]const u8 = null,
-    main_fields: []const []const u8 = &.{"module", "main"},
+    main_fields: []const []const u8 = &.{ "module", "main" },
     conditions: []const []const u8 = &.{},
     drop: []const []const u8 = &.{},
     no_summary: bool = false,
@@ -164,20 +168,38 @@ pub const Framework = struct {
     };
 
     pub fn auto(allocator: std.mem.Allocator, resolver: anytype, router_list: anytype) !Framework {
-        _ = allocator; _ = resolver; _ = router_list;
+        _ = allocator;
+        _ = resolver;
+        _ = router_list;
         return .{};
     }
 
     pub fn initTranspiler(_: Framework, allocator: std.mem.Allocator, log: anytype, mode: anytype, side: anytype, transpiler: anytype, options: anytype) !void {
-        _ = allocator; _ = log; _ = mode; _ = side; _ = transpiler; _ = options;
+        _ = allocator;
+        _ = log;
+        _ = mode;
+        _ = side;
+        _ = transpiler;
+        _ = options;
     }
 
     pub fn initTranspilerWithOptions(_: Framework, allocator: std.mem.Allocator, log: anytype, mode: anytype, side: anytype, transpiler: anytype, options: anytype, source_map: anytype, minify_whitespace: anytype, minify_syntax: anytype, minify_identifiers: anytype) !void {
-        _ = allocator; _ = log; _ = mode; _ = side; _ = transpiler; _ = options; _ = source_map; _ = minify_whitespace; _ = minify_syntax; _ = minify_identifiers;
+        _ = allocator;
+        _ = log;
+        _ = mode;
+        _ = side;
+        _ = transpiler;
+        _ = options;
+        _ = source_map;
+        _ = minify_whitespace;
+        _ = minify_syntax;
+        _ = minify_identifiers;
     }
 
     pub fn resolve(self: Framework, server_resolver: anytype, client_resolver: anytype, arena: anytype) !Framework {
-        _ = server_resolver; _ = client_resolver; _ = arena;
+        _ = server_resolver;
+        _ = client_resolver;
+        _ = arena;
         return self;
     }
 

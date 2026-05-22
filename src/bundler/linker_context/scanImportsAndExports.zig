@@ -52,9 +52,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                 );
 
                 // Validate cross-file "composes: ... from" named imports
-// safe-transpile: for loop with pointer capture requires manual review
                 for (css_ast.composes.values()) |*composes| {
-// safe-transpile: for loop with pointer capture requires manual review
                     for (composes.composes.slice()) |*compose| {
                         if (compose.from == null or compose.from.? != .import_record_index) continue;
                         const import_record_idx = compose.from.?.import_record_index;
@@ -462,8 +460,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
             if (is_entry_point and output_format == .esm) {
                 const copies = try this.allocator().alloc(Ref, aliases.len);
 
-                // safe-transpile: for with index access requires manual review
-    for (aliases, copies) |alias, *copy| {
+                for (aliases, copies) |alias, *copy| {
                     const original_name = builder.fmt("export_{f}", .{bun.fmt.fmtIdentifier(alias)});
                     copy.* = this.graph.generateNewSymbol(source_index, .other, original_name);
                 }
@@ -533,8 +530,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
             var parts: []Part = parts_list[id].slice();
 
             const imports_to_bind = &imports_to_bind_list[id];
-            // safe-transpile: for with index access requires manual review
-    for (imports_to_bind.keys(), imports_to_bind.values()) |ref_untyped, import_untyped| {
+            for (imports_to_bind.keys(), imports_to_bind.values()) |ref_untyped, import_untyped| {
                 const ref: Ref = ref_untyped; // ZLS
                 const import: ImportData = import_untyped; // ZLS
 
@@ -648,8 +644,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
             const import_records: []ImportRecord = import_records_list[id].slice();
             debug("Binding {d} imports for file {s} (#{d})", .{ import_records.len, source.path.text, id });
 
-            // safe-transpile: for with index access requires manual review
-    for (parts, 0..) |*part, part_index| {
+            for (parts, 0..) |*part, part_index| {
                 var to_esm_uses: u32 = 0;
                 var to_common_js_uses: u32 = 0;
                 var runtime_require_uses: u32 = 0;
@@ -725,7 +720,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                         continue;
                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     bun.assert(@as(usize, @intCast(other_id)) < this.graph.meta.len);
                     const other_flags = flags[other_id];
                     const other_export_kind = exports_kind[other_id];
@@ -737,7 +732,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                         if (wrapper_ref.isValid()) {
                             try this.graph.generateSymbolImportAndUse(
                                 source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 @as(u32, @intCast(part_index)),
                                 wrapper_ref,
                                 1,
@@ -760,7 +755,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                         if (other_flags.wrap == .esm and kind != .stmt) {
                             try this.graph.generateSymbolImportAndUse(
                                 source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 @as(u32, @intCast(part_index)),
                                 this.graph.ast.items(.exports_ref)[other_id],
                                 1,
@@ -789,7 +784,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                         // dynamic export fallback object doesn't end up being needed.
                         try this.graph.generateSymbolImportAndUse(
                             source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @as(u32, @intCast(part_index)),
                             this.graph.ast.items(.exports_ref)[other_id],
                             1,
@@ -809,7 +804,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                     if (record.source_index.isValid()) {
                         const other_source_index = record.source_index.get();
                         const other_id = other_source_index;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         bun.assert(@as(usize, @intCast(other_id)) < this.graph.meta.len);
                         const other_export_kind = exports_kind[other_id];
                         if (other_source_index != source_index and other_export_kind.isDynamic()) {
@@ -823,7 +818,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                             // in a different chunk than this export star.
                             try this.graph.generateSymbolImportAndUse(
                                 source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                 @as(u32, @intCast(part_index)),
                                 this.graph.ast.items(.exports_ref)[other_id],
                                 1,
@@ -836,7 +831,7 @@ pub fn scanImportsAndExports(this: *LinkerContext) ScanImportsAndExportsError!vo
                         // Depend on this file's "exports" object for the first argument to "__reExport"
                         try this.graph.generateSymbolImportAndUse(
                             source_index,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             @as(u32, @intCast(part_index)),
                             this.graph.ast.items(.exports_ref)[id],
                             1,
@@ -1118,7 +1113,7 @@ fn validateComposesFromProperties(
             v.properties.deinit();
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn addPropertyOrWarn(v: *@This(), local: Ref, property_name: []const u8, source_index: Index.Int, range: bun.logger.Range) void {
             const entry = bun.handleOom(v.properties.getOrPut(property_name));
 
@@ -1181,7 +1176,6 @@ fn validateComposesFromProperties(
 
             // This local name was in a style rule that
             if (ast.composes.getPtr(ref)) |composes| {
-// safe-transpile: for loop with pointer capture requires manual review
                 for (composes.composes.sliceConst()) |*compose| {
                     // is an import
                     if (compose.from != null) {
@@ -1215,7 +1209,7 @@ fn validateComposesFromProperties(
             // Warn about cross-file composition with the same CSS properties
             var iter = property_usage.bitset.iterator(.{});
             while (iter.next()) |property_tag| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const property_id_tag: bun.css.PropertyIdTag = @enumFromInt(@as(u16, @intCast(property_tag)));
                 bun.assert(property_id_tag != .custom);
                 bun.assert(property_id_tag != .unparsed);

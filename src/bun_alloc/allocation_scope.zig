@@ -76,7 +76,7 @@ const LockedState = struct {
         return result;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn free(self: Self, buf: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
         const success = if (self.trackFree(buf, ret_addr))
             true
@@ -93,7 +93,7 @@ const LockedState = struct {
     }
 
     fn assertOwned(self: Self, ptr: anytype) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const cast_ptr: [*]const u8 = @ptrCast(switch (@typeInfo(@TypeOf(ptr)).pointer.size) {
             .c, .one, .many => ptr,
             .slice => if (ptr.len > 0) ptr.ptr else return,
@@ -104,7 +104,7 @@ const LockedState = struct {
     }
 
     fn assertUnowned(self: Self, ptr: anytype) void {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const cast_ptr: [*]const u8 = @ptrCast(switch (@typeInfo(@TypeOf(ptr)).pointer.size) {
             .c, .one, .many => ptr,
             .slice => if (ptr.len > 0) ptr.ptr else return,
@@ -120,7 +120,7 @@ const LockedState = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn trackAllocation(self: Self, buf: []const u8, ret_addr: usize, extra: Extra) bun.OOM!void {
         const trace = StoredTrace.capture(ret_addr);
         try self.history.allocations.putNoClobber(self.parent, buf.ptr, .{
@@ -131,7 +131,7 @@ const LockedState = struct {
         self.history.total_memory_allocated += buf.len;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn trackFree(self: Self, buf: []const u8, ret_addr: usize) FreeError!void {
         const entry = self.history.allocations.fetchRemove(buf.ptr) orelse {
             Output.errGeneric("Invalid free, pointer {*}, len {d}", .{ buf.ptr, buf.len });
@@ -233,7 +233,7 @@ const State = struct {
         );
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn trackExternalAllocation(self: *Self, ptr: []const u8, ret_addr: ?usize, extra: Extra) void {
         const locked = self.lock();
         defer self.unlock();
@@ -273,7 +273,7 @@ const State = struct {
     fn setPointerExtra(self: *Self, ptr: *anyopaque, extra: Extra) void {
         const locked = self.lock();
         defer self.unlock();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const allocation = locked.history.allocations.getPtr(@ptrCast(ptr)) orelse
             @panic("Pointer not owned by allocation scope");
         allocation.extra = extra;
@@ -338,7 +338,7 @@ pub fn AllocationScopeIn(comptime Allocator: type) type {
             state.assertUnowned(ptr);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn trackExternalAllocation(
             self: Self,
             ptr: []const u8,
@@ -369,7 +369,6 @@ pub fn AllocationScopeIn(comptime Allocator: type) type {
                     "allocator is not an allocation scope (has vtable {*})",
                     .{std_alloc.vtable},
                 );
-// safe-transpile: @alignCast requires manual review
                 const state: *State = @ptrCast(@alignCast(std_alloc.ptr));
                 break :blk state;
             };
@@ -498,7 +497,7 @@ pub fn AllocationScopeIn(comptime Allocator: type) type {
 
         /// Track an arbitrary pointer. Extra data can be stored in the allocation, which will be
         /// printed when a leak is detected.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn trackExternalAllocation(
             self: Self,
             ptr: []const u8,
@@ -546,7 +545,6 @@ pub const free_trace_limits: bun.crash_handler.WriteStackTraceLimits = .{
 };
 
 fn vtable_alloc(ctx: *anyopaque, len: usize, alignment: std.mem.Alignment, ret_addr: usize) ?[*]u8 {
-// safe-transpile: @alignCast requires manual review
     const raw_state: *State = @ptrCast(@alignCast(ctx));
     const state = raw_state.lock();
     defer raw_state.unlock();
@@ -555,7 +553,6 @@ fn vtable_alloc(ctx: *anyopaque, len: usize, alignment: std.mem.Alignment, ret_a
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn vtable_free(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
-// safe-transpile: @alignCast requires manual review
     const raw_state: *State = @ptrCast(@alignCast(ctx));
     const state = raw_state.lock();
     defer raw_state.unlock();

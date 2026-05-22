@@ -216,7 +216,7 @@ pub const WorkerPipe = struct {
         this.reader.deinit();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn onReadChunk(this: *WorkerPipe, chunk: []const u8, _: bun.io.ReadState) bool {
         bun.handleOom(this.worker.captured.appendSlice(bun.default_allocator, chunk));
         return true;

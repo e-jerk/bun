@@ -331,7 +331,7 @@ const kind = struct {
             default: ?ValueType = null,
         };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn stringIsTruthy(s: []const u8) bool {
             // Most values are considered truthy, except for "", "0", "false", "no", and "off".
             const false_values = .{ "", "0", "false", "no", "off" };
@@ -493,7 +493,7 @@ const kind = struct {
                     return formatted;
                 }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+                // safe-transpile: function uses raw slice parameter — consider safe.String
                 fn handleError(
                     self: *Self,
                     raw_env: []const u8,

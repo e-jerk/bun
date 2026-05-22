@@ -55,11 +55,11 @@ pub const Loop = struct {
             // the kevent() wait so the pending queue gets drained). EV_CLEAR
             // makes it edge-triggered so we never need to read() the eventfd.
             var change = std.mem.zeroes(KEvent);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             change.ident = @intCast(loop.waker.getFd().cast());
             change.filter = std.c.EVFILT.READ;
             change.flags = std.c.EV.ADD | std.c.EV.CLEAR;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             const rc = std.c.kevent(loop.kqueue_fd.cast(), @as([*]const KEvent, @ptrCast(&change)), 1, undefined, 0, null);
             switch (bun.sys.getErrno(rc)) {
                 .SUCCESS => {},
@@ -81,7 +81,10 @@ pub const Loop = struct {
             @panic("Do not use this API on windows");
         }
 
-        if (!once_done) { load(); once_done = true; }
+        if (!once_done) {
+            load();
+            once_done = true;
+        }
 
         return &loop;
     }
@@ -166,7 +169,7 @@ pub const Loop = struct {
             const rc = linux.epoll_wait(
                 this.pollfd().cast(),
                 &events,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(events.len),
                 std.math.maxInt(i32),
             );
@@ -284,13 +287,13 @@ pub const Loop = struct {
             const rc = keventCall(
                 this.pollfd().cast(),
                 events_list.items.ptr,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(change_count),
                 // The same array may be used for the changelist and eventlist.
                 events_list.items.ptr,
                 // we set 0 here so that if we get an error on
                 // registration, it becomes errno
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 @intCast(events_list.capacity),
                 null,
             );
@@ -304,7 +307,7 @@ pub const Loop = struct {
             this.updateNow();
 
             assert(rc <= events_list.capacity);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const current_events: []KEvent = events_list.items.ptr[0..@intCast(rc)];
 
             for (current_events) |event| {
@@ -329,9 +332,9 @@ pub const Loop = struct {
             const rc = clock_gettime_monotonic(&sec, &nsec);
             assert(rc == 0);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             timespec.sec = @intCast(sec);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             timespec.nsec = @intCast(nsec);
         } else {
             var updated: std.posix.timespec = undefined;
@@ -593,7 +596,7 @@ pub const Poll = struct {
                 else => @compileError("invalid action: " ++ @tagName(action)),
             };
             kqueue_event.* = std.mem.zeroes(KEvent);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             kqueue_event.ident = @intCast(fd.native());
             kqueue_event.filter = filter;
             kqueue_event.flags = flags_;
@@ -634,7 +637,6 @@ pub const Poll = struct {
 
             inline else => |t| {
                 const poll = pollable.poll();
-// safe-transpile: @alignCast requires manual review
                 var this: *Pollable.Tag.Type(t) = @alignCast(@fieldParentPtr("io_poll", poll));
                 if (event.flags == std.c.EV.ERROR) {
                     log("error({d}) = {d}", .{ event.ident, event.data });
@@ -657,7 +659,6 @@ pub const Poll = struct {
             .empty => {},
 
             inline else => |t| {
-// safe-transpile: @alignCast requires manual review
                 var this: *Pollable.Tag.Type(t) = @alignCast(@fieldParentPtr("io_poll", poll));
                 if (event.events & linux.EPOLL.ERR != 0) {
                     const errno = bun.sys.getErrno(event.events);

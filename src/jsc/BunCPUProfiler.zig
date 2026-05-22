@@ -12,7 +12,7 @@ extern fn Bun__stopCPUProfiler(vm: *jsc.VM, outJSON: ?*bun.String, outText: ?*bu
 extern fn Bun__setSamplingInterval(intervalMicroseconds: c_int) void;
 
 pub fn setSamplingInterval(interval: u32) void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     Bun__setSamplingInterval(@intCast(interval));
 }
 
@@ -119,7 +119,7 @@ fn generateDefaultFilename(buf: *bun.PathBuffer, md_format: bool) ![]const u8 {
     else
         std.c.getpid();
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const epoch_microseconds: u64 = @intCast(timespec.sec *% 1_000_000 +% @divTrunc(timespec.nsec, 1000));
 
     const extension = if (md_format) ".md" else ".cpuprofile";

@@ -219,7 +219,7 @@ pub const TOML = struct {
                     error.Clobber => {
                         const loc = rope.head.loc;
                         assert(loc.start > 0);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                         const start: u32 = @intCast(loc.start);
                         const key_name = std.mem.trimEnd(u8, p.source().contents[start..rope_end], &std.ascii.whitespace);
                         p.lexer.addError(start, "Cannot redefine key '{s}'", .{key_name});

@@ -1012,9 +1012,8 @@ const ParserCtx = struct {
                 args.append(arr);
                 try ctx.seen_objects.put(expr.data.e_array, arr);
 
-                // safe-transpile: for with index access requires manual review
-    for (expr.data.e_array.slice(), 0..) |item, _i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                for (expr.data.e_array.slice(), 0..) |item, _i| {
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const i: u32 = @intCast(_i);
                     const value = try ctx.toJS(args, item);
                     try arr.putIndex(ctx.global, i, value);

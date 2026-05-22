@@ -145,9 +145,9 @@ fn flushData(this: *@This()) void {
     this._flags.has_backpressure = wrote < chunk.len;
     debug("flushData: wrote {d}/{d} bytes", .{ wrote, chunk.len });
     if (wrote > 0) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         SocketMonitor.write(chunk[0..@intCast(wrote)]);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this._write_buffer.consume(@intCast(wrote));
     }
 }
@@ -252,7 +252,7 @@ pub fn doHandshake(this: *MySQLConnection, success: i32, ssl_error: uws.us_bun_v
                         return false;
                     }
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     const ssl_ptr: *BoringSSL.c.SSL = @ptrCast(this._socket.getNativeHandle());
                     if (BoringSSL.c.SSL_get_servername(ssl_ptr, 0)) |servername| {
                         const hostname = servername[0..bun.len(servername)];
@@ -752,15 +752,14 @@ pub fn sendAuthSwitchResponse(this: *MySQLConnection, auth_method: AuthMethod, p
 pub const Writer = struct {
     connection: *MySQLConnection,
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn write(this: Writer, data: []const u8) AnyMySQLError.Error!void {
         var buffer = &this.connection._write_buffer;
         try buffer.write(bun.default_allocator, data);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn pwrite(this: Writer, data: []const u8, index: usize) AnyMySQLError.Error!void {
-// safe-transpile: @memcpy requires manual review
         @memcpy(this.connection._write_buffer.byte_list.slice()[index..][0..data.len], data);
     }
 
@@ -785,13 +784,13 @@ pub const Reader = struct {
     }
 
     pub fn setOffsetFromStart(this: Reader, offset: usize) void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         this.connection._read_buffer.head = this.connection._last_message_start + @as(u32, @truncate(offset));
     }
 
     pub const ensureLength = ensureCapacity;
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn peek(this: Reader) []const u8 {
         return this.connection._read_buffer.remaining();
     }
@@ -803,19 +802,19 @@ pub const Reader = struct {
                 this.connection._read_buffer.head = 0;
                 return;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.connection._read_buffer.head -= @intCast(abs_count);
             return;
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const ucount: usize = @intCast(count);
         if (this.connection._read_buffer.head + ucount > this.connection._read_buffer.byte_list.len) {
             this.connection._read_buffer.head = this.connection._read_buffer.byte_list.len;
             return;
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.connection._read_buffer.head += @intCast(ucount);
     }
 
@@ -829,7 +828,7 @@ pub const Reader = struct {
             return AnyMySQLError.Error.ShortRead;
         }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         this.skip(@intCast(count));
         return Data{
             .temporary = remaining[0..count],
@@ -839,7 +838,7 @@ pub const Reader = struct {
     pub fn readZ(this: Reader) AnyMySQLError.Error!Data {
         const remaining = this.peek();
         if (bun.strings.indexOfChar(remaining, 0)) |zero| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             this.skip(@intCast(zero + 1));
             return Data{
                 .temporary = remaining[0..zero],
@@ -945,7 +944,6 @@ pub fn handlePreparedStatement(this: *MySQLConnection, comptime Context: type, r
             // Read column definitions if any
             if (ok.num_columns > 0) {
                 statement.columns = try bun.default_allocator.alloc(ColumnDefinition41, ok.num_columns);
-// safe-transpile: for loop with pointer capture requires manual review
                 for (statement.columns) |*col| col.* = .{};
                 statement.columns_received = 0;
             }
@@ -1078,7 +1076,6 @@ fn handleResultSet(this: *MySQLConnection, comptime Context: type, reader: NewRe
                     statement.cached_structure.deinit();
                     statement.cached_structure = .{};
                     if (statement.columns.len > 0) {
-// safe-transpile: for loop with pointer capture requires manual review
                         for (statement.columns) |*column| {
                             column.deinit();
                         }
@@ -1089,7 +1086,6 @@ fn handleResultSet(this: *MySQLConnection, comptime Context: type, reader: NewRe
                         statement.columns = &.{};
                     }
                     statement.columns = try bun.default_allocator.alloc(ColumnDefinition41, header.field_count);
-// safe-transpile: for loop with pointer capture requires manual review
                     for (statement.columns) |*col| col.* = .{};
                     statement.columns_received = 0;
                 }

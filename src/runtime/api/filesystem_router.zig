@@ -184,7 +184,7 @@ pub const FileSystemRouter = struct {
     const win32_normalize_bufs = bun.ThreadlocalBuffers(struct {
         buf: if (Environment.isWindows) [bun.MAX_PATH_BYTES * 2]u8 else void = undefined,
     });
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn bustDirCacheRecursive(this: *FileSystemRouter, globalThis: *jsc.JSGlobalObject, inputPath: []const u8) void {
         var vm = globalThis.bunVM();
         var path = inputPath;
@@ -368,8 +368,7 @@ pub const FileSystemRouter = struct {
         var name_strings = try bun.default_allocator.alloc(ZigString, names.len * 2);
         defer bun.default_allocator.free(name_strings);
         var paths_strings = name_strings[names.len..];
-        // safe-transpile: for with index access requires manual review
-    for (names, 0..) |name, i| {
+        for (names, 0..) |name, i| {
             name_strings[i] = ZigString.init(name).withEncoding();
             paths_strings[i] = ZigString.init(paths[i]).withEncoding();
         }
@@ -562,8 +561,7 @@ pub const MatchedRoute = struct {
                     bun.assert(entry.values.len > 0);
                     if (entry.values.len > 1) {
                         var values = query_string_value_refs_buf[0..entry.values.len];
-                        // safe-transpile: for with index access requires manual review
-    for (entry.values, 0..) |value, i| {
+                        for (entry.values, 0..) |value, i| {
                             values[i] = ZigString.init(value).withEncoding();
                         }
                         try obj.putRecord(global, &str, values);
@@ -582,7 +580,7 @@ pub const MatchedRoute = struct {
         return value;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn getScriptSrcString(
         origin: []const u8,
         comptime Writer: type,

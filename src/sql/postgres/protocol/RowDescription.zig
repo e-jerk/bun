@@ -2,7 +2,6 @@ const RowDescription = @This();
 
 fields: []FieldDescription = &[_]FieldDescription{},
 pub fn deinit(this: *@This()) void {
-// safe-transpile: for loop with pointer capture requires manual review
     for (this.fields) |*field| {
         field.deinit();
     }
@@ -14,7 +13,7 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
     var remaining_bytes = try reader.length();
     remaining_bytes -|= 4;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const field_count: usize = @intCast(@max(try reader.short(), 0));
     var fields = try bun.default_allocator.alloc(
         FieldDescription,
@@ -22,7 +21,6 @@ pub fn decodeInternal(this: *@This(), comptime Container: type, reader: NewReade
     );
     var remaining = fields;
     errdefer {
-// safe-transpile: for loop with pointer capture requires manual review
         for (fields[0 .. field_count - remaining.len]) |*field| {
             field.deinit();
         }

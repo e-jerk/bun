@@ -128,7 +128,6 @@ pub const FSWatcher = struct {
             this.cleanEntries();
         }
         pub fn cleanEntries(this: *FSWatchTask) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (this.entries[0..this.count]) |*entry| {
                 if (entry.needs_free) {
                     entry.event.deinit();

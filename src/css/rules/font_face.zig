@@ -44,7 +44,7 @@ pub const FontFaceProperty = union(enum) {
 
     pub fn toCss(this: *const This, dest: *Printer) PrintErr!void {
         const Helpers = struct {
-// safe-transpile: function uses raw slice parameter — consider safe.String
+            // safe-transpile: function uses raw slice parameter — consider safe.String
             pub fn writeProperty(
                 d: *Printer,
                 comptime prop: []const u8,
@@ -55,8 +55,7 @@ pub const FontFaceProperty = union(enum) {
                 try d.delim(':', false);
                 if (comptime multi) {
                     const len = value.items.len;
-                    // safe-transpile: for with index access requires manual review
-    for (value.items, 0..) |*val, idx| {
+                    for (value.items, 0..) |*val, idx| {
                         try val.toCss(d);
                         if (idx < len - 1) {
                             try d.delim(',', false);
@@ -223,7 +222,7 @@ pub const UnicodeRange = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     fn parseConcatenated(_text: []const u8) css.Maybe(UnicodeRange, void) {
         var text = if (_text.len > 0 and _text[0] == '+') _text[1..] else {
             return .{ .err = {} };
@@ -237,12 +236,14 @@ pub const UnicodeRange = struct {
         }
 
         if (question_marks > 0) {
-            if (text.len == 0) return .{ .result = UnicodeRange{
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-                .start = first_hex_value << @intCast(question_marks * 4),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-                .end = ((first_hex_value + 1) << @intCast(question_marks * 4)) - 1,
-            } };
+            if (text.len == 0) return .{
+                .result = UnicodeRange{
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    .start = first_hex_value << @intCast(question_marks * 4),
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    .end = ((first_hex_value + 1) << @intCast(question_marks * 4)) - 1,
+                },
+            };
         } else if (text.len == 0) {
             return .{ .result = UnicodeRange{
                 .start = first_hex_value,
@@ -519,7 +520,7 @@ pub const FontTechnology = enum {
     /// The incremental tech refers to client support for incremental font loading, using either the range-request or the patch-subset method
     incremental,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn asStr(this: *const @This()) []const u8 {
         return css.enum_property_util.asStr(@This(), this);
     }
@@ -615,8 +616,7 @@ pub const FontFaceRule = struct {
         try dest.writeChar('{');
         dest.indent();
         const len = this.properties.items.len;
-        // safe-transpile: for with index access requires manual review
-    for (this.properties.items, 0..) |*prop, i| {
+        for (this.properties.items, 0..) |*prop, i| {
             try dest.newline();
             try prop.toCss(dest);
             if (i != len - 1 or !dest.minify) {
@@ -640,7 +640,7 @@ pub const FontFaceDeclarationParser = struct {
         pub const Prelude = void;
         pub const AtRule = FontFaceProperty;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parsePrelude(_: *This, name: []const u8, input: *css.Parser) Result(Prelude) {
             return .{
                 .err = input.newError(css.BasicParseErrorKind{ .at_rule_invalid = name }),
@@ -672,7 +672,7 @@ pub const FontFaceDeclarationParser = struct {
     pub const DeclarationParser = struct {
         pub const Declaration = FontFaceProperty;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn parseValue(this: *This, name: []const u8, input: *css.Parser) Result(Declaration) {
             _ = this; // autofix
             const state = input.state();

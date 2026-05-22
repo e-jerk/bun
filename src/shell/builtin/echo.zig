@@ -62,7 +62,6 @@ pub fn start(this: *Echo) Yield {
     var stop_output = false;
 
     // TODO: Should flush buffer after it gets to a certain size
-    // safe-transpile: for with index access requires manual review
     for (args, 0..) |arg, i| {
         if (stop_output) break;
         const thearg = std.mem.span(arg);
@@ -222,7 +221,6 @@ pub fn deinit(this: *Echo) void {
 }
 
 pub inline fn bltn(this: *Echo) *Builtin {
-// safe-transpile: @alignCast requires manual review
     const impl: *Builtin.Impl = @alignCast(@fieldParentPtr("echo", this));
     return @fieldParentPtr("impl", impl);
 }

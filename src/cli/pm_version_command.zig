@@ -1,5 +1,5 @@
 pub const PmVersionCommand = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     const VersionType = enum {
         patch,
         minor,
@@ -189,9 +189,9 @@ const zust = @import("safe");
         var path_buf: bun.PathBuffer = undefined;
         var current_dir = start_dir;
 
-var __loop_limit_1: usize = 0;
-while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) break;
+        var __loop_limit_1: usize = 0;
+        while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) break;
             const package_json_path_z = bun.path.joinAbsStringBufZ(current_dir, &path_buf, &.{"package.json"}, .auto);
             if (bun.FD.cwd().existsAt(package_json_path_z)) {
                 return try allocator.dupe(u8, current_dir);

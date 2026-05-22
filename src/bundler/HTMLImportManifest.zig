@@ -122,7 +122,6 @@ pub fn write(index: u32, graph: *const Graph, linker_graph: *const LinkerGraph, 
     const browser_source_index = graph.html_imports.html_source_indices.slice()[index];
     const server_source_index = graph.html_imports.server_source_indices.slice()[index];
     const sources: []const bun.logger.Source = graph.input_files.items(.source);
-// safe-transpile: @alignCast requires manual review
     const bv2: *const BundleV2 = @alignCast(@fieldParentPtr("graph", graph));
     var entry_point_bits = try bun.bit_set.AutoBitSet.initEmpty(bun.default_allocator, graph.entry_points.items.len);
     defer entry_point_bits.deinit(bun.default_allocator);
@@ -137,7 +136,6 @@ pub fn write(index: u32, graph: *const Graph, linker_graph: *const LinkerGraph, 
     var temp_buffer = std.array_list.Managed(u8).init(bun.default_allocator);
     defer temp_buffer.deinit();
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (chunks) |*ch| {
         if (ch.entry_point.source_index == browser_source_index and ch.entry_point.is_entry_point) {
             entry_point_bits.set(ch.entry_point.entry_point_id);
@@ -173,7 +171,6 @@ pub fn write(index: u32, graph: *const Graph, linker_graph: *const LinkerGraph, 
     // When there's only one HTML import, all browser chunks belong to that manifest.
     // When there are multiple HTML imports, only include chunks that intersect with this entry's bits.
     const has_single_html_import = graph.html_imports.html_source_indices.len == 1;
-// safe-transpile: for loop with pointer capture requires manual review
     for (chunks) |*ch| {
         if (ch.entryBits().hasIntersection(&entry_point_bits) or
             (has_single_html_import and ch.flags.is_browser_chunk_from_server_build))
@@ -219,7 +216,6 @@ pub fn write(index: u32, graph: *const Graph, linker_graph: *const LinkerGraph, 
         }
     }
 
-    // safe-transpile: for with index access requires manual review
     for (additional_output_files, 0..) |*output_file, i| {
         // Only print the file once.
         if (already_visited_output_file.isSet(i)) continue;

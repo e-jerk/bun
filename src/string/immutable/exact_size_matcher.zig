@@ -16,7 +16,7 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
             switch (str.len) {
                 1...max_bytes - 1 => {
                     var tmp: [max_bytes]u8 = undefined;
-// safe-transpile: @memcpy requires manual review
+
                     @memcpy(tmp[0..str.len], str);
                     @memset(tmp[str.len..], 0);
 
@@ -38,8 +38,7 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
             switch (str.len) {
                 1...max_bytes - 1 => {
                     var tmp: [max_bytes]u8 = undefined;
-                    // safe-transpile: for with index access requires manual review
-    for (str, 0..) |char, i| {
+                    for (str, 0..) |char, i| {
                         tmp[i] = std.ascii.toLower(char);
                     }
                     @memset(tmp[str.len..], 0);
@@ -57,7 +56,7 @@ pub fn ExactSizeMatcher(comptime max_bytes: usize) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn case(comptime str: []const u8) T {
             if (str.len < max_bytes) {
                 var bytes = std.mem.zeroes([max_bytes]u8);

@@ -1,6 +1,6 @@
 // This is close to WHATWG URL, but we don't want the validation errors
 pub const URL = struct {
-const zust = @import("safe");
+    const zust = @import("safe");
     const log = Output.scoped(.URL, .visible);
 
     hash: string = "",
@@ -1008,9 +1008,9 @@ pub const Scanner = struct {
 
         // reuse stack space
         // otherwise we'd recursively call the function
-var __loop_limit_1: usize = 0;
-loop: while (true) : (__loop_limit_1 += 1) {
-    if (__loop_limit_1 > 1_000_000) return null;
+        var __loop_limit_1: usize = 0;
+        loop: while (true) : (__loop_limit_1 += 1) {
+            if (__loop_limit_1 > 1_000_000) return null;
             if (this.i >= this.query_string.len) return null;
 
             const slice = this.query_string[this.i..];

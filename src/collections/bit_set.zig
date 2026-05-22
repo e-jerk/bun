@@ -121,23 +121,23 @@ pub fn IntegerBitSet(comptime size: u16) type {
             if (range.start == range.end) return;
             if (MaskInt == u0) return;
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const start_bit = @as(ShiftInt, @intCast(range.start));
 
             var mask = std.math.boolMask(MaskInt, true) << start_bit;
             if (range.end != bit_length) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const end_bit = @as(ShiftInt, @intCast(range.end));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 mask &= std.math.boolMask(MaskInt, true) >> @as(ShiftInt, @truncate(@as(usize, @bitSizeOf(MaskInt)) - @as(usize, end_bit)));
             }
             self.mask &= ~mask;
 
             mask = std.math.boolMask(MaskInt, value) << start_bit;
             if (range.end != bit_length) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const end_bit = @as(ShiftInt, @intCast(range.end));
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 mask &= std.math.boolMask(MaskInt, value) >> @as(ShiftInt, @truncate(@as(usize, @bitSizeOf(MaskInt)) - @as(usize, end_bit)));
             }
             self.mask |= mask;
@@ -307,7 +307,7 @@ pub fn IntegerBitSet(comptime size: u16) type {
                         .reverse => {
                             const leading_zeroes = @clz(self.bits_remain);
                             const top_bit = (@bitSizeOf(MaskInt) - 1) - leading_zeroes;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                             self.bits_remain &= (@as(MaskInt, 1) << @as(ShiftInt, @intCast(top_bit))) - 1;
                             return top_bit;
                         },
@@ -318,12 +318,12 @@ pub fn IntegerBitSet(comptime size: u16) type {
 
         fn maskBit(index: usize) MaskInt {
             if (MaskInt == u0) return 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(MaskInt, 1) << @as(ShiftInt, @intCast(index));
         }
         fn boolMaskBit(index: usize, value: bool) MaskInt {
             if (MaskInt == u0) return 0;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(MaskInt, @intFromBool(value)) << @as(ShiftInt, @intCast(index));
         }
     };
@@ -462,11 +462,11 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
             if (num_masks == 0) return;
 
             const start_mask_index = maskIndex(range.start);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const start_bit = @as(ShiftInt, @truncate(range.start));
 
             const end_mask_index = maskIndex(range.end);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             const end_bit = @as(ShiftInt, @truncate(range.end));
 
             if (start_mask_index == end_mask_index) {
@@ -518,15 +518,13 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
         /// in the toggles bit set.
         pub fn toggleSet(self: *Self, toggles: *const Self) void {
             const other = &toggles.masks;
-            // safe-transpile: for with index access requires manual review
-    for (self.masks, other) |*mask, b| {
+            for (self.masks, other) |*mask, b| {
                 mask.* ^= b;
             }
         }
 
         /// Flips every bit in the bit set.
         pub fn toggleAll(self: *Self) void {
-// safe-transpile: for loop with pointer capture requires manual review
             for (self.masks) |*mask| {
                 mask.* = ~mask.*;
             }
@@ -551,8 +549,7 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
         /// result in the first one.  Bits in the result are
         /// set if the corresponding bits were set in either input.
         pub fn setUnion(self: *Self, other: *const Self) void {
-            // safe-transpile: for with index access requires manual review
-    for (&self.masks, other[0..self.masks.len]) |*mask, alt| {
+            for (&self.masks, other[0..self.masks.len]) |*mask, alt| {
                 mask.* |= alt;
             }
         }
@@ -561,8 +558,7 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
         /// the result in the first one.  Bits in the result are
         /// set if the corresponding bits were set in both inputs.
         pub fn setIntersection(self: *Self, other: *const Self) void {
-            // safe-transpile: for with index access requires manual review
-    for (&self.masks, other.masks[0..self.masks.len]) |*mask, alt| {
+            for (&self.masks, other.masks[0..self.masks.len]) |*mask, alt| {
                 mask.* &= alt;
             }
         }
@@ -641,8 +637,7 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
         }
 
         pub fn hasIntersection(self: *const Self, other: *const Self) bool {
-            // safe-transpile: for with index access requires manual review
-    for (self.masks, other.masks) |a, b| {
+            for (self.masks, other.masks) |a, b| {
                 if (a & b != 0) return true;
             }
 
@@ -680,14 +675,14 @@ pub fn ArrayBitSet(comptime MaskIntType: type, comptime size: usize) type {
         }
 
         fn maskBit(index: usize) callconv(bun.callconv_inline) MaskInt {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             return @as(MaskInt, 1) << @as(ShiftInt, @truncate(index));
         }
         fn maskIndex(index: usize) callconv(bun.callconv_inline) usize {
             return index >> @bitSizeOf(ShiftInt);
         }
         fn boolMaskBit(index: usize, value: bool) callconv(bun.callconv_inline) MaskInt {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             return @as(MaskInt, @intFromBool(value)) << @as(ShiftInt, @intCast(index));
         }
     };
@@ -841,7 +836,7 @@ pub const DynamicBitSetUnmanaged = struct {
             // set the padding bits in the old last item to 1
             if (fill and old_masks > 0) {
                 const old_padding_bits = old_masks * @bitSizeOf(MaskInt) - old_len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                 const old_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(old_padding_bits));
                 self.masks[old_masks - 1] |= ~old_mask;
             }
@@ -856,7 +851,7 @@ pub const DynamicBitSetUnmanaged = struct {
         // Zero out the padding bits
         if (new_len > 0) {
             const padding_bits = new_masks * @bitSizeOf(MaskInt) - new_len;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
             self.masks[new_masks - 1] &= last_item_mask;
         }
@@ -898,7 +893,7 @@ pub const DynamicBitSetUnmanaged = struct {
         return (self.masks[maskIndex(index)] & maskBit(index)) != 0;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn bytes(self: Self) []const u8 {
         return std.mem.sliceAsBytes(self.masks[0..numMasks(self.bit_length)]);
     }
@@ -916,8 +911,7 @@ pub const DynamicBitSetUnmanaged = struct {
 
     pub fn hasIntersection(self: Self, other: Self) bool {
         const num_masks = (self.bit_length + (@bitSizeOf(MaskInt) - 1)) / @bitSizeOf(MaskInt);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks[0..num_masks]) |mask, other_mask| {
+        for (self.masks[0..num_masks], other.masks[0..num_masks]) |mask, other_mask| {
             if ((mask & other_mask) != 0) return true;
         }
 
@@ -948,11 +942,11 @@ pub const DynamicBitSetUnmanaged = struct {
         if (range.start == range.end) return;
 
         const start_mask_index = maskIndex(range.start);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const start_bit = @as(ShiftInt, @truncate(range.start));
 
         const end_mask_index = maskIndex(range.end);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         const end_bit = @as(ShiftInt, @truncate(range.end));
 
         if (start_mask_index == end_mask_index) {
@@ -974,7 +968,6 @@ pub const DynamicBitSetUnmanaged = struct {
                 bulk_mask_index = start_mask_index;
             }
 
-// safe-transpile: for loop with pointer capture requires manual review
             for (self.masks[bulk_mask_index..end_mask_index]) |*mask| {
                 mask.* = std.math.boolMask(MaskInt, value);
             }
@@ -1007,13 +1000,12 @@ pub const DynamicBitSetUnmanaged = struct {
         const bit_length = self.bit_length;
         if (bit_length == 0) return;
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], toggles.masks[0..num_masks]) |*mask, other_mask| {
+        for (self.masks[0..num_masks], toggles.masks[0..num_masks]) |*mask, other_mask| {
             mask.* ^= other_mask;
         }
 
         const padding_bits = num_masks * @bitSizeOf(MaskInt) - bit_length;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
         self.masks[num_masks - 1] &= last_item_mask;
     }
@@ -1022,13 +1014,12 @@ pub const DynamicBitSetUnmanaged = struct {
         const bit_length = self.bit_length;
         if (bit_length == 0) return;
         const num_masks = numMasks(self.bit_length);
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.masks[0..num_masks]) |*mask| {
             mask.* = std.math.boolMask(MaskInt, value);
         }
 
         const padding_bits = num_masks * @bitSizeOf(MaskInt) - bit_length;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
         self.masks[num_masks - 1] &= last_item_mask;
     }
@@ -1040,13 +1031,12 @@ pub const DynamicBitSetUnmanaged = struct {
         if (bit_length == 0) return;
 
         const num_masks = numMasks(self.bit_length);
-// safe-transpile: for loop with pointer capture requires manual review
         for (self.masks[0..num_masks]) |*mask| {
             mask.* = ~mask.*;
         }
 
         const padding_bits = num_masks * @bitSizeOf(MaskInt) - bit_length;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
         self.masks[num_masks - 1] &= last_item_mask;
     }
@@ -1057,13 +1047,12 @@ pub const DynamicBitSetUnmanaged = struct {
         if (bit_length == 0) return;
 
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
+        for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
             mask.* = other_mask;
         }
 
         const padding_bits = num_masks * @bitSizeOf(MaskInt) - bit_length;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
         self.masks[num_masks - 1] &= last_item_mask;
     }
@@ -1075,8 +1064,7 @@ pub const DynamicBitSetUnmanaged = struct {
     pub fn setUnion(self: *Self, other: Self) void {
         if (comptime Environment.allow_assert) bun.assert(other.bit_length == self.bit_length);
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
+        for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
             mask.* |= other_mask;
         }
     }
@@ -1088,8 +1076,7 @@ pub const DynamicBitSetUnmanaged = struct {
     pub fn setIntersection(self: *Self, other: Self) void {
         if (comptime Environment.allow_assert) bun.assert(other.bit_length == self.bit_length);
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
+        for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
             mask.* &= other_mask;
         }
     }
@@ -1097,8 +1084,7 @@ pub const DynamicBitSetUnmanaged = struct {
     pub fn setExcludeTwo(self: *Self, other: Self, third: Self) void {
         if (comptime Environment.allow_assert) bun.assert(other.bit_length == self.bit_length);
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks[0..num_masks], third.masks[0..num_masks]) |*mask, other_mask, third_mask| {
+        for (self.masks[0..num_masks], other.masks[0..num_masks], third.masks[0..num_masks]) |*mask, other_mask, third_mask| {
             mask.* &= ~other_mask;
             mask.* &= ~third_mask;
         }
@@ -1107,8 +1093,7 @@ pub const DynamicBitSetUnmanaged = struct {
     pub fn setExclude(self: *Self, other: Self) void {
         if (comptime Environment.allow_assert) bun.assert(other.bit_length == self.bit_length);
         const num_masks = numMasks(self.bit_length);
-        // safe-transpile: for with index access requires manual review
-    for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
+        for (self.masks[0..num_masks], other.masks) |*mask, other_mask| {
             mask.* &= ~other_mask;
         }
     }
@@ -1194,7 +1179,7 @@ pub const DynamicBitSetUnmanaged = struct {
     pub fn iterator(self: *const Self, comptime options: IteratorOptions) Iterator(options) {
         const num_masks = numMasks(self.bit_length);
         const padding_bits = num_masks * @bitSizeOf(MaskInt) - self.bit_length;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         const last_item_mask = (~@as(MaskInt, 0)) >> @as(ShiftInt, @intCast(padding_bits));
         return Iterator(options).init(self.masks[0..num_masks], last_item_mask);
     }
@@ -1204,14 +1189,14 @@ pub const DynamicBitSetUnmanaged = struct {
     }
 
     fn maskBit(index: usize) MaskInt {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         return @as(MaskInt, 1) << @as(ShiftInt, @truncate(index));
     }
     fn maskIndex(index: usize) usize {
         return index >> @bitSizeOf(ShiftInt);
     }
     fn boolMaskBit(index: usize, value: bool) MaskInt {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         return @as(MaskInt, @intFromBool(value)) << @as(ShiftInt, @intCast(index));
     }
     fn numMasks(bit_length: usize) usize {
@@ -1277,7 +1262,7 @@ pub const AutoBitSet = union(enum) {
         }
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn rawBytes(this: *const AutoBitSet) []const u8 {
         return switch (std.meta.activeTag(this.*)) {
             .static => std.mem.asBytes(&this.static.masks),
@@ -1285,7 +1270,7 @@ pub const AutoBitSet = union(enum) {
         };
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn bytes(this: *const AutoBitSet, _: usize) []const u8 {
         return this.rawBytes();
     }
@@ -1600,7 +1585,7 @@ pub fn BitSetIterator(comptime MaskInt: type, comptime options: IteratorOptions)
                 .reverse => {
                     const leading_zeroes = @clz(self.bits_remain);
                     const top_bit = (@bitSizeOf(MaskInt) - 1) - leading_zeroes;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const no_top_bit_mask = (@as(MaskInt, 1) << @as(ShiftInt, @intCast(top_bit))) - 1;
                     self.bits_remain &= no_top_bit_mask;
                     return top_bit + self.bit_offset;

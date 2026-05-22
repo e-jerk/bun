@@ -107,7 +107,6 @@ pub fn StyleRule(comptime R: type) type {
                     const important = comptime std.mem.eql(u8, decl_field_name, "important_declarations");
                     const decls: *const ArrayList(css.Property) = &@field(this.declarations, decl_field_name);
 
-// safe-transpile: for loop with pointer capture requires manual review
                     for (decls.items) |*decl| {
                         // The CSS modules `composes` property is handled specially, and omitted during printing.
                         // We need to add the classes it references to the list for the selectors in this rule.
@@ -233,13 +232,11 @@ pub fn StyleRule(comptime R: type) type {
                 this.selectors.eql(&other.selectors) and
                 brk: {
                     var len = @min(this.declarations.declarations.items.len, other.declarations.declarations.items.len);
-                    // safe-transpile: for with index access requires manual review
-    for (this.declarations.declarations.items[0..len], other.declarations.declarations.items[0..len]) |*a, *b| {
+                    for (this.declarations.declarations.items[0..len], other.declarations.declarations.items[0..len]) |*a, *b| {
                         if (!a.propertyId().eql(&b.propertyId())) break :brk false;
                     }
                     len = @min(this.declarations.important_declarations.items.len, other.declarations.important_declarations.items.len);
-                    // safe-transpile: for with index access requires manual review
-    for (this.declarations.important_declarations.items[0..len], other.declarations.important_declarations.items[0..len]) |*a, *b| {
+                    for (this.declarations.important_declarations.items[0..len], other.declarations.important_declarations.items[0..len]) |*a, *b| {
                         if (!a.propertyId().eql(&b.propertyId())) break :brk false;
                     }
                     break :brk true;

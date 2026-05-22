@@ -35,7 +35,7 @@ pub const BrotliDecoder = opaque {
         return BrotliDecoderSetParameter(state, @intFromEnum(param), value) > 0;
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn attachDictionary(state: *BrotliDecoder, @"type": BrotliSharedDictionaryType, data: []const u8) callconv(.c) c_int {
         return BrotliDecoderAttachDictionary(state, @"type", data.len, data.ptr);
     }
@@ -48,7 +48,7 @@ pub const BrotliDecoder = opaque {
         return BrotliDecoderDestroyInstance(state);
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn decompress(encoded: []const u8, decoded: *[]u8) callconv(.c) BrotliDecoderResult {
         return BrotliDecoderDecompress(encoded.len, encoded.ptr, &decoded.len, decoded.ptr);
     }
@@ -61,7 +61,6 @@ pub const BrotliDecoder = opaque {
         return BrotliDecoderHasMoreOutput(state) != 0;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
     pub fn takeOutput(state: *BrotliDecoder) callconv(.c) []const u8 {
         var max_size: usize = std.math.maxInt(usize);
         const ptr = BrotliDecoderTakeOutput(state, &max_size) orelse return "";
@@ -278,7 +277,7 @@ pub const BrotliEncoder = opaque {
         return BrotliEncoderHasMoreOutput(state) > 0;
     }
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn takeOutput(state: *BrotliEncoder) []const u8 {
         var size: usize = 0;
         if (BrotliEncoderTakeOutput(state, &size)) |ptr| {
@@ -295,7 +294,7 @@ pub const BrotliEncoder = opaque {
     };
 
     // https://github.com/google/brotli/blob/2ad58d8603294f5ee33d23bb725e0e6a17c1de50/go/cbrotli/writer.go#L23-L40
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn compressStream(state: *BrotliEncoder, op: Operation, data: []const u8) CompressionResult {
         var available_in = data.len;
         var next_in: ?[*]const u8 = data.ptr;

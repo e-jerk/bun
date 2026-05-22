@@ -1091,11 +1091,11 @@ pub const origin_relative_epoch = 946684800 * std.time.ns_per_s;
 fn getOriginTimestamp() u64 {
     return @as(
         u64,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
         @truncate(@as(
             u128,
             // handle if they set their system clock to be before epoch
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(@max(
                 @import("std-fs-compat").nanoTimestamp(),
                 origin_relative_epoch,
@@ -1442,7 +1442,7 @@ pub fn initWorker(
         .standalone_module_graph = worker.parent.standalone_module_graph,
         .worker = worker,
         .debug_thread_id = if (Environment.allow_assert) std.Thread.getCurrentId(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .initial_script_execution_context_identifier = @as(i32, @intCast(worker.execution_context_id)),
     };
     vm.source_mappings.init(&vm.saved_source_map_table);
@@ -2087,8 +2087,7 @@ pub fn processFetchLog(globalThis: *JSGlobalObject, specifier: bun.String, refer
             const referrer_utf8 = referrer.toUTF8(bun.default_allocator);
             defer referrer_utf8.deinit();
 
-            // safe-transpile: for with index access requires manual review
-    for (logs, errors) |msg, *current| {
+            for (logs, errors) |msg, *current| {
                 current.* = switch (msg.metadata) {
                     .build => bun.api.BuildMessage.create(globalThis, globalThis.allocator(), msg) catch |e| globalThis.takeException(e),
                     .resolve => bun.api.ResolveMessage.create(
@@ -2603,7 +2602,6 @@ pub fn swapGlobalForTestIsolation(this: *VirtualMachine) void {
     // path), but repoint it anyway so the field doesn't dangle at a freed
     // GC cell.
     if (this.rare_data) |rare| {
-// safe-transpile: for loop with pointer capture requires manual review
         for (rare.cleanup_hooks.items) |*hook| {
             if (hook.globalThis == old_global) hook.globalThis = new_global;
         }
@@ -2935,7 +2933,6 @@ pub fn remapStackFramePositions(this: *VirtualMachine, frames: [*]jsc.ZigStackFr
     var cached: union(enum) { none, ism: SourceMap.InternalSourceMap, absent } =
         if (sm.last_ism) |ism| .{ .ism = ism } else .none;
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (frames[0..frames_count]) |*frame| {
         if (frame.position.isInvalid() or frame.remapped) continue;
         var sourceURL = frame.source_url.toUTF8(bun.default_allocator);
@@ -2951,7 +2948,7 @@ pub fn remapStackFramePositions(this: *VirtualMachine, frames: [*]jsc.ZigStackFr
             cached_hash = hash;
             if (this.source_mappings.getValueLocked(hash)) |value| {
                 if (value.get(SourceMap.InternalSourceMap)) |ptr| {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+                    // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
                     cached = .{ .ism = .{ .data = @as([*]const u8, @ptrCast(ptr)) } };
                 } else if (value.get(SourceMap.ParsedSourceMap)) |parsed| {
                     // A ParsedSourceMap-with-internal that has no external
@@ -3082,8 +3079,7 @@ pub fn remapZigException(
     var frames: []jsc.ZigStackFrame = exception.stack.frames_ptr[0..exception.stack.frames_len];
     if (this.hide_bun_stackframes) {
         var start_index: ?usize = null;
-        // safe-transpile: for with index access requires manual review
-    for (frames, 0..) |frame, i| {
+        for (frames, 0..) |frame, i| {
             if (frame.source_url.eqlComptime("bun:wrap") or
                 frame.function_name.eqlComptime("::bunternal::"))
             {
@@ -3119,7 +3115,7 @@ pub fn remapZigException(
                 frames[j] = frame;
                 j += 1;
             }
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             exception.stack.frames_len = @as(u8, @truncate(j));
             frames.len = j;
         }
@@ -3130,7 +3126,6 @@ pub fn remapZigException(
     var top = &frames[0];
     var top_frame_is_builtin = false;
     if (this.hide_bun_stackframes) {
-// safe-transpile: for loop with pointer capture requires manual review
         for (frames) |*frame| {
             if (frame.source_url.hasPrefixComptime("bun:") or
                 frame.source_url.hasPrefixComptime("node:") or
@@ -3231,7 +3226,7 @@ pub fn remapZigException(
         const last_line = @max(top.position.line.zeroBased(), 0);
         if (strings.getLinesInText(
             code.slice(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(last_line),
             ZigException.Holder.source_lines_count,
         )) |lines_buf| {
@@ -3242,10 +3237,9 @@ pub fn remapZigException(
             @memset(source_line_numbers, 0);
 
             lines = lines[0..@min(@as(usize, lines.len), source_lines.len)];
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             var current_line_number: i32 = @intCast(last_line);
-            // safe-transpile: for with index access requires manual review
-    for (lines, source_lines[0..lines.len], source_line_numbers[0..lines.len]) |line, *line_dest, *line_number| {
+            for (lines, source_lines[0..lines.len], source_line_numbers[0..lines.len]) |line, *line_dest, *line_number| {
                 // To minimize duplicate allocations, we use the same slice as above
                 // it should virtually always be UTF-8 and thus not cloned
                 line_dest.* = String.init(line);
@@ -3253,7 +3247,7 @@ pub fn remapZigException(
                 current_line_number -= 1;
             }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+            // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
             exception.stack.source_lines_len = @as(u8, @truncate(lines.len));
         }
     } else if (enable_source_code_preview) {
@@ -3261,7 +3255,6 @@ pub fn remapZigException(
     }
 
     if (frames.len > 1) {
-// safe-transpile: for loop with pointer capture requires manual review
         for (frames) |*frame| {
             if (frame == top or frame.position.isInvalid()) continue;
             const source_url = frame.source_url.toUTF8(bun.default_allocator);
@@ -3432,7 +3425,6 @@ fn printErrorInstance(
         var top_frame = if (exception.stack.frames_len > 0) &exception.stack.frames()[0] else null;
 
         if (this.hide_bun_stackframes) {
-// safe-transpile: for loop with pointer capture requires manual review
             for (exception.stack.frames()) |*frame| {
                 if (frame.position.isInvalid() or frame.source_url.hasPrefixComptime("bun:") or frame.source_url.hasPrefixComptime("node:")) continue;
                 top_frame = frame;
@@ -3443,7 +3435,7 @@ fn printErrorInstance(
         if (top_frame == null or top_frame.?.position.isInvalid()) {
             defer did_print_name = true;
             defer source.text.deinit();
-        const trimmed = std.mem.trimEnd(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
+            const trimmed = std.mem.trimEnd(u8, std.mem.trim(u8, source.text.slice(), "\n"), "\t ");
 
             const text = trimmed[0..@min(trimmed.len, max_line_length)];
 
@@ -3499,7 +3491,7 @@ fn printErrorInstance(
                 );
 
                 if (clamped.len < max_line_length_with_divot or top.position.column.zeroBased() > max_line_length_with_divot) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                     const indent = max_line_number_pad + " | ".len + @as(u64, @intCast(top.position.column.zeroBased()));
 
                     try writer.splatByteAll(' ', indent);
@@ -3730,8 +3722,7 @@ fn printErrorNameAndMessage(
                             (if (is_utf16)
                                 // there is no existing function to perform this slice comparison
                                 // []const u16, []const u8
-                                // safe-transpile: for with index access requires manual review
-    for (code, msg_chars[0..code.len]) |a, b| {
+                                for (code, msg_chars[0..code.len]) |a, b| {
                                     if (a != b) break false;
                                 } else true
                             else
@@ -3843,7 +3834,7 @@ pub noinline fn printGithubAnnotation(exception: *ZigException) void {
 
         var i: i16 = 0;
         while (i < frames.len) : (i += 1) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const frame = frames[@as(usize, @intCast(i))];
             const source_url = frame.source_url.toUTF8(allocator);
             defer source_url.deinit();
@@ -4110,7 +4101,6 @@ pub const ExitHandler = struct {
 
     pub fn dispatchOnExit(this: *ExitHandler) void {
         jsc.markBinding(@src());
-// safe-transpile: @alignCast requires manual review
         const vm: *VirtualMachine = @alignCast(@fieldParentPtr("exit_handler", this));
         Process__dispatchOnExit(vm.global, this.exit_code);
         if (vm.isMainThread()) {
@@ -4121,7 +4111,6 @@ pub const ExitHandler = struct {
 
     pub fn dispatchOnBeforeExit(this: *ExitHandler) void {
         jsc.markBinding(@src());
-// safe-transpile: @alignCast requires manual review
         const vm: *VirtualMachine = @alignCast(@fieldParentPtr("exit_handler", this));
         jsc.fromJSHostCallGeneric(vm.global, @src(), Process__dispatchOnBeforeExit, .{ vm.global, this.exit_code }) catch return;
     }

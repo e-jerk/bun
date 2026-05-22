@@ -59,7 +59,7 @@ pub const Options = struct {
             if (port32 < 0 or port32 > std.math.maxInt(u16)) {
                 return throwBadPort(global, p);
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             break :blk @intCast(port32);
         } else 0;
 
@@ -111,9 +111,9 @@ pub fn parse(global: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSError
             const enc: bun.String.WTFEncoding = if (is_8_bit) .latin1 else .utf16;
             const from_chars = if (is_8_bit) input.latin1() else input.utf16();
             const str, const to_chars = bun.String.createUninitialized(enc, from_chars.len + prefix.len);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(to_chars[0..prefix.len], bun.strings.literal(enc.Byte(), prefix));
-// safe-transpile: @memcpy requires manual review
+            // safe-transpile: @memcpy requires manual review
             @memcpy(to_chars[prefix.len..], from_chars);
             break :with_prefix str;
         },
@@ -125,7 +125,7 @@ pub fn parse(global: *jsc.JSGlobalObject, callframe: *jsc.CallFrame) bun.JSError
     const host = url.host();
     const port_: u16 = blk: {
         const port32 = url.port();
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         break :blk if (port32 > std.math.maxInt(u16)) 0 else @intCast(port32);
     };
     bun.assert(host.tag != .Dead);
@@ -286,7 +286,7 @@ pub fn init(addr: []const u8, port_: u16) AddressError!SocketAddress {
 /// Create an IPv4 socket address. `addr` is assumed to be valid. Port is in host byte order.
 pub fn initIPv4(addr: [4]u8, port_: u16) SocketAddress {
     // TODO: make sure casting doesn't swap byte order on us.
-// safe-transpile: @bitCast requires manual review
+    // safe-transpile: @bitCast requires manual review
     return .{ ._addr = sockaddr.v4(std.mem.nativeToBig(u16, port_), @bitCast(addr)) };
 }
 
@@ -437,7 +437,7 @@ pub fn getFlowLabel(this: *SocketAddress, _: *jsc.JSGlobalObject) JSValue {
 /// - [RFC 6437](https://tools.ietf.org/html/rfc6437)
 pub fn flowLabel(this: *const SocketAddress) ?u32 {
     if (this.family() == AF.INET6) {
-// safe-transpile: @bitCast requires manual review
+        // safe-transpile: @bitCast requires manual review
         const in6: inet.sockaddr_in6 = @bitCast(this._addr);
         return in6.flowinfo;
     } else {
@@ -502,9 +502,9 @@ const ipv6: bun.String = .{ .tag = .WTFStringImpl, .value = .{ .WTFStringImpl = 
 
 // FIXME: c-headers-for-zig casts AF_* and PF_* to `c_int` when it should be `comptime_int`
 pub const AF = enum(inet.sa_family_t) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     INET = @intCast(inet.AF_INET),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     INET6 = @intCast(inet.AF_INET6),
 
     pub inline fn int(this: AF) inet.sa_family_t {
@@ -588,7 +588,7 @@ pub const sockaddr = extern union {
             if (!std.mem.allEqual(u8, self.sin6.addr[0..10], 0)) return null;
             if (self.sin6.addr[10] != 255) return null;
             if (self.sin6.addr[11] != 255) return null;
-// safe-transpile: @bitCast requires manual review
+            // safe-transpile: @bitCast requires manual review
             return @bitCast(self.sin6.addr[12..16].*);
         }
         return null;
@@ -603,7 +603,6 @@ pub const sockaddr = extern union {
     }
 
     pub fn fmt(self: *const sockaddr, buf: *[inet.INET6_ADDRSTRLEN]u8) [:0]const u8 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         const addr_src: *const anyopaque = if (self.family() == AF.INET) @ptrCast(&self.sin.addr) else @ptrCast(&self.sin6.addr);
         const formatted = std.mem.sliceTo(ares.ares_inet_ntop(self.family().int(), addr_src, buf, buf.len) orelse {
             std.debug.panic("Invariant violation: SocketAddress created with invalid IPv6 address", .{});
@@ -613,7 +612,7 @@ pub const sockaddr = extern union {
     }
 
     // I'd be money endianess is going to screw us here.
-// safe-transpile: @bitCast requires manual review
+    // safe-transpile: @bitCast requires manual review
     pub const @"127.0.0.1": sockaddr = sockaddr.v4(0, @bitCast([_]u8{ 127, 0, 0, 1 }));
     // TODO: check that `::` is all zeroes on all platforms. Should correspond
     // to `IN6ADDR_ANY_INIT`.
@@ -657,8 +656,7 @@ comptime {
     std.debug.assert(AF.INET6.int() == ares.AF.INET6);
 }
 
-pub const inet = if (bun.Environment.isWindows)
-win: {
+pub const inet = if (bun.Environment.isWindows) win: {
     const ws2 = std.os.windows.ws2_32;
     break :win struct {
         pub const IN4ADDR_LOOPBACK: u32 = ws2.IN4ADDR_LOOPBACK;

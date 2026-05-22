@@ -192,7 +192,6 @@ pub const BoxShadowHandler = struct {
             const ColorFallbackKind = css.ColorFallbackKind;
             var prefixes = context.targets.prefixes(prefixes2, Feature.box_shadow);
             var fallbacks = ColorFallbackKind{};
-// safe-transpile: for loop with pointer capture requires manual review
             for (box_shadows.slice()) |*shadow| {
                 bun.bits.insert(ColorFallbackKind, &fallbacks, shadow.color.getNecessaryFallbacks(context.targets));
             }
@@ -200,8 +199,7 @@ pub const BoxShadowHandler = struct {
             if (fallbacks.rgb) {
                 var rgb = SmallList(BoxShadow, 1).initCapacity(context.allocator, box_shadows.len());
                 rgb.setLen(box_shadows.len());
-                // safe-transpile: for with index access requires manual review
-    for (box_shadows.slice(), rgb.slice_mut()) |*input, *output| {
+                for (box_shadows.slice(), rgb.slice_mut()) |*input, *output| {
                     output.color = input.color.toRGB(context.allocator) orelse input.color.deepClone(context.allocator);
                     const fields = std.meta.fields(BoxShadow);
                     inline for (fields) |field| {
@@ -222,8 +220,7 @@ pub const BoxShadowHandler = struct {
             if (fallbacks.p3) {
                 var p3 = SmallList(BoxShadow, 1).initCapacity(context.allocator, box_shadows.len());
                 p3.setLen(box_shadows.len());
-                // safe-transpile: for with index access requires manual review
-    for (box_shadows.slice(), p3.slice_mut()) |*input, *output| {
+                for (box_shadows.slice(), p3.slice_mut()) |*input, *output| {
                     output.color = input.color.toP3(context.allocator) orelse input.color.deepClone(context.allocator);
                     const fields = std.meta.fields(BoxShadow);
                     inline for (fields) |field| {
@@ -237,8 +234,7 @@ pub const BoxShadowHandler = struct {
             if (fallbacks.lab) {
                 var lab = SmallList(BoxShadow, 1).initCapacity(context.allocator, box_shadows.len());
                 lab.setLen(box_shadows.len());
-                // safe-transpile: for with index access requires manual review
-    for (box_shadows.slice(), lab.slice_mut()) |*input, *output| {
+                for (box_shadows.slice(), lab.slice_mut()) |*input, *output| {
                     output.color = input.color.toLAB(context.allocator) orelse input.color.deepClone(context.allocator);
                     const fields = std.meta.fields(BoxShadow);
                     inline for (fields) |field| {

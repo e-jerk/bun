@@ -262,14 +262,12 @@ pub fn fromJS(value: JSValue, globalThis: *JSGlobalObject) bun.JSError!?Readable
         .Blob => ReadableStream{
             .value = out,
             .ptr = .{
-// safe-transpile: @alignCast requires manual review
                 .Blob = @ptrCast(@alignCast((ptr.?))),
             },
         },
         .File => ReadableStream{
             .value = out,
             .ptr = .{
-// safe-transpile: @alignCast requires manual review
                 .File = @ptrCast(@alignCast((ptr.?))),
             },
         },
@@ -277,7 +275,6 @@ pub fn fromJS(value: JSValue, globalThis: *JSGlobalObject) bun.JSError!?Readable
         .Bytes => ReadableStream{
             .value = out,
             .ptr = .{
-// safe-transpile: @alignCast requires manual review
                 .Bytes = @ptrCast(@alignCast((ptr.?))),
             },
         },
@@ -448,7 +445,7 @@ pub fn NewSource(
         pub const new = bun.TrivialNew(@This());
         pub const deinit = bun.TrivialDeinit(@This());
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn pull(this: *This, buf: []u8) streams.Result {
             return onPull(&this.context, buf, JSValue.zero);
         }
@@ -475,7 +472,7 @@ pub fn NewSource(
             return onStart(&this.context);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onPullFromJS(this: *This, buf: []u8, view: JSValue) streams.Result {
             return onPull(&this.context, buf, view);
         }

@@ -48,7 +48,6 @@ pub const Owner = union(enum) {
         }
 
         comptime {
-// safe-transpile: @bitCast requires manual review
             assert(@as(u32, @bitCast(Packed{ .kind = .none, .data = 1 })) == 1);
         }
     };
@@ -62,24 +61,20 @@ pub fn getOwner(failure: SerializedFailure) Owner {
 /// This is okay since SerializedFailure can contain more than one error.
 pub const ArrayHashContextViaOwner = struct {
     pub fn hash(_: ArrayHashContextViaOwner, k: SerializedFailure) u32 {
-// safe-transpile: @bitCast requires manual review
         return std.hash.int(@as(u32, @bitCast(k.getOwner().encode())));
     }
 
     pub fn eql(_: ArrayHashContextViaOwner, a: SerializedFailure, b: SerializedFailure, _: usize) bool {
-// safe-transpile: @bitCast requires manual review
         return @as(u32, @bitCast(a.getOwner().encode())) == @as(u32, @bitCast(b.getOwner().encode()));
     }
 };
 
 pub const ArrayHashAdapter = struct {
     pub fn hash(_: ArrayHashAdapter, own: Owner) u32 {
-// safe-transpile: @bitCast requires manual review
         return std.hash.int(@as(u32, @bitCast(own.encode())));
     }
 
     pub fn eql(_: ArrayHashAdapter, a: Owner, b: SerializedFailure, _: usize) bool {
-// safe-transpile: @bitCast requires manual review
         return @as(u32, @bitCast(a.encode())) == @as(u32, @bitCast(b.getOwner().encode()));
     }
 };
@@ -125,15 +120,14 @@ pub fn initFromLog(
         unreachable; // enough space
     const w = @import("std-io-compat").writer(&payload);
 
-// safe-transpile: @bitCast requires manual review
+    // safe-transpile: @bitCast requires manual review
     try w.writeInt(u32, @bitCast(owner.encode()), .little);
 
     try writeString32(owner_display_name, w);
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     try w.writeInt(u32, @intCast(messages.len), .little);
 
-// safe-transpile: for loop with pointer capture requires manual review
     for (messages) |*msg| {
         try writeLogMsg(msg, w);
     }
@@ -157,7 +151,7 @@ fn writeLogMsg(msg: *const bun.logger.Msg, w: Writer) !void {
     });
     try writeLogData(msg.data, w);
     const notes = msg.notes;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     try w.writeInt(u32, @intCast(notes.len), .little);
     for (notes) |note| {
         try writeLogData(note, w);
@@ -173,11 +167,11 @@ fn writeLogData(data: bun.logger.Data, w: Writer) !void {
         }
         assert(loc.column >= 0); // zero based and not negative
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(i32, @intCast(loc.line), .little);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(loc.column), .little);
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         try w.writeInt(u32, @intCast(loc.length), .little);
 
         // TODO: syntax highlighted line text + give more context lines
@@ -193,7 +187,7 @@ fn writeLogData(data: bun.logger.Data, w: Writer) !void {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
 fn writeString32(data: []const u8, w: Writer) !void {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     try w.writeInt(u32, @intCast(data.len), .little);
     try w.writeAll(data);
 }

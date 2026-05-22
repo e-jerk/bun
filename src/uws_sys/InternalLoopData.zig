@@ -27,7 +27,7 @@ pub const InternalLoopData = extern struct {
     jsc_vm: ?*jsc.VM,
     tick_depth: c_int,
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn recvSlice(this: *InternalLoopData) []u8 {
         return this.recv_buf[0..LIBUS_RECV_BUFFER_LENGTH];
     }

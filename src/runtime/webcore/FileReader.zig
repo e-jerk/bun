@@ -340,7 +340,6 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
         switch (this.read_inside_on_pull) {
             .js => |in_progress| {
                 if (in_progress.len >= buf.len and !hasMore) {
-// safe-transpile: @memcpy requires manual review
                     @memcpy(in_progress[0..buf.len], buf);
                     this.read_inside_on_pull = .{ .js = in_progress[buf.len..] };
                 } else if (in_progress.len > 0 and !hasMore) {
@@ -382,9 +381,8 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
             defer buffer.clearAndFree(bun.default_allocator);
             if (buffer.items.len > 0) {
                 if (this.pending_view.len >= buffer.items.len) {
-// safe-transpile: @memcpy requires manual review
                     @memcpy(this.pending_view[0..buffer.items.len], buffer.items);
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     this.pending.result = .{ .into_array_and_done = .{ .value = this.pending_value.get() orelse .zero, .len = @truncate(buffer.items.len) } };
                 } else {
                     this.pending.result = .{ .owned_and_done = bun.ByteList.moveFromList(buffer) };
@@ -398,14 +396,13 @@ pub fn onReadChunk(this: *@This(), init_buf: []const u8, state: bun.io.ReadState
         const was_done = this.reader.isDone();
 
         if (this.pending_view.len >= buf.len) {
-// safe-transpile: @memcpy requires manual review
             @memcpy(this.pending_view[0..buf.len], buf);
             reader_buffer.clearRetainingCapacity();
             this.buffered.clearRetainingCapacity();
 
             const into_array: streams.Result.IntoArray = .{
                 .value = this.pending_value.get() orelse .zero,
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                 .len = @truncate(buf.len),
             };
 
@@ -478,7 +475,7 @@ pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Resul
 
         if (buffer.len >= @as(usize, drained.len)) {
             const drained_len = drained.len;
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(buffer[0..drained_len], drained.slice());
             // drain() moved ownership of the allocation into `drained` and
             // left `this.buffered` / the reader buffer empty, so free
@@ -524,11 +521,11 @@ pub fn onPull(this: *FileReader, buffer: []u8, array: jsc.JSValue) streams.Resul
 
                 if (amount_read > 0) {
                     if (this.reader.isDone()) {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                         return .{ .into_array_and_done = .{ .value = array, .len = @truncate(amount_read) } };
                     }
 
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+                    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
                     return .{ .into_array = .{ .value = array, .len = @truncate(amount_read) } };
                 }
 
@@ -606,7 +603,7 @@ pub fn onReaderDone(this: *FileReader) void {
             } else {
                 this.pending.result = .{ .done = {} };
             }
-        this.buffered = .empty;
+            this.buffered = .empty;
             this.pending.run();
         }
         // Don't handle buffered data here - it will be returned on the next onPull

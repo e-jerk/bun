@@ -19,7 +19,7 @@ fn selectALPNCallback(ssl: ?*BoringSSL.SSL, out: [*c][*c]const u8, outlen: [*c]u
         if (protos.len == 0) {
             return BoringSSL.SSL_TLSEXT_ERR_NOACK;
         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         const status = BoringSSL.SSL_select_next_proto(bun.cast([*c][*c]u8, out), outlen, protos.ptr, @as(c_uint, @intCast(protos.len)), in, inlen);
         // Previous versions of Node.js returned SSL_TLSEXT_ERR_NOACK if no protocol
         // match was found. This would neither cause a fatal alert nor would it result
@@ -206,7 +206,7 @@ pub fn NewSocket(comptime ssl: bool) type {
 
             const initialDelay: u32 = brk: {
                 if (args.len > 1) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     break :brk @intCast(try globalThis.validateIntegerRange(args.ptr[1], i32, 0, .{ .min = 0, .field_name = "initialDelay" }));
                 }
                 break :brk 0;
@@ -519,7 +519,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                                 _ = BoringSSL.SSL_set_ex_data(ssl_ptr, 0, this);
                                 BoringSSL.SSL_CTX_set_alpn_select_cb(BoringSSL.SSL_get_SSL_CTX(ssl_ptr), selectALPNCallback, null);
                             } else {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                                 _ = BoringSSL.SSL_set_alpn_protos(ssl_ptr, protos.ptr, @as(c_uint, @intCast(protos.len)));
                             }
                         }
@@ -744,7 +744,7 @@ pub fn NewSocket(comptime ssl: bool) type {
             };
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onData(this: *This, s: Socket, data: []const u8) void {
             jsc.markBinding(@src());
             this.socket = s;
@@ -835,7 +835,7 @@ pub fn NewSocket(comptime ssl: bool) type {
             }
             log("timeout({d})", .{t});
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             this.socket.setTimeout(@as(c_uint, @intCast(t)));
 
             return .js_undefined;
@@ -964,7 +964,7 @@ pub fn NewSocket(comptime ssl: bool) type {
             return JSValue.jsNumber(this.socket.remotePort());
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         inline fn doSocketWrite(this: *This, buffer: []const u8) i32 {
             return if (this.flags.bypass_tls)
                 this.socket.rawWrite(buffer)
@@ -972,14 +972,14 @@ pub fn NewSocket(comptime ssl: bool) type {
                 this.socket.write(buffer);
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeMaybeCorked(this: *This, buffer: []const u8) i32 {
             if (this.socket.isShutdown() or this.socket.isClosed()) {
                 return -1;
             }
 
             const res = this.doSocketWrite(buffer);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const uwrote: usize = @intCast(@max(res, 0));
             this.bytes_written += uwrote;
             log("write({d}) = {d}", .{ buffer.len, res });
@@ -1082,7 +1082,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                     // fast-ish path: use writev() to avoid cloning to another buffer.
                     if (this.socket.socket == .connected and buffer.slice().len > 0) {
                         const rc = this.socket.socket.connected.write2(this.buffered_data_for_node_net.slice(), buffer.slice());
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const written: usize = @intCast(@max(rc, 0));
                         const leftover = total_to_write -| written;
                         if (leftover == 0) {
@@ -1097,7 +1097,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                             if (remaining_in_buffered_data.len > 0) {
                                 var input_buffer = this.buffered_data_for_node_net.slice();
                                 _ = bun.c.memmove(input_buffer.ptr, input_buffer.ptr[written..], remaining_in_buffered_data.len);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                                // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                                 this.buffered_data_for_node_net.len = @truncate(remaining_in_buffered_data.len);
                             }
                         }
@@ -1120,7 +1120,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                 ));
                 const rc = this.writeMaybeCorked(this.buffered_data_for_node_net.slice());
                 if (rc > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     const wrote: usize = @intCast(@max(rc, 0));
                     // did we write everything?
                     // we can free this temporary buffer.
@@ -1128,12 +1128,12 @@ pub fn NewSocket(comptime ssl: bool) type {
                         this.buffered_data_for_node_net.clearAndFree(bun.default_allocator);
                     } else {
                         // Otherwise, let's move the temporary buffer back.
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const len = @as(usize, @intCast(this.buffered_data_for_node_net.len)) - wrote;
                         bun.debugAssert(len <= this.buffered_data_for_node_net.len);
                         bun.debugAssert(len <= this.buffered_data_for_node_net.cap);
                         _ = bun.c.memmove(this.buffered_data_for_node_net.ptr, this.buffered_data_for_node_net.ptr[wrote..], len);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.buffered_data_for_node_net.len = @truncate(len);
                     }
                 }
@@ -1204,7 +1204,7 @@ pub fn NewSocket(comptime ssl: bool) type {
                 if (i < 0) {
                     return globalObject.throwRangeError(i, .{ .field_name = "byteOffset", .min = 0, .max = jsc.MAX_SAFE_INTEGER }) catch .fail;
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 break :brk @intCast(i);
             };
 
@@ -1219,21 +1219,21 @@ pub fn NewSocket(comptime ssl: bool) type {
                 if (l < 0) {
                     return globalObject.throwRangeError(l, .{ .field_name = "byteLength", .min = 0, .max = jsc.MAX_SAFE_INTEGER }) catch .fail;
                 }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 break :brk @intCast(l);
             };
 
             var bytes = buffer.slice();
 
             if (byte_offset > bytes.len) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return globalObject.throwRangeError(@as(i64, @intCast(byte_offset)), .{ .field_name = "byteOffset", .min = 0, .max = @intCast(bytes.len) }) catch .fail;
             }
 
             bytes = bytes[byte_offset..];
 
             if (byte_length > bytes.len) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 return globalObject.throwRangeError(@as(i64, @intCast(byte_length)), .{ .field_name = "byteLength", .min = 0, .max = @intCast(bytes.len) }) catch .fail;
             }
 
@@ -1273,7 +1273,7 @@ pub fn NewSocket(comptime ssl: bool) type {
             }
             log("writeOrEnd {d}", .{bytes.len});
             const wrote = this.writeMaybeCorked(bytes);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const uwrote: usize = @intCast(@max(wrote, 0));
             if (buffer_unwritten_data) {
                 const remaining = bytes[uwrote..];
@@ -1310,14 +1310,14 @@ pub fn NewSocket(comptime ssl: bool) type {
 
         fn internalFlush(this: *This) void {
             if (this.buffered_data_for_node_net.len > 0) {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const written: usize = @intCast(@max(this.doSocketWrite(this.buffered_data_for_node_net.slice()), 0));
                 this.bytes_written += written;
                 if (written > 0) {
                     if (this.buffered_data_for_node_net.len > written) {
                         const remaining = this.buffered_data_for_node_net.slice()[written..];
                         _ = bun.c.memmove(this.buffered_data_for_node_net.ptr, remaining.ptr, remaining.len);
-// safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
+                        // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
                         this.buffered_data_for_node_net.len = @truncate(remaining.len);
                     } else {
                         this.buffered_data_for_node_net.clearAndFree(bun.default_allocator);
@@ -1779,7 +1779,7 @@ const NativeCallbacks = union(enum) {
     h2: *H2FrameParser,
     none,
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     pub fn onData(this: NativeCallbacks, data: []const u8) bool {
         switch (this) {
             .h2 => |h2| {
@@ -1879,7 +1879,7 @@ pub const DuplexUpgradeContext = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+    // safe-transpile: function uses raw slice parameter — consider zust.String
     fn onData(this: *DuplexUpgradeContext, decoded_data: []const u8) void {
         const socket = TLSSocket.Socket.fromDuplex(&this.upgrade);
 
@@ -2175,23 +2175,22 @@ pub fn jsUpgradeDuplexToTLS(globalObject: *jsc.JSGlobalObject, callframe: *jsc.C
 
     duplexContext.task = jsc.AnyTask.New(DuplexUpgradeContext, DuplexUpgradeContext.runEvent).init(duplexContext);
     duplexContext.upgrade = uws.UpgradedDuplex.from(globalObject, duplex, .{
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .onOpen = @ptrCast(&DuplexUpgradeContext.onOpen),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onData = @ptrCast(&DuplexUpgradeContext.onData),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onHandshake = @ptrCast(&DuplexUpgradeContext.onHandshake),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onClose = @ptrCast(&DuplexUpgradeContext.onClose),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onEnd = @ptrCast(&DuplexUpgradeContext.onEnd),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onWritable = @ptrCast(&DuplexUpgradeContext.onWritable),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onError = @ptrCast(&DuplexUpgradeContext.onError),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         .onTimeout = @ptrCast(&DuplexUpgradeContext.onTimeout),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         .ctx = @ptrCast(duplexContext),
     });
 

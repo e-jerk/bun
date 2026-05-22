@@ -274,7 +274,7 @@ pub const HTMLRewriter = struct {
             this.signal = signal;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn writeToDestination(this: *HTMLRewriterLoader, bytes: []const u8) void {
             if (this.backpressure.count > 0) {
                 this.backpressure.write(bytes) catch {
@@ -496,7 +496,7 @@ pub const HTMLRewriter = struct {
             const value = original.getBodyValue();
             const owned_readable_stream = original.getBodyReadableStream(sink.global);
             sink.ref();
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
             sink.bodyValueBufferer = jsc.WebCore.Body.ValueBufferer.init(sink, @ptrCast(&onFinishedBuffering), sink.global, bun.default_allocator);
             response_js_value.ensureStillAlive();
 
@@ -532,7 +532,7 @@ pub const HTMLRewriter = struct {
             return response_js_value;
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn onFinishedBuffering(sink: *BufferOutputSink, bytes: []const u8, js_err: ?jsc.WebCore.Body.Value.ValueError, is_async: bool) void {
             defer sink.deref();
             if (js_err) |err| {
@@ -570,7 +570,7 @@ pub const HTMLRewriter = struct {
             } else {}
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn runOutputSink(
             sink: *BufferOutputSink,
             bytes: []const u8,
@@ -627,7 +627,7 @@ pub const HTMLRewriter = struct {
             ) catch {}; // TODO: properly propagate exception upwards
         }
 
-// safe-transpile: function uses raw slice parameter — consider zust.String
+        // safe-transpile: function uses raw slice parameter — consider zust.String
         pub fn write(this: *BufferOutputSink, bytes: []const u8) void {
             bun.handleOom(this.bytes.append(bytes));
         }

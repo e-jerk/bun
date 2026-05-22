@@ -54,18 +54,15 @@ pub fn setNodeName(
 ) void {
     if (Output.enable_ansi_colors_stderr) {
         if (is_first) {
-// safe-transpile: @memcpy requires manual review
             @memcpy(this.progress_name_buf[0..emoji.len], emoji);
-// safe-transpile: @memcpy requires manual review
+
             @memcpy(this.progress_name_buf[emoji.len..][0..name.len], name);
             node.name = this.progress_name_buf[0 .. emoji.len + name.len];
         } else {
-// safe-transpile: @memcpy requires manual review
             @memcpy(this.progress_name_buf[emoji.len..][0..name.len], name);
             node.name = this.progress_name_buf[0 .. emoji.len + name.len];
         }
     } else {
-// safe-transpile: @memcpy requires manual review
         @memcpy(this.progress_name_buf[0..name.len], name);
         node.name = this.progress_name_buf[0..name.len];
     }

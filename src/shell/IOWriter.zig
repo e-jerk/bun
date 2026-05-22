@@ -259,7 +259,6 @@ pub fn cancelChunks(this: *IOWriter, ptr_: anytype) void {
     const idx = this.writer_idx;
     const slice: []Writer = this.writers.sliceMutable();
     if (idx >= slice.len) return;
-// safe-transpile: for loop with pointer capture requires manual review
     for (slice[idx..]) |*w| {
         if (w.ptr.ptr.repr._ptr == actual_ptr) {
             w.setDead();
@@ -301,7 +300,6 @@ pub const Writers = SmolList(Writer, 2);
 /// amount they would have written so the buf is skipped as well
 pub fn skipDead(this: *IOWriter) void {
     const slice = this.writers.slice();
-// safe-transpile: for loop with pointer capture requires manual review
     for (slice[this.writer_idx..]) |*w| {
         if (w.isDead()) {
             this.writer_idx += 1;
@@ -434,7 +432,6 @@ pub fn brokenPipeForWriters(this: *IOWriter) void {
     bun.assert(this.flags.broken_pipe);
     var offset: usize = 0;
     const writers = this.writers.sliceMutable()[this.writer_idx..];
-// safe-transpile: for loop with pointer capture requires manual review
     for (writers) |*w| {
         if (w.isDead()) {
             offset += w.len;
@@ -896,7 +893,6 @@ pub const AsyncDeinitWriter = struct {
     }
 
     pub fn writer(this: *@This()) *IOWriter {
-// safe-transpile: @alignCast requires manual review
         return @alignCast(@fieldParentPtr("async_deinit", this));
     }
 

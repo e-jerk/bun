@@ -30,7 +30,7 @@ pub const CronExpression = struct {
         TooFewFields,
     };
 
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn errorMessage(e: Error) []const u8 {
         return switch (e) {
             error.TooFewFields => "Invalid cron expression: expected 5 space-separated fields (minute hour day month weekday)",
@@ -43,7 +43,7 @@ pub const CronExpression = struct {
     }
 
     /// Parse a 5-field cron expression or predefined nickname into a CronExpression.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(input: []const u8) Error!CronExpression {
         const expr = bun.strings.trim(input, " \t");
 
@@ -74,7 +74,7 @@ pub const CronExpression = struct {
     }
 
     /// Validate a cron expression string without allocating.
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn validate(expr: []const u8) bool {
         _ = parse(expr) catch return false;
         return true;
@@ -82,7 +82,7 @@ pub const CronExpression = struct {
 
     /// Format the expression as a normalized numeric "M H D Mo W" string
     /// suitable for crontab. Returns the written slice of `buf`.
-// safe-transpile: function returns small constant slice — consider safe.String
+    // safe-transpile: function returns small constant slice — consider safe.String
     pub fn formatNumeric(self: CronExpression, buf: *[512]u8) []const u8 {
         var stream = @import("std-io-compat").fixedBufferStream(buf);
         const w = stream.writer();
@@ -111,7 +111,7 @@ pub const CronExpression = struct {
             // Normalize overflow + recompute weekday via a UTC round-trip.
             dt = globalObject.msToGregorianDateTimeUTC(try globalObject.gregorianDateTimeToMSUTC(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, 0));
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (!bitSet(u16, self.months, @intCast(dt.month))) {
                 dt.month += 1;
                 dt.day = 1;
@@ -121,9 +121,9 @@ pub const CronExpression = struct {
             }
             // POSIX: if both DOM and DOW are restricted (not `*`), either
             // matching is enough; otherwise the `*` field matches all anyway.
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const day_ok = bitSet(u32, self.days, @intCast(dt.day));
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             const weekday_ok = bitSet(u8, self.weekdays, @intCast(dt.weekday));
             const day_match = if (!self.days_is_wildcard and !self.weekdays_is_wildcard)
                 day_ok or weekday_ok
@@ -135,13 +135,13 @@ pub const CronExpression = struct {
                 dt.minute = 0;
                 continue;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (!bitSet(u32, self.hours, @intCast(dt.hour))) {
                 dt.hour += 1;
                 dt.minute = 0;
                 continue;
             }
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             if (!bitSet(u64, self.minutes, @intCast(dt.minute))) {
                 dt.minute += 1;
                 continue;
@@ -246,7 +246,7 @@ fn parseField(comptime T: type, field: []const u8, min: u7, max: u7, kind: NameK
         // Set bits
         var i: u7 = range_min;
         while (i <= range_max) : (i += step) {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             result |= @as(T, 1) << @intCast(i);
             if (@as(u8, i) + @as(u8, step) > range_max) break;
         }
@@ -279,7 +279,7 @@ fn parseValue(str: []const u8, min: u7, max: u7, kind: NameKind) error{InvalidNu
 
     const val = std.fmt.parseInt(u8, str, 10) catch return error.InvalidNumber;
     if (val < min or val > max) return error.InvalidNumber;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return @intCast(val);
 }
 
@@ -299,7 +299,7 @@ fn formatBitfield(w: anytype, comptime T: type, bits: T, min: u8, max: u8) void 
     }
     var first = true;
     for (min..max + 1) |i| {
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         if ((bits >> @intCast(i)) & 1 != 0) {
             if (!first) w.writeByte(',') catch unreachable;
             w.print("{d}", .{i}) catch unreachable;

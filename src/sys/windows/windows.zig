@@ -3183,7 +3183,7 @@ pub fn userUniqueId() u32 {
     // UNLEN + 1
     var buf: [257]u16 = undefined;
     var size: u32 = buf.len;
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
     if (GetUserNameW(@ptrCast(&buf), &size) == 0) {
         if (Environment.isDebug) std.debug.panic("GetUserNameW failed: {}", .{bun.windows.GetLastError()});
         return 0;
@@ -3317,7 +3317,7 @@ pub fn GetFinalPathNameByHandle(
     fmt: std.os.windows.GetFinalPathNameByHandleFormat,
     out_buffer: []u16,
 ) std.os.windows.GetFinalPathNameByHandleError![]u16 {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const return_length = bun.windows.GetFinalPathNameByHandleW(hFile, out_buffer.ptr, @truncate(out_buffer.len), switch (fmt.volume_name) {
         .Dos => win32.FILE_NAME_NORMALIZED | win32.VOLUME_NAME_DOS,
         .Nt => win32.FILE_NAME_NORMALIZED | win32.VOLUME_NAME_NT,
@@ -3333,7 +3333,7 @@ pub fn GetFinalPathNameByHandle(
         return error.NameTooLong;
     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     var ret = out_buffer[0..@intCast(return_length)];
 
     bun.sys.syslog("GetFinalPathNameByHandleW({*p}) = {f}", .{ hFile, bun.fmt.utf16(ret) });
@@ -3365,10 +3365,9 @@ pub fn getModuleHandleFromAddress(addr: usize) ?HMODULE {
 }
 
 pub fn getModuleNameW(module: HMODULE, buf: []u16) ?[]const u16 {
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const rc = GetModuleFileNameW(module, @ptrCast(buf.ptr), @intCast(buf.len));
     if (rc == 0) return null;
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     return buf[0..@intCast(rc)];
 }
 
@@ -3404,7 +3403,7 @@ pub fn DeleteFileBun(sub_path_w: []const u16, options: DeleteFileOptions) bun.sy
     else
         windows.FILE_NON_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT; // would we ever want to delete the target instead?
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
     const path_len_bytes = @as(u16, @intCast(sub_path_w.len * 2));
     var nt_name = UNICODE_STRING{
         .Length = path_len_bytes,
@@ -3765,7 +3764,7 @@ pub fn spawnWatcherChild(
         p.ptr,
         0,
         c.PROC_THREAD_ATTRIBUTE_JOB_LIST,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @ptrCast(&job),
         @sizeOf(HANDLE),
         null,
@@ -3778,7 +3777,7 @@ pub fn spawnWatcherChild(
 
     const image_path = exePathW();
     var wbuf: WPathBuffer = undefined;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(wbuf[0..image_path.len], image_path);
     wbuf[image_path.len] = 0;
 
@@ -3803,10 +3802,9 @@ pub fn spawnWatcherChild(
     const envbuf = try allocator.alloc(u16, size + watcherChildEnv.len + 4);
     defer allocator.free(envbuf);
     if (kernelenv) |pointer| {
-// safe-transpile: @memcpy requires manual review
         @memcpy(envbuf[0..size], pointer);
     }
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(envbuf[size .. size + watcherChildEnv.len], watcherChildEnv);
     envbuf[size + watcherChildEnv.len] = '=';
     envbuf[size + watcherChildEnv.len + 1] = '1';
@@ -3846,7 +3844,7 @@ pub fn spawnWatcherChild(
         flags,
         envbuf.ptr,
         null,
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @ptrCast(&startupinfo),
         procinfo,
     );
@@ -3873,7 +3871,6 @@ fn @"windows process.dlopen"(str: *bun.String) callconv(.c) ?*anyopaque {
     const data = switch (str.encoding()) {
         .utf8 => bun.strings.convertUTF8toUTF16InBuffer(&buf, str.utf8()),
         .utf16 => brk: {
-// safe-transpile: @memcpy requires manual review
             @memcpy(buf[0..str.length()], str.utf16());
             break :brk buf[0..str.length()];
         },
@@ -3947,7 +3944,6 @@ pub fn moveOpenedFileAt(
     const struct_len = @sizeOf(w.FILE_RENAME_INFORMATION_EX) - 1 + new_file_name.len * 2;
     if (struct_len > struct_buf_len) return Maybe(void).errno(bun.sys.E.NAMETOOLONG, .NtSetInformationFile);
 
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
     const rename_info = @as(*w.FILE_RENAME_INFORMATION_EX, @ptrCast(&rename_info_buf));
     var io_status_block: w.IO_STATUS_BLOCK = undefined;
 
@@ -3956,17 +3952,17 @@ pub fn moveOpenedFileAt(
     rename_info.* = .{
         .Flags = flags,
         .RootDirectory = if (std.fs.path.isAbsoluteWindowsWTF16(new_file_name)) null else new_dir_fd.cast(),
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         .FileNameLength = @intCast(new_file_name.len * 2), // already checked error.NameTooLong
         .FileName = undefined,
     };
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(@as([*]u16, &rename_info.FileName)[0..new_file_name.len], new_file_name);
     const rc = w.ntdll.NtSetInformationFile(
         src_fd.cast(),
         &io_status_block,
         rename_info,
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
         @intCast(struct_len), // already checked for error.NameTooLong
         .FileRenameInformationEx,
     );

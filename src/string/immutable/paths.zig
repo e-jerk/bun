@@ -122,7 +122,7 @@ pub fn toNTPath16(wbuf: []u16, path: []const u16) [:0]u16 {
 
 pub fn addNTPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
     wbuf[0..bun.windows.nt_object_prefix.len].* = bun.windows.nt_object_prefix;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(wbuf[bun.windows.nt_object_prefix.len..][0..utf16.len], utf16);
     wbuf[utf16.len + bun.windows.nt_object_prefix.len] = 0;
     return wbuf[0 .. utf16.len + bun.windows.nt_object_prefix.len :0];
@@ -130,7 +130,7 @@ pub fn addNTPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
 
 pub fn addLongPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
     wbuf[0..bun.windows.long_path_prefix.len].* = bun.windows.long_path_prefix;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(wbuf[bun.windows.long_path_prefix.len..][0..utf16.len], utf16);
     wbuf[utf16.len + bun.windows.long_path_prefix.len] = 0;
     return wbuf[0 .. utf16.len + bun.windows.long_path_prefix.len :0];
@@ -138,7 +138,6 @@ pub fn addLongPathPrefix(wbuf: []u16, utf16: []const u16) [:0]u16 {
 
 pub fn addNTPathPrefixIfNeeded(wbuf: []u16, utf16: []const u16) [:0]u16 {
     if (hasPrefixComptimeType(u16, utf16, bun.windows.nt_object_prefix)) {
-// safe-transpile: @memcpy requires manual review
         @memcpy(wbuf[0..utf16.len], utf16);
         wbuf[utf16.len] = 0;
         return wbuf[0..utf16.len :0];
@@ -222,9 +221,7 @@ pub fn normalizeSlashesOnlyT(comptime T: type, buf: []T, path: []const T, compti
     const undesired_slash = if (desired_slash == '/') '\\' else '/';
 
     if (bun.strings.containsCharT(T, path, undesired_slash)) {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..path.len], path);
-// safe-transpile: for loop with pointer capture requires manual review
         for (buf[0..path.len]) |*c| {
             if (c.* == undesired_slash) {
                 c.* = desired_slash;
@@ -234,7 +231,6 @@ pub fn normalizeSlashesOnlyT(comptime T: type, buf: []T, path: []const T, compti
     }
 
     if (comptime always_copy) {
-// safe-transpile: @memcpy requires manual review
         @memcpy(buf[0..path.len], path);
         return buf[0..path.len];
     }
@@ -317,7 +313,7 @@ pub fn toPathMaybeDir(buf: []u8, utf8: []const u8, comptime add_trailing_lash: b
     bun.unsafeAssert(buf.len > 0);
 
     var len = utf8.len;
-// safe-transpile: @memcpy requires manual review
+
     @memcpy(buf[0..len], utf8[0..len]);
 
     if (add_trailing_lash and len > 0 and buf[len - 1] != '\\') {
@@ -428,9 +424,7 @@ pub fn withoutLeadingPathSeparator(this: string) []const u8 {
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn removeLeadingDotSlash(slice: []const u8) callconv(bun.callconv_inline) []const u8 {
     if (slice.len >= 2) {
-// safe-transpile: @bitCast requires manual review
         if ((@as(u16, @bitCast(slice[0..2].*)) == comptime std.mem.readInt(u16, "./", .little)) or
-// safe-transpile: @bitCast requires manual review
             (Environment.isWindows and @as(u16, @bitCast(slice[0..2].*)) == comptime std.mem.readInt(u16, ".\\", .little)))
         {
             return slice[2..];
@@ -474,7 +468,7 @@ fn basenameWindows(comptime T: type, input: []const T) []const T {
 
     var end_index: usize = input.len - 1;
     while (true) {
-var loop_limit: usize = 0;
+        var loop_limit: usize = 0;
         loop_limit += 1;
         std.debug.assert(loop_limit <= 1_000_000);
         const byte = input[end_index];

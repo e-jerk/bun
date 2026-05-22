@@ -154,7 +154,7 @@ fn parseCompressionOptions(globalThis: *jsc.JSGlobalObject, options_arg: jsc.JSV
             if (level_num < 1 or level_num > 12) {
                 return globalThis.throwInvalidArguments("Archive: level must be between 1 and 12", .{});
             }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             level = @intCast(level_num);
         }
 
@@ -192,9 +192,9 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
     }
 
     if (lib.archive_write_open2(
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+        // safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
         @ptrCast(archive),
-// safe-transpile: @ptrCast requires manual review — add @alignCast if alignment is guaranteed
+
         @ptrCast(&growing_buffer),
         &lib.GrowingBuffer.openCallback,
         &lib.GrowingBuffer.writeCallback,
@@ -207,7 +207,7 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
     const entry = lib.Archive.Entry.new();
     defer entry.free();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const now_secs: isize = @intCast(@divTrunc(@import("std-fs-compat").milliTimestamp(), 1000));
 
     // Iterate over object properties and write directly to archive
@@ -237,7 +237,7 @@ fn buildTarballFromObject(globalThis: *jsc.JSGlobalObject, obj: jsc.JSValue) bun
         const data = data_slice.slice();
         _ = entry.clear();
         entry.setPathnameUtf8(key_str);
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         entry.setSize(@intCast(data.len));
         entry.setFiletype(@intFromEnum(lib.FileType.regular));
         entry.setPerm(0o644);
@@ -388,7 +388,7 @@ fn parsePatternArg(globalThis: *jsc.JSGlobalObject, arg: jsc.JSValue, api_name: 
         // Empty array = no filter
         if (len == 0) return null;
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
         var patterns = std.ArrayList([]const u8).initCapacity(allocator, @intCast(len)) catch return error.OutOfMemory;
         errdefer {
             for (patterns.items) |p| allocator.free(p);
@@ -829,7 +829,7 @@ const FilesContext = struct {
                 if (!matchGlobPatterns(patterns, pathname)) continue;
             }
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+            // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             const size: usize = @intCast(@max(entry.size(), 0));
             const mtime = entry.mtime();
 
@@ -849,7 +849,7 @@ const FilesContext = struct {
                         return if (cloneErrorString(archive)) |err| .{ .libarchive_err = err } else .{ .err = error.ReadError };
                     }
                     if (read == 0) break;
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     total_read += @intCast(read);
                 }
             }
@@ -872,7 +872,6 @@ const FilesContext = struct {
                     return .{ .reject = globalThis.createErrorInstance("Failed to create Map", .{}) };
                 };
 
-// safe-transpile: for loop with pointer capture requires manual review
                 for (entries.items) |*entry| {
                     const blob_ptr = jsc.WebCore.Blob.new(jsc.WebCore.Blob.createWithBytesAndAllocator(entry.data, bun.default_allocator, globalThis, false));
                     entry.data = &.{}; // Ownership transferred
@@ -923,7 +922,7 @@ fn startFilesTask(globalThis: *jsc.JSGlobalObject, store: *jsc.WebCore.Blob.Stor
 fn compressGzip(data: []const u8, level: u8) ![]u8 {
     libdeflate.load();
 
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
     const compressor = libdeflate.Compressor.alloc(@intCast(level)) orelse return error.GzipInitFailed;
     defer compressor.deinit();
 
@@ -1063,12 +1062,12 @@ fn extractToDiskFiltered(
                 count += 1;
             },
             .file => {
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                 const size: usize = @intCast(@max(entry.size(), 0));
                 // Sanitize permissions: use entry perms masked to 0o777, or default 0o644
                 const entry_perm = entry.perm();
                 const mode: bun.Mode = if (entry_perm != 0)
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                    // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                     @intCast(entry_perm & 0o777)
                 else
                     0o644;
@@ -1105,7 +1104,7 @@ fn extractToDiskFiltered(
                             write_success = false;
                             break;
                         }
-// safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
+                        // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
                         const bytes_read: usize = @intCast(read);
                         // Write all bytes, handling partial writes
                         var written: usize = 0;

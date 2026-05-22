@@ -287,7 +287,6 @@ pub fn ThreadSafeRefCount(T: type, field_name: []const u8, destructor: fn (*T) v
 
         pub fn dumpActiveRefs(count: *@This()) void {
             if (enable_debug) {
-// safe-transpile: @alignCast requires manual review
                 const ptr: *T = @alignCast(@fieldParentPtr(field_name, count));
                 count.debug.dump(@typeName(T), ptr, count.raw_count.load(.seq_cst));
             }
@@ -546,7 +545,7 @@ pub fn DebugData(thread_safe: bool) type {
             }) catch |err| bun.handleOom(err);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn deinit(debug: *@This(), data: []const u8, ret_addr: usize) void {
             assertValid(debug);
             debug.magic = undefined;
@@ -559,9 +558,8 @@ pub fn DebugData(thread_safe: bool) type {
             }
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         fn onAllocationLeak(ptr: *anyopaque, data: []u8) void {
-// safe-transpile: @alignCast requires manual review
             const debug: *@This() = @ptrCast(@alignCast(ptr));
             debug.lock.lock();
             defer debug.lock.unlock();

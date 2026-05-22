@@ -47,7 +47,7 @@ pub const PasswordObject = struct {
                                         return globalObject.throwInvalidArguments("Rounds must be between 4 and 31", .{});
                                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     algorithm.bcrypt = @as(u6, @intCast(rounds));
                                 }
 
@@ -67,7 +67,7 @@ pub const PasswordObject = struct {
                                         return globalObject.throwInvalidArguments("Time cost must be greater than 0", .{});
                                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     argon.time_cost = @as(u32, @intCast(time_cost));
                                 }
 
@@ -82,7 +82,7 @@ pub const PasswordObject = struct {
                                         return globalObject.throwInvalidArguments("Memory cost must be greater than 0", .{});
                                     }
 
-// safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
+                                    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
                                     argon.memory_cost = @as(u32, @intCast(memory_cost));
                                 }
 
@@ -157,7 +157,7 @@ pub const PasswordObject = struct {
 
         pub const default = Algorithm.argon2;
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn get(pw: []const u8) ?Algorithm {
             if (pw[0] != '$') {
                 return null;
@@ -190,7 +190,7 @@ pub const PasswordObject = struct {
     pub const HashError = pwhash.Error || error{UnsupportedAlgorithm};
 
     // This is purposely simple because nobody asked to make it more complicated
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(
         allocator: std.mem.Allocator,
         password: []const u8,
@@ -245,7 +245,7 @@ pub const PasswordObject = struct {
         }
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn verify(
         allocator: std.mem.Allocator,
         password: []const u8,
@@ -264,7 +264,7 @@ pub const PasswordObject = struct {
         );
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn verifyWithAlgorithm(
         allocator: std.mem.Allocator,
         password: []const u8,
@@ -399,7 +399,7 @@ pub const JSPasswordObject = struct {
             bun.destroy(this);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getValue(password: []const u8, algorithm: PasswordObject.Algorithm.Value) Result.Value {
             const value = PasswordObject.hash(bun.default_allocator, password, algorithm) catch |err| {
                 return Result.Value{ .err = err };
@@ -426,7 +426,7 @@ pub const JSPasswordObject = struct {
         }
     };
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn hash(globalObject: *jsc.JSGlobalObject, password: []const u8, algorithm: PasswordObject.Algorithm.Value, comptime sync: bool) bun.JSError!jsc.JSValue {
         assert(password.len > 0); // caller must check
 
@@ -461,7 +461,7 @@ pub const JSPasswordObject = struct {
         return promise.value();
     }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+    // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn verify(globalObject: *jsc.JSGlobalObject, password: []const u8, prev_hash: []const u8, algorithm: ?PasswordObject.Algorithm, comptime sync: bool) bun.JSError!jsc.JSValue {
         assert(password.len > 0); // caller must check
 
@@ -617,7 +617,7 @@ pub const JSPasswordObject = struct {
             bun.destroy(this);
         }
 
-// safe-transpile: function uses raw slice parameter — consider safe.String
+        // safe-transpile: function uses raw slice parameter — consider safe.String
         pub fn getValue(password: []const u8, prev_hash: []const u8, algorithm: ?PasswordObject.Algorithm) Result.Value {
             const pass = PasswordObject.verify(bun.default_allocator, password, prev_hash, algorithm) catch |err| {
                 return Result.Value{ .err = err };

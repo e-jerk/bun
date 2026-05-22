@@ -156,8 +156,7 @@ pub const Source = struct {
             const stdin = peb.ProcessParameters.hStdInput;
 
             const handles = &.{ &stdin, &stdout, &stderr };
-            // safe-transpile: for with index access requires manual review
-    inline for (console_mode, handles) |mode, handle| {
+            inline for (console_mode, handles) |mode, handle| {
                 if (mode) |m| {
                     _ = c.SetConsoleMode(handle.*, m);
                 }
@@ -375,7 +374,10 @@ pub const Source = struct {
         lazy_color_depth = .none;
     }
     pub fn colorDepth() ColorDepth {
-        if (!color_depth_once_done) { getColorDepthOnce(); color_depth_once_done = true; }
+        if (!color_depth_once_done) {
+            getColorDepthOnce();
+            color_depth_once_done = true;
+        }
         return lazy_color_depth;
     }
 
@@ -493,7 +495,10 @@ pub fn isAIAgent() bool {
         var once_done = false;
 
         pub fn isEnabled() bool {
-            if (!once_done) { setValue(); once_done = true; }
+            if (!once_done) {
+                setValue();
+                once_done = true;
+            }
             return value;
         }
     };
@@ -696,13 +701,13 @@ pub fn printElapsedStdoutTrim(elapsed: f64) void {
 }
 
 pub fn printStartEnd(start: i128, end: i128) void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const elapsed = @divTrunc(@as(i64, @truncate(end - start)), @as(i64, std.time.ns_per_ms));
     printElapsed(@as(f64, @floatFromInt(elapsed)));
 }
 
 pub fn printStartEndStdout(start: i128, end: i128) void {
-// safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
+    // safe-transpile: @truncate requires manual review — consider safe.CheckedInt(T).init(@truncate)
     const elapsed = @divTrunc(@as(i64, @truncate(end - start)), @as(i64, std.time.ns_per_ms));
     printElapsedStdout(@as(f64, @floatFromInt(elapsed)));
 }
@@ -832,8 +837,7 @@ pub fn Scoped(comptime tag: anytype, comptime visibility: Visibility) type {
             else => tag,
         };
         var ascii_slice: [input.len]u8 = undefined;
-        // safe-transpile: for with index access requires manual review
-    for (input, &ascii_slice) |in, *out| {
+        for (input, &ascii_slice) |in, *out| {
             out.* = std.ascii.toLower(in);
         }
         break :brk ascii_slice;
@@ -885,7 +889,10 @@ fn ScopedLogger(comptime tagname: []const u8, comptime visibility: Visibility) t
         }
 
         pub fn isVisible() bool {
-            if (!is_visible_once_done) { evaluateIsVisible(); is_visible_once_done = true; }
+            if (!is_visible_once_done) {
+                evaluateIsVisible();
+                is_visible_once_done = true;
+            }
             return !really_disable.load(.monotonic);
         }
 
