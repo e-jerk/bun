@@ -35,7 +35,7 @@ var getTemporaryDirectoryOnce = bun.once(struct {
 
         var tried_dot_tmp = false;
         var tempdir: @import("std-fs-compat").FsDir = blk: {
-            const dir = bun.MakePath.makeOpenPath(@import("std-fs-compat").Dir{ .fd = std.c.AT.FDCWD }, temp_dir_name, .{}) catch {
+            const dir = bun.MakePath.makeOpenPath(@import("std-fs-compat").Dir{ .handle = std.c.AT.FDCWD }, temp_dir_name, .{}) catch {
                 tried_dot_tmp = true;
                 const fallback = bun.MakePath.makeOpenPath(cache_directory.toDir(), bun.pathLiteral(".tmp"), .{}) catch |err2| {
                     Output.prettyErrorln("<r><red>error<r>: bun is unable to access tempdir: {s}", .{@errorName(err2)});
@@ -133,7 +133,7 @@ noinline fn ensureCacheDirectory(this: *PackageManager) @import("std-fs-compat")
                 this.options.enable.cache = false;
                 this.allocator.free(this.cache_directory_path);
                 continue :loop;
-            }).fd };
+            }).handle };
         }
 
         this.cache_directory_path = this.allocator.dupeZ(u8, Path.joinAbsString(

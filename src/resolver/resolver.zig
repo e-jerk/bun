@@ -2895,7 +2895,7 @@ pub const Resolver = struct {
                         @as(std.posix.mode_t, 0),
                     );
                     if (dir_fd < 0) break :open_req error.Unexpected;
-                    break :open_req FD.fromStdDir(std.fs.Dir{ .fd = dir_fd });
+                    break :open_req FD.fromStdDir(std.Io.Dir{ .handle = dir_fd });
                 } else if (comptime Environment.isWindows) open_req: {
                     const dirfd_result = bun.sys.openDirAtWindowsA(bun.invalid_fd, sentinel, .{
                         .iterable = true,

@@ -274,9 +274,9 @@ pub const Archiver = struct {
         const dir: @import("std-fs-compat").FsDir = brk: {
             // if the destination doesn't exist, we skip the whole thing since nothing can overwrite it.
             if (std.fs.path.isAbsolute(root)) {
-                break :brk @import("std-fs-compat").FsDir{ .fd = (bun.openDirAbsolute(root) catch return).fd };
+                break :brk @import("std-fs-compat").FsDir{ .fd = (bun.openDirAbsolute(root) catch return).handle };
             } else {
-                break :brk @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), root) catch return).fd };
+                break :brk @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.Io.Dir.cwd(), root) catch return).handle };
             }
         };
 
@@ -362,7 +362,7 @@ pub const Archiver = struct {
         _ = stream.openRead();
         const archive = stream.archive;
         var count: u32 = 0;
-        const dir_fd = dir.fd;
+        const dir_fd = dir.handle;
 
         var symlink_join_buf: ?*bun.PathBuffer = null;
         defer if (symlink_join_buf) |join_buf| bun.path_buffer_pool.put(join_buf);
@@ -493,7 +493,7 @@ pub const Archiver = struct {
                                     // without `./` in the beginning. So if it already exists, continue to the
                                     // next entry.
                                     if (err == .EXIST or err == .NOTDIR) continue;
-                                    bun.makePath(std.fs.Dir{ .fd = dir.fd }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
+                                    bun.makePath(std.Io.Dir{ .handle = dir.handle }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
                                     _ = std.c.mkdirat(dir_fd, path, 0o777);
                                 }
                             }
@@ -517,7 +517,7 @@ pub const Archiver = struct {
                                 bun.sys.symlinkat(link_target, .fromNative(dir_fd), path).unwrap() catch |err| brk: {
                                     switch (err) {
                                         error.EPERM, error.ENOENT => {
-                                            bun.makePath(std.fs.Dir{ .fd = dir.fd }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
+                                            bun.makePath(std.Io.Dir{ .handle = dir.handle }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
                                             break :brk try bun.sys.symlinkat(link_target, .fromNative(dir_fd), path).unwrap();
                                         },
                                         else => return err,
@@ -556,7 +556,7 @@ pub const Archiver = struct {
                                 }) catch |err|
                                     switch (err) {
                                         error.AccessDenied, error.FileNotFound => brk: {
-                                            bun.makePath(std.fs.Dir{ .fd = dir.fd }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
+                                            bun.makePath(std.Io.Dir{ .handle = dir.handle }, std.fs.path.dirname(path_slice) orelse return error.Fail) catch {};
                                             break :brk try dir.createFileZ(path, .{
                                                 .truncate = true,
                                                 .mode = mode,
@@ -684,9 +684,9 @@ pub const Archiver = struct {
             bun.makePath(bun.FD.cwd().stdDir(), root) catch {};
 
             if (std.fs.path.isAbsolute(root)) {
-                break :brk @import("std-fs-compat").FsDir{ .fd = (try bun.openDirAbsolute(root)).fd };
+                break :brk @import("std-fs-compat").FsDir{ .fd = (try bun.openDirAbsolute(root)).handle };
             } else {
-                break :brk @import("std-fs-compat").FsDir{ .fd = (try bun.openDirA(bun.FD.cwd().stdDir(), root)).fd };
+                break :brk @import("std-fs-compat").FsDir{ .fd = (try bun.openDirA(std.Io.Dir.cwd(), root)).handle };
             }
         };
 

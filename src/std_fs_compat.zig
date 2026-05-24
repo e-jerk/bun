@@ -539,11 +539,11 @@ pub const FsDir = struct {
     }
 
     pub fn toDir(self: FsDir) Dir {
-        return .{ .fd = self.fd };
+        return .{ .handle = self.fd };
     }
 
     pub fn fromDir(dir: Dir) FsDir {
-        return .{ .fd = dir.fd };
+        return .{ .fd = dir.handle };
     }
 
     pub fn iterate(self: FsDir) Iterator {

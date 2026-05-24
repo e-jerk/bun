@@ -15,6 +15,7 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
         pub const Entry = Unmanaged.Entry;
         pub const GetOrPutResult = Unmanaged.GetOrPutResult;
         pub const KV = Unmanaged.KV;
+        pub const Iterator = Unmanaged.Iterator;
 
         pub fn init(allocator: std.mem.Allocator) Self {
             return .{

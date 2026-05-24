@@ -104,8 +104,8 @@ pub const FD = packed struct(backing_int) {
         return .{ .handle = fd.native() };
     }
 
-    pub fn stdDir(fd: FD) @import("std-fs-compat").FsDir {
-        return .{ .fd = fd.native() };
+    pub fn stdDir(fd: FD) std.Io.Dir {
+        return .{ .handle = fd.native() };
     }
 
     pub fn compatFile(fd: FD) @import("std-fs-compat").File {
