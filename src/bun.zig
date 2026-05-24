@@ -456,18 +456,13 @@ fn Span(comptime T: type) type {
                 .many, .slice => {},
             }
             new_ptr_info.size = .slice;
-            return @Type(.{
-                .pointer = .{
-                    .size = .slice,
-                    .is_const = new_ptr_info.is_const,
-                    .is_volatile = new_ptr_info.is_volatile,
-                    .alignment = new_ptr_info.alignment,
-                    .child = new_ptr_info.child,
-                    .address_space = new_ptr_info.address_space,
-                    .is_allowzero = new_ptr_info.is_allowzero,
-                    .sentinel_ptr = new_ptr_info.sentinel_ptr,
-                },
-            });
+            return @Pointer(.slice, .{
+                .@"const" = new_ptr_info.is_const,
+                .@"volatile" = new_ptr_info.is_volatile,
+                .@"align" = new_ptr_info.alignment,
+                .@"addrspace" = new_ptr_info.address_space,
+                .@"allowzero" = new_ptr_info.is_allowzero,
+            }, new_ptr_info.child, if (new_ptr_info.sentinel_ptr) |sp| @as(*align(1) const new_ptr_info.child, @ptrCast(sp)).* else null);
         },
         else => @compileError("invalid type given to std.mem.Span: " ++ @typeName(T)),
     }
@@ -1487,18 +1482,13 @@ fn SliceTo(comptime T: type, comptime end: std.meta.Elem(T)) type {
                     new_ptr_info.is_allowzero = false;
                 },
             }
-            return @Type(.{
-                .pointer = .{
-                    .size = .slice,
-                    .is_const = new_ptr_info.is_const,
-                    .is_volatile = new_ptr_info.is_volatile,
-                    .alignment = new_ptr_info.alignment,
-                    .child = new_ptr_info.child,
-                    .address_space = new_ptr_info.address_space,
-                    .is_allowzero = new_ptr_info.is_allowzero,
-                    .sentinel_ptr = new_ptr_info.sentinel_ptr,
-                },
-            });
+            return @Pointer(.slice, .{
+                .@"const" = new_ptr_info.is_const,
+                .@"volatile" = new_ptr_info.is_volatile,
+                .@"align" = new_ptr_info.alignment,
+                .@"addrspace" = new_ptr_info.address_space,
+                .@"allowzero" = new_ptr_info.is_allowzero,
+            }, new_ptr_info.child, if (new_ptr_info.sentinel_ptr) |sp| @as(*align(1) const new_ptr_info.child, @ptrCast(sp)).* else null);
         },
         else => {},
     }

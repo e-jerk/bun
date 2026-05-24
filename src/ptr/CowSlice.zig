@@ -41,7 +41,7 @@ pub fn CowSliceZ(T: type, comptime sentinel: ?T) type {
         /// NOTE: `ptr` is const if data is borrowed.
         ptr: [*]T,
         flags: packed struct(usize) {
-            len: @Type(.{ .int = .{ .signedness = .unsigned, .bits = @bitSizeOf(usize) - 1 } }),
+            len: @Int(.unsigned, @bitSizeOf(usize) - 1),
             is_owned: bool,
         },
         debug: if (cow_str_assertions) ?*DebugData else void,

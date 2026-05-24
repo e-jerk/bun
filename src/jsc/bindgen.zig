@@ -130,22 +130,15 @@ pub fn ExternTaggedUnion(comptime field_types: []const type) type {
 
 fn ExternUnion(comptime field_types: []const type) type {
     const info = @typeInfo(bun.meta.TaggedUnion(field_types)).@"union";
-    var fields: [info.fields.len]std.builtin.Type.UnionField = undefined;
+    var names: [info.fields.len][]const u8 = undefined;
+    var types: [info.fields.len]type = undefined;
+    var attrs: [info.fields.len]std.builtin.Type.UnionField.Attributes = undefined;
     for (info.fields, 0..) |field, i| {
-        fields[i] = .{
-            .name = field.name,
-            .type = field.type,
-            .alignment = field.alignment,
-        };
+        names[i] = field.name;
+        types[i] = field.type;
+        attrs[i] = .{ .@"align" = field.alignment };
     }
-    return @Type(.{
-        .@"union" = .{
-            .layout = .@"extern",
-            .fields = &fields,
-            .decls = &.{},
-            .tag_type = null,
-        },
-    });
+    return @Union(.@"extern", null, &names, &types, &attrs);
 }
 
 pub fn BindgenArray(comptime Child: type) type {

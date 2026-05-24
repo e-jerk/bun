@@ -182,18 +182,13 @@ pub fn rebaseSlice(slice: []const u8, old_base: [*]const u8, new_base: [*]const 
 /// the allocation to free it.
 pub fn dropSentinel(ptr: anytype, allocator: std.mem.Allocator) blk: {
     const info = @typeInfo(@TypeOf(ptr)).pointer;
-    break :blk bun.OOM!@Type(.{
-        .pointer = .{
-            .size = .slice,
-            .is_const = info.is_const,
-            .is_volatile = info.is_volatile,
-            .alignment = info.alignment,
-            .address_space = info.address_space,
-            .child = info.child,
-            .is_allowzero = info.is_allowzero,
-            .sentinel_ptr = null,
-        },
-    });
+    break :blk bun.OOM!@Pointer(.slice, .{
+        .@"const" = info.is_const,
+        .@"volatile" = info.is_volatile,
+        .@"align" = info.alignment,
+        .@"addrspace" = info.address_space,
+        .@"allowzero" = info.is_allowzero,
+    }, info.child, null);
 } {
     const info = @typeInfo(@TypeOf(ptr)).pointer;
     const Child = info.child;
