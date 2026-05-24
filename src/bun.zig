@@ -1167,7 +1167,7 @@ pub const StringHashMapContext = struct {
 };
 
 pub fn StringArrayHashMap(comptime Type: type) type {
-    return @import("array-hash-map-compat").ArrayHashMap([]const u8, Type, StringArrayHashMapContext, true);
+    return @import("array-hash-map-compat").StringArrayHashMap(Type);
 }
 
 pub fn CaseInsensitiveASCIIStringArrayHashMap(comptime Type: type) type {
