@@ -7,14 +7,13 @@ pub const Address = extern union {
     in6: std.posix.sockaddr.in6,
 
     pub fn initIp4(ip: [4]u8, port: u16) Address {
-        const result: Address = .{
-            .in = .{
-                .family = std.posix.AF.INET,
-                .port = std.mem.nativeToBig(u16, port),
-                .addr = @as(u32, @bitCast(ip)),
-                .zero = [_]u8{0} ** 8,
-            },
-        };
+        const result: Address = .{ .in = .{
+            .family = std.posix.AF.INET,
+            .port = std.mem.nativeToBig(u16, port),
+// safe-transpile: @bitCast requires manual review
+            .addr = @as(u32, @bitCast(ip)),
+            .zero = [_]u8{0} ** 8,
+        }};
         return result;
     }
 
@@ -25,13 +24,15 @@ pub const Address = extern union {
             .flowinfo = std.mem.nativeToBig(u32, flowinfo),
             .addr = ip,
             .scope_id = std.mem.nativeToBig(u32, scope_id),
-        } };
+        }};
         return result;
     }
 
     pub fn initPosix(addr: *const std.posix.sockaddr) Address {
         return switch (addr.family) {
+// safe-transpile: @alignCast requires manual review
             std.posix.AF.INET => .{ .in = @as(*const std.posix.sockaddr.in, @ptrCast(@alignCast(addr))).* },
+// safe-transpile: @alignCast requires manual review
             std.posix.AF.INET6 => .{ .in6 = @as(*const std.posix.sockaddr.in6, @ptrCast(@alignCast(addr))).* },
             else => @panic("unsupported address family"),
         };
@@ -109,12 +110,13 @@ pub const Address = extern union {
             else => try writer.writeAll("<unknown address family>"),
         }
     }
+
 };
 
 pub const Ip4Address = struct {
     sa: std.posix.sockaddr.in,
 
-    // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(presentation: []const u8, port: u16) !Ip4Address {
         const addr = try std.net.Ip4Address.parse(presentation, port);
         return .{ .sa = addr.sa };
@@ -124,7 +126,7 @@ pub const Ip4Address = struct {
 pub const Ip6Address = struct {
     sa: std.posix.sockaddr.in6,
 
-    // safe-transpile: function uses raw slice parameter — consider safe.String
+// safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(presentation: []const u8, port: u16) !Ip6Address {
         const addr = try std.net.Ip6Address.parse(presentation, port);
         return .{ .sa = addr.sa };
