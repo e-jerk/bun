@@ -236,7 +236,7 @@ pub fn crashHandler(
                 // Output.errorWriter() is not used here because it may not be configured
                 // if the program crashes immediately at startup.
                 var stderr_buf: [1]u8 = undefined;
-                var writer_w = std.fs.File.stderr().writerStreaming(&stderr_buf);
+                var writer_w = (@import("std-fs-compat").File.stderr()).writerStreaming(&stderr_buf);
                 const writer = &writer_w.interface;
 
                 // The format of the panic trace is slightly different in debug
@@ -1716,7 +1716,7 @@ extern "c" fn WTF__DumpStackTrace(ptr: [*]usize, count: usize) void;
 pub fn dumpStackTrace(trace: std.builtin.StackTrace, limits: WriteStackTraceLimits) void {
     Output.flush();
     var stderr_buf: [1]u8 = undefined;
-    var stderr_w = std.fs.File.stderr().writerStreaming(&stderr_buf);
+    var stderr_w = (@import("std-fs-compat").File.stderr()).writerStreaming(&stderr_buf);
     const stderr = &stderr_w.interface;
     if (!bun.Environment.show_crash_trace) {
         // debug symbols aren't available, lets print a tracestring
@@ -2119,7 +2119,7 @@ fn printLineInfo(
 fn printLineFromFileAnyOs(out_stream: anytype, tty_config: @import("std-io-compat").TtyConfig, source_location: SourceLocation) !void {
     // Need this to always block even in async I/O mode, because this could potentially
     // be called from e.g. the event loop code crashing.
-    var f = try std.fs.cwd().openFile(source_location.file_name, .{});
+    var f = try std.Io.Dir.cwd().openFile(source_location.file_name, .{});
     defer f.close();
 
     var line_buf: [4096]u8 = undefined;

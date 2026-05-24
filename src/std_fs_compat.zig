@@ -13,7 +13,7 @@ pub fn spanC(ptr: [*c]const u8) [:0]const u8 {
 }
 
 // fs compatibility - use std.fs types
-pub const Dir = std.fs.Dir;
+pub const Dir = std.Io.Dir;
 
 /// Old-style fs.File compatibility shim for code that needs @import("std-fs-compat").File API
 pub const File = struct {
@@ -110,15 +110,15 @@ pub const File = struct {
     }
 
     // safe-transpile: function uses raw slice parameter — consider safe.String
-    pub fn writerStreaming(self: File, buffer: []u8) std.fs.File.Writer {
-        const std_file = std.fs.File{ .handle = self.handle };
-        return std.fs.File.writerStreaming(std_file, buffer);
+    pub fn writerStreaming(self: File, buffer: []u8) std.Io.File.Writer {
+        const std_file = std.Io.File{ .handle = self.handle };
+        return std.Io.File.writerStreaming(std_file, buffer);
     }
 
     // safe-transpile: function uses raw slice parameter — consider safe.String
-    pub fn readerStreaming(self: File, buffer: []u8) std.fs.File.Reader {
-        const std_file = std.fs.File{ .handle = self.handle };
-        return std.fs.File.readerStreaming(std_file, buffer);
+    pub fn readerStreaming(self: File, buffer: []u8) std.Io.File.Reader {
+        const std_file = std.Io.File{ .handle = self.handle };
+        return std.Io.File.readerStreaming(std_file, buffer);
     }
 
     pub fn stdin() File {
@@ -184,8 +184,8 @@ pub const File = struct {
         };
     }
 
-    pub const Kind = std.fs.File.Kind;
-    pub const INode = std.fs.File.INode;
+    pub const Kind = std.Io.File.Kind;
+    pub const INode = std.Io.File.INode;
     pub const Timestamp = struct {
         nanoseconds: i128,
     };
@@ -207,7 +207,7 @@ pub const File = struct {
         mtime: Timestamp,
         ctime: Timestamp,
     };
-    pub const OpenFlags = std.fs.File.OpenFlags;
+    pub const OpenFlags = std.Io.File.OpenFlags;
 
     pub const Writer = @import("std-io-compat").MakeGenericWriter(File, error{WriteFailed}, struct {
         // safe-transpile: function uses raw slice parameter — consider safe.String

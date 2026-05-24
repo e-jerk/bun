@@ -241,8 +241,8 @@ pub const Source = struct {
                 WindowsStdio.init();
             }
 
-            const stdout = bun.sys.File.from(std.fs.File.stdout());
-            const stderr = bun.sys.File.from(std.fs.File.stderr());
+            const stdout = bun.sys.File.from(std.Io.File.stdout());
+            const stderr = bun.sys.File.from((@import("std-fs-compat").File.stderr()));
 
             Source.setInit(stdout, stderr);
 
@@ -1310,7 +1310,7 @@ pub fn initScopedDebugWriterAtStartup() void {
     if (bun.env_var.BUN_DEBUG.get()) |path| {
         if (path.len > 0 and !strings.eql(path, "0") and !strings.eql(path, "false")) {
             if (std.fs.path.dirname(path)) |dir| {
-                bun.makePath(std.fs.cwd(), dir) catch {};
+                bun.makePath(std.Io.Dir.cwd(), dir) catch {};
             }
 
             // do not use libuv through this code path, since it might not be initialized yet.

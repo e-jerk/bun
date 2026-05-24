@@ -85,7 +85,7 @@ pub fn from(other: anytype) File {
         }
     }
 
-    if (T == std.fs.File) {
+    if (T == std.Io.File) {
         return File{ .handle = .fromNative(other.handle) };
     }
 

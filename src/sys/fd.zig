@@ -96,16 +96,20 @@ pub const FD = packed struct(backing_int) {
         return .fromNative(file.handle);
     }
 
-    pub fn fromStdDir(dir: std.fs.Dir) FD {
-        return .fromNative(dir.fd);
+    pub fn fromStdDir(dir: std.Io.Dir) FD {
+        return .fromNative(dir.handle);
     }
 
-    pub fn stdFile(fd: FD) @import("std-fs-compat").File {
-        return .{ .handle = fd.native(), .flags = .{ .nonblocking = false } };
+    pub fn stdFile(fd: FD) std.Io.File {
+        return .{ .handle = fd.native() };
     }
 
-    pub fn stdDir(fd: FD) std.fs.Dir {
+    pub fn stdDir(fd: FD) @import("std-fs-compat").FsDir {
         return .{ .fd = fd.native() };
+    }
+
+    pub fn compatFile(fd: FD) @import("std-fs-compat").File {
+        return .{ .handle = fd.native(), .flags = .{ .nonblocking = false } };
     }
 
     /// Perform different logic for each kind of windows file descriptor
