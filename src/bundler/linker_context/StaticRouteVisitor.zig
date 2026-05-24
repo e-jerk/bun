@@ -6,7 +6,7 @@
 const StaticRouteVisitor = @This();
 
 c: *LinkerContext,
-cache: std.array_hash_map.AutoArrayHashMapUnmanaged(Index.Int, bool) = .{},
+cache: std.AutoArrayHashMapUnmanaged(Index.Int, bool) = .{},
 visited: bun.bit_set.AutoBitSet,
 
 pub fn deinit(this: *StaticRouteVisitor) void {

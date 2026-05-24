@@ -3017,7 +3017,7 @@ pub const LocalsResultsMap = bun.bundle_v2.MangledProps;
 /// to the css modules spec. We should warn the user about this.
 pub const LocalPropertyUsage = std.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, PropertyUsage);
 pub const Composes = css_properties.css_modules.Composes;
-pub const ComposesMap = std.array_hash_map.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, ComposesEntry);
+pub const ComposesMap = std.AutoArrayHashMapUnmanaged(bun.bundle_v2.Ref, ComposesEntry);
 
 pub const ComposesEntry = struct {
     composes: bun.BabyList(Composes) = .{},

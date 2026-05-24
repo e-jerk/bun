@@ -1145,7 +1145,7 @@ pub const ReactRefresh = struct {
     pub const HookContext = struct {
         hasher: std.hash.Wyhash,
         signature_cb: Ref,
-        user_hooks: std.array_hash_map.AutoArrayHashMapUnmanaged(Ref, Expr),
+        user_hooks: std.AutoArrayHashMapUnmanaged(Ref, Expr),
     };
 
     // https://github.com/facebook/react/blob/d1afcb43fd506297109c32ff462f6f659f9110ae/packages/react-refresh/src/ReactFreshBabelPlugin.js#L42

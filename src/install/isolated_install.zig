@@ -57,7 +57,7 @@ pub fn installIsolatedPackages(
         // The universe of distinct peer-dependency names is small even in large
         // lockfiles, so each per-package set is a bitset over that universe and the
         // fixpoint is bitwise OR/ANDNOT on a contiguous buffer.
-        var peer_name_idx: std.array_hash_map.AutoArrayHashMapUnmanaged(PackageNameHash, void) = .empty;
+        var peer_name_idx: std.AutoArrayHashMapUnmanaged(PackageNameHash, void) = .empty;
         defer peer_name_idx.deinit(lockfile.allocator);
         for (dependencies) |dep| {
             if (dep.behavior.isPeer()) {
@@ -1110,7 +1110,7 @@ pub fn installIsolatedPackages(
             defer scc_stack.deinit(manager.allocator);
             var work: std.ArrayListUnmanaged(struct { v: u32, child: u32 }) = .empty;
             defer work.deinit(manager.allocator);
-            var scc_ext: std.array_hash_map.AutoArrayHashMapUnmanaged(u64, void) = .empty;
+            var scc_ext: std.AutoArrayHashMapUnmanaged(u64, void) = .empty;
             defer scc_ext.deinit(manager.allocator);
 
             var index_counter: u32 = 0;

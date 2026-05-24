@@ -185,11 +185,11 @@ pub const ModuleInfo = struct {
     strings_map: std.ArrayHashMapUnmanaged(StringMapKey, void, void, true),
     strings_buf: std.ArrayListUnmanaged(u8),
     strings_lens: std.ArrayListUnmanaged(u32),
-    requested_modules: std.array_hash_map.AutoArrayHashMapUnmanaged(StringID, FetchParameters),
+    requested_modules: std.AutoArrayHashMapUnmanaged(StringID, FetchParameters),
     buffer: std.ArrayListUnmanaged(StringID),
     record_kinds: std.ArrayListUnmanaged(RecordKind),
     flags: Flags,
-    exported_names: std.array_hash_map.AutoArrayHashMapUnmanaged(StringID, void),
+    exported_names: std.AutoArrayHashMapUnmanaged(StringID, void),
     finalized: bool = false,
 
     /// only initialized after .finalize() is called
@@ -335,7 +335,7 @@ pub const ModuleInfo = struct {
     /// find any exports marked as 'local' that are actually 'indirect' and fix them
     pub fn finalize(self: *ModuleInfo) !void {
         bun.assert(!self.finalized);
-        var local_name_to_module_name = std.array_hash_map.AutoArrayHashMapUnmanaged(StringID, struct { module_name: StringID, import_name: StringID, record_kinds_idx: usize, is_namespace: bool }){};
+        var local_name_to_module_name = std.AutoArrayHashMapUnmanaged(StringID, struct { module_name: StringID, import_name: StringID, record_kinds_idx: usize, is_namespace: bool }){};
         defer local_name_to_module_name.deinit(bun.default_allocator);
         {
             var i: usize = 0;

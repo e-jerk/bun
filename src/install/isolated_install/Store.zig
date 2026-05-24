@@ -218,7 +218,7 @@ pub const Store = struct {
 
             const entry_parents = store.entries.items(.parents);
 
-            var parents: std.array_hash_map.AutoArrayHashMapUnmanaged(Entry.Id, void) = .empty;
+            var parents: std.AutoArrayHashMapUnmanaged(Entry.Id, void) = .empty;
             // defer parents.deinit(bun.default_allocator);
 
             for (entry_parents[entry_id.get()].items) |parent_id| {

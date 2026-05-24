@@ -1,14 +1,12 @@
-//! Compatibility shim for ArrayHashMap - in Zig 0.16, std.array_hash_map.ArrayHashMap
-//! IS the managed version with the old API, so we just re-export it.
+//! Compatibility shim for ArrayHashMap
+//! In Zig 0.16, use std.AutoArrayHashMapUnmanaged which is deprecated but works.
 const std = @import("std");
 
-pub const ArrayHashMap = std.array_hash_map.ArrayHashMap;
-pub const AutoArrayHashMap = std.array_hash_map.AutoArrayHashMap;
-pub const StringArrayHashMap = std.array_hash_map.StringArrayHashMap;
+pub const ArrayHashMap = std.array_hash_map.Custom;
+pub const AutoArrayHashMap = std.AutoArrayHashMapUnmanaged;
+pub const StringArrayHashMap = std.StringArrayHashMapUnmanaged;
+pub const AutoArrayHashMapUnmanaged = std.AutoArrayHashMapUnmanaged;
 
-/// Convenience alias matching the old std.array_hash_map.Auto
 pub fn Auto(comptime K: type, comptime V: type) type {
-    return AutoArrayHashMap(K, V);
+    return std.AutoArrayHashMapUnmanaged(K, V);
 }
-
-const safe = @import("safe");

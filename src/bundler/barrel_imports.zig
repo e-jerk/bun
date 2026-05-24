@@ -84,7 +84,7 @@ fn applyBarrelOptimizationImpl(this: *BundleV2, parse_result: *ParseTask.Result)
     // export names. Export * records are always needed.
     var needed_records_stack = std.heap.stackFallback(8192, this.allocator());
     const needed_records_alloc = needed_records_stack.get();
-    var needed_records = std.array_hash_map.AutoArrayHashMapUnmanaged(u32, void){};
+    var needed_records = std.AutoArrayHashMapUnmanaged(u32, void){};
     defer needed_records.deinit(needed_records_alloc);
 
     for (ast.export_star_import_records) |record_idx| {
@@ -208,7 +208,7 @@ const BarrelWorkItem = struct { barrel_source_index: u32, alias: []const u8, is_
 
 /// Resolve, process, and patch import records for a single barrel.
 /// Used to inline-resolve deferred records whose source_index is still invalid.
-fn resolveBarrelRecords(this: *BundleV2, barrel_idx: u32, barrels_to_resolve: *std.array_hash_map.AutoArrayHashMapUnmanaged(u32, void)) i32 {
+fn resolveBarrelRecords(this: *BundleV2, barrel_idx: u32, barrels_to_resolve: *std.AutoArrayHashMapUnmanaged(u32, void)) i32 {
     const graph_ast = this.graph.ast.slice();
     const barrel_ir = &graph_ast.items(.import_records)[barrel_idx];
     const target = graph_ast.items(.target)[barrel_idx];
@@ -251,7 +251,7 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
     // so we can detect bare imports (those with no specific export bindings).
     var named_ir_indices_stack = std.heap.stackFallback(4096, this.allocator());
     const named_ir_indices_alloc = named_ir_indices_stack.get();
-    var named_ir_indices = std.array_hash_map.AutoArrayHashMapUnmanaged(u32, void){};
+    var named_ir_indices = std.AutoArrayHashMapUnmanaged(u32, void){};
     defer named_ir_indices.deinit(named_ir_indices_alloc);
 
     // In dev server mode, patchImportRecordSourceIndices skips saving source_indices
@@ -434,7 +434,7 @@ pub fn scheduleBarrelDeferredImports(this: *BundleV2, result: *ParseTask.Result.
     // dedup via requested_exports to prevent cycles.
     const initial_queue_len = queue.items.len;
 
-    var barrels_to_resolve = std.array_hash_map.AutoArrayHashMapUnmanaged(u32, void){};
+    var barrels_to_resolve = std.AutoArrayHashMapUnmanaged(u32, void){};
     var barrels_to_resolve_stack = std.heap.stackFallback(1024, this.allocator());
     const barrels_to_resolve_alloc = barrels_to_resolve_stack.get();
     defer barrels_to_resolve.deinit(barrels_to_resolve_alloc);
