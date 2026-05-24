@@ -585,7 +585,7 @@ pub const Process = struct {
             switch (this.poller) {
                 .waiter_thread, .fd => {
                     // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-                    const err = std.c.kill(this.pid, @intCast(signal));
+                    const err = std.c.kill(this.pid, @as(std.posix.SIG, @enumFromInt(signal)));
                     if (err != 0) {
                         const errno_ = bun.sys.getErrno(err);
 
@@ -655,7 +655,7 @@ pub const Status = union(enum) {
 
                 if (std.posix.W.IFSIGNALED(result.status)) {
                     // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-                    signal = @as(u8, @truncate(std.posix.W.TERMSIG(result.status)));
+                    signal = @as(u8, @truncate(@intFromEnum(std.posix.W.TERMSIG(result.status))));
                 }
 
                 // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/waitpid.2.html
@@ -1018,13 +1018,13 @@ const WaiterThreadPosix = struct {
 
         if (comptime Environment.isLinux) {
             var current_mask = bun.sys.sigemptyset();
-            bun.sys.sigaddset(&current_mask, std.posix.SIG.CHLD);
+            bun.sys.sigaddset(&current_mask, @intFromEnum(std.posix.SIG.CHLD));
             const act = bun.sys.Sigaction{
                 .handler = .{ .handler = &wakeup },
                 .mask = current_mask,
                 .flags = std.posix.SA.NOCLDSTOP,
             };
-            bun.sys.sigaction(std.posix.SIG.CHLD, &act, null);
+            bun.sys.sigaction(@intFromEnum(std.posix.SIG.CHLD), &act, null);
         }
     }
 
@@ -1056,7 +1056,7 @@ const WaiterThreadPosix = struct {
                 _ = std.posix.poll(&polls, std.math.maxInt(i32)) catch 0;
             } else {
                 var mask = std.posix.sigemptyset();
-                var signal: c_int = std.posix.SIG.CHLD;
+                var signal: c_int = @intFromEnum(std.posix.SIG.CHLD);
                 const rc = std.c.sigwait(&mask, &signal);
                 _ = rc;
             }
@@ -1422,7 +1422,7 @@ pub fn spawnProcessPosix(
             // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             @intCast(sig)
         else if (bun.ParentDeathWatchdog.shouldDefaultSpawnPdeathsig())
-            std.posix.SIG.KILL
+            @intFromEnum(std.posix.SIG.KILL)
         else
             0;
     }
@@ -2677,7 +2677,7 @@ pub const sync = struct {
         // `child` alone.
         if (jc.isActive())
             // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
-            add(&changes, @intCast(std.c.SIG.CHLD), std.c.EVFILT.SIGNAL, 0, 0);
+            add(&changes, @intFromEnum(std.c.SIG.CHLD), std.c.EVFILT.SIGNAL, 0, 0);
         for (out_fds_to_wait_for, 0..) |fd, i| {
             // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
             if (fd != bun.invalid_fd) add(&changes, @intCast(fd.cast()), std.c.EVFILT.READ, 0, i);
@@ -2822,12 +2822,12 @@ pub const sync = struct {
         // signalfd.
         var libc_mask = std.posix.sigemptyset();
         var old_mask = std.posix.sigemptyset();
-        std.posix.sigaddset(&libc_mask, std.posix.SIG.CHLD);
+        std.posix.sigaddset(&libc_mask, @intFromEnum(std.posix.SIG.CHLD));
         std.posix.sigprocmask(std.posix.SIG.BLOCK, &libc_mask, &old_mask);
         defer std.posix.sigprocmask(std.posix.SIG.SETMASK, &old_mask, null);
         const chld_fd: bun.FD = blk: {
             var kmask = linux.sigemptyset();
-            linux.sigaddset(&kmask, std.posix.SIG.CHLD);
+            linux.sigaddset(&kmask, @intFromEnum(std.posix.SIG.CHLD));
             const rc = linux.signalfd(-1, &kmask, linux.SFD.CLOEXEC | linux.SFD.NONBLOCK);
             switch (linux.E.init(rc)) {
                 // safe-transpile: @intCast requires manual review — consider zust.CheckedInt(T).init(@intCast)
@@ -2859,7 +2859,7 @@ pub const sync = struct {
             _ = std.posix.prctl(.SET_PDEATHSIG, .{0}) catch {};
         }
         defer if (ppid > 1) {
-            _ = std.posix.prctl(.SET_PDEATHSIG, .{std.posix.SIG.KILL}) catch {};
+            _ = std.posix.prctl(.SET_PDEATHSIG, .{@intFromEnum(std.posix.SIG.KILL)}) catch {};
         };
         if (ppid > 1 and std.c.getppid() != ppid)
             bun.Global.exit(bun.ParentDeathWatchdog.exit_code);

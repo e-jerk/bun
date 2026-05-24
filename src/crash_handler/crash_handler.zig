@@ -871,7 +871,7 @@ const metadata_version_line = std.fmt.comptimePrint(
     },
 );
 
-fn handleSegfaultPosix(sig: i32, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) noreturn {
+fn handleSegfaultPosix(sig: std.posix.SIG, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) noreturn {
     const addr = switch (bun.Environment.os) {
         .linux => @intFromPtr(info.fields.sigfault.addr),
         .mac, .freebsd => @intFromPtr(info.addr),
@@ -912,10 +912,10 @@ fn updatePosixSegfaultHandler(act: ?*bun.sys.Sigaction) !void {
         }
     }
 
-    bun.sys.sigaction(std.posix.SIG.SEGV, act, null);
-    bun.sys.sigaction(std.posix.SIG.ILL, act, null);
-    bun.sys.sigaction(std.posix.SIG.BUS, act, null);
-    bun.sys.sigaction(std.posix.SIG.FPE, act, null);
+    bun.sys.sigaction(@intFromEnum(std.posix.SIG.SEGV), act, null);
+    bun.sys.sigaction(@intFromEnum(std.posix.SIG.ILL), act, null);
+    bun.sys.sigaction(@intFromEnum(std.posix.SIG.BUS), act, null);
+    bun.sys.sigaction(@intFromEnum(std.posix.SIG.FPE), act, null);
 }
 
 var windows_segfault_handle: ?windows.HANDLE = null;
@@ -1612,7 +1612,7 @@ fn crash() noreturn {
         },
         else => {
             // Install default handler so that the tkill below will terminate.
-            const sigact = bun.sys.Sigaction{ .handler = .{ .handler = std.posix.SIG.DFL }, .mask = bun.sys.sigemptyset(), .flags = 0 };
+            const sigact = bun.sys.Sigaction{ .handler = .{ .handler = @intFromEnum(std.posix.SIG.DFL) }, .mask = bun.sys.sigemptyset(), .flags = 0 };
             inline for (.{
                 std.posix.SIG.SEGV,
                 std.posix.SIG.ILL,

@@ -329,7 +329,7 @@ const State = struct {
         for (this.handles) |*handle| {
             if (handle.process) |*proc| {
                 if (proc.status == .running) {
-                    _ = proc.ptr.kill(std.posix.SIG.INT);
+                    _ = proc.ptr.kill(@intFromEnum(@intFromEnum(std.posix.SIG.INT)));
                 }
             }
         }
@@ -375,7 +375,7 @@ const AbortHandler = struct {
                 .mask = bun.sys.sigemptyset(),
                 .flags = std.posix.SA.SIGINFO | std.posix.SA.RESTART | std.posix.SA.RESETHAND,
             };
-            bun.sys.sigaction(std.posix.SIG.INT, &action, null);
+            bun.sys.sigaction(@intFromEnum(@intFromEnum(std.posix.SIG.INT)), &action, null);
         } else {
             const res = bun.c.SetConsoleCtrlHandler(windowsCtrlHandler, std.os.windows.TRUE);
             if (res == 0) {

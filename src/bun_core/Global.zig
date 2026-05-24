@@ -162,8 +162,7 @@ pub fn raiseIgnoringPanicHandler(sig: bun.SignalCode) noreturn {
     }
 
     // kill self
-    // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-    _ = std.c.raise(@intCast(@intFromEnum(sig)));
+    _ = std.c.raise(@as(std.posix.SIG, @enumFromInt(@intFromEnum(sig))));
     std.c.abort();
 }
 
