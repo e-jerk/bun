@@ -100,8 +100,8 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
             return self.map.getPtr(key);
         }
 
-        pub fn swapRemoveAt(self: *Self, i: usize) ?KV {
-            return self.map.swapRemoveAt(i);
+        pub fn swapRemoveAt(self: *Self, i: usize) void {
+            self.map.swapRemoveAt(i);
         }
 
         pub fn putAssumeCapacityNoClobber(self: *Self, key: K, value: V) void {
@@ -110,6 +110,29 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
 
         pub fn capacity(self: Self) usize {
             return self.map.capacity();
+        }
+
+        pub fn getOrPutValue(self: *Self, key: K, value: V) !*V {
+            const result = try self.map.getOrPut(self.allocator, key);
+            if (!result.found_existing) result.value_ptr.* = value;
+            return result.value_ptr;
+        }
+
+        pub fn cloneWithAllocator(self: Self, allocator: std.mem.Allocator) !Self {
+            var new_map = try self.map.clone(allocator);
+            return .{ .allocator = allocator, .map = new_map };
+        }
+
+        pub fn sort(self: *Self, sort_ctx: anytype) void {
+            self.map.sort(sort_ctx);
+        }
+
+        pub fn getEntry(self: Self, key: K) ?*V {
+            return self.map.getPtr(key);
+        }
+
+        pub fn fetchSwapRemove(self: *Self, key: K) ?KV {
+            return self.map.fetchSwapRemove(key);
         }
 
         pub fn shrinkAndFree(self: *Self, new_len: usize) void {
