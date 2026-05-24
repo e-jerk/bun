@@ -873,7 +873,9 @@ fn enableFastBuild(b: *Build) bool {
 fn configureObj(b: *Build, opts: *BunBuildOptions, obj: *Compile) void {
     // Flags on root module get used for the compilation
     obj.root_module.omit_frame_pointer = false;
-    obj.root_module.strip = false; // stripped at the end
+    // Strip error names and debug strings in release builds to reduce binary size.
+    // In debug builds, keep them for stack traces.
+    obj.root_module.strip = opts.optimize != .Debug;
     // https://github.com/ziglang/zig/issues/17430
     obj.root_module.pic = true;
 
