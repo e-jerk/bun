@@ -590,7 +590,7 @@ pub const Style = union(enum) {
         comptime conventions: NextRoutingConvention,
     ) ![]Part {
         var i: usize = 1;
-        var parts: std.ArrayListUnmanaged(Part) = .{};
+        var parts: std.ArrayListUnmanaged(Part) = .empty;
         const stop_chars = switch (conventions) {
             .pages => "[",
             .app => "[(@",
@@ -1337,7 +1337,27 @@ pub const JSFrameworkRouter = struct {
             return .null;
 
         var rendered = try std.array_list.Managed(u8).initCapacity(alloc, filepath.slice().len);
-        for (parsed.parts) |part| try part.toStringForInternalUse(rendered.writer());
+        for (parsed.parts) |part| {
+            var part_buf = try std.array_list.Managed(u8).initCapacity(alloc, 256);
+            defer part_buf.deinit();
+            // Inline writer: append bytes to the array list
+            const Writer = struct {
+                list: *std.array_list.Managed(u8),
+                pub fn writeAll(self: @This(), bytes: []const u8) !void {
+                    try self.list.appendSlice(bytes);
+                }
+                pub fn print(self: @This(), comptime fmt_str: []const u8, args: anytype) !void {
+                    const size = @import("std").fmt.count(fmt_str, args);
+                    try self.list.ensureUnusedCapacity(size);
+                    const len = self.list.items.len;
+                    self.list.items.len = len + size;
+                    const buf = self.list.items[len..];
+                    _ = @import("std").fmt.bufPrint(buf, fmt_str, args) catch unreachable;
+                }
+            };
+            try part.toStringForInternalUse(Writer{ .list = &part_buf });
+            try rendered.appendSlice(part_buf.items);
+        }
 
         var out = bun.String.init(rendered.items);
         const obj = JSValue.createEmptyObject(global, 2);

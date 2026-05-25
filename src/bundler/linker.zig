@@ -61,7 +61,7 @@ pub const Linker = struct {
         file_path: Fs.Path,
         fd: ?FileDescriptorType,
     ) !Fs.FileSystem.RealFS.ModKey {
-        var file: @import("std-fs-compat").File = if (fd) |_fd| _fd.stdFile() else switch (bun.sys.openA(file_path.text, bun.O.RDONLY, 0)) {
+        var file: @import("std-fs-compat").File = if (fd) |_fd| _fd.compatFile() else switch (bun.sys.openA(file_path.text, bun.O.RDONLY, 0)) {
             .result => |f| @import("std-fs-compat").File{ .handle = f.value.as_system, .flags = .{ .nonblocking = false } },
             .err => |err| return err.toZigErr(),
         };

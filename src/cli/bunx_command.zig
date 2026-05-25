@@ -303,7 +303,7 @@ pub const BunxCommand = struct {
             if (is_stale) {
                 _ = target_package_json.close();
                 // If delete fails, oh well. Hope installation takes care of it.
-                std.fs.cwd().deleteTree(tempdir_name) catch {};
+                std.Io.Dir.cwd().deleteTree(std.Io.Threaded.global_single_threaded.io(), tempdir_name) catch {};
                 return error.NeedToInstall;
             }
             _ = target_package_json.close();
@@ -647,11 +647,11 @@ pub const BunxCommand = struct {
                                 else => break :is_stale true,
                             }
                         } else {
-                            var stat: std.posix.Stat = undefined;
-                            const rc = std.c.stat(destination, &stat);
-                            if (rc != 0) {
+                            const stat_result = bun.sys.stat(destination);
+                            if (stat_result.isErr()) {
                                 break :is_stale true;
                             }
+                            const stat = stat_result.result;
                             break :is_stale @import("std-fs-compat").timestamp() - stat.mtime().sec > seconds_cache_valid;
                         }
                     };
@@ -758,7 +758,7 @@ pub const BunxCommand = struct {
             Global.exit(1);
         }
 
-        try bun.makePath(std.fs.cwd(), bunx_cache_dir);
+        try bun.makePath(std.Io.Dir.cwd(), bunx_cache_dir);
         const bunx_install_dir = try bun.openDirAbsolute(bunx_cache_dir);
 
         create_package_json: {

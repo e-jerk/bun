@@ -1050,7 +1050,7 @@ pub const RunCommand = struct {
             if (default_completions) |defaults| {
                 try results.ensureUnusedCapacity(defaults.len);
                 for (defaults) |item| {
-                    _ = results.getOrPutAssumeCapacity(item);
+                    _ = results.map.getOrPutAssumeCapacity(item);
                 }
             }
         }
@@ -1148,7 +1148,7 @@ pub const RunCommand = struct {
                             if (scripts.contains(key["post".len..])) continue :loop;
                         }
 
-                        const entry_item = results.getOrPutAssumeCapacity(key);
+                        const entry_item = results.map.getOrPutAssumeCapacity(key);
 
                         if (filter == Filter.script_and_descriptions and max_description_len > 0) {
                             var description = scripts.get(key).?;

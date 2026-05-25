@@ -277,10 +277,10 @@ pub const JSBundleCompletionTask = struct {
         const dirname = std.fs.path.dirname(full_outfile_path) orelse ".";
         const basename = std.fs.path.basename(full_outfile_path);
 
-        var root_dir = bun.FD.cwd().stdDir();
+        const root_dir = bun.FD.cwd().stdDir();
         defer {
             if (bun.FD.fromStdDir(root_dir) != bun.FD.cwd()) {
-                root_dir.close();
+                @import("std-fs-compat").dirClose(root_dir);
             }
         }
 
@@ -307,7 +307,7 @@ pub const JSBundleCompletionTask = struct {
             &compile_options.compile_target,
             bun.default_allocator,
             output_files.items,
-            @import("std-fs-compat").FsDir{ .fd = root_dir.fd },
+            @import("std-fs-compat").FsDir{ .fd = root_dir.handle },
             module_prefix,
             outfile_for_executable,
             this.env,

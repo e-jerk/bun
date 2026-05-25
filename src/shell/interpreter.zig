@@ -966,7 +966,7 @@ pub const Interpreter = struct {
             };
 
             // This will save ~2x memory
-            var export_env = EnvMap.initWithCapacity(allocator, env_loader.map.map.unmanaged.entries.len);
+            var export_env = EnvMap.initWithCapacity(allocator, env_loader.map.map.map.entries.len);
 
             var iter = env_loader.iterator();
 
@@ -1734,7 +1734,7 @@ const CmdEnvIter = struct {
     }
 
     pub fn len(self: *const CmdEnvIter) usize {
-        return self.env.unmanaged.entries.len;
+        return self.env.map.entries.len;
     }
 
     pub fn next(self: *CmdEnvIter) !?Entry {

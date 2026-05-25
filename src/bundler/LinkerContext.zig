@@ -636,9 +636,9 @@ pub const LinkerContext = struct {
     pub const ChunkMeta = struct {
         imports: Map,
         exports: Map,
-        dynamic_imports: std.array_hash_map.Auto(Index.Int, void),
+        dynamic_imports: @import("array-hash-map-compat").AutoArrayHashMap(Index.Int, void),
 
-        pub const Map = std.array_hash_map.Auto(Ref, void);
+        pub const Map = @import("array-hash-map-compat").AutoArrayHashMap(Ref, void);
     };
 
     pub const computeCrossChunkDependencies = @import("./linker_context/computeCrossChunkDependencies.zig").computeCrossChunkDependencies;
@@ -716,7 +716,7 @@ pub const LinkerContext = struct {
         //   -->
         //    Which source index in the generated sourcemap, referred to
         //    as the "mapping source index" within this function to be distinct.
-        var source_id_map = bun.handleOom(std.array_hash_map.Auto(u32, i32).init(worker.allocator));
+        var source_id_map = bun.handleOom(@import("array-hash-map-compat").AutoArrayHashMap(u32, i32).init(worker.allocator));
         defer source_id_map.deinit();
 
         const source_indices = results.items(.source_index);

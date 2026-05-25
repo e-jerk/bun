@@ -15,6 +15,47 @@ pub fn spanC(ptr: [*c]const u8) [:0]const u8 {
 // fs compatibility - use std.fs types
 pub const Dir = std.Io.Dir;
 
+/// Helper to close a Dir without needing an Io context (uses POSIX close)
+pub fn dirClose(dir: anytype) void {
+    const fd = if (@hasField(@TypeOf(dir), "fd")) dir.fd else if (@hasField(@TypeOf(dir), "handle")) dir.handle else @compileError("dirClose requires .fd or .handle field");
+    _ = std.c.close(fd);
+}
+
+pub fn dirDeleteTree(dir: anytype, sub_path: []const u8) !void {
+    const fd = if (@hasField(@TypeOf(dir), "fd")) dir.fd else if (@hasField(@TypeOf(dir), "handle")) dir.handle else @compileError("dirDeleteTree requires .fd or .handle field");
+    var buf: [std.fs.max_path_bytes]u8 = undefined;
+
+    @memcpy(buf[0..sub_path.len], sub_path);
+    buf[sub_path.len] = 0;
+
+    const pathz = @as([*:0]u8, @ptrCast(&buf));
+    const rc = std.c.unlinkat(fd, pathz, 0);
+    if (rc != 0) {
+        return switch (std.posix.errno(rc)) {
+            .EXIST => error.PathAlreadyExists,
+            .NOENT => error.FileNotFound,
+            .ACCES => error.AccessDenied,
+            .NOTEMPTY => error.DirNotEmpty,
+            else => error.Unexpected,
+        };
+    }
+}
+
+/// Helper to close a compat File
+pub fn fileClose(file: File) void {
+    _ = std.c.close(file.handle);
+}
+
+/// Helper to close an Io.File
+pub fn ioFileClose(file: std.Io.File) void {
+    _ = std.c.close(file.handle);
+}
+
+/// Helper to stat an Io.File without needing an Io context
+pub fn ioFileStat(file: std.Io.File) !std.Io.File.Stat {
+    return std.Io.File.stat(file, std.Io.Threaded.global_single_threaded.io());
+}
+
 /// Old-style fs.File compatibility shim for code that needs @import("std-fs-compat").File API
 pub const File = struct {
     handle: std.posix.fd_t,
@@ -111,14 +152,14 @@ pub const File = struct {
 
     // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn writerStreaming(self: File, buffer: []u8) std.Io.File.Writer {
-        const std_file = std.Io.File{ .handle = self.handle };
-        return std.Io.File.writerStreaming(std_file, buffer);
+        const std_file = std.Io.File{ .handle = self.handle, .flags = .{ .nonblocking = false } };
+        return std.Io.File.writerStreaming(std_file, std.Io.Threaded.global_single_threaded.io(), buffer);
     }
 
     // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn readerStreaming(self: File, buffer: []u8) std.Io.File.Reader {
-        const std_file = std.Io.File{ .handle = self.handle };
-        return std.Io.File.readerStreaming(std_file, buffer);
+        const std_file = std.Io.File{ .handle = self.handle, .flags = .{ .nonblocking = false } };
+        return std.Io.File.readerStreaming(std_file, std.Io.Threaded.global_single_threaded.io(), buffer);
     }
 
     pub fn stdin() File {
@@ -303,6 +344,15 @@ pub const FsDir = struct {
         return FsDir{ .fd = new_fd };
     }
 
+    pub fn openat(self: FsDir, sub_path: []const u8, flags: u32, mode: std.posix.mode_t) !File {
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        @memcpy(buf[0..sub_path.len], sub_path);
+        buf[sub_path.len] = 0;
+        const fd = std.c.openat(self.fd, @as([*:0]u8, @ptrCast(&buf)), @bitCast(std.c.O.toPacked(flags)), mode);
+        if (fd < 0) return error.Unexpected;
+        return File{ .handle = fd };
+    }
+
     pub fn accessZ(self: FsDir, sub_path: [*:0]const u8, flags: u32) !void {
         _ = flags;
         if (std.c.faccessat(self.fd, sub_path, std.c.F_OK, 0) != 0) {
@@ -310,9 +360,40 @@ pub const FsDir = struct {
         }
     }
 
+    pub fn deleteFile(self: FsDir, sub_path: []const u8) !void {
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        @memcpy(buf[0..sub_path.len], sub_path);
+        buf[sub_path.len] = 0;
+        return self.deleteFileZ(@as([*:0]u8, @ptrCast(&buf)));
+    }
+
+    pub fn deleteDir(self: FsDir, sub_path: []const u8) !void {
+        var buf: [std.fs.max_path_bytes]u8 = undefined;
+        @memcpy(buf[0..sub_path.len], sub_path);
+        buf[sub_path.len] = 0;
+        return self.deleteDirZ(@as([*:0]u8, @ptrCast(&buf)));
+    }
+
+    pub fn deleteDirZ(self: FsDir, sub_path: [*:0]const u8) !void {
+        if (std.c.unlinkat(self.fd, sub_path, std.c.AT.REMOVEDIR) != 0) {
+            return switch (std.c.errno(std.c._errno().*)) {
+                .NOENT => error.FileNotFound,
+                .NOTEMPTY => error.DirNotEmpty,
+                else => error.Unexpected,
+            };
+        }
+    }
+
     pub fn deleteFileZ(self: FsDir, sub_path: [*:0]const u8) !void {
-        if (std.c.unlinkat(self.fd, sub_path, 0) != 0) {
-            return error.Unexpected;
+        const rc = std.c.unlinkat(self.fd, sub_path, 0);
+        if (rc != 0) {
+            return switch (std.c.errno(rc)) {
+                .ISDIR => error.IsDir,
+                .PERM => error.AccessDenied,
+                .NOENT => error.FileNotFound,
+                .NOTDIR => error.NotDir,
+                else => error.Unexpected,
+            };
         }
     }
 
@@ -550,18 +631,17 @@ pub const FsDir = struct {
         return Iterator{ .dir = self };
     }
 
+    pub fn iterateAssumeFirstIteration(self: FsDir) Iterator {
+        return self.iterate();
+    }
+
     pub const Entry = Iterator.Entry;
 
     pub const Iterator = struct {
         dir: FsDir,
         index: usize = 0,
 
-        pub const Kind = enum {
-            file,
-            directory,
-            sym_link,
-            unknown,
-        };
+        pub const Kind = std.Io.File.Kind;
 
         pub const Entry = struct {
             name: []const u8,
@@ -691,7 +771,7 @@ pub fn makeDir(dir: Dir, sub_path: []const u8) !void {
     buf[sub_path.len] = 0;
 
     const pathz = @as([*:0]u8, @ptrCast(&buf));
-    const rc = std.c.mkdirat(dir.fd, pathz, 0o755);
+    const rc = std.c.mkdirat(dir.handle, pathz, 0o755);
     if (rc != 0) {
         return switch (std.posix.errno(rc)) {
             .EXIST => error.PathAlreadyExists,
@@ -741,9 +821,35 @@ pub fn getFdPath(fd: std.posix.fd_t, buf: []u8) ![]u8 {
     return buf[0..len];
 }
 
+pub const SimpleMutex = struct {
+    state: std.atomic.Value(bool) = .init(false),
+    pub fn lock(self: *SimpleMutex) void {
+        while (self.state.cmpxchgWeak(false, true, .acquire, .monotonic) != null) {
+            std.atomic.spinLoopHint();
+        }
+    }
+    pub fn unlock(self: *SimpleMutex) void {
+        self.state.store(false, .release);
+    }
+};
+
+pub const SimpleCondition = struct {
+    pub fn wait(self: *SimpleCondition, mutex: *SimpleMutex) void {
+        _ = self;
+        _ = mutex;
+        // Stub: not fully implemented for 0.16 compat
+    }
+    pub fn broadcast(self: *SimpleCondition) void {
+        _ = self;
+    }
+    pub fn signal(self: *SimpleCondition) void {
+        _ = self;
+    }
+};
+
 pub const ResetEvent = struct {
-    mutex: std.Thread.Mutex = .{},
-    cond: std.Thread.Condition = .{},
+    mutex: SimpleMutex = .{},
+    cond: SimpleCondition = .{},
     signaled: bool = false,
 
     pub fn wait(self: *ResetEvent) void {

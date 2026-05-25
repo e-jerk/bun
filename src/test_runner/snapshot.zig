@@ -219,7 +219,7 @@ pub const Snapshots = struct {
     }
 
     pub fn addInlineSnapshotToWrite(self: *Snapshots, file_id: TestRunner.File.ID, value: InlineSnapshotToWrite) !void {
-        const gpres = try self.inline_snapshots_to_write.getOrPut(file_id);
+        const gpres = try self.inline_snapshots_to_write.getOrPut(self.allocator, file_id);
         if (!gpres.found_existing) {
             gpres.value_ptr.* = std.array_list.Managed(InlineSnapshotToWrite).init(self.allocator);
         }
@@ -261,7 +261,7 @@ pub const Snapshots = struct {
             };
             var file: File = .{
                 .id = file_id,
-                .file = fd.stdFile(),
+                .file = .{ .handle = fd.native() },
             };
             errdefer _ = std.c.close(file.file.handle);
 
@@ -538,7 +538,7 @@ pub const Snapshots = struct {
 
             var file: File = .{
                 .id = file_id,
-                .file = fd.stdFile(),
+                .file = fd.compatFile(),
             };
             errdefer _ = std.c.close(file.file.handle);
 

@@ -106,7 +106,7 @@ pub const ArrayBuffer = extern struct {
             null,
             // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
             @intCast(@max(size, 0)),
-            std.posix.PROT.READ | std.posix.PROT.WRITE,
+            std.c.PROT{ .READ = true, .WRITE = true },
             .{ .TYPE = .SHARED },
             fd,
             0,

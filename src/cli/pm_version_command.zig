@@ -132,7 +132,7 @@ pub const PmVersionCommand = struct {
                 Global.exit(1);
             };
 
-            std.fs.cwd().writeFile(.{
+            std.Io.Dir.cwd().writeFile(std.Io.Threaded.global_single_threaded.io(), .{
                 .sub_path = package_json_path,
                 .data = package_json_writer.ctx.writtenWithoutTrailingZero(),
             }) catch |err| {

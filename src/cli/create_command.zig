@@ -409,7 +409,8 @@ pub const CreateCommand = struct {
                         progress.refresh();
 
                         package_json_contents = plucker.contents;
-                        package_json_file = plucker.fd.stdFile();
+                        const io_file = plucker.fd.stdFile();
+                        package_json_file = .{ .handle = io_file.handle, .flags = .{ .nonblocking = io_file.flags.nonblocking } };
                     }
                 }
             },
@@ -429,7 +430,7 @@ pub const CreateCommand = struct {
                 };
 
                 @import("std-fs-compat").FsDir.deleteTreeAbsolute(destination) catch {};
-                bun.makePath(std.fs.cwd(), destination) catch |err| {
+                bun.makePath(std.Io.Dir.cwd(), destination) catch |err| {
                     node.end();
 
                     progress.refresh();
@@ -452,12 +453,12 @@ pub const CreateCommand = struct {
                     template_path_buf[src_without_trailing_slash.len] = std.fs.path.sep;
                 }
 
-                const destination_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), destination) catch |err| {
+                const destination_dir = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.Io.Dir.cwd(), destination) catch |err| {
                     Output.err(err, "failed to open destination", .{});
                     Global.crash();
                 }).fd };
                 const Walker = @import("../sys/walker_skippable.zig");
-                var walker_ = try Walker.walk(.fromStdDir(template_dir), ctx.allocator, skip_files, skip_dirs);
+                var walker_ = try Walker.walk(.fromStdDir(template_dir.toDir()), ctx.allocator, skip_files, skip_dirs);
                 defer walker_.deinit();
 
                 const FileCopier = struct {
@@ -1890,7 +1891,7 @@ pub const Example = struct {
             if (env_loader.map.get("BUN_CREATE_DIR")) |home_dir| {
                 var parts = [_]string{home_dir};
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[0] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                folders[0] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.Io.Dir.cwd(), outdir_path) catch |err| {
                     Output.err(err, "failed to open BUN_CREATE_DIR", .{});
                     Global.crash();
                 }).fd };
@@ -1899,7 +1900,7 @@ pub const Example = struct {
             {
                 var parts = [_]string{ filesystem.top_level_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[1] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                folders[1] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.Io.Dir.cwd(), outdir_path) catch |err| {
                     Output.err(err, "failed to open BUN_CREATE_DIR", .{});
                     Global.crash();
                 }).fd };
@@ -1908,7 +1909,7 @@ pub const Example = struct {
             if (env_loader.map.get(bun.env_var.HOME.key())) |home_dir| {
                 var parts = [_]string{ home_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[2] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.fs.cwd(), outdir_path) catch |err| {
+                folders[2] = @import("std-fs-compat").FsDir{ .fd = (bun.openDirA(std.Io.Dir.cwd(), outdir_path) catch |err| {
                     Output.err(err, "failed to open HOME dir", .{});
                     Global.crash();
                 }).fd };

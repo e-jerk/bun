@@ -154,23 +154,16 @@ pub const Fs = struct {
     ) !Entry {
         var rfs = _fs.fs;
 
-        var file_handle: @import("std-fs-compat").File = if (_file_handle) |__file| __file.stdFile() else undefined;
+        var file_handle: @import("std-fs-compat").File = if (_file_handle) |__file| __file.compatFile() else undefined;
 
         if (_file_handle == null) {
             if (FeatureFlags.store_file_descriptors and dirname_fd.isValid()) {
                 file_handle = (bun.sys.openatA(dirname_fd, std.fs.path.basename(path), bun.O.RDONLY, 0).unwrap() catch |err| brk: {
                     switch (err) {
-                        error.ENOENT => {
-                            const handle = try bun.openFile(path, .{ .mode = .read_only });
-                            Output.prettyErrorln(
-                                "<r><d>Internal error: directory mismatch for directory \"{s}\", fd {f}<r>. You don't need to do anything, but this indicates a bug.",
-                                .{ path, dirname_fd },
-                            );
-                            break :brk bun.FD.fromStdFile(handle);
-                        },
+                        error.ENOENT => break :brk try bun.sys.openA(path, bun.O.RDONLY, 0).unwrap(),
                         else => return err,
                     }
-                }).stdFile();
+                }).compatFile();
             } else {
                 file_handle = try bun.openFile(path, .{ .mode = .read_only });
             }

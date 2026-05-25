@@ -19,10 +19,10 @@ pub const bun_install_js_bindings = struct {
         const cwd = try args[0].toSliceOrNull(globalObject);
         defer cwd.deinit();
 
-        var dir = bun.openDirAbsoluteNotForDeletingOrRenaming(cwd.slice()) catch |err| {
+        const dir = bun.openDirAbsoluteNotForDeletingOrRenaming(cwd.slice()) catch |err| {
             return globalObject.throw("failed to open: {s}, '{s}'", .{ @errorName(err), cwd.slice() });
         };
-        defer dir.close();
+        defer @import("std-fs-compat").dirClose(dir);
 
         const lockfile_path = Path.joinAbsStringZ(cwd.slice(), &[_]string{"bun.lockb"}, .auto);
 
@@ -35,7 +35,7 @@ pub const bun_install_js_bindings = struct {
         // as long as we aren't migration from `package-lock.json`, leaving this undefined is okay
         const manager = globalObject.bunVM().transpiler.resolver.getPackageManager();
 
-        const load_result: Lockfile.LoadResult = lockfile.loadFromDir(.fromStdDir(dir), manager, allocator, &log, true);
+        const load_result: Lockfile.LoadResult = lockfile.loadFromDir(bun.FD.fromNative(dir.fd), manager, allocator, &log, true);
 
         switch (load_result) {
             .err => |err| {

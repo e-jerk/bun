@@ -60,7 +60,7 @@ pub const TestingAPIs = struct {
 
         const posix = std.posix;
         const sentry = struct {
-            fn handler(_: i32) callconv(.c) void {}
+            fn handler(_: std.posix.SIG) callconv(.c) void {}
         };
         var mask = bun.sys.sigemptyset();
         // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
@@ -73,11 +73,9 @@ pub const TestingAPIs = struct {
         var prev: bun.sys.Sigaction = undefined;
         var readback: bun.sys.Sigaction = undefined;
         // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-        bun.sys.sigaction(@intCast(posix.SIG.USR2), &act, &prev);
-        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-        bun.sys.sigaction(@intCast(posix.SIG.USR2), null, &readback);
-        // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-        bun.sys.sigaction(@intCast(posix.SIG.USR2), &prev, null);
+        bun.sys.sigaction(@intFromEnum(posix.SIG.USR2), &act, &prev);
+        bun.sys.sigaction(@intFromEnum(posix.SIG.USR2), null, &readback);
+        bun.sys.sigaction(@intFromEnum(posix.SIG.USR2), &prev, null);
 
         const installed = (try jsc.JSObject.create(.{
             .handler = @as(f64, @floatFromInt(@intFromPtr(&sentry.handler))),

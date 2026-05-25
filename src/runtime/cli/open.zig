@@ -128,7 +128,7 @@ pub const Editor = enum(u8) {
     pub fn byFallbackPathForEditor(editor: Editor, out: ?*[]const u8) bool {
         if (bin_path.get(editor)) |paths| {
             for (paths) |path| {
-                if (std.fs.cwd().openFile(path, .{})) |opened| {
+                if (std.Io.Dir.cwd().openFile(path, .{})) |opened| {
                     opened.close();
                     if (out != null) {
                         out.?.* = bun.asByteSlice(path);
@@ -341,7 +341,7 @@ pub const EditorContext = struct {
     path: string = "",
     const Fs = @import("../../resolver/fs.zig");
 
-    pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: std.fs.Dir, line: string, column: string) void {
+    pub fn openInEditor(this: *EditorContext, editor_: Editor, blob: []const u8, id: string, tmpdir: std.Io.Dir, line: string, column: string) void {
         _openInEditor(this.path, editor_, blob, id, tmpdir, line, column) catch |err| {
             if (editor_ != .other) {
                 Output.prettyErrorln("Error {s} opening in {s}", .{ @errorName(err), @tagName(editor_) });
@@ -351,7 +351,7 @@ pub const EditorContext = struct {
         };
     }
 
-    fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: std.fs.Dir, line: string, column: string) !void {
+    fn _openInEditor(path: string, editor_: Editor, blob: []const u8, id: string, tmpdir: std.Io.Dir, line: string, column: string) !void {
         var basename_buf: [512]u8 = undefined;
         var basename = std.fs.path.basename(id);
         if (strings.endsWith(basename, ".bun") and basename.len < 499) {

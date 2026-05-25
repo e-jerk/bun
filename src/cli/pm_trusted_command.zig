@@ -26,7 +26,7 @@ pub const UntrustedCommand = struct {
         const resolutions: []Install.Resolution = packages.items(.resolution);
         const buf = pm.lockfile.buffers.string_bytes.items;
 
-        var untrusted_dep_ids = std.array_hash_map.Auto(DependencyID, void).init(ctx.allocator);
+        var untrusted_dep_ids = @import("array-hash-map-compat").AutoArrayHashMap(DependencyID, void).init(ctx.allocator);
         defer untrusted_dep_ids.deinit();
 
         // loop through dependencies and get trusted and untrusted deps with lifecycle scripts
@@ -49,7 +49,7 @@ pub const UntrustedCommand = struct {
             return;
         }
 
-        var untrusted_deps = std.array_hash_map.Auto(DependencyID, Lockfile.Package.Scripts.List).init(ctx.allocator);
+        var untrusted_deps = @import("array-hash-map-compat").AutoArrayHashMap(DependencyID, Lockfile.Package.Scripts.List).init(ctx.allocator);
         defer untrusted_deps.deinit();
 
         var tree_iterator = Lockfile.Tree.Iterator(.node_modules).init(pm.lockfile);
@@ -213,7 +213,7 @@ pub const TrustCommand = struct {
         defer node_modules_path.deinit();
 
         var package_names_to_add: bun.StringArrayHashMapUnmanaged(void) = .{};
-        var scripts_at_depth = std.array_hash_map.Auto(usize, std.ArrayListUnmanaged(struct {
+        var scripts_at_depth = @import("array-hash-map-compat").AutoArrayHashMap(usize, std.ArrayListUnmanaged(struct {
             package_id: PackageID,
             scripts_list: Lockfile.Package.Scripts.List,
             skip: bool,
@@ -226,7 +226,7 @@ pub const TrustCommand = struct {
             defer node_modules_path_save.restore();
             node_modules_path.append(node_modules.relative_path);
 
-            var node_modules_dir = bun.openDir(std.fs.cwd(), node_modules.relative_path) catch |err| {
+            var node_modules_dir = bun.openDir(std.Io.Dir.cwd(), node_modules.relative_path) catch |err| {
                 if (err == error.ENOENT) continue;
                 return err;
             };

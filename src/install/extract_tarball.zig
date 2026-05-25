@@ -478,7 +478,7 @@ pub fn moveToCacheDirectory(
 
     // We return a resolved absolute absolute file path to the cache dir.
     // To get that directory, we open the directory again.
-    var final_dir = bun.openDir(cache_dir.toDir(), folder_name) catch |err| {
+    const final_dir = bun.openDir(cache_dir.toDir(), folder_name) catch |err| {
         log.addErrorFmt(
             null,
             logger.Loc.Empty,
@@ -488,10 +488,10 @@ pub fn moveToCacheDirectory(
         ) catch unreachable;
         return error.InstallFailed;
     };
-    defer final_dir.close();
+    defer @import("std-fs-compat").dirClose(final_dir);
     // and get the fd path
     const final_path = bun.getFdPathZ(
-        .fromStdDir(final_dir),
+        bun.FD.fromNative(final_dir.fd),
         &bufs.final_path_buf,
     ) catch |err| {
         log.addErrorFmt(

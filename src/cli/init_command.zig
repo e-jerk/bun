@@ -421,7 +421,7 @@ pub const InitCommand = struct {
         }
 
         if (initialize_in_folder) |ifdir| {
-            bun.makePath(std.fs.cwd(), ifdir) catch |err| {
+            bun.makePath(std.Io.Dir.cwd(), ifdir) catch |err| {
                 Output.prettyErrorln("Failed to create directory {s}: {s}", .{ ifdir, @errorName(err) });
                 Global.exit(1);
             };

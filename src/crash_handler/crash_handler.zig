@@ -1227,12 +1227,9 @@ const StackLine = struct {
                     const vmaddr_slide = std.c._dyld_get_image_vmaddr_slide(i);
 
                     const cmds_buf = @as([*]u8, @ptrFromInt(@intFromPtr(header) + @sizeOf(std.macho.mach_header_64)))[0..header.sizeofcmds];
-                    var it = std.macho.LoadCommandIterator{
-                        .ncmds = header.ncmds,
-                        .buffer = cmds_buf,
-                    };
+                    var it = std.macho.LoadCommandIterator.init(@ptrCast(header), cmds_buf) catch unreachable;
 
-                    while (it.next()) |cmd| switch (cmd.hdr.cmd) {
+                    while (it.next() catch break) |cmd| switch (cmd.hdr.cmd) {
                         .SEGMENT_64 => {
                             const segment_cmd = cmd.cast(std.macho.segment_command_64).?;
                             if (!bun.strings.eqlComptime(segment_cmd.segName(), "__TEXT")) continue;
@@ -1612,7 +1609,7 @@ fn crash() noreturn {
         },
         else => {
             // Install default handler so that the tkill below will terminate.
-            const sigact = bun.sys.Sigaction{ .handler = .{ .handler = @intFromEnum(std.posix.SIG.DFL) }, .mask = bun.sys.sigemptyset(), .flags = 0 };
+            const sigact = bun.sys.Sigaction{ .handler = .{ .handler = std.posix.SIG.DFL }, .mask = bun.sys.sigemptyset(), .flags = 0 };
             inline for (.{
                 std.posix.SIG.SEGV,
                 std.posix.SIG.ILL,
@@ -1622,7 +1619,7 @@ fn crash() noreturn {
                 std.posix.SIG.HUP,
                 std.posix.SIG.TERM,
             }) |sig| {
-                bun.sys.sigaction(sig, &sigact, null);
+                bun.sys.sigaction(@intFromEnum(sig), &sigact, null);
             }
 
             @trap();

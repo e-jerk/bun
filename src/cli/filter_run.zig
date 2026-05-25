@@ -351,7 +351,7 @@ const State = struct {
         for (this.handles) |*handle| {
             if (handle.process) |*proc| {
                 // if we get an error here we simply ignore it
-                _ = proc.ptr.kill(std.posix.SIG.INT);
+                _ = proc.ptr.kill(@intFromEnum(std.posix.SIG.INT));
             }
         }
     }
@@ -378,7 +378,7 @@ const AbortHandler = struct {
 
     var should_abort = false;
 
-    fn posixSignalHandler(sig: i32, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) void {
+    fn posixSignalHandler(sig: std.posix.SIG, info: *const std.posix.siginfo_t, _: ?*anyopaque) callconv(.c) void {
         _ = sig;
         _ = info;
         should_abort = true;
@@ -399,7 +399,7 @@ const AbortHandler = struct {
                 .mask = bun.sys.sigemptyset(),
                 .flags = std.posix.SA.SIGINFO | std.posix.SA.RESTART | std.posix.SA.RESETHAND,
             };
-            bun.sys.sigaction(std.posix.SIG.INT, &action, null);
+            bun.sys.sigaction(@intFromEnum(std.posix.SIG.INT), &action, null);
         } else {
             const res = bun.c.SetConsoleCtrlHandler(windowsCtrlHandler, std.os.windows.TRUE);
             if (res == 0) {

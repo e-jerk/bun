@@ -19,7 +19,7 @@ pub const Installer = struct {
 
     supported_backend: std.atomic.Value(PackageInstall.Method),
 
-    trusted_dependencies_from_update_requests: std.array_hash_map.Auto(TruncatedPackageNameHash, void),
+    trusted_dependencies_from_update_requests: @import("array-hash-map-compat").AutoArrayHashMap(TruncatedPackageNameHash, void),
 
     /// Absolute path to the global virtual store (`<cache_dir>/links`). When
     /// non-null, npm/git/tarball entries are materialized once into this

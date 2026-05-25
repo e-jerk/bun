@@ -2,7 +2,9 @@
 //! Wraps Zig 0.16 unmanaged ArrayHashMap with a managed API.
 const std = @import("std");
 
-pub const ArrayHashMap = std.array_hash_map.Custom;
+pub fn ArrayHashMap(comptime K: type, comptime V: type, comptime Context: type, comptime store_hash: bool) type {
+    return Managed(K, V, Context, store_hash);
+}
 
 /// Managed wrapper that stores allocator (matches 0.15 managed API)
 pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, comptime store_hash: bool) type {
@@ -43,6 +45,10 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
 
         pub fn values(self: Self) []V {
             return self.map.values();
+        }
+
+        pub fn entries(self: *const Self) Unmanaged.DataList {
+            return self.map.entries;
         }
 
         pub fn getOrPut(self: *Self, key: K) !GetOrPutResult {
@@ -113,14 +119,17 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
             return self.map.capacity();
         }
 
-        pub fn getOrPutValue(self: *Self, key: K, value: V) !*V {
-            const result = try self.map.getOrPut(self.allocator, key);
-            if (!result.found_existing) result.value_ptr.* = value;
-            return result.value_ptr;
+        pub fn getOrPutValue(self: *Self, key: K, value: V) !GetOrPutResult {
+            const res = try self.map.getOrPut(self.allocator, key);
+            if (!res.found_existing) {
+                res.key_ptr.* = key;
+                res.value_ptr.* = value;
+            }
+            return res;
         }
 
         pub fn cloneWithAllocator(self: Self, allocator: std.mem.Allocator) !Self {
-            var new_map = try self.map.clone(allocator);
+            const new_map = try self.map.clone(allocator);
             return .{ .allocator = allocator, .map = new_map };
         }
 
@@ -128,8 +137,17 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
             self.map.sort(sort_ctx);
         }
 
-        pub fn getEntry(self: Self, key: K) ?*V {
-            return self.map.getPtr(key);
+        pub fn getEntry(self: Self, key: K) ?Unmanaged.Entry {
+            return self.map.getEntry(key);
+        }
+
+        pub fn getIndex(self: Self, key: K) ?usize {
+            return self.map.getIndex(key);
+        }
+
+        pub fn getKey(self: Self, key: K) ?*K {
+            const entry = self.map.getEntry(key) orelse return null;
+            return entry.key_ptr;
         }
 
         pub fn fetchSwapRemove(self: *Self, key: K) ?KV {
@@ -138,6 +156,35 @@ pub fn Managed(comptime K: type, comptime V: type, comptime Context: type, compt
 
         pub fn shrinkAndFree(self: *Self, new_len: usize) void {
             return self.map.shrinkAndFree(self.allocator, new_len);
+        }
+
+        pub fn reIndex(self: *Self) !void {
+            try self.map.reIndex(self.allocator);
+        }
+
+        pub fn clone(self: Self) !Self {
+            const new_map = try self.map.clone(self.allocator);
+            return .{ .map = new_map, .allocator = self.allocator };
+        }
+
+        pub fn reIndexWithAllocator(self: *Self, allocator: std.mem.Allocator) !void {
+            self.map.reIndex(allocator);
+        }
+
+        pub fn putNoClobber(self: *Self, key: K, value: V) !void {
+            return self.map.putNoClobber(self.allocator, key, value);
+        }
+
+        pub fn orderedRemove(self: *Self, key: K) bool {
+            return self.map.orderedRemove(key);
+        }
+
+        pub fn fetchOrderedRemove(self: *Self, key: K) ?KV {
+            return self.map.fetchOrderedRemove(key);
+        }
+
+        pub fn remove(self: *Self, key: K) bool {
+            return self.map.swapRemove(key);
         }
     };
 }

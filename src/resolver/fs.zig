@@ -626,7 +626,7 @@ pub const FileSystem = struct {
                 }).unwrap()).stdDir());
             }
 
-            return @import("std-fs-compat").FsDir.fromDir(try bun.openDirAbsolute(tmpdirPath()));
+            return try bun.openDirAbsolute(tmpdirPath());
         }
 
         pub fn entriesAt(this: *RealFS, index: allocators.IndexType, generation: bun.Generation) ?*EntriesOption {
@@ -674,7 +674,8 @@ pub const FileSystem = struct {
             }
 
             pub inline fn file(this: *TmpfilePosix) @import("std-fs-compat").File {
-                return this.fd.stdFile();
+                const io_file = this.fd.stdFile();
+                return .{ .handle = io_file.handle, .flags = .{ .nonblocking = io_file.flags.nonblocking } };
             }
 
             pub fn close(this: *TmpfilePosix) void {
@@ -1490,9 +1491,9 @@ pub const FileSystem = struct {
                         cache.fd = file;
                     }
                 }
-                const file_stat = try file.stdFile().stat();
+                const file_stat = try bun.sys.fstat(file).unwrap();
                 symlink = try file.getFdPath(&outpath);
-                file_kind = file_stat.kind;
+                file_kind = if (std.posix.S.ISDIR(file_stat.mode)) .directory else if (std.posix.S.ISREG(file_stat.mode)) .file else .unknown;
             }
 
             bun.assert(file_kind != .sym_link);

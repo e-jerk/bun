@@ -425,10 +425,10 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
             0,
         ).unwrap()).handle.stdFile();
 
-        try workspace_package_json_file.pwriteAll(source, 0);
+        try workspace_package_json_file.writePositionalAll(std.Io.Threaded.global_single_threaded.io(), source, 0);
         // safe-transpile: @intCast requires manual review — consider safe.CheckedInt(T).init(@intCast)
-        _ = bun.sys.ftruncate(.fromStdFile(workspace_package_json_file), @intCast(source.len));
-        workspace_package_json_file.close();
+        _ = bun.sys.ftruncate(bun.FD.fromNative(workspace_package_json_file.handle), @intCast(source.len));
+        workspace_package_json_file.close(std.Io.Threaded.global_single_threaded.io());
 
         if (subcommand == .remove) {
             if (!any_changes) {
@@ -436,7 +436,7 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
                 return;
             }
 
-            var cwd = std.fs.cwd();
+            var cwd = std.Io.Dir.cwd();
             // This is not exactly correct
             var node_modules_buf: bun.PathBuffer = undefined;
             bun.copy(u8, &node_modules_buf, "node_modules" ++ std.fs.path.sep_str);
@@ -447,7 +447,7 @@ fn updatePackageJSONAndInstallWithManagerWithUpdates(
                 // This is a quick & dirty cleanup intended for when deleting top-level dependencies
                 if (std.mem.indexOfScalar(PackageNameHash, name_hashes, String.Builder.stringHash(request.name)) == null) {
                     bun.copy(u8, offset_buf, request.name);
-                    cwd.deleteTree(node_modules_buf[0 .. "node_modules/".len + request.name.len]) catch {};
+                    cwd.deleteTree(std.Io.Threaded.global_single_threaded.io(), node_modules_buf[0 .. "node_modules/".len + request.name.len]) catch {};
                 }
             }
 

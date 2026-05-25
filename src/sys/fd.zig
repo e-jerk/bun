@@ -101,7 +101,7 @@ pub const FD = packed struct(backing_int) {
     }
 
     pub fn stdFile(fd: FD) std.Io.File {
-        return .{ .handle = fd.native() };
+        return .{ .handle = fd.native(), .flags = .{ .nonblocking = false } };
     }
 
     pub fn stdDir(fd: FD) std.Io.Dir {
@@ -507,7 +507,7 @@ pub const FD = packed struct(backing_int) {
     // TODO: make our own version of deleteTree
     // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn deleteTree(dir: FD, subpath: []const u8) !void {
-        try dir.stdDir().deleteTree(subpath);
+        try @import("std-fs-compat").dirDeleteTree(dir.stdDir(), subpath);
     }
 
     // The following functions are from bun.sys but with the 'f' prefix dropped

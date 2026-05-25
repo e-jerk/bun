@@ -937,7 +937,7 @@ pub const FilePoll = struct {
                         // we set 0 here so that if we get an error on
                         // registration, it becomes errno
                         0,
-                        0x0001,
+                        .{ .IMMEDIATE = true },
                         &timeout,
                     );
 
@@ -1179,7 +1179,7 @@ pub const FilePoll = struct {
                 // The same array may be used for the changelist and eventlist.
                 &changelist,
                 nchanges,
-                0x0001,
+                .{ .IMMEDIATE = true },
                 &timeout,
             );
 
@@ -1358,7 +1358,7 @@ pub const KEventWaker = struct {
             0,
             &events,
             events.len,
-            0,
+            .{},
             null,
         );
     }

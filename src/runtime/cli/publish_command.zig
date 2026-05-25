@@ -1280,7 +1280,7 @@ pub const PublishCommand = struct {
                     }
                 };
 
-                var dirs: std.ArrayListUnmanaged(struct { std.fs.Dir, string, bool }) = .{};
+                var dirs: std.ArrayListUnmanaged(struct { std.Io.Dir, string, bool }) = .{};
                 defer dirs.deinit(allocator);
 
                 try dirs.append(allocator, .{ bin_dir.stdDir(), normalized_bin_dir, false });

@@ -1290,7 +1290,7 @@ pub const PublishCommand = struct {
                 var dirs: std.ArrayListUnmanaged(struct { @import("std-fs-compat").FsDir, string, bool }) = .empty;
                 defer dirs.deinit(allocator);
 
-                try dirs.append(allocator, .{ @import("std-fs-compat").FsDir{ .fd = bin_dir.stdDir().fd }, normalized_bin_dir, false });
+                try dirs.append(allocator, .{ @import("std-fs-compat").FsDir{ .fd = bin_dir.stdDir().handle }, normalized_bin_dir, false });
 
                 while (dirs.pop()) |dir_info| {
                     var dir, const dir_subpath, const close_dir = dir_info;

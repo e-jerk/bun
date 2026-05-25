@@ -129,11 +129,11 @@ noinline fn ensureCacheDirectory(this: *PackageManager) @import("std-fs-compat")
             const cache_dir = fetchCacheDirectoryPath(this.env, &this.options);
             this.cache_directory_path = bun.handleOom(this.allocator.dupeZ(u8, cache_dir.path));
 
-            return @import("std-fs-compat").FsDir{ .fd = (bun.openDirAbsolute(cache_dir.path) catch {
+            return bun.openDirAbsolute(cache_dir.path) catch {
                 this.options.enable.cache = false;
                 this.allocator.free(this.cache_directory_path);
                 continue :loop;
-            }).handle };
+            };
         }
 
         this.cache_directory_path = this.allocator.dupeZ(u8, Path.joinAbsString(
@@ -145,10 +145,10 @@ noinline fn ensureCacheDirectory(this: *PackageManager) @import("std-fs-compat")
             .auto,
         )) catch |err| bun.handleOom(err);
 
-        return @import("std-fs-compat").FsDir{ .fd = (bun.openDirAbsolute("node_modules/.cache") catch |err| {
+        return bun.openDirAbsolute("node_modules/.cache") catch |err| {
             Output.prettyErrorln("<r><red>error<r>: bun is unable to write files: {s}", .{@errorName(err)});
             Global.crash();
-        }).fd };
+        };
     }
     unreachable;
 }

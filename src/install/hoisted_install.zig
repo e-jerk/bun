@@ -180,7 +180,7 @@ pub fn installHoistedPackages(
                     const trees = bun.handleOom(this.allocator.alloc(TreeContext, this.lockfile.buffers.trees.items.len));
                     for (0..this.lockfile.buffers.trees.items.len) |i| {
                         trees[i] = .{
-                            .binaries = Bin.PriorityQueue.init(this.allocator, .{
+                            .binaries = Bin.PriorityQueue.initContext(.{
                                 .dependencies = &this.lockfile.buffers.dependencies,
                                 .string_buf = &this.lockfile.buffers.string_bytes,
                             }),

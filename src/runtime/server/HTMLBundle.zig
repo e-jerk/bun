@@ -281,7 +281,7 @@ pub const Route = struct {
         if (bun.cli.Command.get().args.serve_define) |define| {
             bun.assert(define.keys.len == define.values.len);
             try config.define.map.ensureUnusedCapacity(define.keys.len);
-            config.define.map.unmanaged.entries.len = define.keys.len;
+            config.define.map.map.entries.len = define.keys.len;
             // safe-transpile: @memcpy requires manual review
             @memcpy(config.define.map.keys(), define.keys);
             for (config.define.map.values(), define.values) |*to, from| {

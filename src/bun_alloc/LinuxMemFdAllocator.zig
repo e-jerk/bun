@@ -89,7 +89,7 @@ pub fn alloc(self: *Self, len: usize, offset: usize, flags: std.posix.MAP) bun.s
     switch (bun.sys.mmap(
         null,
         @min(size, self.size),
-        std.posix.PROT.READ | std.posix.PROT.WRITE,
+        std.c.PROT.READ | std.c.PROT.WRITE,
         flags_mut,
         self.fd,
         offset,

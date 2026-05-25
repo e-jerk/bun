@@ -552,7 +552,7 @@ pub const RuntimeTranspilerCache = struct {
             _ = bun.sys.unlink(cache_file_path.sliceAssumeZ());
         }
 
-        const file = cache_fd.stdFile();
+        const file = cache_fd.compatFile();
         // TODO: preadAll not available in Zig 0.16 std.Io.File
         const metadata_bytes = 0; // try file.preadAll(&metadata_bytes_buf, 0);
         if (comptime bun.Environment.isWindows) {} // try file.seekTo(0);

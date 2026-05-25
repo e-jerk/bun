@@ -68,7 +68,8 @@ pub const PointerInfo = struct {
             @compileError("volatile pointers not supported");
         }
         const expected_alignment = @alignOf(Child);
-        if (pointer_info.alignment != expected_alignment) {
+        const actual_alignment = pointer_info.alignment orelse expected_alignment;
+        if (actual_alignment != expected_alignment) {
             @compileError("non-default alignment not supported");
         }
         if (pointer_info.is_allowzero) {

@@ -115,7 +115,7 @@ pub const InitCommand = struct {
 
             // Read a single character
             var stdin_b: [1]u8 = undefined;
-            var stdin_r = std.fs.File.stdin().readerStreaming(&stdin_b);
+            var stdin_r = std.Io.File.stdin().readerStreaming(&stdin_b);
             var stdin_i = &stdin_r.interface;
             const byte = stdin_i.takeByte() catch return selected;
 

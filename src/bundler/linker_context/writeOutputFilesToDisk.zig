@@ -7,7 +7,7 @@ pub fn writeOutputFilesToDisk(
 ) !void {
     const trace = bun.perf.trace("Bundler.writeOutputFilesToDisk");
     defer trace.end();
-    var root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), root_path, .{}) catch |err| {
+    const root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), root_path, .{}) catch |err| {
         if (err == error.NotDir) {
             c.log.addErrorFmt(null, Logger.Loc.Empty, bun.default_allocator, "Failed to create output directory {f} is a file. Please choose a different outdir or delete {f}", .{
                 bun.fmt.quote(root_path),
@@ -22,7 +22,7 @@ pub fn writeOutputFilesToDisk(
 
         return err;
     };
-    defer root_dir.close();
+    defer @import("std-fs-compat").dirClose(root_dir);
     // Optimization: when writing to disk, we can re-use the memory
     var max_heap_allocator: bun.MaxHeapAllocator = undefined;
     defer max_heap_allocator.deinit();

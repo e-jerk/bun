@@ -118,8 +118,11 @@ pub const Ip4Address = struct {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(presentation: []const u8, port: u16) !Ip4Address {
-        const addr = try std.net.Ip4Address.parse(presentation, port);
-        return .{ .sa = addr.sa };
+        const addr = try std.Io.net.Ip4Address.parse(presentation, port);
+        return .{ .sa = .{
+            .port = std.mem.nativeToBig(u16, addr.port),
+            .addr = @bitCast(addr.bytes),
+        } };
     }
 };
 
@@ -128,8 +131,14 @@ pub const Ip6Address = struct {
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
     pub fn parse(presentation: []const u8, port: u16) !Ip6Address {
-        const addr = try std.net.Ip6Address.parse(presentation, port);
-        return .{ .sa = addr.sa };
+        const addr = try std.Io.net.Ip6Address.parse(presentation, port);
+        return .{ .sa = .{
+            .family = std.posix.AF.INET6,
+            .port = std.mem.nativeToBig(u16, port),
+            .flowinfo = std.mem.nativeToBig(u32, addr.flow),
+            .addr = addr.bytes,
+            .scope_id = std.mem.nativeToBig(u32, addr.interface.index),
+        }};
     }
 };
 

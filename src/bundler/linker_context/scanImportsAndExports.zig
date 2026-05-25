@@ -1098,7 +1098,7 @@ fn validateComposesFromProperties(
         range: bun.logger.Range,
     };
     const Visitor = struct {
-        visited: std.array_hash_map.Auto(Ref, void),
+        visited: @import("array-hash-map-compat").AutoArrayHashMap(Ref, void),
         properties: bun.StringArrayHashMap(PropertyInFile),
         all_import_records: []const ImportRecord.List,
         all_css_asts: []const ?*bun.css.BundlerStyleSheet,
@@ -1224,7 +1224,7 @@ fn validateComposesFromProperties(
     var sfb = std.heap.stackFallback(1024, this.graph.allocator);
     const temp_allocator = sfb.get();
     var visitor = Visitor{
-        .visited = bun.handleOom(std.array_hash_map.Auto(Ref, void).init(temp_allocator)),
+        .visited = bun.handleOom(@import("array-hash-map-compat").AutoArrayHashMap(Ref, void).init(temp_allocator)),
         .properties = bun.StringArrayHashMap(PropertyInFile).init(temp_allocator),
         .all_import_records = import_records_list,
         .all_css_asts = all_css_asts,

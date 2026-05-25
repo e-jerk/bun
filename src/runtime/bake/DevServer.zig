@@ -225,7 +225,7 @@ active_websocket_connections: std.AutoHashMapUnmanaged(*HmrSocket, void),
 
 // Debugging
 
-dump_dir: if (bun.FeatureFlags.bake_debugging_features) ?std.fs.Dir else void,
+dump_dir: if (bun.FeatureFlags.bake_debugging_features) ?std.Io.Dir else void,
 /// Reference count to number of active sockets with the incremental_visualizer enabled.
 emit_incremental_visualizer_events: u32,
 /// Reference count to number of active sockets with the memory_visualizer enabled.
@@ -298,7 +298,7 @@ pub fn init(options: Options) bun.JSOOM!*DevServer {
 
     var dump_dir = if (bun.FeatureFlags.bake_debugging_features)
         if (options.dump_sources) |dir|
-            std.fs.cwd().makeOpenPath(dir, .{}) catch |err| dir: {
+            std.Io.Dir.cwd().makeOpenPath(dir, .{}) catch |err| dir: {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 Output.warn("Could not open directory for dumping sources: {}", .{err});
                 break :dir null;
@@ -3605,7 +3605,7 @@ pub const ChunkKind = enum(u1) {
 pub const SerializedFailure = @import("./DevServer/SerializedFailure.zig");
 
 // For debugging, it is helpful to be able to see bundles.
-pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8, chunk: []const u8, wrap: bool) !void {
+pub fn dumpBundle(dump_dir: std.Io.Dir, graph: bake.Graph, rel_path: []const u8, chunk: []const u8, wrap: bool) !void {
     const buf = bun.path_buffer_pool.get();
     defer bun.path_buffer_pool.put(buf);
     const name = bun.path.joinAbsStringBuf("/", buf, &.{
@@ -3645,7 +3645,7 @@ pub fn dumpBundle(dump_dir: std.fs.Dir, graph: bake.Graph, rel_path: []const u8,
     try bufw.flush();
 }
 
-pub noinline fn dumpBundleForChunk(dev: *DevServer, dump_dir: std.fs.Dir, side: bake.Side, key: []const u8, code: []const u8, wrap: bool, is_ssr_graph: bool) void {
+pub noinline fn dumpBundleForChunk(dev: *DevServer, dump_dir: std.Io.Dir, side: bake.Side, key: []const u8, code: []const u8, wrap: bool, is_ssr_graph: bool) void {
     const cwd = dev.root;
     var a: bun.PathBuffer = undefined;
     var b: [bun.MAX_PATH_BYTES * 2]u8 = undefined;
@@ -4255,7 +4255,7 @@ fn dumpStateDueToCrash(dev: *DevServer) !void {
     // being conservative about how much stuff is put on the stack.
     var filepath_buf: [@min(4096, bun.MAX_PATH_BYTES)]u8 = undefined;
     const filepath = std.fmt.bufPrintZ(&filepath_buf, "incremental-graph-crash-dump.{d}.html", .{std.time.timestamp()}) catch "incremental-graph-crash-dump.html";
-    const file = std.fs.cwd().createFileZ(filepath, .{}) catch |err| {
+    const file = std.Io.Dir.cwd().createFileZ(filepath, .{}) catch |err| {
         bun.handleErrorReturnTrace(err, @errorReturnTrace());
         Output.warn("Could not open file for dumping incremental graph: {}", .{err});
         return;

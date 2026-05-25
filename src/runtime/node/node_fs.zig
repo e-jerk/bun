@@ -5833,7 +5833,7 @@ pub const NodeFS = struct {
 
     pub fn rmdir(this: *NodeFS, args: Arguments.RmDir, _: Flavor) Maybe(Return.Rmdir) {
         if (args.recursive) {
-            zigDeleteTree(std.fs.cwd(), args.path.slice(), .directory) catch |err| {
+            zigDeleteTree(@import("std-fs-compat").FsDir.fromDir(std.Io.Dir.cwd()), args.path.slice(), .directory) catch |err| {
                 var errno: bun.sys.E = switch (@as(anyerror, err)) {
                     error.AccessDenied => .PERM,
                     error.FileTooBig => .FBIG,
@@ -5889,7 +5889,7 @@ pub const NodeFS = struct {
 
         // We cannot use removefileat() on macOS because it does not handle write-protected files as expected.
         if (args.recursive) {
-            zigDeleteTree(std.fs.cwd(), args.path.slice(), .file) catch |err| {
+            zigDeleteTree(@import("std-fs-compat").FsDir.fromDir(std.Io.Dir.cwd()), args.path.slice(), .file) catch |err| {
                 bun.handleErrorReturnTrace(err, @errorReturnTrace());
                 const errno: E = switch (@as(anyerror, err)) {
                     // error.InvalidHandle => .BADF,
@@ -6688,7 +6688,7 @@ pub const NodeFS = struct {
 
             const first_try = ret.errnoSysP(c.copyfile(src, dest, null, mode_), .copyfile, src) orelse return ret.success;
             if (first_try == .err and first_try.err.errno == @intFromEnum(Syscall.E.NOENT)) {
-                bun.makePath(std.fs.cwd(), bun.path.dirname(dest, .auto)) catch {};
+                bun.makePath(std.Io.Dir.cwd(), bun.path.dirname(dest, .auto)) catch {};
                 return ret.errnoSysP(c.copyfile(src, dest, null, mode_), .copyfile, src) orelse ret.success;
             }
             return first_try;
@@ -7056,13 +7056,13 @@ comptime {
 /// Copied from @import("std-fs-compat").Dir.deleteTree. This function returns `FileNotFound` instead of ignoring it, which
 /// is required to match the behavior of Node.js's `fs.rm` { recursive: true, force: false }.
 // safe-transpile: function uses raw slice parameter — consider zust.String
-pub fn zigDeleteTree(self: @import("std-fs-compat").Dir, sub_path: []const u8, kind_hint: @import("std-fs-compat").File.Kind) !void {
+pub fn zigDeleteTree(self: @import("std-fs-compat").FsDir, sub_path: []const u8, kind_hint: @import("std-fs-compat").File.Kind) !void {
     var initial_iterable_dir = (try zigDeleteTreeOpenInitialSubpath(self, sub_path, kind_hint)) orelse return;
 
     const StackItem = struct {
         name: []const u8,
-        parent_dir: @import("std-fs-compat").Dir,
-        iter: @import("std-fs-compat").Dir.Iterator,
+        parent_dir: @import("std-fs-compat").FsDir,
+        iter: @import("std-fs-compat").FsDir.Iterator,
 
         fn closeAll(items: []@This()) void {
             for (items) |*item| item.iter.dir.close();
@@ -7109,7 +7109,7 @@ pub fn zigDeleteTree(self: @import("std-fs-compat").Dir, sub_path: []const u8, k
                         });
                         continue :process_stack;
                     } else {
-                        try zigDeleteTreeMinStackSizeWithKindHint(top.iter.dir, entry.name, entry.kind);
+                        try zigDeleteTreeMinStackSizeWithKindHint(top.iter.dir.toDir(), entry.name, entry.kind);
                         break :handle_entry;
                     }
                 } else {
@@ -7196,7 +7196,7 @@ pub fn zigDeleteTree(self: @import("std-fs-compat").Dir, sub_path: []const u8, k
 }
 
 // safe-transpile: function uses raw slice parameter — consider zust.String
-fn zigDeleteTreeOpenInitialSubpath(self: @import("std-fs-compat").Dir, sub_path: []const u8, kind_hint: @import("std-fs-compat").File.Kind) !?@import("std-fs-compat").Dir {
+fn zigDeleteTreeOpenInitialSubpath(self: @import("std-fs-compat").FsDir, sub_path: []const u8, kind_hint: @import("std-fs-compat").File.Kind) !?@import("std-fs-compat").FsDir {
     return iterable_dir: {
         // Treat as a file by default
         var treat_as_dir = kind_hint == .directory;
@@ -7234,9 +7234,9 @@ fn zigDeleteTreeMinStackSizeWithKindHint(self: @import("std-fs-compat").Dir, sub
     var __loop_limit_11: usize = 0;
     start_over: while (true) : (__loop_limit_11 += 1) {
         if (__loop_limit_11 > 1_000_000) break;
-        var dir = (try zigDeleteTreeOpenInitialSubpath(self, sub_path, kind_hint)) orelse return;
-        var cleanup_dir_parent: ?@import("std-fs-compat").Dir = null;
-        defer if (cleanup_dir_parent) |*d| d.close();
+        var dir = (try zigDeleteTreeOpenInitialSubpath(@import("std-fs-compat").FsDir.fromDir(self), sub_path, kind_hint)) orelse return;
+        var cleanup_dir_parent: ?@import("std-fs-compat").FsDir = null;
+        defer if (cleanup_dir_parent) |*d| @import("std-fs-compat").dirClose(d.*);
 
         var cleanup_dir = true;
         defer if (cleanup_dir) dir.close();
@@ -7275,7 +7275,7 @@ fn zigDeleteTreeMinStackSizeWithKindHint(self: @import("std-fs-compat").Dir, sub
                             },
                             else => |e| return e,
                         };
-                        if (cleanup_dir_parent) |*d| d.close();
+                        if (cleanup_dir_parent) |*d| @import("std-fs-compat").dirClose(d.*);
                         cleanup_dir_parent = dir;
                         dir = new_dir;
                         const result = dir_name_buf[0..entry.name.len];
@@ -7311,7 +7311,7 @@ fn zigDeleteTreeMinStackSizeWithKindHint(self: @import("std-fs-compat").Dir, sub
                 };
                 continue :start_over;
             } else {
-                self.deleteDir(sub_path) catch |err| switch (err) {
+                @import("std-fs-compat").FsDir.fromDir(self).deleteDir(sub_path) catch |err| switch (err) {
                     error.FileNotFound => return,
                     error.DirNotEmpty => continue :start_over,
                     else => |e| return e,

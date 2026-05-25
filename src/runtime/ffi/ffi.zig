@@ -2374,10 +2374,7 @@ const CompilerRT = struct {
 
         inline for (comptime std.meta.declarations(compiler_rt_sources)) |decl| {
             const source = @field(compiler_rt_sources, decl.name);
-            bunCC.toDir().writeFile(.{
-                .sub_path = decl.name,
-                .data = source,
-            }) catch {};
+            _ = bun.sys.File.writeFile(bun.FD.fromNative(bunCC.fd), decl.name, source);
         }
         var path_buf: [bun.MAX_PATH_BYTES]u8 = undefined;
         compiler_rt_dir = bun.handleOom(bun.default_allocator.dupeZ(u8, bun.getFdPath(bun.FD.fromSystem(bunCC.fd), &path_buf) catch return));

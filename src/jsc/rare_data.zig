@@ -274,7 +274,7 @@ pub const AWSSignatureCache = struct {
         }
         if (this.date == numeric_day) {
             if (this.cache.getKey(key)) |cached| {
-                return cached;
+                return cached.*;
             }
         }
         return null;

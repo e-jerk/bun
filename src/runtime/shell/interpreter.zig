@@ -956,7 +956,7 @@ pub const Interpreter = struct {
             };
 
             // This will save ~2x memory
-            var export_env = EnvMap.initWithCapacity(allocator, env_loader.map.map.unmanaged.entries.len);
+            var export_env = EnvMap.initWithCapacity(allocator, env_loader.map.map.entries.len);
 
             var iter = env_loader.iterator();
 
@@ -1033,7 +1033,7 @@ pub const Interpreter = struct {
 
     pub fn initAndRunFromFile(ctx: bun.cli.Command.Context, mini: *jsc.MiniEventLoop, path: []const u8) !bun.shell.ExitCode {
         var shargs = ShellArgs.init();
-        const src = try std.fs.cwd().readFileAlloc(shargs.arena_allocator(), path, std.math.maxInt(u32));
+        const src = try std.Io.Dir.cwd().readFileAlloc(shargs.arena_allocator(), path, std.math.maxInt(u32));
         defer shargs.deinit();
 
         const jsobjs: []JSValue = &[_]JSValue{};
@@ -1719,7 +1719,7 @@ const CmdEnvIter = struct {
     }
 
     pub fn len(self: *const CmdEnvIter) usize {
-        return self.env.unmanaged.entries.len;
+        return self.env.map.entries.len;
     }
 
     pub fn next(self: *CmdEnvIter) !?Entry {

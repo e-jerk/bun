@@ -98,7 +98,7 @@ pub const UpdateInteractiveCommand = struct {
         const new_package_json_source = try manager.allocator.dupe(u8, package_json_writer.ctx.writtenWithoutTrailingZero());
 
         // Write the updated package.json
-        const write_file = std.fs.cwd().createFile(package_json_path, .{}) catch |err| {
+        const write_file = std.Io.Dir.cwd().createFile(package_json_path, .{}) catch |err| {
             manager.allocator.free(new_package_json_source);
             Output.errGeneric("Failed to write package.json at {s}: {s}", .{ package_json_path, @errorName(err) });
             return err;
@@ -1644,7 +1644,7 @@ pub const UpdateInteractiveCommand = struct {
 
             // Read input
             var reader_buffer: [1]u8 = undefined;
-            var reader_file = std.fs.File.stdin().readerStreaming(&reader_buffer);
+            var reader_file = std.Io.File.stdin().readerStreaming(&reader_buffer);
             const reader = &reader_file.interface;
             const byte = reader.takeByte() catch return state.selected;
 

@@ -197,3 +197,6 @@ test/integration/bun-types/fixture/bun.lock
 .claude/scheduled_tasks.lock
 lib/
 .zust-migrate/
+ci_zig/
+oven_zig/
+oven_zig_latest/

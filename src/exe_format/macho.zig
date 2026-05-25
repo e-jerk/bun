@@ -148,8 +148,8 @@ pub const MachoFile = struct {
                                     // Update segment with proper sizes and alignment
                                     self.segment.vmsize = alignVmsize(aligned_size, blob_alignment);
                                     self.segment.filesize = aligned_size;
-                                    self.segment.maxprot = 3; // VM_PROT_READ | VM_PROT_WRITE
-                                    self.segment.initprot = 3; // VM_PROT_READ | VM_PROT_WRITE
+                                    self.segment.maxprot = std.c.PROT{ .READ = true, .WRITE = true };
+                                    self.segment.initprot = std.c.PROT{ .READ = true, .WRITE = true };
 
                                     self.section = .{
                                         .sectname = SECTNAME,

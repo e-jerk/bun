@@ -315,10 +315,10 @@ pub fn spawnPackageLifecycleScripts(
     try LifecycleScriptSubprocess.spawnPackageScripts(this, list, envp, shell_bin, optional, log_level, foreground, install_ctx);
 }
 
-pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) std.array_hash_map.Auto(TruncatedPackageNameHash, void) {
+pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) @import("array-hash-map-compat").AutoArrayHashMap(TruncatedPackageNameHash, void) {
     const parts = this.lockfile.packages.slice();
     // find all deps originating from --trust packages from cli
-    var set = std.array_hash_map.Auto(TruncatedPackageNameHash, void).init(this.lockfile.allocator);
+    var set = @import("array-hash-map-compat").AutoArrayHashMap(TruncatedPackageNameHash, void).init(this.lockfile.allocator);
     if (this.options.do.trust_dependencies_from_args and this.lockfile.packages.len > 0) {
         const root_deps = parts.items(.dependencies)[this.root_package_id.get(this.lockfile, this.workspace_name_hash)];
         var dep_id = root_deps.off;
@@ -346,7 +346,7 @@ pub fn findTrustedDependenciesFromUpdateRequests(this: *PackageManager) std.arra
 }
 
 fn addDependenciesToSet(
-    names: *std.array_hash_map.Auto(TruncatedPackageNameHash, void),
+    names: *@import("array-hash-map-compat").AutoArrayHashMap(TruncatedPackageNameHash, void),
     lockfile: *Lockfile,
     dependencies_slice: Lockfile.DependencySlice,
 ) void {

@@ -224,7 +224,7 @@ pub const TrustCommand = struct {
             defer node_modules_path_save.restore();
             node_modules_path.append(node_modules.relative_path);
 
-            var node_modules_dir = bun.openDir(std.fs.cwd(), node_modules.relative_path) catch |err| {
+            var node_modules_dir = bun.openDir(std.Io.Dir.cwd(), node_modules.relative_path) catch |err| {
                 if (err == error.ENOENT) continue;
                 return err;
             };

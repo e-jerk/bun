@@ -2014,7 +2014,7 @@ pub const Resolver = struct {
     pub const fromJS = js.fromJS;
     pub const fromJSDirect = js.fromJSDirect;
 
-    const PollsMap = std.array_hash_map.Auto(c_ares.ares_socket_t, *PollType);
+    const PollsMap = @import("array-hash-map-compat").AutoArrayHashMap(c_ares.ares_socket_t, *PollType);
 
     const PollType = if (Environment.isWindows)
         UvDnsPoll

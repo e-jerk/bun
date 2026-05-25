@@ -342,9 +342,9 @@ pub fn promptForWarnings() bool {
 
 const PackageCollector = struct {
     manager: *PackageManager,
-    dedupe: std.array_hash_map.Auto(PackageID, void),
+    dedupe: @import("array-hash-map-compat").AutoArrayHashMap(PackageID, void),
     queue: bun.LinearFifo(QueueItem, .Dynamic),
-    package_paths: std.array_hash_map.Auto(PackageID, PackagePath),
+    package_paths: @import("array-hash-map-compat").AutoArrayHashMap(PackageID, PackagePath),
 
     const QueueItem = struct {
         pkg_id: PackageID,
@@ -356,9 +356,9 @@ const PackageCollector = struct {
     pub fn init(manager: *PackageManager) !PackageCollector {
         return .{
             .manager = manager,
-            .dedupe = std.array_hash_map.Auto(PackageID, void).init(bun.default_allocator),
+            .dedupe = @import("array-hash-map-compat").AutoArrayHashMap(PackageID, void).init(bun.default_allocator),
             .queue = bun.LinearFifo(QueueItem, .Dynamic).init(bun.default_allocator),
-            .package_paths = std.array_hash_map.Auto(PackageID, PackagePath).init(manager.allocator),
+            .package_paths = @import("array-hash-map-compat").AutoArrayHashMap(PackageID, PackagePath).init(manager.allocator),
         };
     }
 
@@ -728,7 +728,7 @@ fn attemptSecurityScanWithRetry(manager: *PackageManager, security_scanner: []co
     manager.sleepUntil(&closure, &@TypeOf(closure).isDone);
 
     const packages_scanned = collector.dedupe.count();
-    return try scanner.handleResults(&collector.package_paths, start_time, packages_scanned, security_scanner, security_scanner_pkg_id, command_ctx, original_cwd, is_retry);
+    return try scanner.handleResults(&collector.package_paths.map, start_time, packages_scanned, security_scanner, security_scanner_pkg_id, command_ctx, original_cwd, is_retry);
 }
 
 pub const SecurityScanSubprocess = struct {

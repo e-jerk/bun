@@ -259,8 +259,8 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
                 try bun.makePath(bun.FD.cwd().stdDir(), tempdir_name);
                 var tmpdir = try bun.openDirAbsolute(tempdir_name);
                 defer tmpdir.close();
-                defer std.fs.Dir.deleteTree(std.fs.cwd(), tempdir_name) catch {};
-                const fs_tmpdir = @import("std-fs-compat").FsDir{ .fd = tmpdir.fd };
+                defer @import("std-fs-compat").dirDeleteTree(std.Io.Dir.cwd(), tempdir_name) catch {};
+                const fs_tmpdir = tmpdir;
                 _ = libarchive.Archiver.extractToDir(
                     tarball_bytes.items,
                     fs_tmpdir,
@@ -282,7 +282,7 @@ pub fn downloadToPath(this: *const CompileTarget, env: *bun.DotEnv.Loader, alloc
                 while (true) {
                     if (move_loop_limit > 100) return error.ExtractionFailed;
                     move_loop_limit += 1;
-                    bun.sys.moveFileZ(.fromStdDir(tmpdir), if (this.os == .windows) "bun.exe" else "bun", bun.invalid_fd, dest_z) catch {
+                    bun.sys.moveFileZ(.fromNative(tmpdir.fd), if (this.os == .windows) "bun.exe" else "bun", bun.invalid_fd, dest_z) catch {
                         if (!did_retry) {
                             did_retry = true;
                             const dirname = bun.path.dirname(dest_z, .loose);

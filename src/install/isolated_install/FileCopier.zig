@@ -30,7 +30,7 @@ pub const FileCopier = struct {
     }
 
     pub fn copy(this: *FileCopier) sys.Maybe(void) {
-        var dest_dir = bun.MakePath.makeOpenPath(FD.cwd().stdDir(), this.dest_subpath.sliceZ(), .{}) catch |err| {
+        const dest_dir = bun.MakePath.makeOpenPath(FD.cwd().stdDir(), this.dest_subpath.sliceZ(), .{}) catch |err| {
             // TODO: remove the need for this and implement openDir makePath makeOpenPath in bun
             var errno: bun.sys.E = switch (@as(anyerror, err)) {
                 error.AccessDenied => .PERM,
@@ -67,7 +67,7 @@ pub const FileCopier = struct {
 
             return .{ .err = bun.sys.Error.fromCode(errno, .copyfile) };
         };
-        defer dest_dir.close();
+        defer @import("std-fs-compat").dirClose(dest_dir);
 
         var copy_file_state: bun.CopyFileState = .{};
 

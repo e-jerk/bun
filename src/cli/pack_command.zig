@@ -360,7 +360,7 @@ pub const PackCommand = struct {
                             }
                         }
 
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     else => unreachable,
                 }
@@ -475,7 +475,7 @@ pub const PackCommand = struct {
                                 continue :next_entry;
                             }
                         }
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         for (bins) |bin| {
@@ -535,7 +535,7 @@ pub const PackCommand = struct {
         root_dir: @import("std-fs-compat").FsDir,
         log_level: LogLevel,
     ) OOM!PackQueue {
-        var bundled_pack_queue = PackQueue.init(ctx.allocator, {});
+        var bundled_pack_queue = PackQueue.initContext({});
         if (ctx.bundled_deps.items.len == 0) return bundled_pack_queue;
 
         var dir = bun.openDirA(root_dir.toDir(), "node_modules") catch |err| {
@@ -593,7 +593,7 @@ pub const PackCommand = struct {
                             break;
                         }
 
-                        const subdir = openSubdir(dir, entry_name, entry_subpath);
+                        const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
                         dep.was_packed = true;
                         try addBundledDep(
                             ctx,
@@ -623,7 +623,7 @@ pub const PackCommand = struct {
                         break;
                     }
 
-                    const subdir = openSubdir(dir, entry_name, entry_subpath);
+                    const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
                     dep.was_packed = true;
                     try addBundledDep(
                         ctx,
@@ -782,7 +782,7 @@ pub const PackCommand = struct {
 
                 switch (entry.kind) {
                     .file => {
-                        try bundled_pack_queue.add(.{ .path = entry_subpath });
+                        try bundled_pack_queue.push(ctx.allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         const subdir = openSubdir(dir.toDir(), entry_name, entry_subpath);
@@ -886,7 +886,7 @@ pub const PackCommand = struct {
                                 continue :next_entry;
                             }
                         }
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         for (bins) |bin| {
@@ -1449,8 +1449,8 @@ pub const PackCommand = struct {
             try getBundledDeps(ctx.allocator, json.root, "bundleDependencies") orelse
             .empty;
 
-        var pack_queue = PackQueue.init(ctx.allocator, {});
-        defer pack_queue.deinit();
+        var pack_queue = PackQueue.initContext({});
+        defer pack_queue.deinit(ctx.allocator);
 
         const bins = try getPackageBins(ctx.allocator, json.root);
         defer for (bins) |bin| ctx.allocator.free(bin.path);
@@ -1458,7 +1458,7 @@ pub const PackCommand = struct {
         for (bins) |bin| {
             switch (bin.type) {
                 .file => {
-                    try pack_queue.add(.{ .path = bin.path, .optional = true });
+                    try pack_queue.push(ctx.allocator, .{ .path = bin.path, .optional = true });
                 },
                 .dir => {
                     const bin_dir = root_dir.openDir(bin.path, .{ .iterate = true }) catch {
@@ -1529,7 +1529,7 @@ pub const PackCommand = struct {
         }
 
         var bundled_pack_queue = try iterateBundledDeps(ctx, @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, log_level);
-        defer bundled_pack_queue.deinit();
+        defer bundled_pack_queue.deinit(ctx.allocator);
 
         // +1 for package.json
         ctx.stats.total_files = pack_queue.count() + bundled_pack_queue.count() + 1;
@@ -1680,7 +1680,7 @@ pub const PackCommand = struct {
             const most_likely_a_slash = dest_buf[abs_tarball_dest_dir_end];
             dest_buf[abs_tarball_dest_dir_end] = 0;
             const abs_tarball_dest_dir = dest_buf[0..abs_tarball_dest_dir_end :0];
-            bun.makePath(std.fs.cwd(), abs_tarball_dest_dir) catch {};
+            bun.makePath(std.Io.Dir.cwd(), abs_tarball_dest_dir) catch {};
             dest_buf[abs_tarball_dest_dir_end] = most_likely_a_slash;
         }
 
@@ -1721,10 +1721,10 @@ pub const PackCommand = struct {
             entry = try archivePackageJSON(ctx, archive, entry, @import("std-fs-compat").FsDir{ .fd = root_dir.fd }, edited_package_json);
             if (log_level.showProgress()) node.completeOne();
 
-            while (pack_queue.removeOrNull()) |item| {
+            while (pack_queue.pop()) |item| {
                 defer if (log_level.showProgress()) node.completeOne();
 
-                const file = bun.sys.openat(.fromStdDir(root_dir), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
+                const file = bun.sys.openat(.fromStdDir(root_dir.toDir()), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
                     if (item.optional) {
                         ctx.stats.total_files -= 1;
                         continue;
@@ -1761,10 +1761,10 @@ pub const PackCommand = struct {
                 );
             }
 
-            while (bundled_pack_queue.removeOrNull()) |item| {
+            while (bundled_pack_queue.pop()) |item| {
                 defer if (log_level.showProgress()) node.completeOne();
 
-                const file = File.openat(.fromStdDir(root_dir), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
+                const file = File.openat(.fromStdDir(root_dir.toDir()), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
                     if (item.optional) {
                         ctx.stats.total_files -= 1;
                         continue;
@@ -2564,7 +2564,7 @@ pub const PackCommand = struct {
                 "package.json",
             });
 
-            while (pack_list.removeOrNull()) |item| {
+            while (pack_list.pop()) |item| {
                 const stat = root_dir.statat(item.path).unwrap() catch |err| {
                     if (item.optional) {
                         ctx.stats.total_files -= 1;

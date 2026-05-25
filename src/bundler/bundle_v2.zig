@@ -2367,11 +2367,11 @@ pub const BundleV2 = struct {
     ) !void {
         if (outdir.len > 0) {
             // Open the output directory
-            var root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), outdir, .{}) catch |err| {
+            const root_dir = bun.MakePath.makeOpenPath(bun.FD.cwd().stdDir(), outdir, .{}) catch |err| {
                 bun.Output.warn("Failed to open output directory '{s}': {s}", .{ outdir, @errorName(err) });
                 return;
             };
-            defer root_dir.close();
+            defer @import("std-fs-compat").dirClose(root_dir);
 
             // Create parent directories if needed (relative to outdir)
             if (std.fs.path.dirname(file_path)) |parent| {

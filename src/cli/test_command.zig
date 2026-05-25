@@ -1415,7 +1415,7 @@ pub const TestCommand = struct {
         var snapshot_file_buf = std.array_list.Managed(u8).init(ctx.allocator);
         var snapshot_values = Snapshots.ValuesHashMap.init(ctx.allocator);
         var snapshot_counts = bun.StringHashMap(usize).init(ctx.allocator);
-        var inline_snapshots_to_write = bun.handleOom(std.array_hash_map.Auto(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator));
+        var inline_snapshots_to_write = bun.handleOom(@import("array-hash-map-compat").AutoArrayHashMap(TestRunner.File.ID, std.array_list.Managed(Snapshots.InlineSnapshotToWrite)).init(ctx.allocator));
         jsc.VirtualMachine.isBunTest = true;
 
         var reporter = try zust.Box(CommandLineReporter).init(ctx.allocator, undefined);
@@ -1443,7 +1443,7 @@ pub const TestCommand = struct {
                     .file_buf = &snapshot_file_buf,
                     .values = &snapshot_values,
                     .counts = &snapshot_counts,
-                    .inline_snapshots_to_write = &inline_snapshots_to_write,
+                    .inline_snapshots_to_write = &inline_snapshots_to_write.map,
                 },
                 .bun_test_root = .init(ctx.allocator),
             },

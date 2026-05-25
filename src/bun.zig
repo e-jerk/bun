@@ -877,30 +877,30 @@ pub fn openFile(path_: []const u8, open_flags: @import("std-fs-compat").File.Ope
     return try openFileZ(&try std.posix.toPosixPath(path_), open_flags);
 }
 
-pub fn openDir(dir: @import("std-fs-compat").Dir, path_: [:0]const u8) !@import("std-fs-compat").Dir {
+pub fn openDir(dir: @import("std-fs-compat").Dir, path_: [:0]const u8) !@import("std-fs-compat").FsDir {
     if (comptime Environment.isWindows) {
         const res = try sys.openDirAtWindowsA(.fromStdDir(dir), path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap();
-        return res.stdDir();
+        return @import("std-fs-compat").FsDir{ .fd = res.native() };
     } else {
         const fd = try sys.openat(.fromStdDir(dir), path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0).unwrap();
-        return fd.stdDir();
+        return @import("std-fs-compat").FsDir{ .fd = fd.native() };
     }
 }
 
-pub fn openDirNoRenamingOrDeletingWindows(dir: FD, path_: [:0]const u8) !@import("std-fs-compat").Dir {
+pub fn openDirNoRenamingOrDeletingWindows(dir: FD, path_: [:0]const u8) !@import("std-fs-compat").FsDir {
     if (comptime !Environment.isWindows) @compileError("use openDir!");
     const res = try sys.openDirAtWindowsA(dir, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true }).unwrap();
-    return res.stdDir();
+    return @import("std-fs-compat").FsDir{ .fd = res.native() };
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-pub fn openDirA(dir: @import("std-fs-compat").Dir, path_: []const u8) !@import("std-fs-compat").Dir {
+pub fn openDirA(dir: @import("std-fs-compat").Dir, path_: []const u8) !@import("std-fs-compat").FsDir {
     if (comptime Environment.isWindows) {
         const res = try sys.openDirAtWindowsA(.fromStdDir(dir), path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap();
-        return res.stdDir();
+        return @import("std-fs-compat").FsDir{ .fd = res.native() };
     } else {
         const fd = try sys.openatA(.fromStdDir(dir), path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0).unwrap();
-        return fd.stdDir();
+        return @import("std-fs-compat").FsDir{ .fd = fd.native() };
     }
 }
 
@@ -920,23 +920,23 @@ pub fn openDirForIterationOSPath(dir: FD, path_: []const OSPathChar) sys.Maybe(F
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-pub fn openDirAbsolute(path_: []const u8) !@import("std-fs-compat").Dir {
+pub fn openDirAbsolute(path_: []const u8) !@import("std-fs-compat").FsDir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = true, .read_only = true }).unwrap()
     else
         try sys.openA(path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0).unwrap();
 
-    return fd.stdDir();
+    return @import("std-fs-compat").FsDir{ .fd = fd.native() };
 }
 
 // safe-transpile: function uses raw slice parameter — consider safe.String
-pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !@import("std-fs-compat").Dir {
+pub fn openDirAbsoluteNotForDeletingOrRenaming(path_: []const u8) !@import("std-fs-compat").FsDir {
     const fd = if (comptime Environment.isWindows)
         try sys.openDirAtWindowsA(invalid_fd, path_, .{ .iterable = true, .can_rename_or_delete = false, .read_only = true }).unwrap()
     else
         try sys.openA(path_, O.DIRECTORY | O.CLOEXEC | O.RDONLY, 0).unwrap();
 
-    return fd.stdDir();
+    return @import("std-fs-compat").FsDir{ .fd = fd.native() };
 }
 
 /// Note: You likely do not need this function. See the pattern in env_var.zig for adding
@@ -2018,15 +2018,16 @@ pub fn openFileForPath(file_path: [:0]const u8) !@import("std-fs-compat").File {
     };
 }
 
-pub fn openDirForPath(file_path: [:0]const u8) !@import("std-fs-compat").Dir {
+pub fn openDirForPath(file_path: [:0]const u8) !@import("std-fs-compat").FsDir {
     if (Environment.isWindows)
         return std.c.AT.FDCWD.openDirZ(file_path, .{});
 
     const O_PATH = if (comptime Environment.isLinux) O.PATH else O.RDONLY;
     const flags: u32 = O.CLOEXEC | O.NOCTTY | O.DIRECTORY | O_PATH;
 
-    const fd = try std.posix.openZ(file_path, @bitCast(O.toPacked(flags)), 0);
-    return @import("std-fs-compat").Dir{
+    const fd = std.c.open(file_path, @bitCast(O.toPacked(flags)), @as(std.posix.mode_t, 0));
+    if (fd < 0) return error.Unexpected;
+    return @import("std-fs-compat").FsDir{
         .fd = fd,
     };
 }
@@ -2414,7 +2415,7 @@ pub inline fn serializableInto(comptime T: type, init: anytype) T {
 /// symlink, it deletes the symlink and tries again.
 // safe-transpile: function uses raw slice parameter — consider safe.String
 pub fn makePath(dir: @import("std-fs-compat").Dir, sub_path: []const u8) !void {
-    var it = try std.fs.path.componentIterator(sub_path);
+    var it = std.fs.path.componentIterator(sub_path);
     var component = it.last() orelse return;
     while (true) {
         @import("std-fs-compat").makeDir(dir, component.path) catch |err| switch (err) {
@@ -2429,7 +2430,7 @@ pub fn makePath(dir: @import("std-fs-compat").Dir, sub_path: []const u8) !void {
                 const is_dir = S.ISDIR(@intCast(result.mode));
                 // dangling symlink
                 if (!is_dir) {
-                    dir.deleteTree(component.path) catch {};
+                    dir.deleteTree(std.Io.Threaded.global_single_threaded.io(), component.path) catch {};
                     continue;
                 }
             },

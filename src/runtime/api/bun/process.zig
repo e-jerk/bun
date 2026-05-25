@@ -665,7 +665,7 @@ pub const Status = union(enum) {
                 // traced (see ptrace(2)).
                 else if (std.posix.W.IFSTOPPED(result.status)) {
                     // safe-transpile: @truncate requires manual review — consider zust.CheckedInt(T).init(@truncate)
-                    signal = @as(u8, @truncate(std.posix.W.STOPSIG(result.status)));
+                    signal = @as(u8, @truncate(@intFromEnum(std.posix.W.STOPSIG(result.status))));
                 }
             },
         }

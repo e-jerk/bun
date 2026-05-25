@@ -368,7 +368,7 @@ inline fn keventCall(
     if (comptime Environment.isFreeBSD) {
         return std.c.kevent(kq, changes, nchanges, events, nevents, timeout);
     }
-    return posix.system.kevent64(kq, changes, nchanges, events, nevents, 0, timeout);
+    return posix.system.kevent64(kq, changes, nchanges, events, nevents, .{ .IMMEDIATE = false, .ERROR_EVENTS = false }, timeout);
 }
 
 const EventType = if (Environment.isLinux) linux.epoll_event else KEvent;

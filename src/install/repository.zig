@@ -650,7 +650,7 @@ pub const Repository = extern struct {
                 ) catch unreachable;
                 return err;
             };
-            var dir = @import("std-fs-compat").FsDir.fromDir(try bun.openDir(cache_dir.toDir(), folder_name));
+            var dir = try bun.openDir(cache_dir.toDir(), folder_name);
             dir.deleteTree(".git") catch {};
 
             if (resolved.len > 0) insert_tag: {

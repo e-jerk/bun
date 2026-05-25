@@ -237,7 +237,7 @@ pub fn init(options: Options) OutputFile {
             .file => |file| Value{
                 .copy = brk: {
                     var op = FileOperation.fromFile(.fromStdFile(file.file), options.output_path);
-                    op.dir = .fromStdDir(std.fs.Dir{ .fd = file.dir.fd });
+                    op.dir = .fromStdDir(std.Io.Dir{ .handle = file.dir.fd });
                     break :brk op;
                 },
             },

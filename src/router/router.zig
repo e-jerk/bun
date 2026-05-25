@@ -218,7 +218,7 @@ const RouteLoader = struct {
     config: Options.RouteConfig,
     route_dirname_len: u16 = 0,
 
-    dedupe_dynamic: std.array_hash_map.Auto(u32, string),
+    dedupe_dynamic: @import("array-hash-map-compat").AutoArrayHashMap(u32, string),
     log: *Logger.Log,
     index: ?*Route = null,
     static_list: bun.StringHashMap(*Route),
@@ -330,7 +330,7 @@ const RouteLoader = struct {
             .fs = resolver.fs,
             .config = config,
             .static_list = bun.StringHashMap(*Route).init(allocator),
-            .dedupe_dynamic = bun.handleOom(std.array_hash_map.Auto(u32, string).init(allocator)),
+            .dedupe_dynamic = bun.handleOom(@import("array-hash-map-compat").AutoArrayHashMap(u32, string).init(allocator)),
             .all_routes = .empty,
             .route_dirname_len = route_dirname_len,
         };
@@ -744,7 +744,7 @@ pub const Route = struct {
             var needs_close = true;
             defer if (needs_close) file.close();
             if (entry.cache.fd.unwrapValid()) |valid| {
-                file = valid.stdFile();
+                file = valid.compatFile();
                 needs_close = false;
             } else {
                 var parts = [_]string{ entry.dir, entry.base() };

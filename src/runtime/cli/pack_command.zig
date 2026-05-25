@@ -227,7 +227,7 @@ pub const PackCommand = struct {
     const PackQueue = std.PriorityQueue(PackQueueItem, void, PackQueueContext.lessThan);
 
     const DirInfo = struct {
-        std.fs.Dir, // the dir
+        std.Io.Dir, // the dir
         string, // the dir subpath
         usize, // dir depth. used to shrink ignore stack
     };
@@ -238,7 +238,7 @@ pub const PackCommand = struct {
         bins: []const BinInfo,
         includes: []const Pattern,
         excludes: []const Pattern,
-        root_dir: std.fs.Dir,
+        root_dir: std.Io.Dir,
         log_level: LogLevel,
     ) OOM!void {
         if (comptime Environment.isDebug) {
@@ -359,7 +359,7 @@ pub const PackCommand = struct {
                             }
                         }
 
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     else => unreachable,
                 }
@@ -474,7 +474,7 @@ pub const PackCommand = struct {
                                 continue :next_entry;
                             }
                         }
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         for (bins) |bin| {
@@ -498,10 +498,10 @@ pub const PackCommand = struct {
     }
 
     fn openSubdir(
-        dir: std.fs.Dir,
+        dir: std.Io.Dir,
         entry_name: string,
         entry_subpath: stringZ,
-    ) std.fs.Dir {
+    ) std.Io.Dir {
         return dir.openDirZ(
             entryNameZ(entry_name, entry_subpath),
             .{ .iterate = true },
@@ -533,10 +533,10 @@ pub const PackCommand = struct {
 
     fn iterateBundledDeps(
         ctx: *Context,
-        root_dir: std.fs.Dir,
+        root_dir: std.Io.Dir,
         log_level: LogLevel,
     ) OOM!PackQueue {
-        var bundled_pack_queue = PackQueue.init(ctx.allocator, {});
+        var bundled_pack_queue = PackQueue.initContext({});
         if (ctx.bundled_deps.items.len == 0) return bundled_pack_queue;
 
         var dir = root_dir.openDirZ("node_modules", .{ .iterate = true }) catch |err| {
@@ -669,7 +669,7 @@ pub const PackCommand = struct {
 
     fn addBundledDep(
         ctx: *Context,
-        root_dir: std.fs.Dir,
+        root_dir: std.Io.Dir,
         bundled_dir_info: DirInfo,
         bundled_pack_queue: *PackQueue,
         dedupe: *bun.StringHashMap(void),
@@ -783,7 +783,7 @@ pub const PackCommand = struct {
 
                 switch (entry.kind) {
                     .file => {
-                        try bundled_pack_queue.add(.{ .path = entry_subpath });
+                        try bundled_pack_queue.push(ctx.allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         const subdir = openSubdir(dir, entry_name, entry_subpath);
@@ -887,7 +887,7 @@ pub const PackCommand = struct {
                                 continue :next_entry;
                             }
                         }
-                        try pack_queue.add(.{ .path = entry_subpath });
+                        try pack_queue.push(allocator, .{ .path = entry_subpath });
                     },
                     .directory => {
                         for (bins) |bin| {
@@ -1453,7 +1453,7 @@ pub const PackCommand = struct {
         for (bins) |bin| {
             switch (bin.type) {
                 .file => {
-                    try pack_queue.add(.{ .path = bin.path, .optional = true });
+                    try pack_queue.push(ctx.allocator, .{ .path = bin.path, .optional = true });
                 },
                 .dir => {
                     const bin_dir = root_dir.openDir(bin.path, .{ .iterate = true }) catch {
@@ -1524,7 +1524,7 @@ pub const PackCommand = struct {
         }
 
         var bundled_pack_queue = try iterateBundledDeps(ctx, root_dir, log_level);
-        defer bundled_pack_queue.deinit();
+        defer bundled_pack_queue.deinit(ctx.allocator);
 
         // +1 for package.json
         ctx.stats.total_files = pack_queue.count() + bundled_pack_queue.count() + 1;
@@ -1712,7 +1712,7 @@ pub const PackCommand = struct {
             entry = try archivePackageJSON(ctx, archive, entry, root_dir, edited_package_json);
             if (log_level.showProgress()) node.completeOne();
 
-            while (pack_queue.removeOrNull()) |item| {
+            while (pack_queue.pop()) |item| {
                 defer if (log_level.showProgress()) node.completeOne();
 
                 const file = bun.sys.openat(.fromStdDir(root_dir), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
@@ -1752,7 +1752,7 @@ pub const PackCommand = struct {
                 );
             }
 
-            while (bundled_pack_queue.removeOrNull()) |item| {
+            while (bundled_pack_queue.pop()) |item| {
                 defer if (log_level.showProgress()) node.completeOne();
 
                 const file = File.openat(.fromStdDir(root_dir), item.path, bun.O.RDONLY, 0).unwrap() catch |err| {
@@ -2044,7 +2044,7 @@ pub const PackCommand = struct {
         ctx: *Context,
         archive: *Archive,
         entry: *Archive.Entry,
-        root_dir: std.fs.Dir,
+        root_dir: std.Io.Dir,
         edited_package_json: string,
     ) OOM!*Archive.Entry {
         const stat = bun.sys.fstatat(.fromStdDir(root_dir), "package.json").unwrap() catch |err| {
@@ -2430,7 +2430,7 @@ pub const PackCommand = struct {
 
         pub const List = std.ArrayListUnmanaged(IgnorePatterns);
 
-        fn ignoreFileFail(dir: std.fs.Dir, ignore_kind: Kind, reason: enum { read, open }, err: anyerror) noreturn {
+        fn ignoreFileFail(dir: std.Io.Dir, ignore_kind: Kind, reason: enum { read, open }, err: anyerror) noreturn {
             var buf: PathBuffer = undefined;
             const dir_path = bun.getFdPath(.fromStdDir(dir), &buf) catch "";
             Output.err(err, "failed to {s} {s} at: \"{s}{s}{s}\"", .{
@@ -2455,7 +2455,7 @@ pub const PackCommand = struct {
         }
 
         // ignore files are always ignored, don't need to worry about opening or reading twice
-        pub fn readFromDisk(allocator: std.mem.Allocator, dir: std.fs.Dir, dir_depth: usize) OOM!?IgnorePatterns {
+        pub fn readFromDisk(allocator: std.mem.Allocator, dir: std.Io.Dir, dir_depth: usize) OOM!?IgnorePatterns {
             var patterns: std.ArrayListUnmanaged(Pattern) = .{};
             errdefer patterns.deinit(allocator);
 
@@ -2529,7 +2529,7 @@ pub const PackCommand = struct {
 
     fn printArchivedFilesAndPackages(
         ctx: *Context,
-        root_dir_std: std.fs.Dir,
+        root_dir_std: std.Io.Dir,
         comptime is_dry_run: bool,
         pack_list: if (is_dry_run) *PackQueue else PackList,
         package_json_len: usize,
@@ -2551,7 +2551,7 @@ pub const PackCommand = struct {
                 "package.json",
             });
 
-            while (pack_list.removeOrNull()) |item| {
+            while (pack_list.pop()) |item| {
                 const stat = root_dir.statat(item.path).unwrap() catch |err| {
                     if (item.optional) {
                         ctx.stats.total_files -= 1;
@@ -2648,10 +2648,11 @@ pub const bindings = struct {
         const tarball_path = tarball_path_str.toUTF8(bun.default_allocator);
         defer tarball_path.deinit();
 
-        const tarball_file = File.from(std.Io.Dir.cwd().openFile(tarball_path.slice(), .{}) catch |err| {
+        const tarball_fd = bun.sys.openA(tarball_path.slice(), bun.O.RDONLY, 0).unwrap() catch |err| {
             return global.throw("failed to open tarball file \"{s}\": {s}", .{ tarball_path.slice(), @errorName(err) });
-        });
-        defer tarball_file.close();
+        };
+        defer tarball_fd.close();
+        const tarball_file = File.from(tarball_fd);
 
         const tarball = tarball_file.readToEnd(bun.default_allocator).unwrap() catch |err| {
             return global.throw("failed to read tarball contents \"{s}\": {s}", .{ tarball_path.slice(), @errorName(err) });

@@ -396,10 +396,10 @@ pub const Bin = extern struct {
         bin: Bin,
         i: usize = 0,
         done: bool = false,
-        dir_iterator: ?std.fs.Dir.Iterator = null,
-        child_dir: ?std.fs.Dir = null,
+        dir_iterator: ?std.Io.Dir.Iterator = null,
+        child_dir: ?std.Io.Dir = null,
         package_name: String,
-        destination_node_modules: std.fs.Dir = std.fs.cwd(),
+        destination_node_modules: std.Io.Dir = std.Io.Dir.cwd(),
         buf: bun.PathBuffer = undefined,
         string_buffer: []const u8,
         extern_string_buf: []const ExternalString,
@@ -419,18 +419,19 @@ pub const Bin = extern struct {
                 this.buf[joined.len] = 0;
                 const joined_: [:0]u8 = this.buf[0..joined.len :0];
                 var child_dir = try bun.openDir(dir, joined_);
-                this.child_dir = child_dir;
-                this.dir_iterator = child_dir.iterate();
+                const io_dir = child_dir.toDir();
+                this.child_dir = io_dir;
+                this.dir_iterator = io_dir.iterate();
             }
 
             var iter = &this.dir_iterator.?;
-            if (iter.next() catch null) |entry| {
+            if (iter.next(std.Io.Threaded.global_single_threaded.io()) catch null) |entry| {
                 this.i += 1;
                 return entry.name;
             } else {
                 this.done = true;
                 if (this.child_dir) |*cd| {
-                    cd.close();
+                    @import("std-fs-compat").dirClose(cd.*);
                     this.child_dir = null;
                 }
                 this.dir_iterator = null;
@@ -836,7 +837,7 @@ pub const Bin = extern struct {
 
                         const node_modules_path_save = this.node_modules_path.save();
                         this.node_modules_path.append(".bin");
-                        bun.makePath(std.fs.cwd(), this.node_modules_path.slice()) catch {};
+                        bun.makePath(std.Io.Dir.cwd(), this.node_modules_path.slice()) catch {};
                         node_modules_path_save.restore();
 
                         switch (bun.sys.symlinkRunningExecutable(rel_target, abs_dest)) {

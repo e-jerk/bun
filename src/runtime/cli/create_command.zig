@@ -242,7 +242,7 @@ pub const CreateCommand = struct {
         }
 
         var package_json_contents: MutableString = undefined;
-        var package_json_file: ?std.fs.File = null;
+        var package_json_file: ?std.Io.File = null;
 
         if (example_tag != .local_folder) {
             if (create_options.verbose) {
@@ -425,7 +425,7 @@ pub const CreateCommand = struct {
                 };
 
                 std.fs.deleteTreeAbsolute(destination) catch {};
-                const destination_dir__ = std.fs.cwd().makeOpenPath(destination, .{}) catch |err| {
+                const destination_dir__ = std.Io.Dir.cwd().makeOpenPath(destination, .{}) catch |err| {
                     node.end();
 
                     progress.refresh();
@@ -455,7 +455,7 @@ pub const CreateCommand = struct {
 
                 const FileCopier = struct {
                     pub fn copy(
-                        destination_dir_: std.fs.Dir,
+                        destination_dir_: std.Io.Dir,
                         walker: *Walker,
                         node_: *Progress.Node,
                         progress_: *Progress,
@@ -1185,7 +1185,7 @@ pub const CreateCommand = struct {
                 //         var public_index_html_parts = [_]string{ destination, "public/index.html" };
                 //         var public_index_html_path = filesystem.absBuf(&public_index_html_parts, &bun_path_buf);
 
-                //         const public_index_html_file = std.fs.cwd().openFile(public_index_html_path, .{ .mode = .read_write }) catch break :bail;
+                //         const public_index_html_file = std.Io.Dir.cwd().openFile(public_index_html_path, .{ .mode = .read_write }) catch break :bail;
                 //         defer public_index_html_file.close();
 
                 //         const file_extensions_to_try = [_]string{ ".tsx", ".ts", ".jsx", ".js", ".mts", ".mcjs" };
@@ -1868,7 +1868,7 @@ pub const Example = struct {
 
         var examples = std.array_list.Managed(Example).fromOwnedSlice(ctx.allocator, remote_examples);
         {
-            var folders = [3]std.fs.Dir{
+            var folders = [3]std.Io.Dir{
                 bun.invalid_fd.stdDir(),
                 bun.invalid_fd.stdDir(),
                 bun.invalid_fd.stdDir(),
@@ -1876,19 +1876,19 @@ pub const Example = struct {
             if (env_loader.map.get("BUN_CREATE_DIR")) |home_dir| {
                 var parts = [_]string{home_dir};
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[0] = std.fs.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[0] = std.Io.Dir.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
             }
 
             {
                 var parts = [_]string{ filesystem.top_level_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[1] = std.fs.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[1] = std.Io.Dir.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
             }
 
             if (env_loader.map.get(bun.env_var.HOME.key())) |home_dir| {
                 var parts = [_]string{ home_dir, BUN_CREATE_DIR };
                 const outdir_path = filesystem.absBuf(&parts, &home_dir_buf);
-                folders[2] = std.fs.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
+                folders[2] = std.Io.Dir.cwd().openDir(outdir_path, .{}) catch bun.invalid_fd.stdDir();
             }
 
             // subfolders with package.json
@@ -1897,7 +1897,7 @@ pub const Example = struct {
                     var iter = folder.iterate();
 
                     loop: while (iter.next() catch null) |entry_| {
-                        const entry: std.fs.Dir.Entry = entry_;
+                        const entry: std.Io.Dir.Entry = entry_;
 
                         switch (entry.kind) {
                             .directory => {

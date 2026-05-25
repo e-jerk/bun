@@ -401,8 +401,8 @@ pub fn migrateNPMLockfile(
     var string_buf = this.stringBuf();
 
     if (workspace_map) |wksp| {
-        try this.workspace_paths.ensureTotalCapacity(allocator, wksp.map.unmanaged.entries.len);
-        try this.workspace_versions.ensureTotalCapacity(allocator, wksp.map.unmanaged.entries.len);
+        try this.workspace_paths.ensureTotalCapacity(allocator, wksp.map.map.entries.len);
+        try this.workspace_versions.ensureTotalCapacity(allocator, wksp.map.map.entries.len);
 
         for (wksp.map.keys(), wksp.map.values()) |k, v| {
             const name_hash = stringHash(v.name);

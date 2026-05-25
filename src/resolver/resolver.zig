@@ -1107,8 +1107,7 @@ pub const Resolver = struct {
                         defer {
                             if (r.fs.fs.needToCloseFiles()) {
                                 if (query.entry.cache.fd.isValid()) {
-                                    var file = query.entry.cache.fd.stdFile();
-                                    file.close();
+                                    bun.FD.close(query.entry.cache.fd);
                                     query.entry.cache.fd = .invalid;
                                 }
                             }
@@ -4068,9 +4067,10 @@ pub const Resolver = struct {
                         }
 
                         const this_dir = fd.stdDir();
-                        var file = bun.FD.fromStdDir(bun.openDir(this_dir, bun.pathLiteral("node_modules/.bin")) catch
-                            break :append_bin_dir);
-                        defer file.close();
+                        var bin_dir = bun.openDir(this_dir, bun.pathLiteral("node_modules/.bin")) catch
+                            break :append_bin_dir;
+                        defer bin_dir.close();
+                        var file = bun.FD.fromNative(bin_dir.fd);
                         const bin_path = file.getFdPath(bufs(.node_bin_path)) catch break :append_bin_dir;
                         bin_folders_lock.lock();
                         defer bin_folders_lock.unlock();
@@ -4096,7 +4096,7 @@ pub const Resolver = struct {
                             const this_dir = fd.stdDir();
                             var file = bun.openDir(this_dir, bun.pathLiteral(".bin")) catch break :append_bin_dir;
                             defer file.close();
-                            const bin_path = bun.getFdPath(.fromStdDir(file), bufs(.node_bin_path)) catch break :append_bin_dir;
+                            const bin_path = bun.getFdPath(bun.FD.fromNative(file.fd), bufs(.node_bin_path)) catch break :append_bin_dir;
                             bin_folders_lock.lock();
                             defer bin_folders_lock.unlock();
 

@@ -166,7 +166,7 @@ pub fn MultiArrayList(comptime T: type) type {
                 data[i] = .{
                     .size = @sizeOf(field_info.type),
                     .size_index = i,
-                    .alignment = if (@sizeOf(field_info.type) == 0) 1 else field_info.alignment,
+                    .alignment = if (@sizeOf(field_info.type) == 0) 1 else field_info.alignment orelse 1,
                 };
             }
             const Sort = struct {
