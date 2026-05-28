@@ -42,6 +42,45 @@ bun test test/integration/bun-types/bun-types.test.ts
 
 This is an explicit exception to the "never use `bun test` directly" rule. There are no native changes for a debug build to pick up, so don't wait on one.
 
+### Optional Build Flags (Minimal Builds)
+
+Bun supports optional features that can be disabled at compile time to produce smaller binaries:
+
+```sh
+# Minimal build (disable heavy features)
+bun run build:release -- -Denable_s3=false -Denable_image=false -Denable_valkey=false -Denable_sql=false
+
+# Server-only build (no parsers)
+bun run build:release -- -Denable_s3=false -Denable_image=false -Denable_markdown=false -Denable_json5=false -Denable_jsonc=false -Denable_toml=false -Denable_yaml=false
+
+# Full build (all features, default)
+bun run build:release
+```
+
+| Flag | Feature | Default |
+|------|---------|---------|
+| `enable_s3` | S3 client | `true` |
+| `enable_image` | Image manipulation | `true` |
+| `enable_valkey` | Valkey/Redis client | `true` |
+| `enable_sql` | SQL (Postgres/MySQL) | `true` |
+| `enable_archive` | Archive (tar/zip) | `true` |
+| `enable_markdown` | Markdown parser | `true` |
+| `enable_json5` | JSON5 parser | `true` |
+| `enable_jsonc` | JSONC parser | `true` |
+| `enable_toml` | TOML parser | `true` |
+| `enable_yaml` | YAML parser | `true` |
+| `enable_cron` | Cron scheduler | `true` |
+| `enable_csrf` | CSRF tokens | `true` |
+| `enable_terminal` | Terminal emulator | `true` |
+| `enable_router` | FileSystemRouter | `true` |
+| `enable_glob` | Glob patterns | `true` |
+| `enable_quic` | HTTP/3 (QUIC) | `true` |
+| `enable_lolhtml` | HTML rewriter | `true` |
+| `enable_transpiler` | Transpiler object | `true` |
+| `enable_ffi` | FFI (TinyCC) | `true` |
+
+**Note:** Disabled features are not exported to the JS runtime but may still be compiled. The linker strips unused code in release builds.
+
 ## Testing
 
 ### Running Tests
