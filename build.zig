@@ -60,6 +60,27 @@ const BunBuildOptions = struct {
     windows_shim: ?WindowsShim = null,
     llvm_codegen_threads: ?u32 = null,
 
+    // Feature flags for optional features
+    enable_s3: bool = true,
+    enable_image: bool = true,
+    enable_valkey: bool = true,
+    enable_sql: bool = true,
+    enable_archive: bool = true,
+    enable_markdown: bool = true,
+    enable_json5: bool = true,
+    enable_jsonc: bool = true,
+    enable_toml: bool = true,
+    enable_yaml: bool = true,
+    enable_cron: bool = true,
+    enable_csrf: bool = true,
+    enable_terminal: bool = true,
+    enable_router: bool = true,
+    enable_glob: bool = true,
+    enable_quic: bool = true,
+    enable_lolhtml: bool = true,
+    enable_transpiler: bool = true,
+    enable_ffi: bool = true,
+
     pub fn isBaseline(this: *const BunBuildOptions) bool {
         return this.arch.isX86() and
             !Target.x86.featureSetHas(this.target.result.cpu.features, .avx2);
@@ -89,6 +110,25 @@ const BunBuildOptions = struct {
         opts.addOption(bool, "enable_fuzzilli", this.enable_fuzzilli);
         opts.addOption(bool, "enable_valgrind", this.enable_valgrind);
         opts.addOption(bool, "enable_tinycc", this.enable_tinycc);
+        opts.addOption(bool, "enable_s3", this.enable_s3);
+        opts.addOption(bool, "enable_image", this.enable_image);
+        opts.addOption(bool, "enable_valkey", this.enable_valkey);
+        opts.addOption(bool, "enable_sql", this.enable_sql);
+        opts.addOption(bool, "enable_archive", this.enable_archive);
+        opts.addOption(bool, "enable_markdown", this.enable_markdown);
+        opts.addOption(bool, "enable_json5", this.enable_json5);
+        opts.addOption(bool, "enable_jsonc", this.enable_jsonc);
+        opts.addOption(bool, "enable_toml", this.enable_toml);
+        opts.addOption(bool, "enable_yaml", this.enable_yaml);
+        opts.addOption(bool, "enable_cron", this.enable_cron);
+        opts.addOption(bool, "enable_csrf", this.enable_csrf);
+        opts.addOption(bool, "enable_terminal", this.enable_terminal);
+        opts.addOption(bool, "enable_router", this.enable_router);
+        opts.addOption(bool, "enable_glob", this.enable_glob);
+        opts.addOption(bool, "enable_quic", this.enable_quic);
+        opts.addOption(bool, "enable_lolhtml", this.enable_lolhtml);
+        opts.addOption(bool, "enable_transpiler", this.enable_transpiler);
+        opts.addOption(bool, "enable_ffi", this.enable_ffi);
         opts.addOption(bool, "use_mimalloc", this.use_mimalloc);
         opts.addOption([]const u8, "reported_nodejs_version", b.fmt("{f}", .{this.reported_nodejs_version}));
         opts.addOption(bool, "zig_self_hosted_backend", this.no_llvm);
@@ -275,6 +315,25 @@ pub fn build(b: *Build) !void {
         .enable_fuzzilli = b.option(bool, "enable_fuzzilli", "Enable fuzzilli instrumentation") orelse false,
         .enable_valgrind = b.option(bool, "enable_valgrind", "Enable valgrind") orelse false,
         .enable_tinycc = b.option(bool, "enable_tinycc", "Enable TinyCC for FFI JIT compilation") orelse true,
+        .enable_s3 = b.option(bool, "enable_s3", "Enable S3 client support") orelse true,
+        .enable_image = b.option(bool, "enable_image", "Enable Image manipulation support") orelse true,
+        .enable_valkey = b.option(bool, "enable_valkey", "Enable Valkey/Redis client support") orelse true,
+        .enable_sql = b.option(bool, "enable_sql", "Enable SQL (Postgres/MySQL) support") orelse true,
+        .enable_archive = b.option(bool, "enable_archive", "Enable Archive (tar/zip) support") orelse true,
+        .enable_markdown = b.option(bool, "enable_markdown", "Enable Markdown parser support") orelse true,
+        .enable_json5 = b.option(bool, "enable_json5", "Enable JSON5 parser support") orelse true,
+        .enable_jsonc = b.option(bool, "enable_jsonc", "Enable JSONC parser support") orelse true,
+        .enable_toml = b.option(bool, "enable_toml", "Enable TOML parser support") orelse true,
+        .enable_yaml = b.option(bool, "enable_yaml", "Enable YAML parser support") orelse true,
+        .enable_cron = b.option(bool, "enable_cron", "Enable Cron scheduler support") orelse true,
+        .enable_csrf = b.option(bool, "enable_csrf", "Enable CSRF token support") orelse true,
+        .enable_terminal = b.option(bool, "enable_terminal", "Enable Terminal emulator support") orelse true,
+        .enable_router = b.option(bool, "enable_router", "Enable FileSystemRouter support") orelse true,
+        .enable_glob = b.option(bool, "enable_glob", "Enable Glob support") orelse true,
+        .enable_quic = b.option(bool, "enable_quic", "Enable HTTP/3 (QUIC) support") orelse true,
+        .enable_lolhtml = b.option(bool, "enable_lolhtml", "Enable HTML rewriter (lol-html) support") orelse true,
+        .enable_transpiler = b.option(bool, "enable_transpiler", "Enable Transpiler object support") orelse true,
+        .enable_ffi = b.option(bool, "enable_ffi", "Enable FFI (TinyCC) support") orelse true,
         .use_mimalloc = b.option(bool, "use_mimalloc", "Use mimalloc as default allocator") orelse false,
         .llvm_codegen_threads = b.option(u32, "llvm_codegen_threads", "Number of threads to use for LLVM codegen") orelse 1,
         .android_ndk_sysroot = android_ndk_sysroot,
