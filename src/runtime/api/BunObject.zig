@@ -1,5 +1,6 @@
 const Bun = @This();
 const zust = @import("safe");
+const build_options = @import("build_options");
 
 /// How to add a new function or property to the Bun global
 ///
@@ -122,11 +123,19 @@ pub const BunObject = struct {
         }
 
         // --- Lazy property callbacks ---
-        @export(&BunObject.Archive, .{ .name = lazyPropertyCallbackName("Archive") });
+        if (build_options.enable_archive) {
+            @export(&BunObject.Archive, .{ .name = lazyPropertyCallbackName("Archive") });
+        }
         @export(&BunObject.CryptoHasher, .{ .name = lazyPropertyCallbackName("CryptoHasher") });
-        @export(&BunObject.CSRF, .{ .name = lazyPropertyCallbackName("CSRF") });
-        @export(&BunObject.FFI, .{ .name = lazyPropertyCallbackName("FFI") });
-        @export(&BunObject.FileSystemRouter, .{ .name = lazyPropertyCallbackName("FileSystemRouter") });
+        if (build_options.enable_csrf) {
+            @export(&BunObject.CSRF, .{ .name = lazyPropertyCallbackName("CSRF") });
+        }
+        if (build_options.enable_ffi) {
+            @export(&BunObject.FFI, .{ .name = lazyPropertyCallbackName("FFI") });
+        }
+        if (build_options.enable_router) {
+            @export(&BunObject.FileSystemRouter, .{ .name = lazyPropertyCallbackName("FileSystemRouter") });
+        }
         @export(&BunObject.MD4, .{ .name = lazyPropertyCallbackName("MD4") });
         @export(&BunObject.MD5, .{ .name = lazyPropertyCallbackName("MD5") });
         @export(&BunObject.SHA1, .{ .name = lazyPropertyCallbackName("SHA1") });
@@ -135,16 +144,34 @@ pub const BunObject = struct {
         @export(&BunObject.SHA384, .{ .name = lazyPropertyCallbackName("SHA384") });
         @export(&BunObject.SHA512, .{ .name = lazyPropertyCallbackName("SHA512") });
         @export(&BunObject.SHA512_256, .{ .name = lazyPropertyCallbackName("SHA512_256") });
-        @export(&BunObject.JSONC, .{ .name = lazyPropertyCallbackName("JSONC") });
-        @export(&BunObject.markdown, .{ .name = lazyPropertyCallbackName("markdown") });
-        @export(&BunObject.TOML, .{ .name = lazyPropertyCallbackName("TOML") });
-        @export(&BunObject.JSON5, .{ .name = lazyPropertyCallbackName("JSON5") });
-        @export(&BunObject.YAML, .{ .name = lazyPropertyCallbackName("YAML") });
-        @export(&BunObject.Glob, .{ .name = lazyPropertyCallbackName("Glob") });
-        @export(&BunObject.Image, .{ .name = lazyPropertyCallbackName("Image") });
-        @export(&BunObject.Transpiler, .{ .name = lazyPropertyCallbackName("Transpiler") });
+        if (build_options.enable_jsonc) {
+            @export(&BunObject.JSONC, .{ .name = lazyPropertyCallbackName("JSONC") });
+        }
+        if (build_options.enable_markdown) {
+            @export(&BunObject.markdown, .{ .name = lazyPropertyCallbackName("markdown") });
+        }
+        if (build_options.enable_toml) {
+            @export(&BunObject.TOML, .{ .name = lazyPropertyCallbackName("TOML") });
+        }
+        if (build_options.enable_json5) {
+            @export(&BunObject.JSON5, .{ .name = lazyPropertyCallbackName("JSON5") });
+        }
+        if (build_options.enable_yaml) {
+            @export(&BunObject.YAML, .{ .name = lazyPropertyCallbackName("YAML") });
+        }
+        if (build_options.enable_glob) {
+            @export(&BunObject.Glob, .{ .name = lazyPropertyCallbackName("Glob") });
+        }
+        if (build_options.enable_image) {
+            @export(&BunObject.Image, .{ .name = lazyPropertyCallbackName("Image") });
+        }
+        if (build_options.enable_transpiler) {
+            @export(&BunObject.Transpiler, .{ .name = lazyPropertyCallbackName("Transpiler") });
+        }
         @export(&BunObject.argv, .{ .name = lazyPropertyCallbackName("argv") });
-        @export(&BunObject.cron, .{ .name = lazyPropertyCallbackName("cron") });
+        if (build_options.enable_cron) {
+            @export(&BunObject.cron, .{ .name = lazyPropertyCallbackName("cron") });
+        }
         @export(&BunObject.cwd, .{ .name = lazyPropertyCallbackName("cwd") });
         @export(&BunObject.enableANSIColors, .{ .name = lazyPropertyCallbackName("enableANSIColors") });
         @export(&BunObject.hash, .{ .name = lazyPropertyCallbackName("hash") });
@@ -153,11 +180,17 @@ pub const BunObject = struct {
         @export(&BunObject.unsafe, .{ .name = lazyPropertyCallbackName("unsafe") });
         @export(&BunObject.semver, .{ .name = lazyPropertyCallbackName("semver") });
         @export(&BunObject.embeddedFiles, .{ .name = lazyPropertyCallbackName("embeddedFiles") });
-        @export(&BunObject.S3Client, .{ .name = lazyPropertyCallbackName("S3Client") });
-        @export(&BunObject.s3, .{ .name = lazyPropertyCallbackName("s3") });
-        @export(&BunObject.ValkeyClient, .{ .name = lazyPropertyCallbackName("ValkeyClient") });
-        @export(&BunObject.valkey, .{ .name = lazyPropertyCallbackName("valkey") });
-        @export(&BunObject.Terminal, .{ .name = lazyPropertyCallbackName("Terminal") });
+        if (build_options.enable_s3) {
+            @export(&BunObject.S3Client, .{ .name = lazyPropertyCallbackName("S3Client") });
+            @export(&BunObject.s3, .{ .name = lazyPropertyCallbackName("s3") });
+        }
+        if (build_options.enable_valkey) {
+            @export(&BunObject.ValkeyClient, .{ .name = lazyPropertyCallbackName("ValkeyClient") });
+            @export(&BunObject.valkey, .{ .name = lazyPropertyCallbackName("valkey") });
+        }
+        if (build_options.enable_terminal) {
+            @export(&BunObject.Terminal, .{ .name = lazyPropertyCallbackName("Terminal") });
+        }
         // --- Lazy property callbacks ---
 
         // --- Callbacks ---
